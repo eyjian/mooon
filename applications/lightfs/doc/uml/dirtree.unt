@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XPD:UNIT xmlns:XPD="http://www.staruml.com" version="1">
+<XPD:HEADER>
+<XPD:SUBUNITS>
+</XPD:SUBUNITS>
+</XPD:HEADER>
+<XPD:BODY>
+<XPD:OBJ name="DocumentElement" type="UMLPackage" guid="B28Nz9dfyUiezFD0uSo6swAA">
+<XPD:ATTR name="Name" type="string">dirtree</XPD:ATTR>
+<XPD:ATTR name="#Views" type="integer">1</XPD:ATTR>
+<XPD:REF name="Views[0]">8iBxtgj4/ki19Bfotp23QAAA</XPD:REF>
+<XPD:ATTR name="#OwnedDiagrams" type="integer">1</XPD:ATTR>
+<XPD:OBJ name="OwnedDiagrams[0]" type="UMLClassDiagram" guid="CYPbFC4mgkedgYV6BCsa4gAA">
+<XPD:ATTR name="Name" type="string">dirtree-Main</XPD:ATTR>
+<XPD:REF name="DiagramOwner">B28Nz9dfyUiezFD0uSo6swAA</XPD:REF>
+<XPD:OBJ name="DiagramView" type="UMLClassDiagramView" guid="jtUdCeDSK0mGoaN38hYZvgAA">
+<XPD:REF name="Diagram">CYPbFC4mgkedgYV6BCsa4gAA</XPD:REF>
+</XPD:OBJ>
+</XPD:OBJ>
+</XPD:OBJ>
+</XPD:BODY>
+</XPD:UNIT>

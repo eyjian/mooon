@@ -1,0 +1,47 @@
+include $(top_srcdir)/Make.rules
+AUTOMAKE_OPTIONS= foreign
+
+#
+# 如果想编译plugin_mysql，则应当保证MySQL被安装在/usr/local目录下，或用户主目录下，或环境变量指定的目录MYSQL_HOME
+# 即分别应当为：
+# /usr/local/mysql
+# $HOME/mysql
+# $MYSQL_HOME
+#
+# 而且要求
+# /usr/local/mysql/include或$HOME/mysql/include或$MYSQL_HOME/include目录下有mysql.h头文件，
+# 和/usr/local/mysql/lib或$HOME/mysql/lib或$MYSQL_HOME/lib目录下有libmysqlclient_r.so或libmysqlclient_r.a库文件
+#
+
+if MYSQL_INSTALLED_ENV
+MYSQL_PATH=$${MYSQL_HOME}
+else
+if MYSQL_INSTALLED_HOME
+MYSQL_PATH=$${HOME}/mysql
+else
+if MYSQL_INSTALLED_USR
+MYSQL_PATH=/usr/local/mysql
+endif
+endif
+endif
+
+INCLUDES += -I$(MYSQL_PATH)/include
+# libmysqlclient.a可能在$(MYSQL_PATH)/lib下，也可能在$(MYSQL_PATH)/lib/mysql下
+LDADD += -L$(MYSQL_PATH)/lib -L$(MYSQL_PATH)/lib/mysql -lmysqlclient -L$(top_srcdir)/common -lmcommon
+
+AM_LDFLAGS += -fPIC -shared
+AM_CXXFLAGS += -fPIC
+
+libdir=$(prefix)/lib
+lib_LIBRARIES = libxmysql.a
+libxmysql_a_SOURCES = 
+
+moduledir=$(prefix)/lib
+module_PROGRAMS = libxmysql.so
+libxmysql_so_SOURCES =
+
+install-data-hook:
+	mkdir -p $(prefix)/include/plugin&&cp -r $(top_srcdir)/../include/plugin/plugin_mysql $(prefix)/include/plugin/
+
+uninstall-hook:
+	rm -fr $(prefix)/include/plugin/plugin_mysql

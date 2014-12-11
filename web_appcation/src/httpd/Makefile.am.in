@@ -1,0 +1,12 @@
+include $(top_srcdir)/Make.rules
+AUTOMAKE_OPTIONS= foreign
+
+INCLUDES   +=
+LDADD      += -L../util -lutil -L../sys -lsys -L../net -lnet -L../gtf -lgtf -L../http_parser -lhttp_parser -L../plugin/plugin_log4cxx -lplugin_log4cxx -L../plugin/plugin_tinyxml -lplugin_tinyxml
+AM_LDFLAGS  +=
+AM_CXXFLAGS +=
+
+bindir=$(prefix)/bin
+bin_PROGRAMS = jhttpd
+
+jhttpd_SOURCES = 

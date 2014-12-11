@@ -1,0 +1,20 @@
+include $(top_srcdir)/Make.rules
+AUTOMAKE_OPTIONS= foreign
+
+INCLUDES   +=
+LDADD      += -lrt $(MOOON_HOME)/lib/libdispatcher.a $(MOOON_HOME)/lib/libhttp_parser.a $(MOOON_HOME)/lib/libnet.a $(MOOON_HOME)/lib/libsys.a $(MOOON_HOME)/lib/libutil.a
+AM_LDFLAGS  += -fPIC
+AM_CXXFLAGS += -fPIC
+
+bindir=$(prefix)/bin
+bin_PROGRAMS = hs
+
+hs_SOURCES =
+
+install-data-hook:
+	mkdir -p $(prefix)/bin
+	mkdir -p $(prefix)/log
+	cp http_stress $(prefix)/bin/
+
+uninstall-hook:
+	rm -f $(prefix)/bin/hs

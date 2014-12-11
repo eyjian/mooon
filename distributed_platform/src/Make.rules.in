@@ -1,0 +1,7 @@
+# -march=pentium4 for 32bit
+MY_CXXFLAGS = -march=pentium4
+AM_LDFLAGS  = -rdynamic
+AM_CXXFLAGS = $(MY_CXXFLAGS) -D_GNU_SOURCE -rdynamic -Wall
+
+INCLUDES = -I$(top_srcdir)/../include -I$(MOOON_HOME)/include
+LDADD    = -L$(MOOON_HOME)/lib

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="gb2312"?>
+<jian>
+	<scheduler thread_number="10" queue_size="100000" timeout_milliseconds="2000" />
+	<inputor thread_number="1" timeout_milliseconds="1000" keep_alive_second="60" server_ip="eth0" server_port="6666" />
+</jian>

@@ -1,0 +1,8 @@
+GTF: General TCP server Framework
+
+注意事项：
+1.不要在src目录下存放无关的cpp文件，也不要在include目录下存放非对外头文件
+2.不支持c文件，只支持cpp文件
+
+如何编译？
+当第一次从SVN下载代码后，在执行automake操作之前，需要执行一次bootstrap.sh。

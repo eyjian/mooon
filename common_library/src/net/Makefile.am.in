@@ -1,0 +1,22 @@
+include $(top_srcdir)/Make.rules
+AUTOMAKE_OPTIONS= foreign
+
+INCLUDES   +=
+LDADD      += -L$(top_srcdir)/util -lutil -L$(top_srcdir)/sys -lsys
+AM_LDFLAGS  += -fPIC -shared
+AM_CXXFLAGS += -fPIC
+
+libdir=$(prefix)/lib
+lib_LIBRARIES = libnet.a
+libnet_a_SOURCES = 
+
+moduledir=$(prefix)/lib
+module_PROGRAMS = libnet.so
+libnet_so_SOURCES =
+
+install-data-hook:
+	find $(prefix)/include/net -name .svn |xargs rm -fr
+	mkdir -p $(prefix)/include&&cp -r $(top_srcdir)/../include/net $(prefix)/include/
+
+uninstall-hook:
+	rm -fr $(prefix)/include/net

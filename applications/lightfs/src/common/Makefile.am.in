@@ -1,0 +1,15 @@
+include $(top_srcdir)/Make.rules
+AUTOMAKE_OPTIONS= foreign
+INCLUDES   += 
+LDADD      += -lz $(MOOON_HOME)/lib/libsys.a $(MOOON_HOME)/lib/libutil.a
+AM_LDFLAGS  += -pthread -lrt -ldl
+AM_CXXFLAGS +=
+
+libdir=$(prefix)/lib
+lib_LIBRARIES = libcommon.a
+libcommon_a_SOURCES = file_indexer.cc file_indexer_manager.cc util.cc
+
+bindir=$(prefix)/bin
+bin_PROGRAMS = file_indexer_test 
+file_indexer_test_LDADD = libcommon.a $(LDADD)
+file_indexer_test_SOURCES = file_indexer_test.cc

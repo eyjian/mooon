@@ -1,0 +1,8 @@
+GTF: General TCP server Framework
+
+注意事项：
+1.不要在src目录下存放无关的cpp文件，也不要在include目录下存放非对外头文件
+2.不支持c文件，只支持cpp文件
+
+如何编译？
+当第一次从SVN下载代码后，先执行gen_makefile_am.sh，以生成Makefile.am文件，然后再运行gen_configure_ac.sh，以生成Makefile.in文件，最后执行configure，如果没有出错，就可以开始make了。

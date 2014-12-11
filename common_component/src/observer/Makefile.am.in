@@ -1,0 +1,23 @@
+include $(top_srcdir)/Make.rules
+AUTOMAKE_OPTIONS= foreign
+
+INCLUDES   +=
+LDADD      += -lmcommon
+AM_LDFLAGS  += -fPIC -shared -pthread -lrt
+AM_CXXFLAGS += -fPIC
+
+libdir = $(prefix)/lib
+lib_LIBRARIES = libobserver.a
+libobserver_a_SOURCES =
+
+moduledir = $(prefix)/lib
+module_PROGRAMS = libobserver.so
+libobserver_so_SOURCES =
+
+install-data-hook:
+	mkdir -p $(prefix)/include
+	find $(prefix)/include/observer -name .svn |xargs rm -fr
+	cp -r $(top_srcdir)/../include/observer $(prefix)/include/
+
+uninstall-hook:
+	rm -fr $(prefix)/include/observer

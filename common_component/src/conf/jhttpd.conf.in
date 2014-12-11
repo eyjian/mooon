@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="gb2312"?>
+<JWS>
+	<thread number="1" timeout="1000" waiter_number="1000" epoll_size="10000" keep_alive_second="60" />
+
+	<virtual_host domain_name="www.hadoopor.com" >
+		<listen ip="eth0" port="8000" />
+		<document root="/" index="index.htm" />
+	</virtual_host>
+</JWS>

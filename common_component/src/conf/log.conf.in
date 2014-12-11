@@ -1,0 +1,21 @@
+# 定义了1个category sub
+log4j.rootCategory=DEBUG, rootAppender
+log4j.category.sub=DEBUG, sub
+
+# 设置sub的additivity属性，false表示不打屏，默认为true打屏
+log4j.additivity.sub=false
+
+# 定义rootAppender类型和layout属性
+log4j.appender.rootAppender=org.apache.log4j.ConsoleAppender
+log4j.appender.rootAppender.layout=org.apache.log4j.SimpleLayout
+
+# 定义sub的属性
+log4j.appender.sub=org.apache.log4j.RollingFileAppender
+log4j.appender.sub.fileName=../log/jhttpd.log
+log4j.appender.sub.layout=org.apache.log4j.PatternLayout
+# 如果需要记录日志时自动加上换行符，只需要在加上%n
+log4j.appender.sub.layout.ConversionPattern=[%d][%t][%p] %m
+
+# 日志文件的滚动个数和单个文件大小
+log4j.appender.sub.MaxBackupIndex=10
+log4j.appender.sub.MaxFileSize=100MB

@@ -1,0 +1,66 @@
+mooon模板的automake、autoconf、m4和libtool版本信息
+
+autoconf --version
+autoconf (GNU Autoconf) 2.59
+
+automake --version
+automake (GNU automake) 1.9.6
+
+m4 --version
+GNU M4 1.4.4
+
+libtool --version
+ltmain.sh (GNU libtool) 1.5.22
+
+如果在上述版本的libtool遇到如下错误：
+
+configure.ac:64: error: possibly undefined macro: AC_PROG_LIBTOOL
+      If this token and others are legitimate, please use m4_pattern_allow.
+      See the Autoconf documentation.
+请升级libtool版本，下面这个版本测试通过：
+libtool --version
+libtool (GNU libtool) 2.4
+
+下载网址：
+http://mirrors.ustc.edu.cn/gnu/libtool/libtool-2.4.tar.gz
+
+automake、autoconf和m4可以在http://ftp.gnu.org/gnu找到各种版本的源代码安装包。
+
+如果过程中仍遇到如下错误：
+../libtool: line 816: X--tag=CXX: command not found
+../libtool: line 849: libtool: ignoring unknown tag : command not found
+../libtool: line 816: X--mode=link: command not found
+../libtool: line 966: *** Warning: inferring the mode of operation is deprecated.: command not found
+../libtool: line 967: *** Future versions of Libtool will require -mode=MODE be specified.: command not found
+gcc: no input files
+gcc: no input files
+gcc: no input files
+gcc: no input files
+../libtool: line 2120: X-D_GNU_SOURCE: command not found
+../libtool: line 2120: X-DTHREADED: command not found
+../libtool: line 2120: X-rdynamic: command not found
+../libtool: line 2120: X-Wall: command not found
+../libtool: line 2120: X-fPIC: command not found
+../libtool: line 2120: X-g: command not found
+../libtool: line 2120: X-rdynamic: command not found
+../libtool: line 2120: X-fPIC: command not found
+../libtool: line 2284: Xiflow_download: command not found
+../libtool: line 2289: X: command not found
+../libtool: line 2296: Xiflow_download: command not found
+../libtool: line 2436: X-lrt: command not found
+../libtool: line 2436: X-lz: command not found
+../libtool: line 2436: X-lpthread: command not found
+../libtool: line 2436: X-lm: command not found
+../libtool: line 2436: X-ldl: command not found
+../libtool: line 2436: X-lrt: command not found
+../libtool: line 2436: X-lz: command not found
+../libtool: line 2436: X-lpthread: command not found
+../libtool: line 2436: X-lm: command not found
+../libtool: line 2436: X-ldl: command not found
+
+这个错误据说是libtool版本问题，需要回退版本，但实际上不用回退版本也可以解决，在libtool（请注意不是/usr/bin/libtool，而是和configure同一目录下的，在mooon中，就是src目录）文件中找到下列行：
+
+# An echo program that protects backslashes.
+ECHO="printf %s\\n"
+
+将ECHO一句换成：echo="echo"，问题即可得到解决，如果没有ECHO="printf %s\\n"一行，但有ECHO="echo"一行，那解决方法是相同的。

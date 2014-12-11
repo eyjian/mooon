@@ -1,0 +1,12 @@
+include $(top_srcdir)/Make.rules
+AUTOMAKE_OPTIONS= foreign
+
+INCLUDES   +=
+LDADD      += 
+AM_LDFLAGS  +=
+AM_CXXFLAGS +=
+
+bindir=$(prefix)/bin
+bin_PROGRAMS = loader
+
+loader_SOURCES = 

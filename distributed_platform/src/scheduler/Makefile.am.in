@@ -1,0 +1,17 @@
+include $(top_srcdir)/Make.rules
+AUTOMAKE_OPTIONS= foreign
+
+INCLUDES   +=
+LDADD      += -lmcommon
+AM_LDFLAGS  += -fPIC -shared
+AM_CXXFLAGS += -fPIC
+
+moduledir = $(prefix)/lib
+module_PROGRAMS = libscheduler.so
+libscheduler_so_SOURCES =
+
+install-data-hook:
+	mkdir -p $(prefix)/include&&cp -r $(top_srcdir)/../include/scheduler $(prefix)/include/
+
+uninstall-hook:
+	rm -fr $(prefix)/include/scheduler

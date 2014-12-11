@@ -1,0 +1,20 @@
+include $(top_srcdir)/Make.rules
+AUTOMAKE_OPTIONS= foreign
+
+INCLUDES   +=
+LDADD      += -lutil -lsys -lnet -lxtinyxml -lserver -lhttp_parser
+AM_LDFLAGS  += -fPIC
+AM_CXXFLAGS += -fPIC
+
+bindir=$(prefix)/bin
+bin_PROGRAMS = general_server
+
+general_server_SOURCES =
+
+install-data-hook:
+	mkdir -p $(prefix)/bin
+	mkdir -p $(prefix)/log
+	mkdir -p $(prefix)/conf
+
+uninstall-hook:
+	rm -f $(prefix)/bin/http_stress
