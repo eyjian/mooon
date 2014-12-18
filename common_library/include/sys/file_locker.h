@@ -93,11 +93,17 @@ public:
 
     bool unlock()
     {
+        bool ret = false;
+    
         if (is_locked())
         {
-            flock(_fd, LOCK_UN);
+            if (0 == flock(_fd, LOCK_UN))
+                ret = true;
+
             close(_fd);
         }
+        
+        return ret;
     }
 
     bool is_locked() const
