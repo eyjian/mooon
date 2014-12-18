@@ -26,21 +26,21 @@ UTIL_NAMESPACE_BEGIN
 class CStringUtil
 {
 public:
-	/** 删除字符串尾部从指定字符开始的内容
-	  * @source: 需要处理的字符串
-	  * @c: 分隔字符
-	  * @example:  如果str为“/usr/local/test/bin/”，而c为“/”，
+    /** 删除字符串尾部从指定字符开始的内容
+      * @source: 需要处理的字符串
+      * @c: 分隔字符
+      * @example:  如果str为“/usr/local/test/bin/”，而c为“/”，
       *            则处理后str变成“/usr/local/test/bin”
-	  */
-	static void remove_last(std::string& source, char c);
+      */
+    static void remove_last(std::string& source, char c);
 
-	/** 删除字符串尾部从指定字符串开始的内容
-	  * @source: 需要处理的字符串
-	  * @sep: 分隔字符串
-	  * @example: 如果str为“/usr/local/test/bin/tt”，而sep为“/bin/”，
+    /** 删除字符串尾部从指定字符串开始的内容
+      * @source: 需要处理的字符串
+      * @sep: 分隔字符串
+      * @example: 如果str为“/usr/local/test/bin/tt”，而sep为“/bin/”，
       *           则处理后str变成“/usr/local/test
-	  */
-	static void remove_last(std::string& source, const std::string& sep);
+      */
+    static void remove_last(std::string& source, const std::string& sep);
 
     /** 将字符串中的所有小写字符转换成大写 */
     static void to_upper(char* source);
@@ -65,89 +65,89 @@ public:
     static void trim_right(char* source);        
     static void trim_right(std::string& source);
 
-	/**
-	  * 字符串转换成整数函数
-	  */
+    /**
+      * 字符串转换成整数函数
+      */
 	
     /** 将字符串转换成8位的有符号整数
-	  * @source: 待转换成整数的字符串
-	  * @result: 转换后的整数
+      * @source: 待转换成整数的字符串
+      * @result: 转换后的整数
       * @converted_length: 需要进行数字转换的字符个数，超过部分不做解析，如果取值为0则处理整个字符串
       * @ignored_zero: 是否允许允许字符串以0打头，并自动忽略
-	  * @return: 如果转换成功返回true，否则返回false
-	  */
+      * @return: 如果转换成功返回true，否则返回false
+      */
     static bool string2int(const char* source, int8_t& result, uint8_t converted_length=0, bool ignored_zero=false);
-	static bool string2int8(const char* source, int8_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
+    static bool string2int8(const char* source, int8_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
 
-	/** 将字符串转换成16位的有符号整数
-	  * @source: 待转换成整数的字符串
-	  * @result: 转换后的整数
+    /** 将字符串转换成16位的有符号整数
+      * @source: 待转换成整数的字符串
+      * @result: 转换后的整数
       * @converted_length: 需要进行数字转换的字符个数，超过部分不做解析，如果取值为0则处理整个字符串
       * @ignored_zero: 是否允许允许字符串以0打头，并自动忽略
-	  * @return: 如果转换成功返回true，否则返回false
-	  */
+      * @return: 如果转换成功返回true，否则返回false
+      */
     static bool string2int(const char* source, int16_t& result, uint8_t converted_length=0, bool ignored_zero=false);
 	static bool string2int16(const char* source, int16_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
 
-	/** 将字符串转换成32位的有符号整数
-	  * @source: 待转换成整数的字符串
-	  * @result: 转换后的整数
+    /** 将字符串转换成32位的有符号整数
+      * @source: 待转换成整数的字符串
+      * @result: 转换后的整数
       * @converted_length: 需要进行数字转换的字符个数，超过部分不做解析，如果取值为0则处理整个字符串
       * @ignored_zero: 是否允许允许字符串以0打头，并自动忽略
-	  * @return: 如果转换成功返回true，否则返回false
-	  */
+      * @return: 如果转换成功返回true，否则返回false
+      */
     static bool string2int(const char* source, int32_t& result, uint8_t converted_length=0, bool ignored_zero=false);
-	static bool string2int32(const char* source, int32_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
+    static bool string2int32(const char* source, int32_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
 
-	/** 将字符串转换成64位的有符号整数
-	  * @source: 待转换成整数的字符串
-	  * @result: 转换后的整数
+    /** 将字符串转换成64位的有符号整数
+      * @source: 待转换成整数的字符串
+      * @result: 转换后的整数
       * @converted_length: 需要进行数字转换的字符个数，超过部分不做解析，如果取值为0则处理整个字符串
       * @ignored_zero: 是否允许允许字符串以0打头，并自动忽略
-	  * @return: 如果转换成功返回true，否则返回false
-	  */
+      * @return: 如果转换成功返回true，否则返回false
+      */
     static bool string2int(const char* source, int64_t& result, uint8_t converted_length=0, bool ignored_zero=false);
-	static bool string2int64(const char* source, int64_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
+    static bool string2int64(const char* source, int64_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
 
     /** 将字符串转换成8位的无符号整数
-	  * @source: 待转换成整数的字符串
-	  * @result: 转换后的整数
+      * @source: 待转换成整数的字符串
+      * @result: 转换后的整数
       * @converted_length: 需要进行数字转换的字符个数，超过部分不做解析，如果取值为0则处理整个字符串
       * @ignored_zero: 是否允许允许字符串以0打头，并自动忽略
-	  * @return: 如果转换成功返回true，否则返回false
-	  */
+      * @return: 如果转换成功返回true，否则返回false
+      */
     static bool string2int(const char* source, uint8_t& result, uint8_t converted_length=0, bool ignored_zero=false);
-	static bool string2uint8(const char* source, uint8_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
+    static bool string2uint8(const char* source, uint8_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
 
-	/** 将字符串转换成16位的无符号整数
-	  * @source: 待转换成整数的字符串
-	  * @result: 转换后的整数
+    /** 将字符串转换成16位的无符号整数
+      * @source: 待转换成整数的字符串
+      * @result: 转换后的整数
       * @converted_length: 需要进行数字转换的字符个数，超过部分不做解析，如果取值为0则处理整个字符串
       * @ignored_zero: 是否允许允许字符串以0打头，并自动忽略
-	  * @return: 如果转换成功返回true，否则返回false
-	  */
+      * @return: 如果转换成功返回true，否则返回false
+      */
     static bool string2int(const char* source, uint16_t& result, uint8_t converted_length=0, bool ignored_zero=false);
-	static bool string2uint16(const char* source, uint16_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
+    static bool string2uint16(const char* source, uint16_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
 
-	/** 将字符串转换成32位的无符号整数
-	  * @source: 待转换成整数的字符串
-	  * @result: 转换后的整数
+    /** 将字符串转换成32位的无符号整数
+      * @source: 待转换成整数的字符串
+      * @result: 转换后的整数
       * @converted_length: 需要进行数字转换的字符个数，超过部分不做解析，如果取值为0则处理整个字符串
       * @ignored_zero: 是否允许允许字符串以0打头，并自动忽略
-	  * @return: 如果转换成功返回true，否则返回false
-	  */
+      * @return: 如果转换成功返回true，否则返回false
+      */
     static bool string2int(const char* source, uint32_t& result, uint8_t converted_length=0, bool ignored_zero=false);
-	static bool string2uint32(const char* source, uint32_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
+    static bool string2uint32(const char* source, uint32_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
 
-	/** 将字符串转换成64位的无符号整数
-	  * @source: 待转换成整数的字符串
-	  * @result: 转换后的整数
+    /** 将字符串转换成64位的无符号整数
+      * @source: 待转换成整数的字符串
+      * @result: 转换后的整数
       * @converted_length: 需要进行数字转换的字符个数，超过部分不做解析，如果取值为0则处理整个字符串
       * @ignored_zero: 是否允许允许字符串以0打头，并自动忽略
-	  * @return: 如果转换成功返回true，否则返回false
-	  */
+      * @return: 如果转换成功返回true，否则返回false
+      */
     static bool string2int(const char* source, uint64_t& result, uint8_t converted_length=0, bool ignored_zero=false);
-	static bool string2uint64(const char* source, uint64_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
+    static bool string2uint64(const char* source, uint64_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
 
     static std::string int_tostring(int16_t source);
     static std::string int16_tostring(int16_t source);    
