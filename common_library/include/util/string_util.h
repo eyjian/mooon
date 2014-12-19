@@ -186,7 +186,7 @@ public:
 
     /** 万用类型转换函数 */
     template <typename Any>
-    std::string any2string(Any any)
+    static std::string any2string(Any any)
     {
         std::stringstream s;
         s << any;
