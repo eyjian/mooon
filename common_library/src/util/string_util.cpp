@@ -505,6 +505,11 @@ uint32_t CStringUtil::hash(const char *str, int len)
     return h;
 }
 
+// snprintf()第2个参数的大小，要求包含结尾符'\0'
+// snprintf()的返回值，返回的是期望大小，但不包含结尾符'\0'，下面假设snprintf()的第二个参数值为10，则：
+// 1) 当str为"abc"时，它的返回值的大小是3，"abc"的字符个数刚好是3；
+// 2) 当str为"1234567890"时，它的返回值大小是10，"1234567890"的字符个数刚好是10；
+// 3) 当str为"1234567890X"时，它的返回值大小是11，"1234567890X"的字符个数刚好是11。
 int CStringUtil::fix_snprintf(char *str, size_t size, const char *format, ...)
 {
     va_list ap;
@@ -579,6 +584,11 @@ std::string CStringUtil::extract_filename(const std::string& filepath)
     return filename;
 }
 
+// snprintf()第2个参数的大小，要求包含结尾符'\0'
+// snprintf()的返回值，返回的是期望大小，但不包含结尾符'\0'，下面假设snprintf()的第二个参数值为10，则：
+// 1) 当str为"abc"时，它的返回值的大小是3，"abc"的字符个数刚好是3；
+// 2) 当str为"1234567890"时，它的返回值大小是10，"1234567890"的字符个数刚好是10；
+// 3) 当str为"1234567890X"时，它的返回值大小是11，"1234567890X"的字符个数刚好是11。
 // 最多支持10240个ANSI字符，超过的会被截断，但调用者可能不清楚是否发生了截断@_@
 std::string CStringUtil::format_string(const char* format, ...)
 {
@@ -591,7 +601,7 @@ std::string CStringUtil::format_string(const char* format, ...)
 
     // vsnprintf中的第二参数大小是要求包含结尾符的
     int expected = vsnprintf(buffer, size + 1, format, ap);
-    if (expected > ((int)size-1))
+    if (expected >= ((int)size+1))
     {
         // 防止太长，撑死内存
         if (expected > 10240)
