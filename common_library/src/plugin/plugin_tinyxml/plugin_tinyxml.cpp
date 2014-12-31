@@ -30,7 +30,7 @@ class CConfigReader;
 class CConfigFile: public sys::IConfigFile
 {
 private:
-	virtual bool open(const std::string& xmlfile);
+    virtual bool open(const std::string& xmlfile);
     virtual void close();
     virtual sys::IConfigReader* get_config_reader();
     virtual void free_config_reader(sys::IConfigReader* config_reader);
@@ -40,7 +40,7 @@ private:
     virtual std::string get_error_message() const;
 
 private:
-	TiXmlDocument _document;
+    TiXmlDocument _document;
 };
 
 class CConfigReader: public sys::IConfigReader
@@ -90,7 +90,7 @@ private:
 
 bool CConfigFile::open(const std::string& xmlfile)
 {    
-	return _document.LoadFile(xmlfile.c_str());
+    return _document.LoadFile(xmlfile.c_str());
 }
 
 void CConfigFile::close()
@@ -132,59 +132,59 @@ CConfigReader::CConfigReader(TiXmlElement* root)
 
 TiXmlElement* CConfigReader::select_element(const std::string& path)
 {
-	util::CTokenList::TTokenList token_list;
-	util::CTokenList::parse(token_list, path, "/");
+    util::CTokenList::TTokenList token_list;
+    util::CTokenList::parse(token_list, path, "/");
 	
-	// 用以支持：get_string_value("/", "name", value);
-	if (token_list.empty()) return _root;
+    // 用以支持：get_string_value("/", "name", value);
+    if (token_list.empty()) return _root;
 	
-	TiXmlElement* element = _root;	
-	while (!token_list.empty())
-	{
-		std::string token = token_list.front();
-		token_list.pop_front();
+    TiXmlElement* element = _root;	
+    while (!token_list.empty())
+    {
+        std::string token = token_list.front();
+        token_list.pop_front();
 
-		while (true)
-		{
-			if (NULL == element) return NULL;
+        while (true)
+        {
+            if (NULL == element) return NULL;
 
-			const char* element_name = element->Value();
-			if (NULL == element_name) return NULL;			
+            const char* element_name = element->Value();
+            if (NULL == element_name) return NULL;			
 
-			if (0 == strcasecmp(token.c_str(), element_name))
-			{
-				if (token_list.empty()) return element;
+            if (0 == strcasecmp(token.c_str(), element_name))
+            {
+                if (token_list.empty()) return element;
 				
-				element = element->FirstChildElement();
-				break;
-			}
-			else
-			{
-				element = element->NextSiblingElement();
-			}
-		}
-	}
+                element = element->FirstChildElement();
+                break;
+            }
+            else
+            {
+                element = element->NextSiblingElement();
+            }
+        }
+    }
 
-	return NULL;
+    return NULL;
 }
 
 TiXmlAttribute* CConfigReader::select_attribute(const std::string& path, const std::string& name)
 {
-	TiXmlElement* element = this->select_element(path);
-	if (NULL == element) return NULL;
+    TiXmlElement* element = this->select_element(path);
+    if (NULL == element) return NULL;
 	
-	TiXmlAttribute* attribute = element->FirstAttribute();
-	while (attribute != NULL)
-	{		
-		const char* name_tmp = attribute->Name();
+    TiXmlAttribute* attribute = element->FirstAttribute();
+    while (attribute != NULL)
+    {		
+        const char* name_tmp = attribute->Name();
 		
-		if (NULL == name_tmp) return NULL;
+        if (NULL == name_tmp) return NULL;
         if (0 == strcasecmp(name.c_str(), name_tmp)) return attribute;
 		
-		attribute = attribute->Next();
-	}
+        attribute = attribute->Next();
+    }
 
-	return NULL;
+    return NULL;
 }
 
 bool CConfigReader::select_elements(const std::string& path, TTiXmlElementArray& element_array)
@@ -202,10 +202,10 @@ bool CConfigReader::select_elements(const std::string& path, TTiXmlElementArray&
     util::CTokenList::parse(token_list, path, "/");
     parent_element_array.push_back(_root);
 
-	while (!token_list.empty())
-	{
-		token = token_list.front();
-		token_list.pop_front();
+    while (!token_list.empty())
+    {
+        token = token_list.front();
+        token_list.pop_front();
         
         // returns zero for a successful compilation or an error code for failure
         int errcode = regcomp(&reg, token.c_str(), REG_EXTENDED);
@@ -217,11 +217,11 @@ bool CConfigReader::select_elements(const std::string& path, TTiXmlElementArray&
         child_element_array.clear();
         for (i=0; i<parent_element_array.size(); ++i)
         {
-			element_name =  parent_element_array[i]->Value();
-			if (NULL == element_name) continue;			
+            element_name =  parent_element_array[i]->Value();
+            if (NULL == element_name) continue;			
 
             // returns zero for a successful match or REG_NOMATCH for failure
-			if (0 == regexec(&reg, element_name, 0, NULL, 0))
+            if (0 == regexec(&reg, element_name, 0, NULL, 0))
             {
                 if (token_list.empty())
                 {     
@@ -248,21 +248,21 @@ bool CConfigReader::select_elements(const std::string& path, TTiXmlElementArray&
         }
 
         regfree(&reg);
-	}
+    }
 
-	return !element_array.empty();
+    return !element_array.empty();
 }
 
 bool CConfigReader::path_exist(const std::string& path)
 {
-	TiXmlElement* element = this->select_element(path);
-	return (NULL == element)? false: true;
+    TiXmlElement* element = this->select_element(path);
+    return (NULL == element)? false: true;
 }
 
 bool CConfigReader::name_exist(const std::string& path, const std::string& name)
 {
-	TiXmlAttribute* attribute = this->select_attribute(path, name);
-	return (NULL == attribute)? false: true;
+    TiXmlAttribute* attribute = this->select_attribute(path, name);
+    return (NULL == attribute)? false: true;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -288,20 +288,20 @@ bool CConfigReader::get_bool_value(const std::string& path, const std::string& n
 
 bool CConfigReader::get_string_value(const std::string& path, const std::string& name, std::string& value)
 {
-	TiXmlAttribute* attribute = this->select_attribute(path, name);
-	if (NULL == attribute) return false;
+    TiXmlAttribute* attribute = this->select_attribute(path, name);
+    if (NULL == attribute) return false;
 
-	const char* value_tmp = attribute->Value();
-	if (NULL == value_tmp) return false;
+    const char* value_tmp = attribute->Value();
+    if (NULL == value_tmp) return false;
 
-	value = value_tmp;
-	return true;
+    value = value_tmp;
+    return true;
 }
 
 bool CConfigReader::get_int16_value(const std::string& path, const std::string& name, int16_t& value)
 {
     TiXmlAttribute* attribute = this->select_attribute(path, name);
-	if (NULL == attribute) return false;
+    if (NULL == attribute) return false;
 
     const char* value_tmp = attribute->Value();
     if (NULL == value_tmp) return false;
@@ -316,7 +316,7 @@ bool CConfigReader::get_int16_value(const std::string& path, const std::string& 
 bool CConfigReader::get_int32_value(const std::string& path, const std::string& name, int32_t& value)
 {
     TiXmlAttribute* attribute = this->select_attribute(path, name);
-	if (NULL == attribute) return false;
+    if (NULL == attribute) return false;
 
     const char* value_tmp = attribute->Value();
     if (NULL == value_tmp) return false;
@@ -331,7 +331,7 @@ bool CConfigReader::get_int32_value(const std::string& path, const std::string& 
 bool CConfigReader::get_int64_value(const std::string& path, const std::string& name, int64_t& value)
 {
     TiXmlAttribute* attribute = this->select_attribute(path, name);
-	if (NULL == attribute) return false;
+    if (NULL == attribute) return false;
 
     const char* value_tmp = attribute->Value();
     if (NULL == value_tmp) return false;
@@ -346,7 +346,7 @@ bool CConfigReader::get_int64_value(const std::string& path, const std::string& 
 bool CConfigReader::get_uint16_value(const std::string& path, const std::string& name, uint16_t& value)
 {
     TiXmlAttribute* attribute = this->select_attribute(path, name);
-	if (NULL == attribute) return false;
+    if (NULL == attribute) return false;
 
     const char* value_tmp = attribute->Value();
     if (NULL == value_tmp) return false;
@@ -361,7 +361,7 @@ bool CConfigReader::get_uint16_value(const std::string& path, const std::string&
 bool CConfigReader::get_uint32_value(const std::string& path, const std::string& name, uint32_t& value)
 {
     TiXmlAttribute* attribute = this->select_attribute(path, name);
-	if (NULL == attribute) return false;
+    if (NULL == attribute) return false;
 
     const char* value_tmp = attribute->Value();
     if (NULL == value_tmp) return false;
@@ -376,7 +376,7 @@ bool CConfigReader::get_uint32_value(const std::string& path, const std::string&
 bool CConfigReader::get_uint64_value(const std::string& path, const std::string& name, uint64_t& value)
 {
     TiXmlAttribute* attribute = this->select_attribute(path, name);
-	if (NULL == attribute) return false;
+    if (NULL == attribute) return false;
 	
     const char* value_tmp = attribute->Value();
     if (NULL == value_tmp) return false;
@@ -571,12 +571,12 @@ bool CConfigReader::get_value(TiXmlElement* element, const std::string& name, st
 
 sys::IConfigFile* create_config_file()
 {
-	return new CConfigFile;
+    return new CConfigFile;
 }
 
 void destroy_config_file(sys::IConfigFile* config_file)
 {
-	delete (CConfigFile*)config_file;
+    delete (CConfigFile*)config_file;
 }
 
 LIBPLUGIN_NAMESPACE_END
