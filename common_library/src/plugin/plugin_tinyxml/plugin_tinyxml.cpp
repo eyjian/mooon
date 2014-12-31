@@ -196,7 +196,7 @@ bool CConfigReader::select_elements(const std::string& path, TTiXmlElementArray&
     
     TiXmlElement* element = NULL;
     TTiXmlElementArray child_element_array;
-	TTiXmlElementArray parent_element_array;
+    TTiXmlElementArray parent_element_array;
     util::CTokenList::TTokenList token_list;
 
     util::CTokenList::parse(token_list, path, "/");
