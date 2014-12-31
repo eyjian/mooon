@@ -135,6 +135,9 @@ TiXmlElement* CConfigReader::select_element(const std::string& path)
 	util::CTokenList::TTokenList token_list;
 	util::CTokenList::parse(token_list, path, "/");
 	
+	// 用以支持：get_string_value("/", "name", value);
+	if (token_list.empty()) return _root;
+	
 	TiXmlElement* element = _root;	
 	while (!token_list.empty())
 	{
