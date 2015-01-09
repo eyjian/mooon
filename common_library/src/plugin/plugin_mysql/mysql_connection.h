@@ -121,7 +121,7 @@ public:
       * @exception: 如出错抛出CDBException异常
       */
     CMySQLRecordset* query(const char* format, va_list& args);
-    CMySQLRecordset* query(const char* format, ...);
+    CMySQLRecordset* query(const char* format, ...) __attribute__((format(printf, 2, 3)));
     int query(sys::DbTable* table, const char* format, va_list& args);
     int query(sys::DbTable* table, const char* format, ...);
     
@@ -131,13 +131,13 @@ public:
      * @return 返回符合条件的行数
      */
     int get_field_value(std::string* value, const char* format, va_list& args);
-    int get_field_value(std::string* value, const char* format, ...);
+    int get_field_value(std::string* value, const char* format, ...) __attribute__((format(printf, 3, 4)));
 
     /***
      * 取得多个字段的第一行的值
      */
     int get_fields_value(sys::DbFields *values, const char* format, va_list& args);
-    int get_fields_value(sys::DbFields *values, const char* format, ...);
+    int get_fields_value(sys::DbFields *values, const char* format, ...) __attribute__((format(printf, 3, 4)));
 
     /***
       * 释放query得到的记录集
@@ -150,7 +150,7 @@ public:
       * @exception: 如出错抛出CDBException异常
       */
     size_t update(const char* format, va_list& args);
-    size_t update(const char* format, ...);
+    size_t update(const char* format, ...) __attribute__((format(printf, 2, 3)));
 
 private:
     bool _is_established;   /** 是否已经和数据库建立的连接 */
@@ -218,7 +218,7 @@ private:
       * @return: 如成功返回记录集的指针
       * @exception: 如出错抛出CDBException异常
       */
-    virtual sys::IRecordset* query(const char* format, ...)
+    virtual sys::IRecordset* query(const char* format, ...) __attribute__((format(printf, 2, 3)))
     {
         va_list args;
         va_start(args, format);
@@ -227,7 +227,7 @@ private:
         return _mysql_connection.query(format, args);
     }
     
-    virtual int query(sys::DbTable* table, const char* format, ...)
+    virtual int query(sys::DbTable* table, const char* format, ...) __attribute__((format(printf, 3, 4)))
     {
         va_list args;
         va_start(args, format);
@@ -246,7 +246,7 @@ private:
         return _mysql_connection.get_field_value(value, format, args);
     }
 
-    int get_field_value(std::string* value, const char* format, ...)
+    int get_field_value(std::string* value, const char* format, ...) __attribute__((format(printf, 3, 4)))
     {
         va_list args;
         va_start(args, format);
@@ -263,7 +263,7 @@ private:
         return _mysql_connection.get_fields_value(values, format, args);
     }
 
-    int get_fields_value(sys::DbFields *values, const char* format, ...)
+    int get_fields_value(sys::DbFields *values, const char* format, ...) __attribute__((format(printf, 3, 4)))
     {
         va_list args;
         va_start(args, format);
@@ -285,7 +285,7 @@ private:
       * @return: 如成功返回受影响的记录个数
       * @exception: 如出错抛出CDBException异常
       */
-    virtual size_t update(const char* format, ...)
+    virtual size_t update(const char* format, ...) __attribute__((format(printf, 2, 3)))
     {
         va_list args;
         va_start(args, format);
@@ -352,7 +352,7 @@ private:
       * @return: 如成功返回记录集的指针
       * @exception: 如出错抛出CDBException异常
       */
-    virtual sys::IRecordset* query(const char* format, ...)
+    virtual sys::IRecordset* query(const char* format, ...) __attribute__((format(printf, 2, 3)))
     {
         va_list args;
         va_start(args, format);
@@ -361,7 +361,7 @@ private:
         return _mysql_connection.query(format, args);
     }
     
-    virtual int query(sys::DbTable* table, const char* format, ...)
+    virtual int query(sys::DbTable* table, const char* format, ...) __attribute__((format(printf, 3, 4)))
     {
         va_list args;
         va_start(args, format);
@@ -419,7 +419,7 @@ private:
       * @return: 如成功返回受影响的记录个数
       * @exception: 如出错抛出CDBException异常
       */
-    virtual size_t update(const char* format, ...)
+    virtual size_t update(const char* format, ...) __attribute__((format(printf, 2, 3)))
     {
         va_list args;
         va_start(args, format);
