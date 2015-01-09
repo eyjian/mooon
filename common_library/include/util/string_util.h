@@ -178,7 +178,7 @@ public:
       * 不同于标准库的snprintf，这里的snprintf总是保证返回实际向str写入的字节数，
       * 包括结尾符，而不管size是否足够容纳，其它行为相同
       */
-    static int fix_snprintf(char *str, size_t size, const char *format, ...);
+    static int fix_snprintf(char *str, size_t size, const char *format, ...) __attribute__((format(printf, 3, 4)));
     static int fix_vsnprintf(char *str, size_t size, const char *format, va_list ap);
 
     /** 路径转换成文件名 */
@@ -253,7 +253,7 @@ public:
       * 请注意字符串的长度不能超过10240字节，否则会被截断
       * @return 返回生成的字符串
       */
-    static std::string format_string(const char* format, ...);
+    static std::string format_string(const char* format, ...) __attribute__((format(printf, 1, 2)));
 };
 
 UTIL_NAMESPACE_END
