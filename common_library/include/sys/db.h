@@ -170,8 +170,8 @@ public:
       * @return: 如成功返回记录集的指针，这时必须调用release_recordset，否则有内存泄漏
       * @exception: 如出错抛出CDBException异常
       */
-    virtual IRecordset* query(const char* format, ...) = 0;
-    virtual int query(DbTable* table, const char* format, ...) = 0;
+    virtual IRecordset* query(const char* format, ...) __attribute__((format(printf, 2, 3))) = 0;
+    virtual int query(DbTable* table, const char* format, ...) __attribute__((format(printf, 3, 4))) = 0;
 
     /***
      * 取单个字段第一行的值
@@ -179,13 +179,13 @@ public:
      * @return 返回符合条件的行数
      */
     virtual int get_field_value(std::string* value, const char* format, va_list& args) = 0;
-    virtual int get_field_value(std::string* value, const char* format, ...) = 0;
+    virtual int get_field_value(std::string* value, const char* format, ...) __attribute__((format(printf, 3, 4))) = 0;
 
     /***
      * 取得多个字段的第一行的值
      */
     virtual int get_fields_value(DbFields *values, const char* format, va_list& args) = 0;
-    virtual int get_fields_value(DbFields *values, const char* format, ...) = 0;
+    virtual int get_fields_value(DbFields *values, const char* format, ...) __attribute__((format(printf, 3, 4))) = 0;
 
     /***
       * 释放query得到的记录集
@@ -197,7 +197,7 @@ public:
       * @return: 如成功返回受影响的记录个数
       * @exception: 如出错抛出CDBException异常
       */
-    virtual size_t update(const char* format, ...) = 0;
+    virtual size_t update(const char* format, ...) __attribute__((format(printf, 2, 3))) = 0;
 };
 
 /***
@@ -222,8 +222,8 @@ public:
       * @return: 如成功返回记录集的指针，这时必须调用release_recordset，否则有内存泄漏
       * @exception: 如出错抛出CDBException异常
       */
-    virtual IRecordset* query(const char* format, ...) = 0;
-    virtual int query(DbTable* table, const char* format, ...) = 0;
+    virtual IRecordset* query(const char* format, ...) __attribute__((format(printf, 2, 3))) = 0;
+    virtual int query(DbTable* table, const char* format, ...) __attribute__((format(printf, 3, 4))) = 0;
     
     /***
      * 取单个字段第一行的值
@@ -231,13 +231,13 @@ public:
      * @return 返回符合条件的行数
      */
     virtual int get_field_value(std::string* value, const char* format, va_list& args) = 0;
-    virtual int get_field_value(std::string* value, const char* format, ...) = 0;
+    virtual int get_field_value(std::string* value, const char* format, ...) __attribute__((format(printf, 3, 4))) = 0;
 
     /***
      * 取得多个字段的第一行的值
      */
     virtual int get_fields_value(DbFields *values, const char* format, va_list& args) = 0;
-    virtual int get_fields_value(DbFields *values, const char* format, ...) = 0;
+    virtual int get_fields_value(DbFields *values, const char* format, ...) __attribute__((format(printf, 3, 4))) = 0;
 
     /***
       * 释放query得到的记录集
@@ -249,7 +249,7 @@ public:
       * @return: 如成功返回受影响的记录个数
       * @exception: 如出错抛出CDBException异常
       */
-    virtual size_t update(const char* format, ...) = 0;
+    virtual size_t update(const char* format, ...) __attribute__((format(printf, 2, 3))) = 0;
 };
 
 /***
