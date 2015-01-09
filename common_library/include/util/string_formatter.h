@@ -71,7 +71,7 @@ class StringFormatter
 {
 public:
     // 使用简单，固化buffer_size
-    explicit StringFormatter(const char* format, ...) throw (std::bad_alloc)
+    explicit StringFormatter(const char* format, ...) throw (std::bad_alloc) __attribute__((format(printf, 2, 3)))
         : _buffer_size(1024)
     {
         va_list ap;
@@ -82,7 +82,7 @@ public:
     }
 
     // 增加灵活性，buffer_size由参数传入
-    explicit StringFormatter(size_t buffer_size, const char* format, ...) throw (std::bad_alloc)
+    explicit StringFormatter(size_t buffer_size, const char* format, ...) throw (std::bad_alloc) __attribute__((format(printf, 3, 4)))
         : _buffer_size(buffer_size)
     {
         va_list ap;
