@@ -137,14 +137,14 @@ public:
     virtual bool enabled_state();
     virtual bool enabled_trace();
 
-    virtual void log_detail(const char* filename, int lineno, const char* module_name, const char* format, ...);
-    virtual void log_debug(const char* filename, int lineno, const char* module_name, const char* format, ...);
-    virtual void log_info(const char* filename, int lineno, const char* module_name, const char* format, ...);
-    virtual void log_warn(const char* filename, int lineno, const char* module_name, const char* format, ...);
-    virtual void log_error(const char* filename, int lineno, const char* module_name, const char* format, ...);
-    virtual void log_fatal(const char* filename, int lineno, const char* module_name, const char* format, ...);
-    virtual void log_state(const char* filename, int lineno, const char* module_name, const char* format, ...);
-    virtual void log_trace(const char* filename, int lineno, const char* module_name, const char* format, ...);
+    virtual void log_detail(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
+    virtual void log_debug(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
+    virtual void log_info(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
+    virtual void log_warn(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
+    virtual void log_error(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
+    virtual void log_fatal(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
+    virtual void log_state(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
+    virtual void log_trace(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
 
     virtual void bin_log(const char* filename, int lineno, const char* module_name, const char* log, uint16_t size);
 
