@@ -95,7 +95,7 @@ public:
     
     /** 输出日志，象printf一样使用，不自动加换行符 */
     void print(const char* format, va_list& ap);
-    void print(const char* format, ...);
+    void print(const char* format, ...) __attribute__((format(printf, 2, 3)));
 
     /** 刷新日志，因为使用FILE是带缓存的 */
     void flush();
