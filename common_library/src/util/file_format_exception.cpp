@@ -19,10 +19,9 @@
 #include "util/file_format_exception.h"
 UTIL_NAMESPACE_BEGIN
 
-CFileFormatException::CFileFormatException(const char* filename, int line_number, int field_number)
-    :_filename(filename)
-    ,_line_number(line_number)
-    ,_field_number(field_number)
+CFileFormatException::CFileFormatException(const char* file, int line, int field)
+    :CException("format error", -1, file, line)
+    ,_field(field)
 {
 }
 
