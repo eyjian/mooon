@@ -18,21 +18,17 @@
  */
 #ifndef MOOON_UTIL_FILE_FORMAT_EXCEPTION_H
 #define MOOON_UTIL_FILE_FORMAT_EXCEPTION_H
-#include "util/config.h"
+#include "util/exception.h"
 UTIL_NAMESPACE_BEGIN
 
-class CFileFormatException
+class CFileFormatException: public CException
 {
 public:
-    CFileFormatException(const char* filename, int line_number, int field_number=0);
-    const char* get_filename() const { return _filename.c_str(); }
-    int get_line_number() const { return _line_number; }
-    int get_field_number() const { return _field_number; }
+    CFileFormatException(const char* file, int line, int field=0);
+    int field() const { return _field; }
 
-private:
-    std::string _filename; /** 格式存在错误的文件名 */
-    int _line_number;       /** 错误发生的行号 */
-    int _field_number;      /** 错误发生的列号或字段号 */
+private:    
+    int _field; /** 错误发生的列号或字段号 */
 };
 
 UTIL_NAMESPACE_END
