@@ -16,6 +16,7 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  *
+ * 独立的单个头文件，可即时独立使用，只要定义了宏NOT_WITH_MOOON，即不依赖于mooon
  * 简单的写日志类，多进程安全，但非多线程安全，只提供按大小滚动功能
  * 不追求功能，也不追求性能，只求简单，若要功能强、性能高，可以使用CLogger
  *
@@ -453,7 +454,12 @@ inline void CSimpleLogger::print(const char* file, int line, const char* level, 
         {
             // 滚动处理
             if (need_rotate())
-            {                
+            {    
+                // 加文件锁
+                std::string lock_path = _log_dir + std::string("/.") + _filename + std::string(".lock");
+                FileLocker file_locker(lock_path.c_str());
+
+                // _fd可能已被其它进程滚动了，所以这里需要重新open一下
                 std::string log_filepath = _log_dir + std::string("/") + _filename;
                 int fd = open(log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_MODE_DEFAULT);
 
@@ -463,10 +469,7 @@ inline void CSimpleLogger::print(const char* file, int line, const char* level, 
                     // 如果记syslog，这个时候应当调用reset
                 }
                 else
-                {      
-                    std::string lock_path = _log_dir + std::string("/.") + _filename + std::string(".lock");
-                    FileLocker file_locker(lock_path.c_str());
-
+                {                    
                     // 需要再次判断，原因是可能其它进程已处理过了
                     if (need_rotate(fd))
                     {
@@ -561,7 +564,7 @@ inline void CSimpleLogger::set_tag2(const std::string& tag)
 }
 
 /***
-  * 测试代码，可能同时启多个来测试多进程并发写
+  * 测试代码
 #include "simple_logger.h"
 int main()
 {
