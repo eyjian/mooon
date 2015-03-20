@@ -37,8 +37,8 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <time.h>
-#include "sys/file_locker.h"
-SYS_NAMESPACE_BEGIN
+#include "file_locker.h"
+//SYS_NAMESPACE_BEGIN
 
 /**
  * 便于使用的日志宏
@@ -457,30 +457,24 @@ inline void CSimpleLogger::print(const char* file, int line, const char* level, 
             {    
                 // 加文件锁
                 std::string lock_path = _log_dir + std::string("/.") + _filename + std::string(".lock");
-                FileLocker file_locker(lock_path.c_str());
-
+                FileLocker file_locker(lock_path.c_str(), true); // 确保这里一定加锁
+                
                 // _fd可能已被其它进程滚动了，所以这里需要重新open一下
                 std::string log_filepath = _log_dir + std::string("/") + _filename;
                 int fd = open(log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_MODE_DEFAULT);
 
-                if (-1 == fd)
+                // 需要再次判断，原因是可能其它进程已处理过了
+                if (need_rotate(fd))
                 {
-                    // 异常abort，或记syslog，
-                    // 如果记syslog，这个时候应当调用reset
+                    printf("%d to rotate\n", getpid());
+                    close(fd);
+                    rotate_log();
                 }
-                else
-                {                    
-                    // 需要再次判断，原因是可能其它进程已处理过了
-                    if (need_rotate(fd))
-                    {
-                        close(fd);
-                        rotate_log();
-                    }
-                    else // 其它进程完成了滚动
-                    {
-                        close(_fd);
-                        _fd = fd;
-                    }
+                else // 其它进程完成了滚动
+                {
+                    printf("rotate by other: %d\n", getpid());
+                    close(_fd);
+                    _fd = fd;
                 }
             }
         }
@@ -529,6 +523,7 @@ inline void CSimpleLogger::rotate_log()
     }
 
     // 重新创建
+    printf("create %s\n", old_path.c_str());
     _fd = open(old_path.c_str(), O_WRONLY|O_CREAT|O_EXCL, FILE_MODE_DEFAULT);
 }
 
@@ -583,5 +578,5 @@ int main()
 }
 */
 
-SYS_NAMESPACE_END
+//SYS_NAMESPACE_END
 #endif // MOOON_SYS_SIMPLE_LOGGER_H
