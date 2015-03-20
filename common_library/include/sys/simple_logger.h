@@ -16,7 +16,6 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  *
- * 独立的单个头文件，可即时独立使用，只要定义了宏NOT_WITH_MOOON，即不依赖于mooon
  * 简单的写日志类，多进程安全，但非多线程安全，只提供按大小滚动功能
  * 不追求功能，也不追求性能，只求简单，若要功能强、性能高，可以使用CLogger
  *
@@ -38,7 +37,7 @@
 #include <sys/uio.h>
 #include <time.h>
 #include "sys/file_locker.h"
-//SYS_NAMESPACE_BEGIN
+SYS_NAMESPACE_BEGIN
 
 /**
  * 便于使用的日志宏
@@ -562,7 +561,7 @@ inline void CSimpleLogger::set_tag2(const std::string& tag)
 }
 
 /***
-  * 测试代码
+  * 测试代码，可能同时启多个来测试多进程并发写
 #include "simple_logger.h"
 int main()
 {
@@ -581,5 +580,5 @@ int main()
 }
 */
 
-//SYS_NAMESPACE_END
+SYS_NAMESPACE_END
 #endif // MOOON_SYS_SIMPLE_LOGGER_H
