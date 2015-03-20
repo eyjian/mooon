@@ -466,13 +466,11 @@ inline void CSimpleLogger::print(const char* file, int line, const char* level, 
                 // 需要再次判断，原因是可能其它进程已处理过了
                 if (need_rotate(fd))
                 {
-                    printf("%d to rotate\n", getpid());
                     close(fd);
                     rotate_log();
                 }
                 else // 其它进程完成了滚动
                 {
-                    printf("rotate by other: %d\n", getpid());
                     close(_fd);
                     _fd = fd;
                 }
