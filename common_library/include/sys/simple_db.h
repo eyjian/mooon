@@ -72,24 +72,53 @@ public:
 
 public:
     virtual ~DBConnection() {}
+    
+    /***
+     * 设置需要连接的DB的IP和服务端口号
+     * 注意，只有在open()或reopen()之前调用才生效
+     */
+    virtual void set_host(const std::string& db_ip, uint16_t db_port) = 0;
 
     /***
+     * 设置连接的数据库名
+     * 注意，只有在open()或reopen()之前调用才生效
+     */
+    virtual void set_db_name(const std::string& db_name) = 0;
+    
+    /***
+     * 设置用来连接DB的用户名和密码
+     * 注意，只有在open()或reopen()之前调用才生效
+     */
+    virtual void set_user(const std::string& db_user, const std::string& db_password) = 0;
+    
+    /***
+     * 设置访问DB的字符集
+     * 注意，只有在open()或reopen()之前调用才生效
+     */
+    virtual void set_charset(const std::string& charset) = 0;
+    
+    /***
+     * 设置为连接断开后自动重连接
+     * 注意，只有在open()或reopen()之前调用才生效
+     */
+    virtual void enable_auto_reconnect() = 0;
+    
+    /***
+     * 设置用来连接的超时秒数
+     * 注意，只有在open()或reopen()之前调用才生效
+     */
+    virtual void set_timeout_seconds(int timeout_seconds) = 0;
+    
+    /***
+     * 设置空值，字段在DB表中的值为NULL时，返回的内容
+     */
+    virtual void set_null_value(const std::string& null_value) = 0;
+    
+    /***
      * 建立一个DB连接
-     * @db_ip 访问DB的IP地址
-     * @db_port 访问DB的端口号
-     * @db_name 需要访问的DB名，可以为空
-     * @db_user 用来访问DB的用户名，不能为空
-     * @db_password 用来访问DB的密码，可以为空
-     * @charset 字符集，如：latin1，不能为空
-     * @auto_reconnect 是否自动重连接，为true时表示自动重连接，否则表示不自动重连接
-     * @timeout_seconds 连接超时时长
-     * @null_value 字段在DB表中的值为NULL时，返回给的内容
      * 出错抛出异常CDBException
      */
-    virtual void open(const std::string& db_ip, uint16_t db_port, const std::string& db_name,
-                      const std::string& db_user, const std::string& db_password,
-                      const std::string& charset, bool auto_reconnect,
-                      int timeout_seconds, const std::string& null_value="$NULL$") throw (CDBException) = 0;
+    virtual void open() throw (CDBException) = 0;
 
     /**
      * 关闭一个DB连接

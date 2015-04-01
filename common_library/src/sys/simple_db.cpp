@@ -39,6 +39,15 @@ public:
     CDBConnectionBase(size_t sql_max);
     
 private:
+    virtual void set_host(const std::string& db_ip, uint16_t db_port);
+    virtual void set_db_name(const std::string& db_name);
+    virtual void set_user(const std::string& db_user, const std::string& db_password);
+    virtual void set_charset(const std::string& charset);
+    virtual void enable_auto_reconnect();
+    virtual void set_timeout_seconds(int timeout_seconds);
+    virtual void set_null_value(const std::string& null_value);
+    
+private:
     virtual void query(DBTable& db_table, const char* format, ...) throw (CDBException) __attribute__((format(printf, 3, 4)));
     virtual void query(DBRow& db_row, const char* format, ...) throw (CDBException) __attribute__((format(printf, 3, 4)));
     virtual std::string query(const char* format, ...) throw (CDBException) __attribute__((format(printf, 2, 3)));
@@ -78,10 +87,7 @@ public:
     ~CMySQLConnection();
 
 private:
-    virtual void open(const std::string& db_ip, uint16_t db_port, const std::string& db_name,
-                      const std::string& db_user, const std::string& db_password,
-                      const std::string& charset, bool auto_reconnect,
-                      int timeout_seconds, const std::string& null_value="$NULL$") throw (CDBException);
+    virtual void open() throw (CDBException);
     virtual void close() throw ();
     virtual void reopen() throw (CDBException);
 
@@ -110,10 +116,7 @@ public:
     ~CSQLite3Connection();
 
 private:
-    virtual void open(const std::string& db_ip, uint16_t db_port, const std::string& db_name,
-                      const std::string& db_user, const std::string& db_password,
-                      const std::string& charset, bool auto_reconnect,
-                      int timeout_seconds, const std::string& null_value="$NULL$") throw (CDBException);
+    virtual void open() throw (CDBException);
     virtual void close() throw ();
     virtual void reopen() throw (CDBException);
 
@@ -167,10 +170,47 @@ bool DBConnection::is_disconnected_exception(CDBException& db_error)
 ////////////////////////////////////////////////////////////////////////////////
 CDBConnectionBase::CDBConnectionBase(size_t sql_max)
     : _sql_max(sql_max), _is_established(false),
-      _db_port(3306), _auto_reconnect(true), _timeout_seconds(10)
+      _db_port(3306), _auto_reconnect(false), _timeout_seconds(10)
 {
 }
 
+void CDBConnectionBase::set_host(const std::string& db_ip, uint16_t db_port)
+{
+    _db_ip = db_ip;
+    _db_port = db_port;    
+}
+
+void CDBConnectionBase::set_db_name(const std::string& db_name)
+{
+    _db_name = db_name;    
+}
+
+void CDBConnectionBase::set_user(const std::string& db_user, const std::string& db_password)
+{
+    _db_user = db_user;
+    _db_password = db_password;    
+}
+
+void CDBConnectionBase::set_charset(const std::string& charset)
+{
+    _charset = charset;    
+}
+
+void CDBConnectionBase::enable_auto_reconnect()
+{
+    _auto_reconnect = true;    
+}
+
+void CDBConnectionBase::set_timeout_seconds(int timeout_seconds)
+{
+    _timeout_seconds = timeout_seconds;    
+}
+
+void CDBConnectionBase::set_null_value(const std::string& null_value)
+{
+    _null_value = null_value;
+}
+    
 void CDBConnectionBase::query(DBTable& db_table, const char* format, ...) throw (CDBException)
 {
     va_list args;
@@ -284,23 +324,9 @@ CMySQLConnection::~CMySQLConnection()
     close(); // 不要在父类的析构中调用虚拟函数
 }
 
-void CMySQLConnection::open(const std::string& db_ip, uint16_t db_port, const std::string& db_name,
-                            const std::string& db_user, const std::string& db_password,
-                            const std::string& charset, bool auto_reconnect,
-                            int timeout_seconds, const std::string& null_value) throw (CDBException)
-{
-    // 记住，以便重用
-    _db_ip = db_ip;
-    _db_port = db_port;
-    _db_name = db_name;
-    _db_user = db_user;
-    _db_password = db_password;
-    _charset = charset;
-    _auto_reconnect = auto_reconnect;
-    _timeout_seconds = timeout_seconds;
-    _null_value = null_value;
-    _id = util::CStringUtil::format_string("mysql://%s@%s:%d", db_name.c_str(), db_ip.c_str(), db_port);
-
+void CMySQLConnection::open() throw (CDBException)
+{    
+    _id = util::CStringUtil::format_string("mysql://%s@%s:%d", _db_name.c_str(), _db_ip.c_str(), _db_port);
     do_open();
 }
 
@@ -453,16 +479,19 @@ CSQLite3Connection::~CSQLite3Connection()
     close(); // 不要在父类的析构中调用虚拟函数
 }
 
-void CSQLite3Connection::open(const std::string& db_ip, uint16_t db_port, const std::string& db_name,
-                              const std::string& db_user, const std::string& db_password,
-                              const std::string& charset, bool auto_reconnect,
-                              int timeout_seconds, const std::string& null_value) throw (CDBException)
-{
-    _id = util::CStringUtil::format_string("sqlite3://%s", "none");
-
-    if (!db_name.empty())
+void CSQLite3Connection::open() throw (CDBException)
+{    
+    if (_db_name.empty())
     {
-        if (sqlite3_open(db_name.c_str(), &_sqlite) != SQLITE_OK)
+            throw CDBException(NULL,
+                               "db name of sqlite3 not set", -1,
+                               __FILE__, __LINE__);
+    }
+    else
+    {
+        _id = util::CStringUtil::format_string("sqlite3://%s", _db_name.c_str());
+
+        if (sqlite3_open(_db_name.c_str(), &_sqlite) != SQLITE_OK)
         {
             throw CDBException(NULL,
                                sqlite3_errmsg(_sqlite), sqlite3_errcode(_sqlite),
@@ -486,7 +515,7 @@ void CSQLite3Connection::reopen() throw (CDBException)
 {
     // 先关闭释放资源，才能再建立
     close();
-    open("", 0, "", "", "", "", false, 0, "");
+    open();
 }
 
 int CSQLite3Connection::update(const char* format, ...) throw (CDBException)
