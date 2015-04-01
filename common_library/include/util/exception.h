@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_UTIL_EXCEPTION_H
 #define MOOON_UTIL_EXCEPTION_H
-#include "util/config.h"
+#include "util/string_formatter.h"
 #include <exception>
 #include <string>
 UTIL_NAMESPACE_BEGIN
@@ -40,6 +40,16 @@ public:
     explicit CException(const std::string& errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
     {
         _errmsg = errmsg;
+        _errcode = errcode;
+        
+        if (file != NULL)
+            _file = file;
+        _line = line;
+    }
+
+    explicit CException(const StringFormatter& errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
+    {
+        _errmsg = errmsg.str();
         _errcode = errcode;
         
         if (file != NULL)
