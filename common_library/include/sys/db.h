@@ -23,66 +23,12 @@
 #ifndef MOOON_SYS_DB_H
 #define MOOON_SYS_DB_H
 #include <vector>
-#include "sys/config.h"
+#include "sys/db_exception.h"
 #define SQL_MAX 4096 /** 一条SQL语句允许的最大长度 */
 SYS_NAMESPACE_BEGIN
 
 typedef std::vector<std::string> DbFields; // 用来存储表的一行的所有字段值
 typedef std::vector<DbFields > DbTable;    // 用来存储表的多行数据
-
-class CDBException
-{
-public:
-    /***
-      * 构造一个异常对象
-      * 请注意不应当显示调用构造函数
-      */
-    CDBException(const char* sql, const char* error_message, int error_number=0, const char* filename=__FILE__, int line_number=__LINE__)
-    {
-        if (sql != NULL) _sql = sql;
-        if (error_message != NULL) _error_message = error_message;
-        if (filename != NULL) _filename = filename;
-        _error_number = error_number;
-        _line_number = line_number;
-    }
-
-    /** 返回执行出错的SQL语句，如果不是执行SQL语句，则仅返回一个字符串结尾符 */
-    const char* get_sql() const
-    {
-        return _sql.c_str();
-    }
-    
-    /** 返回数据库的出错信息 */
-    const char* get_error_message() const
-    { 
-        return _error_message.c_str(); 
-    }
-
-    /** 返回数据库的出错代码 */
-    int get_error_number() const
-    {
-        return _error_number;
-    }
-
-    /** 返回执行数据库操作时出错的文件名 */
-    const char* get_filename() const
-    {
-        return _filename.c_str();
-    }
-
-    /** 返回执行数据库操作时出错的代码行 */
-    int get_line_number() const
-    {
-        return _line_number;
-    }
-    
-private:   
-    std::string _sql;
-    std::string _error_message; /** 错误信息 */
-    int _error_number;          /** 错误号 */
-    std::string _filename;      /** 抛出异常的文件名 */
-    int _line_number;                  /** 抛出异常的代码行 */
-};
 
 /***
   * 记录行接口
