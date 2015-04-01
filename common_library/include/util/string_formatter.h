@@ -113,7 +113,7 @@ private:
     void init(const char* format, va_list& ap) throw (std::bad_alloc)
     {        
         char* buffer = new char[_buffer_size];
-        vsnprintf(buffer.get(), _buffer_size, format, ap);
+        vsnprintf(buffer, _buffer_size, format, ap);
 
         // 保存结果
         DeleteHelper<char> dh(buffer, true);
