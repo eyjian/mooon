@@ -170,7 +170,7 @@ bool DBConnection::is_disconnected_exception(CDBException& db_error)
 ////////////////////////////////////////////////////////////////////////////////
 CDBConnectionBase::CDBConnectionBase(size_t sql_max)
     : _sql_max(sql_max), _is_established(false),
-      _db_port(3306), _auto_reconnect(false), _timeout_seconds(10)
+      _db_port(3306), _auto_reconnect(false), _timeout_seconds(10), _null_value("$NULL$")
 {
 }
 

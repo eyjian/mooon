@@ -117,6 +117,7 @@ public:
     
     /***
      * 设置空值，字段在DB表中的值为NULL时，返回的内容
+     * 如果不主动设置，则默认空值时被设置为"$NULL$"。
      */
     virtual void set_null_value(const std::string& null_value) = 0;
     
