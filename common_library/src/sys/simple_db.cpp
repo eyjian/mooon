@@ -18,6 +18,7 @@
  */
 #include "sys/simple_db.h"
 #include "util/scoped_ptr.h"
+#include "util/string_formatter.h"
 #include "util/string_util.h"
 //#include <my_global.h> // 有些版本的MySQL可能需要包含此头文件
 //#include <my_sys.h>    // 有些版本的MySQL可能需要包含此头文件
@@ -26,12 +27,51 @@
 #include <mysql/mysqld_error.h> // ER_QUERY_INTERRUPTED
 #include <stdarg.h>
 #include <strings.h>
+#include <sqlite3/sqlite3.h>
 SYS_NAMESPACE_BEGIN
+
+/**
+ * 不同DB的通用操作
+ */
+class CDBConnectionBase: public DBConnection
+{
+public:
+    CDBConnectionBase(size_t sql_max);
+
+private:
+    virtual void query(DBTable& db_table, const char* format, ...) throw (CDBException) __attribute__((format(printf, 3, 4)));
+    virtual void query(DBRow& db_row, const char* format, ...) throw (CDBException) __attribute__((format(printf, 3, 4)));
+    virtual std::string query(const char* format, ...) throw (CDBException) __attribute__((format(printf, 2, 3)));
+
+private:
+    virtual void _do_query(DBTable& db_table, const char* format, va_list& args, const char* sql, int bytes_printed) throw (CDBException) = 0;
+
+private:
+    void do_query(DBTable& db_table, const char* format, va_list& args) throw (CDBException);
+
+protected:
+    const size_t _sql_max; // 支持的最大SQL语句长度，单位为字节数，不含结尾符
+    bool _is_established;  // 是否已经和数据库建立的连接
+    std::string _id;       // 身份标识，用来识别
+
+protected:
+    std::string _db_ip;
+    uint16_t _db_port;
+    std::string _db_name;
+    std::string _db_user;
+    std::string _db_password;
+    std::string _charset;
+    bool _auto_reconnect;
+    int _timeout_seconds;
+    std::string _null_value; // 字段在DB表中的值为NULL时，返回的内容
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * MySQL版本的DB连接
  */
-class CMySQLConnection: public DBConnection
+class CMySQLConnection: public CDBConnectionBase
 {
 public:
     CMySQLConnection(size_t sql_max);
@@ -45,34 +85,51 @@ private:
     virtual void close() throw ();
     virtual void reopen() throw (CDBException);
 
-    virtual void query(DBTable& db_table, const char* format, ...) throw (CDBException) __attribute__((format(printf, 3, 4)));
-    virtual void query(DBRow& db_row, const char* format, ...) throw (CDBException) __attribute__((format(printf, 3, 4)));
-    virtual std::string query(const char* format, ...) throw (CDBException) __attribute__((format(printf, 2, 3)));
     virtual int update(const char* format, ...) throw (CDBException) __attribute__((format(printf, 2, 3)));
-
     virtual std::string str() throw ();
 
 private:
+    virtual void _do_query(DBTable& db_table, const char* format, va_list& args, const char* sql, int bytes_printed) throw (CDBException);
+
+private:
     void do_open() throw (CDBException);
-    void do_query(DBTable& db_table, const char* format, va_list& args) throw (CDBException);
 
 private:
-    const size_t _sql_max; // 支持的最大SQL语句长度，单位为字节数，不含结尾符
     MYSQL* _mysql_handler; // MySQL句柄
-    bool _is_established;  // 是否已经和数据库建立的连接
-    std::string _id;       // 身份标识，用来识别
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * SQLite3版本的DB连接
+ */
+class CSQLite3Connection: public CDBConnectionBase
+{
+public:
+    CSQLite3Connection(size_t sql_max);
+    ~CSQLite3Connection();
 
 private:
-    std::string _db_ip;
-    uint16_t _db_port;
-    std::string _db_name;
-    std::string _db_user;
-    std::string _db_password;
-    std::string _charset;
-    bool _auto_reconnect;
-    int _timeout_seconds;
-    std::string _null_value; // 字段在DB表中的值为NULL时，返回的内容
+    virtual void open(const std::string& db_ip, uint16_t db_port, const std::string& db_name,
+                      const std::string& db_user, const std::string& db_password,
+                      const std::string& charset, bool auto_reconnect,
+                      int timeout_seconds, const std::string& null_value="$NULL$") throw (CDBException);
+    virtual void close() throw ();
+    virtual void reopen() throw (CDBException);
+
+    virtual int update(const char* format, ...) throw (CDBException) __attribute__((format(printf, 2, 3)));
+    virtual std::string str() throw ();
+
+private:
+    virtual void _do_query(DBTable& db_table, const char* format, va_list& args, const char* sql, int bytes_printed) throw (CDBException);
+
+private:
+    void do_open() throw (CDBException);
+
+private:
+    sqlite3* _sqlite;
 };
+
 
 ////////////////////////////////////////////////////////////////////////////////
 DBConnection* DBConnection::create_connection(const std::string& db_type_name, size_t sql_max)
@@ -83,6 +140,10 @@ DBConnection* DBConnection::create_connection(const std::string& db_type_name, s
     if (0 == strcasecmp(db_type_name.c_str(), "mysql"))
     {
         db_connection = new CMySQLConnection(sql_max);
+    }
+    else if (0 == strcasecmp(db_type_name.c_str(), "sqlite3"))
+    {
+        db_connection = new CSQLite3Connection(sql_max);
     }
 
     return db_connection;
@@ -104,9 +165,117 @@ bool DBConnection::is_disconnected_exception(CDBException& db_error)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-CMySQLConnection::CMySQLConnection(size_t sql_max)
-    : _sql_max(sql_max), _mysql_handler(NULL), _is_established(false),
+CDBConnectionBase::CDBConnectionBase(size_t sql_max)
+    : _sql_max(sql_max), _is_established(false),
       _db_port(3306), _auto_reconnect(true), _timeout_seconds(10)
+{
+}
+
+void CDBConnectionBase::query(DBTable& db_table, const char* format, ...) throw (CDBException)
+{
+    va_list args;
+    va_start(args, format);
+
+    try
+    {
+        do_query(db_table, format, args);
+        va_end(args);
+    }
+    catch (...)
+    {
+        va_end(args);
+        throw;
+    }
+}
+
+void CDBConnectionBase::query(DBRow& db_row, const char* format, ...) throw (CDBException)
+{
+    DBTable db_table;
+    va_list args;
+    va_start(args, format);
+
+    try
+    {
+        do_query(db_table, format, args);
+
+        if (1 == db_table.size())
+        {
+            db_row = db_table.front();
+        }
+        else if (db_table.size() > 1)
+        {
+            throw CDBException(NULL, util::StringFormatter("too many rows: %d", (int)db_table.size()).c_str(),
+                    DB_ERROR_TOO_MANY_ROWS, __FILE__, __LINE__);
+        }
+
+        va_end(args);
+    }
+    catch (...)
+    {
+        va_end(args);
+        throw;
+    }
+}
+
+std::string CDBConnectionBase::query(const char* format, ...) throw (CDBException)
+{
+    DBTable db_table;
+    std::string result;
+    va_list args;
+    va_start(args, format);
+
+    try
+    {
+        do_query(db_table, format, args);
+
+        if (db_table.size() > 1)
+        {
+            throw CDBException(NULL, util::StringFormatter("too many rows: %d", (int)db_table.size()).c_str(),
+                    DB_ERROR_TOO_MANY_ROWS, __FILE__, __LINE__);
+        }
+        else if (1 == db_table.size())
+        {
+            const DBRow& db_row = db_table.front();
+            if (1 == db_row.size())
+            {
+                result = db_row.front();
+            }
+            else if (db_row.size() > 1)
+            {
+                throw CDBException(NULL, util::StringFormatter("too many cols: %d", (int)db_row.size()).c_str(),
+                        DB_ERROR_TOO_MANY_COLS, __FILE__, __LINE__);
+            }
+        }
+
+        va_end(args);
+    }
+    catch (...)
+    {
+        va_end(args);
+        throw;
+    }
+
+    return result;
+}
+
+void CDBConnectionBase::do_query(DBTable& db_table, const char* format, va_list& args) throw (CDBException)
+{
+    util::ScopedArray<char> sql(new char[_sql_max + 1]);
+
+    // 拼成SQL语句
+    int bytes_printed = vsnprintf(sql.get(), _sql_max + 1, format, args);
+    if (bytes_printed >= ((int)_sql_max + 1))
+    {
+        throw CDBException(NULL, util::StringFormatter("sql[%s] too long: %d over %d", sql.get(), bytes_printed, (int)_sql_max).c_str(),
+                -1, __FILE__, __LINE__);
+    }
+
+    _do_query(db_table, format, args, sql.get(), bytes_printed);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+CMySQLConnection::CMySQLConnection(size_t sql_max)
+    : CDBConnectionBase(sql_max), _mysql_handler(NULL)
 {
 }
 
@@ -152,93 +321,6 @@ void CMySQLConnection::reopen() throw (CDBException)
     do_open();
 }
 
-void CMySQLConnection::query(DBTable& db_table, const char* format, ...) throw (CDBException)
-{
-    va_list args;
-    va_start(args, format);
-
-    try
-    {
-        do_query(db_table, format, args);
-        va_end(args);
-    }
-    catch (...)
-    {
-        va_end(args);
-        throw;
-    }
-}
-
-void CMySQLConnection::query(DBRow& db_row, const char* format, ...) throw (CDBException)
-{
-    DBTable db_table;
-    va_list args;
-    va_start(args, format);
-
-    try
-    {
-        do_query(db_table, format, args);
-
-        if (1 == db_table.size())
-        {
-            db_row = db_table.front();
-        }
-        else if (db_table.size() > 1)
-        {
-            throw CDBException(NULL, util::StringFormatter("too many rows: %d", (int)db_table.size()).c_str(),
-                    DB_ERROR_TOO_MANY_ROWS, __FILE__, __LINE__);
-        }
-
-        va_end(args);
-    }
-    catch (...)
-    {
-        va_end(args);
-        throw;
-    }
-}
-
-std::string CMySQLConnection::query(const char* format, ...) throw (CDBException)
-{
-    DBTable db_table;
-    std::string result;
-    va_list args;
-    va_start(args, format);
-
-    try
-    {
-        do_query(db_table, format, args);
-
-        if (db_table.size() > 1)
-        {
-            throw CDBException(NULL, util::StringFormatter("too many rows: %d", (int)db_table.size()).c_str(),
-                    DB_ERROR_TOO_MANY_ROWS, __FILE__, __LINE__);
-        }
-        else if (1 == db_table.size())
-        {
-            const DBRow& db_row = db_table.front();
-            if (1 == db_row.size())
-            {
-                result = db_row.front();
-            }
-            else if (db_row.size() > 1)
-            {
-                throw CDBException(NULL, util::StringFormatter("too many cols: %d", (int)db_row.size()).c_str(),
-                        DB_ERROR_TOO_MANY_COLS, __FILE__, __LINE__);
-            }
-        }
-
-        va_end(args);
-    }
-    catch (...)
-    {
-        va_end(args);
-        throw;
-    }
-
-    return result;
-}
-
 int CMySQLConnection::update(const char* format, ...) throw (CDBException)
 {
     va_list args;
@@ -258,8 +340,7 @@ int CMySQLConnection::update(const char* format, ...) throw (CDBException)
     // 如果查询成功，返回0。如果出现错误，返回非0值
     if (mysql_real_query(_mysql_handler, sql.get(), (unsigned long)bytes_printed) != 0)
     {
-        throw CDBException(NULL,
-                util::StringFormatter("sql[%s] error: %s", sql.get(), mysql_error(_mysql_handler)).c_str(),
+        throw CDBException(NULL, util::StringFormatter("sql[%s] error: %s", sql.get(), mysql_error(_mysql_handler)).c_str(),
                 mysql_errno(_mysql_handler), __FILE__, __LINE__);
     }
 
@@ -269,6 +350,53 @@ int CMySQLConnection::update(const char* format, ...) throw (CDBException)
 std::string CMySQLConnection::str() throw ()
 {
     return _id;
+}
+
+void CMySQLConnection::_do_query(DBTable& db_table, const char* format, va_list& args, const char* sql, int bytes_printed) throw (CDBException)
+{
+    // 如果查询成功，返回0。如果出现错误，返回非0值
+    if (mysql_real_query(_mysql_handler, sql, (unsigned long)bytes_printed) != 0)
+    {
+        throw CDBException(NULL, util::StringFormatter("sql[%s] error: %s", sql, mysql_error(_mysql_handler)).c_str(),
+                mysql_errno(_mysql_handler), __FILE__, __LINE__);
+    }
+
+    // 取结果集
+    MYSQL_RES* result_set = mysql_store_result(_mysql_handler);
+    if (NULL == result_set)
+    {
+        throw CDBException(NULL, util::StringFormatter("sql[%s] error: %s", sql, mysql_error(_mysql_handler)).c_str(),
+                mysql_errno(_mysql_handler), __FILE__, __LINE__);
+    }
+    else
+    {
+        // 取得字段个数
+        int num_fields = mysql_num_fields(result_set);
+
+        while (true)
+        {
+            MYSQL_ROW row = mysql_fetch_row(result_set);
+            if (NULL == row)
+            {
+                break;
+            }
+
+            DBRow db_row;
+            for (int i = 0; i < num_fields; ++i)
+            {
+                const char* field_value = row[i];
+
+                if (NULL == field_value)
+                    db_row.push_back(_null_value);
+                else
+                    db_row.push_back(field_value);
+            }
+
+            db_table.push_back(db_row);
+        }
+
+        mysql_free_result(result_set);
+    }
 }
 
 void CMySQLConnection::do_open() throw (CDBException)
@@ -314,51 +442,76 @@ void CMySQLConnection::do_open() throw (CDBException)
     }
 }
 
-void CMySQLConnection::do_query(DBTable& db_table, const char* format, va_list& args) throw (CDBException)
+////////////////////////////////////////////////////////////////////////////////
+void CSQLite3Connection::open(const std::string& db_ip, uint16_t db_port, const std::string& db_name,
+                              const std::string& db_user, const std::string& db_password,
+                              const std::string& charset, bool auto_reconnect,
+                              int timeout_seconds, const std::string& null_value) throw (CDBException)
 {
-    util::ScopedArray<char> sql(new char[_sql_max + 1]);
+    _id = util::CStringUtil::format_string("sqlite3://%s", "none");
 
-    // 拼成SQL语句
-    int bytes_printed = vsnprintf(sql.get(), _sql_max + 1, format, args);
-    if (bytes_printed >= ((int)_sql_max + 1))
+    if (!db_name.empty())
     {
-        throw CDBException(NULL, util::StringFormatter("sql[%s] too long: %d over %d", sql.get(), bytes_printed, (int)_sql_max).c_str(),
-                -1, __FILE__, __LINE__);
+        if (sqlite3_open(db_name.c_str(), &_sqlite) != SQLITE_OK)
+        {
+            throw CDBException(NULL,
+                               sqlite3_errmsg(_sqlite), sqlite3_errcode(_sqlite),
+                               __FILE__, __LINE__);
+        }
     }
+}
 
-    // 如果查询成功，返回0。如果出现错误，返回非0值
-    if (mysql_real_query(_mysql_handler, sql.get(), (unsigned long)bytes_printed) != 0)
+void CSQLite3Connection::close() throw ()
+{
+    _is_established = false;
+    sqlite3_close(_sqlite);
+}
+
+void CSQLite3Connection::reopen() throw (CDBException)
+{
+    // 先关闭释放资源，才能再建立
+    close();
+    open("", 0, "", "", "", "", false, 0, "");
+}
+
+std::string CSQLite3Connection::str() throw ()
+{
+    return _id;
+}
+
+void CSQLite3Connection::_do_query(DBTable& db_table, const char* format, va_list& args, const char* sql, int bytes_printed) throw (CDBException)
+{
+    int num_rows = 0;
+    int num_cols = 0;
+    char *errmsg = NULL;
+    char **table = NULL;
+
+    int ret = sqlite3_get_table(
+            _sqlite
+          , sql
+          , &table
+          , &num_rows
+          , &num_cols
+          , &errmsg);
+    if (ret != SQLITE_OK)
     {
+        std::string errmsg_ = errmsg;
+
+        sqlite3_free(errmsg);
         throw CDBException(NULL,
-                util::StringFormatter("sql[%s] error: %s", sql.get(), mysql_error(_mysql_handler)).c_str(),
-                mysql_errno(_mysql_handler), __FILE__, __LINE__);
-    }
-
-    // 取结果集
-    MYSQL_RES* result_set = mysql_store_result(_mysql_handler);
-    if (NULL == result_set)
-    {
-        throw CDBException(NULL, 
-                util::StringFormatter("sql[%s] error: %s", sql.get(), mysql_error(_mysql_handler)).c_str(),
-                mysql_errno(_mysql_handler),__FILE__, __LINE__);
+                util::StringFormatter("sql[%s] error: %s", sql, errmsg_.c_str()).c_str(),
+                -1, __FILE__, __LINE__);
     }
     else
     {
-        // 取得字段个数
-        int num_fields = mysql_num_fields(result_set);
-
-        while (true)
+        for (int i=0; i<num_rows; ++i)
         {
-            MYSQL_ROW row = mysql_fetch_row(result_set);
-            if (NULL == row)
-            {
-                break;
-            }
+            int index = (i + 1) * num_cols;
 
             DBRow db_row;
-            for (int i = 0; i < num_fields; ++i)
+            for (int field_no=0; field_no<num_cols; ++field_no)
             {
-                const char* field_value = row[i];
+                const char* field_value = table[index + field_no];
 
                 if (NULL == field_value)
                     db_row.push_back(_null_value);
@@ -369,7 +522,7 @@ void CMySQLConnection::do_query(DBTable& db_table, const char* format, va_list& 
             db_table.push_back(db_row);
         }
 
-        mysql_free_result(result_set);
+        sqlite3_free_table(table);
     }
 }
 
