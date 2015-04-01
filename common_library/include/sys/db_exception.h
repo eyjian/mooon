@@ -26,6 +26,15 @@
 #include "util/exception.h"
 SYS_NAMESPACE_BEGIN
 
+/***
+ * 错误码定义
+ */
+enum
+{
+    DB_ERROR_TOO_MANY_COLS, // 查询结果返回超出预期的列数（即返回的字段数过多）
+    DB_ERROR_TOO_MANY_ROWS  // 查询结果返回超出预期的行数
+};
+
 class CDBException: public util::CException
 {
 public:
