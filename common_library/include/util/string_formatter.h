@@ -92,6 +92,11 @@ public:
         va_end(ap);
     }
 
+    StringFormatter(const StringFormatter& other)
+        : _buffer(other.str()), _buffer_size(other.buffer_size())
+    {        
+    }
+
     size_t buffer_size() const throw ()
     {
         return _buffer_size;
@@ -121,8 +126,7 @@ private:
     }
 
 private:
-    StringFormatter();
-    StringFormatter(const StringFormatter& );
+    StringFormatter();    
     StringFormatter& operator =(const StringFormatter&);
     bool operator ==(const StringFormatter&) const;
     bool operator !=(const StringFormatter&) const;
