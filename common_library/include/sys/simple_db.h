@@ -36,7 +36,13 @@ try
     DBTable db_table;
 
     // 不指定DB名，以及不需要密码
-    db_connection->open("127.0.0.1", 3600, "", "root", "", "utf8", true, 600, "NULL");
+    db->set_host("127.0.0.1", 3600);
+    db->set_user("root", "");
+    db->set_charset("utf8");
+    db->enable_auto_reconnect();
+    db->set_timeout_seconds(600);
+    
+    db_connection->open();
     db_connection->query(db_table, "select count(1) from test_table where id=%d", 2015);
 }
 catch (CDBException& db_error)
@@ -98,13 +104,13 @@ public:
     virtual void set_charset(const std::string& charset) = 0;
     
     /***
-     * 设置为连接断开后自动重连接
+     * 设置为连接断开后自动重连接，如果不主动设置，默认不自动重连接
      * 注意，只有在open()或reopen()之前调用才生效
      */
     virtual void enable_auto_reconnect() = 0;
     
     /***
-     * 设置用来连接的超时秒数
+     * 设置用来连接的超时秒数，如果不主动设置，则使用默认的10秒
      * 注意，只有在open()或reopen()之前调用才生效
      */
     virtual void set_timeout_seconds(int timeout_seconds) = 0;
