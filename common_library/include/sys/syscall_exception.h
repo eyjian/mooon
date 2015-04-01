@@ -19,10 +19,11 @@
 #ifndef MOOON_SYS_SYSCALL_EXCEPTION_H
 #define MOOON_SYS_SYSCALL_EXCEPTION_H
 #include "sys/config.h"
+#include "util/exception.h"
 SYS_NAMESPACE_BEGIN
 
 /** 系统调用出错异常，多数系统调用出错时，均以此异常型反馈给调用者 */
-class CSyscallException
+class CSyscallException: public util::CException
 {
 public:
     /** 构造系统调用异常
@@ -31,16 +32,17 @@ public:
       * @linenumber: 出错发生的行号
       * @tips: 额外的增强信息，用以进一步区分是什么错误
       */
-	CSyscallException(int errcode, const char* filename, int linenumber, const char* tips=NULL);    
+	CSyscallException(int errcode, const char* filename, int linenumber, const char* tips=NULL);
+	~CSyscallException() throw() {}
 
     /** 得到调用出错发生的文件名 */
-    const char* get_filename() const { return _filename; }
+    const char* get_filename() const { return file(); }
 
     /** 得到调用出错时发生的文件行号 */
-    int get_linenumber() const { return _linenumber; }
+    int get_linenumber() const { return line(); }
 
     /** 得到调用出错时的系统出错码，在Linux上为errno值 */
-    int get_errcode() const { return _errcode; }
+    int get_errcode() const { return errcode(); }
 
     /** 得到出错信息 */
     std::string get_errmessage() const;
@@ -54,9 +56,6 @@ public:
     std::string to_string() const;
 
 private:
-	int _errcode;
-	int _linenumber;
-	char _filename[FILENAME_MAX];
     std::string _tips;
 };
 

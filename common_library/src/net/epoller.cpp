@@ -76,9 +76,9 @@ int CEpoller::timed_wait(uint32_t milliseconds)
         if (retval > -1) break;
         if (EINTR == errno) 
         {
-            // 保证时间总是递减的，虽然会引入不精确问题，但总是好些，极端情况下也不会死循环                
+            // 保证时间总是递减的，虽然会引入不精确问题，但总是好些，极端情况下也不会死循环
             time_t gone_milliseconds = (time(NULL)-begin_seconds) * 1000 + 10;
-            remaining_milliseconds = (remaining_milliseconds > gone_milliseconds)? remaining_milliseconds - gone_milliseconds: 0;
+            remaining_milliseconds = (remaining_milliseconds > (uint32_t)gone_milliseconds)? remaining_milliseconds - gone_milliseconds: 0;
             continue;
         }
 

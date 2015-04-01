@@ -23,17 +23,14 @@
 SYS_NAMESPACE_BEGIN
 
 CSyscallException::CSyscallException(int errcode, const char* filename, int linenumber, const char* tips)
-    :_errcode(errcode)
-    ,_linenumber(linenumber)
+    :CException(strerror(errcode), errcode, filename, linenumber)
 {
-    strncpy(_filename, filename, sizeof(_filename)-1);
-    _filename[sizeof(_filename)-1] = '\0';
     if (tips != NULL) _tips = tips;
 }
 
 std::string CSyscallException::get_errmessage() const
 {
-    return CUtil::get_error_message(get_errcode());
+    return what();
 }
 
 std::string CSyscallException::to_string() const
@@ -41,7 +38,7 @@ std::string CSyscallException::to_string() const
     std::stringstream ss;
     ss << "syscall_exception://"
        << get_errcode() << ":"
-       << get_errmessage() << "@"
+       << what() << "@"
        << get_linenumber() << ":"
        << get_filename();
 
