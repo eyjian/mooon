@@ -37,7 +37,7 @@ class CDBConnectionBase: public DBConnection
 {
 public:
     CDBConnectionBase(size_t sql_max);
-
+    
 private:
     virtual void query(DBTable& db_table, const char* format, ...) throw (CDBException) __attribute__((format(printf, 3, 4)));
     virtual void query(DBRow& db_row, const char* format, ...) throw (CDBException) __attribute__((format(printf, 3, 4)));
@@ -281,7 +281,7 @@ CMySQLConnection::CMySQLConnection(size_t sql_max)
 
 CMySQLConnection::~CMySQLConnection()
 {
-    close();
+    close(); // 不要在父类的析构中调用虚拟函数
 }
 
 void CMySQLConnection::open(const std::string& db_ip, uint16_t db_port, const std::string& db_name,
@@ -443,6 +443,16 @@ void CMySQLConnection::do_open() throw (CDBException)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+CSQLite3Connection::CSQLite3Connection(size_t sql_max)
+    : CDBConnectionBase(sql_max), _sqlite(NULL)
+{
+}
+
+CSQLite3Connection::~CSQLite3Connection()
+{
+    close(); // 不要在父类的析构中调用虚拟函数
+}
+
 void CSQLite3Connection::open(const std::string& db_ip, uint16_t db_port, const std::string& db_name,
                               const std::string& db_user, const std::string& db_password,
                               const std::string& charset, bool auto_reconnect,
@@ -464,7 +474,12 @@ void CSQLite3Connection::open(const std::string& db_ip, uint16_t db_port, const 
 void CSQLite3Connection::close() throw ()
 {
     _is_established = false;
-    sqlite3_close(_sqlite);
+    
+    if (_sqlite != NULL)
+    {
+        sqlite3_close(_sqlite);
+        _sqlite = NULL;
+    }
 }
 
 void CSQLite3Connection::reopen() throw (CDBException)
@@ -472,6 +487,38 @@ void CSQLite3Connection::reopen() throw (CDBException)
     // 先关闭释放资源，才能再建立
     close();
     open("", 0, "", "", "", "", false, 0, "");
+}
+
+int CSQLite3Connection::update(const char* format, ...) throw (CDBException)
+{
+    va_list args;
+    va_start(args, format);
+    util::ScopedArray<char> sql(new char[_sql_max + 1]);
+
+    // 拼成SQL语句
+    int bytes_printed = vsnprintf(sql.get(), _sql_max + 1, format, args);
+    va_end(args);
+
+    if (bytes_printed >= ((int)_sql_max + 1))
+    {
+        throw CDBException(NULL, util::StringFormatter("sql[%s] too long: %d over %d", sql.get(), bytes_printed, (int)_sql_max).c_str(),
+                -1, __FILE__, __LINE__);
+    }
+    
+    int ret = SQLITE_OK;
+    char *errmsg = NULL;
+
+    ret = sqlite3_exec(_sqlite, sql.get(), 0, 0, &errmsg);
+    if (ret != SQLITE_OK)
+    {
+        std::string errmsg_ = errmsg;
+        sqlite3_free(errmsg);
+
+        throw CDBException(NULL, util::StringFormatter("sql[%s] error: %s", sql.get(), errmsg_.c_str()).c_str(),
+                -1, __FILE__, __LINE__);
+    }
+
+    return ret;
 }
 
 std::string CSQLite3Connection::str() throw ()
