@@ -18,19 +18,10 @@
  */
 #ifndef MOOON_SYS_SIMPLE_DB_H
 #define MOOON_SYS_SIMPLE_DB_H
-#include "sys/exception.h"
+#include "sys/db_exception.h"
 #include <string>
 #include <vector>
 SYS_NAMESPACE_BEGIN
-
-/***
- * 错误码定义
- */
-enum
-{
-    DB_ERROR_TOO_MANY_COLS, // 查询结果返回超出预期的列数（即返回的字段数过多）
-    DB_ERROR_TOO_MANY_ROWS  // 查询结果返回超出预期的行数
-};
 
 typedef std::vector<std::string> DBRow; // 用来存储一行所有字段的值
 typedef std::vector<DBRow> DBTable;     // 用来存储所有行
