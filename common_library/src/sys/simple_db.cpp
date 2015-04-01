@@ -18,7 +18,7 @@
  */
 #include "sys/simple_db.h"
 #include "util/scoped_ptr.h"
-#include "util/string_utils.h"
+#include "util/string_util.h"
 //#include <my_global.h> // 有些版本的MySQL可能需要包含此头文件
 //#include <my_sys.h>    // 有些版本的MySQL可能需要包含此头文件
 #include <mysql/errmsg.h> // CR_SERVER_GONE_ERROR
@@ -95,7 +95,7 @@ void DBConnection::destroy_connection(DBConnection* db_connection)
 
 bool DBConnection::is_disconnected_exception(CDBException& db_error)
 {
-    int errcode = db_error.error();
+    int errcode = db_error.errcode();
 
     // ER_QUERY_INTERRUPTED：比如mysqld进程挂了
     // CR_SERVER_GONE_ERROR：比如客户端将连接close了
@@ -185,8 +185,8 @@ void CMySQLConnection::query(DBRow& db_row, const char* format, ...) throw (CDBE
         }
         else if (db_table.size() > 1)
         {
-            throw CDBException(DB_ERROR_TOO_MANY_ROWS,
-                    StringFormatter("too many rows: %d", (int)db_table.size()), __FILE__, __LINE__);
+            throw CDBException(NULL, util::StringFormatter("too many rows: %d", (int)db_table.size()).c_str(),
+                    DB_ERROR_TOO_MANY_ROWS, __FILE__, __LINE__);
         }
 
         va_end(args);
@@ -211,8 +211,8 @@ std::string CMySQLConnection::query(const char* format, ...) throw (CDBException
 
         if (db_table.size() > 1)
         {
-            throw CDBException(DB_ERROR_TOO_MANY_ROWS,
-                    StringFormatter("too many rows: %d", (int)db_table.size()), __FILE__, __LINE__);
+            throw CDBException(NULL, util::StringFormatter("too many rows: %d", (int)db_table.size()).c_str(),
+                    DB_ERROR_TOO_MANY_ROWS, __FILE__, __LINE__);
         }
         else if (1 == db_table.size())
         {
@@ -223,8 +223,8 @@ std::string CMySQLConnection::query(const char* format, ...) throw (CDBException
             }
             else if (db_row.size() > 1)
             {
-                throw CDBException(DB_ERROR_TOO_MANY_COLS,
-                        StringFormatter("too many cols: %d", (int)db_row.size()), __FILE__, __LINE__);
+                throw CDBException(NULL, util::StringFormatter("too many cols: %d", (int)db_row.size()).c_str(),
+                        DB_ERROR_TOO_MANY_COLS, __FILE__, __LINE__);
             }
         }
 
@@ -243,7 +243,7 @@ int CMySQLConnection::update(const char* format, ...) throw (CDBException)
 {
     va_list args;
     va_start(args, format);
-    ScopedArray<char> sql(new char[_sql_max + 1]);
+    util::ScopedArray<char> sql(new char[_sql_max + 1]);
 
     // 拼成SQL语句
     int bytes_printed = vsnprintf(sql.get(), _sql_max + 1, format, args);
@@ -251,16 +251,16 @@ int CMySQLConnection::update(const char* format, ...) throw (CDBException)
 
     if (bytes_printed >= ((int)_sql_max + 1))
     {
-        throw CDBException(-1, StringFormatter("sql[%s] too long: %d over %d", sql.get(), bytes_printed, (int)_sql_max).c_str(),
-                __FILE__, __LINE__);
+        throw CDBException(NULL, util::StringFormatter("sql[%s] too long: %d over %d", sql.get(), bytes_printed, (int)_sql_max).c_str(),
+                -1, __FILE__, __LINE__);
     }
 
     // 如果查询成功，返回0。如果出现错误，返回非0值
     if (mysql_real_query(_mysql_handler, sql.get(), (unsigned long)bytes_printed) != 0)
     {
-        throw CDBException(mysql_errno(_mysql_handler),
-                StringFormatter("sql[%s] error: %s", sql.get(), mysql_error(_mysql_handler)).c_str(),
-                __FILE__, __LINE__);
+        throw CDBException(NULL,
+                util::StringFormatter("sql[%s] error: %s", sql.get(), mysql_error(_mysql_handler)).c_str(),
+                mysql_errno(_mysql_handler), __FILE__, __LINE__);
     }
 
     return static_cast<int>(mysql_affected_rows(_mysql_handler));
@@ -300,8 +300,8 @@ void CMySQLConnection::do_open() throw (CDBException)
                                        _db_ip.c_str(), _db_user.c_str(), _db_password.c_str(),
                                        _db_name.c_str(), _db_port, NULL, 0))
         {
-            throw CDBException(mysql_errno(_mysql_handler),
-                               mysql_error(_mysql_handler),
+            throw CDBException(NULL,
+                               mysql_error(_mysql_handler), mysql_errno(_mysql_handler),
                                __FILE__, __LINE__);
         }
 
@@ -316,31 +316,31 @@ void CMySQLConnection::do_open() throw (CDBException)
 
 void CMySQLConnection::do_query(DBTable& db_table, const char* format, va_list& args) throw (CDBException)
 {
-    ScopedArray<char> sql(new char[_sql_max + 1]);
+    util::ScopedArray<char> sql(new char[_sql_max + 1]);
 
     // 拼成SQL语句
     int bytes_printed = vsnprintf(sql.get(), _sql_max + 1, format, args);
     if (bytes_printed >= ((int)_sql_max + 1))
     {
-        throw CDBException(-1, StringFormatter("sql[%s] too long: %d over %d", sql.get(), bytes_printed, (int)_sql_max).c_str(),
-                __FILE__, __LINE__);
+        throw CDBException(NULL, util::StringFormatter("sql[%s] too long: %d over %d", sql.get(), bytes_printed, (int)_sql_max).c_str(),
+                -1, __FILE__, __LINE__);
     }
 
     // 如果查询成功，返回0。如果出现错误，返回非0值
     if (mysql_real_query(_mysql_handler, sql.get(), (unsigned long)bytes_printed) != 0)
     {
-        throw CDBException(mysql_errno(_mysql_handler),
-                StringFormatter("sql[%s] error: %s", sql.get(), mysql_error(_mysql_handler)).c_str(),
-                __FILE__, __LINE__);
+        throw CDBException(NULL,
+                util::StringFormatter("sql[%s] error: %s", sql.get(), mysql_error(_mysql_handler)).c_str(),
+                mysql_errno(_mysql_handler), __FILE__, __LINE__);
     }
 
     // 取结果集
     MYSQL_RES* result_set = mysql_store_result(_mysql_handler);
     if (NULL == result_set)
     {
-        throw CDBException(mysql_errno(_mysql_handler),
-                StringFormatter("sql[%s] error: %s", sql.get(), mysql_error(_mysql_handler)).c_str(),
-                __FILE__, __LINE__);
+        throw CDBException(NULL, 
+                util::StringFormatter("sql[%s] error: %s", sql.get(), mysql_error(_mysql_handler)).c_str(),
+                mysql_errno(_mysql_handler),__FILE__, __LINE__);
     }
     else
     {
