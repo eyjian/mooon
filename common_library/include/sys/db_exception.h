@@ -1,0 +1,90 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Author: eyjian@qq.com or eyjian@gmail.com
+ * 代码采用商业友好的Apache协议，可任意修改和分发，但请保留版权说明文字。
+ * 如遇到的问题，请发送到上述邮箱，以便及时修复。谢谢合作，共创开源！ 
+ *
+ * 数据库操作出错时，均要求以CDBException异常的方式处理
+ */
+#ifndef MOOON_SYS_DB_EXCEPTION_H
+#define MOOON_SYS_DB_EXCEPTION_H
+#include "sys/config.h"
+#include "util/exception.h"
+SYS_NAMESPACE_BEGIN
+
+class CDBException: public util::CException
+{
+public:
+    /***
+      * 构造一个异常对象
+      * 请注意不应当显示调用构造函数
+      */
+    CDBException(const char* sql, const char* errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
+        : CException(errmsg, errcode, file, line)
+    {
+        if (sql != NULL)
+        {
+            _sql = sql;        
+        }
+    }
+
+    CDBException(const char* sql, const std::string& errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
+        : CException(errmsg, errcode, file, line)
+    {
+        if (sql != NULL)
+        {
+            _sql = sql;        
+        }
+    }
+    
+    CDBException(const std::string& sql, const std::string& errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
+        : CException(errmsg, errcode, file, line)
+    {
+        _sql = sql;
+    }
+    
+    CDBException(const char* sql, const util::StringFormatter& errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
+        : CException(errmsg, errcode, file, line)
+    {
+        if (sql != NULL)
+        {
+            _sql = sql;        
+        }
+    }
+
+    CDBException(const std::string& sql, const util::StringFormatter& errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
+        : CException(errmsg, errcode, file, line)
+    {
+        _sql = sql;
+    }
+    
+    virtual ~CDBException() throw ()
+    {
+    }
+    
+    /** 返回执行出错的SQL语句，如果不是执行SQL语句，则仅返回一个字符串结尾符 */
+    const char* sql() const
+    {
+        return _sql.c_str();
+    }
+    
+private:   
+    std::string _sql;
+};
+
+SYS_NAMESPACE_END
+#endif // MOOON_SYS_DB_EXCEPTION_H
