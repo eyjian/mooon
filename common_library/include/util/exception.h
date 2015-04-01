@@ -23,10 +23,10 @@
 #include <string>
 UTIL_NAMESPACE_BEGIN
 
-class CException: public 
+class CException: public std::exception
 {
 public:
-    explicit CException(const const char* errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
+    explicit CException(const char* errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
     {
         if (errmsg != NULL)
             _errmsg = errmsg;
@@ -37,7 +37,7 @@ public:
         _line = line;
     }
 
-    explicit CException(const const std::string& errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
+    explicit CException(const std::string& errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
     {
         _errmsg = errmsg;
         _errcode = errcode;
