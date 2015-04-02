@@ -38,7 +38,7 @@
 #include <sys/uio.h>
 #include <time.h>
 #include "sys/file_locker.h"
-//SYS_NAMESPACE_BEGIN
+SYS_NAMESPACE_BEGIN
 
 /**
  * 便于使用的日志宏
@@ -576,5 +576,5 @@ int main()
 }
 */
 
-//SYS_NAMESPACE_END
+SYS_NAMESPACE_END
 #endif // MOOON_SYS_SIMPLE_LOGGER_H
