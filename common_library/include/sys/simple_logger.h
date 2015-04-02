@@ -37,7 +37,7 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <time.h>
-#include "file_locker.h"
+#include "sys/file_locker.h"
 //SYS_NAMESPACE_BEGIN
 
 /**
@@ -192,7 +192,7 @@ private:
     uint32_t _log_size;        /** 单个日志文件的大小 */
     uint8_t _log_numer;        /** 日志滚动的个数 */
     uint16_t _record_size;     /** 单条日志的大小，单位为字节数 */
-    std::string _log_filepath; /** 含文件名的日志文件路径 */    
+    std::string _log_filepath; /** 含文件名的日志文件路径 */
     std::string _tag1;         /** 自定义的标记1 */
     std::string _tag2;         /** 自定义的标记2 */
 };
