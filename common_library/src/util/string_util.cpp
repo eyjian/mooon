@@ -100,7 +100,7 @@ static bool fast_string2int(const char* str, IntType& result, uint8_t max_length
 void CStringUtil::remove_last(std::string& source, char c)
 {
     std::string::size_type pos = source.rfind(c);
-    if (pos+1 == source.length())
+    if (pos+1 != source.length())
         source.erase(pos);
 }
 
