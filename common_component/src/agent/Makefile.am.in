@@ -8,11 +8,11 @@ AM_CXXFLAGS += -fPIC
 
 libdir = $(prefix)/lib
 lib_LIBRARIES = libagent.a
-libagent_a_SOURCES =
+libagent_a_SOURCES = find . -maxdepth 1 -name "*.cpp" -o -name "*.h"
 
 moduledir = $(prefix)/lib
 module_PROGRAMS = libagent.so
-libagent_so_SOURCES =
+libagent_so_SOURCES = find . -maxdepth 1 -name "*.cpp" -o -name "*.h"
 
 install-data-hook:
 	mkdir -p $(prefix)/include
