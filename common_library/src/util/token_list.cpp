@@ -20,54 +20,77 @@
 UTIL_NAMESPACE_BEGIN
 
 void CTokenList::parse(TTokenList& token_list, const std::string& source, const std::string& sep)
-{
-	std::string::size_type pos = 0;
-	std::string::size_type old_pos = 0;
+{    
+    if (!source.empty())
+    {        
+        std::string str = source; 
+        std::string::size_type pos = str.find(sep);
 
-	/*
-	while (true)
-	{
-		pos = source.find(sep, old_pos);
-		if (std::string::npos == pos)
-		{
-			if (0 == old_pos)
-				token_list.push_back(source);
-			else
-				token_list.push_back(source.substr(old_pos+sep.length()-1));
+        while (true)
+        {
+            std::string token = str.substr(0, pos);
+            token_list->push_back(token);
 
-			break;
-		}
+            if (std::string::npos == pos)
+            {   
+                break;
+            }
 
-		// 如果两个sep是连接着的，那么pos和old_pos值相差为1，空的token过滤掉
-		if (pos >= old_pos+sep.length())
-			token_list.push_back(source.substr(old_pos+sep.length()-1, pos-old_pos-sep.length()+1));
-
-		old_pos = pos + 1;
-	}
-	*/
-
-	//解决当sep大于2个字符的时候的bug.
-	do
-	{
-		pos = source.find(sep, old_pos);
-
-		//处理当sep出现在最前面的特殊情况
-		if (pos == old_pos)
-		{
-			old_pos = pos + 1;
-		}
-		else if (pos == std::string::npos)
-		{
-			token_list.push_back( source.substr(old_pos) );
-			break;
-		}
-		else
-		{
-			token_list.push_back( source.substr(old_pos, pos - old_pos) );
-			old_pos = pos + 1;
-		}
-		old_pos = source.find_first_not_of(sep, old_pos);
-	} while (pos != std::string::npos && old_pos != std::string::npos);
+            str = str.substr(pos + sep.size());
+            pos = str.find(sep);
+        }
+    }
 }
+
+/*
+void print(const std::string& source, const std::string& sep)
+{
+    std::vector<std::string> tokens;
+    int num_tokens = split(source, sep, &tokens);
+
+    printf("source[%s]:\n", source.c_str());
+    for (int i=0; i<num_tokens; ++i)
+    {
+        printf("token: \"%s\"\n", tokens[i].c_str());
+    }
+
+    printf("\n");
+}
+
+int main()
+{
+    std::string str1 = "abc##123##x#z##456";
+    print(str1, "##");
+
+    std::string str2 = "##abc##123##x#z##456";
+    print(str2, "##");
+
+    std::string str3 = "##abc##123##x#z##456##";
+    print(str3, "##");
+
+    std::string str4 = "###abc###123##x#z##456##";
+    print(str4, "##");
+
+    std::string str5 = "###abc###123##x#z###456##";
+    print(str5, "###");
+
+    std::string str6 = "##abc####123##x#z##456";
+    print(str6, "##");
+
+    std::string str7 = "##";
+    print(str7, "##");
+
+    std::string str8 = "";
+    print(str8, "##");
+
+    std::string str9 = "#abc#123#x#z#456#";
+    print(str9, "#");
+
+    std::string str0 = "##abc######123##x#z##456####";
+    print(str0, "##");
+
+    return 0;
+}
+*/
 
 UTIL_NAMESPACE_END
