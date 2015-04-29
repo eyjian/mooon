@@ -34,6 +34,8 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // 非原创，来源于：
 // https://code.google.com/p/protobuf-expectation/source/browse/trunk/src/google/protobuf-expectation/stubs/scoped_ptr.h
+// 相关的：
+// https://github.com/google/protobuf/blob/master/src/google/protobuf/stubs/shared_ptr.h
 #ifndef MOOON_UTIL_SCOPED_PTR_H
 #define MOOON_UTIL_SCOPED_PTR_H
 #include "util/config.h"
