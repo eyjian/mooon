@@ -32,6 +32,8 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 非原创，来源于：
+// https://code.google.com/p/protobuf-expectation/source/browse/trunk/src/google/protobuf-expectation/stubs/scoped_ptr.h
 #ifndef MOOON_UTIL_SCOPED_PTR_H
 #define MOOON_UTIL_SCOPED_PTR_H
 #include "util/config.h"
