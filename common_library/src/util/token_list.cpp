@@ -29,7 +29,7 @@ void CTokenList::parse(TTokenList& token_list, const std::string& source, const 
         while (true)
         {
             std::string token = str.substr(0, pos);
-            token_list->push_back(token);
+            token_list.push_back(token);
 
             if (std::string::npos == pos)
             {   
