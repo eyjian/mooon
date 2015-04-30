@@ -88,7 +88,7 @@ void CListener::listen(const ip_address_t& ip, uint16_t port, bool nonblock, boo
             if (retval != -1) break;
             
             if ((EADDRINUSE == errno) && (--retry_times > 0))
-                sys::CUtil::millisleep(100);
+                sys::CUtils::millisleep(100);
             else
                 THROW_SYSCALL_EXCEPTION(NULL, errno, "bind");
         }

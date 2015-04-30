@@ -74,12 +74,12 @@ private:
     {
         RawInt new_int = 0;
         
-        if (CUtil::is_little_endian())
+        if (CUtils::is_little_endian())
         {
 #ifndef BIG_NET_BYTES_ORDER
             new_int = old_int;
 #else
-            new_int = CUtil::reverse_bytes(old_int);
+            new_int = CUtils::reverse_bytes(old_int);
 #endif
         }
         else
@@ -87,7 +87,7 @@ private:
 #ifdef BIG_NET_BYTES_ORDER
             new_int = old_int;
 #else
-            new_int = CUtil::reverse_bytes(old_int);
+            new_int = CUtils::reverse_bytes(old_int);
 #endif
         }
         

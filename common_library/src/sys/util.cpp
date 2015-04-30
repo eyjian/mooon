@@ -46,33 +46,33 @@ static char *g_arg_start = NULL;
 static char *g_arg_end   = NULL;
 static char *g_env_start = NULL;
 
-void CUtil::millisleep(uint32_t millisecond)
+void CUtils::millisleep(uint32_t millisecond)
 {
     struct timespec ts = { millisecond / 1000, (millisecond % 1000) * 1000000 };
     while ((-1 == nanosleep(&ts, &ts)) && (EINTR == errno));
 }
 
-std::string CUtil::get_error_message(int errcode)
+std::string CUtils::get_error_message(int errcode)
 {
     return Error::to_string(errcode);
 }
 
-std::string CUtil::get_last_error_message()
+std::string CUtils::get_last_error_message()
 {
     return Error::to_string();
 }
 
-int CUtil::get_last_error_code()
+int CUtils::get_last_error_code()
 {
     return Error::code();
 }
 
-int CUtil::get_current_process_id()
+int CUtils::get_current_process_id()
 {
     return getpid();
 }
 
-std::string CUtil::get_program_path()
+std::string CUtils::get_program_path()
 {
     char buf[1024];
 
@@ -99,7 +99,7 @@ std::string CUtil::get_program_path()
     return buf;
 }
 
-std::string CUtil::get_filename(int fd)
+std::string CUtils::get_filename(int fd)
 {
 	char path[PATH_MAX];
 	char filename[FILENAME_MAX] = {'\0'};
@@ -112,7 +112,7 @@ std::string CUtil::get_filename(int fd)
 
 // 库函数：char *realpath(const char *path, char *resolved_path);
 //         char *canonicalize_file_name(const char *path);
-std::string CUtil::get_full_directory(const char* directory)
+std::string CUtils::get_full_directory(const char* directory)
 {
     std::string full_directory;
     DIR* dir = opendir(directory);
@@ -132,7 +132,7 @@ std::string CUtil::get_full_directory(const char* directory)
 // get_nprocs()，声明在sys/sysinfo.h
 // sysconf(_SC_NPROCESSORS_CONF)
 // sysconf(_SC_NPROCESSORS_ONLN)
-uint16_t CUtil::get_cpu_number()
+uint16_t CUtils::get_cpu_number()
 {
 	FILE* fp = fopen("/proc/cpuinfo", "r");
 	if (NULL == fp) return 1;
@@ -152,7 +152,7 @@ uint16_t CUtil::get_cpu_number()
 		*value++ = 0;		
 		if (0 == strncmp("processor", name, sizeof("processor")-1))
 		{
-			 if (!utils::CStringUtil::string2uint16(value, cpu_number))
+			 if (!utils::CStringUtils::string2uint16(value, cpu_number))
              {
                  return 0;
              }
@@ -162,7 +162,7 @@ uint16_t CUtil::get_cpu_number()
 	return (cpu_number+1);
 }
 
-bool CUtil::get_backtrace(std::string& call_stack)
+bool CUtils::get_backtrace(std::string& call_stack)
 {
     const int frame_number_max = 20;       // 最大帧层数
     void* address_array[frame_number_max]; // 帧地址数组
@@ -200,7 +200,7 @@ int _du_fn(const char *fpath, const struct stat *sb, int typeflag)
     return 0;
 }
 
-off_t CUtil::du(const char* dirpath)
+off_t CUtils::du(const char* dirpath)
 {
     dirsize = 0;
     if (ftw(dirpath, _du_fn, 0) != 0) return -1;
@@ -208,27 +208,27 @@ off_t CUtil::du(const char* dirpath)
     return dirsize;
 }
 
-int CUtil::get_page_size()
+int CUtils::get_page_size()
 {
     // sysconf(_SC_PAGE_SIZE);
     // sysconf(_SC_PAGESIZE);
     return getpagesize();
 }
 
-int CUtil::get_fd_max()
+int CUtils::get_fd_max()
 {
     // sysconf(_SC_OPEN_MAX);
     return getdtablesize();
 }
 
-void CUtil::create_directory(const char* dirpath, mode_t permissions)
+void CUtils::create_directory(const char* dirpath, mode_t permissions)
 {
     if (-1 == mkdir(dirpath, permissions))
         if (errno != EEXIST)
             THROW_SYSCALL_EXCEPTION(NULL, errno, "mkdir");
 }
 
-void CUtil::create_directory_recursive(const char* dirpath, mode_t permissions)
+void CUtils::create_directory_recursive(const char* dirpath, mode_t permissions)
 {
     char* slash;
     char* pathname = strdupa(dirpath); // _GNU_SOURCE
@@ -258,13 +258,13 @@ void CUtil::create_directory_recursive(const char* dirpath, mode_t permissions)
     }
 }
 
-void CUtil::create_directory_byfilepath(const char* filepath, mode_t permissions)
+void CUtils::create_directory_byfilepath(const char* filepath, mode_t permissions)
 {
-    std::string dirpath = utils::CStringUtil::extract_dirpath(filepath);
+    std::string dirpath = utils::CStringUtils::extract_dirpath(filepath);
     create_directory_recursive(dirpath.c_str(),  permissions);
 }
 
-bool CUtil::is_file(int fd)
+bool CUtils::is_file(int fd)
 {
     struct stat buf;
     if (-1 == fstat(fd, &buf))
@@ -273,7 +273,7 @@ bool CUtil::is_file(int fd)
     return S_ISREG(buf.st_mode);
 }
 
-bool CUtil::is_file(const char* path)
+bool CUtils::is_file(const char* path)
 {
     struct stat buf;
     if (-1 == stat(path, &buf))
@@ -282,7 +282,7 @@ bool CUtil::is_file(const char* path)
     return S_ISREG(buf.st_mode);
 }
 
-bool CUtil::is_link(int fd)
+bool CUtils::is_link(int fd)
 {
     struct stat buf;
     if (-1 == fstat(fd, &buf))
@@ -291,7 +291,7 @@ bool CUtil::is_link(int fd)
     return S_ISLNK(buf.st_mode);
 }
 
-bool CUtil::is_link(const char* path)
+bool CUtils::is_link(const char* path)
 {
     struct stat buf;
     if (-1 == stat(path, &buf))
@@ -300,7 +300,7 @@ bool CUtil::is_link(const char* path)
     return S_ISLNK(buf.st_mode);
 }
 
-bool CUtil::is_directory(int fd)
+bool CUtils::is_directory(int fd)
 {
     struct stat buf;
     if (-1 == fstat(fd, &buf))
@@ -309,7 +309,7 @@ bool CUtil::is_directory(int fd)
     return S_ISDIR(buf.st_mode);
 }
 
-bool CUtil::is_directory(const char* path)
+bool CUtils::is_directory(const char* path)
 {
     struct stat buf;
     if (-1 == stat(path, &buf))
@@ -318,7 +318,7 @@ bool CUtil::is_directory(const char* path)
     return S_ISDIR(buf.st_mode);
 }
 
-void CUtil::enable_core_dump(bool enabled, int core_file_size)
+void CUtils::enable_core_dump(bool enabled, int core_file_size)
 {    
     if (enabled)
     {
@@ -334,17 +334,17 @@ void CUtil::enable_core_dump(bool enabled, int core_file_size)
         THROW_SYSCALL_EXCEPTION(NULL, errno, "prctl");
 }
 
-const char* CUtil::get_program_name()
+const char* CUtils::get_program_name()
 {
     return program_invocation_name;
 }
 
-const char* CUtil::get_program_short_name()
+const char* CUtils::get_program_short_name()
 {
     return program_invocation_short_name;
 }
 
-void CUtil::set_process_name(const std::string& new_name)
+void CUtils::set_process_name(const std::string& new_name)
 {
     if (!new_name.empty())
     {
@@ -353,7 +353,7 @@ void CUtil::set_process_name(const std::string& new_name)
     }
 }
 
-void CUtil::set_process_name(const char* format, ...)
+void CUtils::set_process_name(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -365,14 +365,14 @@ void CUtil::set_process_name(const char* format, ...)
 }
 
 // 参考：http://www.stamhe.com/?p=416
-void CUtil::init_process_title(int argc, char *argv[])
+void CUtils::init_process_title(int argc, char *argv[])
 {
     g_arg_start = argv[0];
     g_arg_end = argv[argc-1] + strlen(argv[argc-1]) + 1;
     g_env_start = environ[0];
 }
 
-void CUtil::set_process_title(const std::string &new_title)
+void CUtils::set_process_title(const std::string &new_title)
 {
     if (!new_title.empty())
     {
@@ -429,7 +429,7 @@ void CUtil::set_process_title(const std::string &new_title)
     }
 }
 
-void CUtil::set_process_title(const char* format, ...)
+void CUtils::set_process_title(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -440,7 +440,7 @@ void CUtil::set_process_title(const char* format, ...)
     set_process_title(std::string(title));
 }
 
-void CUtil::common_pipe_read(int fd, char** buffer, int32_t* buffer_size)
+void CUtils::common_pipe_read(int fd, char** buffer, int32_t* buffer_size)
 {
 	int ret = 0;
 	int32_t size = 0;
@@ -480,7 +480,7 @@ void CUtil::common_pipe_read(int fd, char** buffer, int32_t* buffer_size)
 	}
 }
 
-void CUtil::common_pipe_write(int fd, const char* buffer, int32_t buffer_size)
+void CUtils::common_pipe_write(int fd, const char* buffer, int32_t buffer_size)
 {
 	int ret = 0;
 	int32_t size = buffer_size;

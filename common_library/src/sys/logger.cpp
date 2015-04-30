@@ -501,7 +501,7 @@ void CLogger::do_log(log_level_t log_level, const char* filename, int lineno, co
     log_message_t* log_message = (log_message_t*)malloc(_log_line_size+sizeof(log_message_t)+1);
     
     char datetime[sizeof("2012-12-12 12:12:12")];
-    CDatetimeUtil::get_current_datetime(datetime, sizeof(datetime));
+    CDatetimeUtils::get_current_datetime(datetime, sizeof(datetime));
     
     // 模块名称
     std::string module_name_field;
@@ -511,7 +511,7 @@ void CLogger::do_log(log_level_t log_level, const char* filename, int lineno, co
     }
 
     // 在构造时，已经保证_log_line_size不会小于指定的值，所以下面的操作是安全的
-    int head_length = utils::CStringUtil::fix_snprintf(
+    int head_length = utils::CStringUtils::fix_snprintf(
             log_message->content
           , _log_line_size
           , "[%s][0x%08x][%s]%s[%s:%d]"
@@ -546,8 +546,8 @@ void CLogger::do_log(log_level_t log_level, const char* filename, int lineno, co
             log_message = new_log_message;
                                     
             // 这里不需要关心返回值了
-            head_length  = utils::CStringUtil::fix_snprintf(log_message->content, new_line_length, "[%s][0x%08x][%s]", datetime, CThread::get_current_thread_id(), get_log_level_name(log_level));
-            log_line_length = utils::CStringUtil::fix_vsnprintf(log_message->content+head_length, new_line_length-head_length, format, args_copy);            
+            head_length  = utils::CStringUtils::fix_snprintf(log_message->content, new_line_length, "[%s][0x%08x][%s]", datetime, CThread::get_current_thread_id(), get_log_level_name(log_level));
+            log_line_length = utils::CStringUtils::fix_vsnprintf(log_message->content+head_length, new_line_length-head_length, format, args_copy);            
             log_message->length = head_length + log_line_length;
         }
     }
@@ -789,10 +789,10 @@ CLogThread::~CLogThread()
 void CLogThread::run()
 {
     // 提示
-    fprintf(stderr, "[%s]Logger thread %u running.\n", CDatetimeUtil::get_current_datetime().c_str(), get_thread_id());
+    fprintf(stderr, "[%s]Logger thread %u running.\n", CDatetimeUtils::get_current_datetime().c_str(), get_thread_id());
 
 #if ENABLE_SET_LOG_THREAD_NAME==1
-    CUtil::set_process_name("log-thread");
+    CUtils::set_process_name("log-thread");
 #endif // ENABLE_SET_LOG_THREAD_NAME
 
     // 所有日志都写完了，才可以退出日志线程
@@ -819,7 +819,7 @@ void CLogThread::run()
     }
 
     // 提示
-    fprintf(stderr, "[%s]Logger thread %u exited.\n", CDatetimeUtil::get_current_datetime().c_str(), get_thread_id());
+    fprintf(stderr, "[%s]Logger thread %u exited.\n", CDatetimeUtils::get_current_datetime().c_str(), get_thread_id());
     remove_object(this);
 }
 

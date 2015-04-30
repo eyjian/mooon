@@ -19,7 +19,7 @@
 #include "sys/dir_util.h"
 SYS_NAMESPACE_BEGIN
 
-void CDirUtil::list(const std::string& dirpath
+void CDirUtils::list(const std::string& dirpath
                   , std::vector<std::string>* subdir_names
                   , std::vector<std::string>* file_names
                   , std::vector<std::string>* link_names)
@@ -77,7 +77,7 @@ void CDirUtil::list(const std::string& dirpath
     closedir(dir);
 }
 
-void CDirUtil::remove(const std::string& dirpath)
+void CDirUtils::remove(const std::string& dirpath)
 {
     if (-1 == rmdir(dirpath.c_str()))
         THROW_SYSCALL_EXCEPTION(NULL, errno, "rmdir");

@@ -186,14 +186,14 @@ bool CInfo::get_kernel_version(kernel_version_t& kernel_version)
     char* dot1 = strchr(version, '.');
     if (NULL == dot1) return false;
     *dot1++ = '\0';
-    if (!utils::CStringUtil::string2int16(version, kernel_version.major)) return false;
+    if (!utils::CStringUtils::string2int16(version, kernel_version.major)) return false;
 
     char* dot2 = strchr(dot1, '.');
     if (NULL == dot2) return false;
     *dot2++ = '\0';
-    if (!utils::CStringUtil::string2int16(dot1, kernel_version.minor)) return false;
+    if (!utils::CStringUtils::string2int16(dot1, kernel_version.minor)) return false;
 
-    return utils::CStringUtil::string2int16(dot2, kernel_version.revision);
+    return utils::CStringUtils::string2int16(dot2, kernel_version.revision);
 }
 
 bool CInfo::get_process_info(process_info_t& process_info)

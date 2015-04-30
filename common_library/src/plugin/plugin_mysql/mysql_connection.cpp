@@ -175,7 +175,7 @@ bool CMySQLConnection::is_established() const
 CMySQLRecordset* CMySQLConnection::query(const char* format, va_list& args)
 {
     char sql[SQL_MAX];    
-    int sql_length = utils::CStringUtil::fix_vsnprintf(sql, sizeof(sql), format, args);
+    int sql_length = utils::CStringUtils::fix_vsnprintf(sql, sizeof(sql), format, args);
 
     // 如果查询成功，返回0。如果出现错误，返回非0值
     if (mysql_real_query(get_mysql_handler(_mysql_handler), sql, (unsigned long)sql_length) != 0)
@@ -295,7 +295,7 @@ void CMySQLConnection::free_recordset(sys::IRecordset* recordset)
 size_t CMySQLConnection::update(const char* format, va_list& args)
 {
     char sql[SQL_MAX];    
-    int sql_length = utils::CStringUtil::fix_vsnprintf(sql, sizeof(sql), format, args);
+    int sql_length = utils::CStringUtils::fix_vsnprintf(sql, sizeof(sql), format, args);
 
     // 如果查询成功，返回0。如果出现错误，返回非0值
     if (mysql_real_query(get_mysql_handler(_mysql_handler), sql, (unsigned long)sql_length) != 0)

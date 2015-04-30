@@ -245,7 +245,7 @@ void CTcpClient::timed_connect()
                 THROW_SYSCALL_EXCEPTION(NULL, errno, "connect");
 
             // 异步连接中，使用poll超时探测
-            if (!CUtil::timed_poll(fd, POLLIN | POLLOUT | POLLERR, _milli_seconds))
+            if (!CUtils::timed_poll(fd, POLLIN | POLLOUT | POLLERR, _milli_seconds))
                 THROW_SYSCALL_EXCEPTION(NULL, ETIMEDOUT, "poll");
 
 		    int errcode = 0;

@@ -22,7 +22,7 @@ NET_NAMESPACE_BEGIN
 
 std::string ip_address_t::to_string() const
 {
-    return _is_ipv6? net::CUtil::ipv6_tostring(_ip_data): net::CUtil::ipv4_tostring(_ip_data[0]);
+    return _is_ipv6? net::CUtils::ipv6_tostring(_ip_data): net::CUtils::ipv4_tostring(_ip_data[0]);
 }
 
 uint32_t ip_address_t::to_ipv4() const
@@ -52,7 +52,7 @@ bool ip_address_t::is_zero_address() const
 
 bool ip_address_t::is_broadcast_address() const
 {
-    return CUtil::is_broadcast_address(to_string().c_str());
+    return CUtils::is_broadcast_address(to_string().c_str());
 }
 
 void ip_address_t::from_string(const char* ip) throw (utils::CException)
@@ -65,14 +65,14 @@ void ip_address_t::from_string(const char* ip) throw (utils::CException)
         _ip_data[2] = 0;
         _ip_data[3] = 0;
     }
-    else if (net::CUtil::string_toipv4(ip, _ip_data[0]))
+    else if (net::CUtils::string_toipv4(ip, _ip_data[0]))
     {
         _is_ipv6 = false;
         _ip_data[1] = 0;
         _ip_data[2] = 0;
         _ip_data[3] = 0;
     }
-    else if (net::CUtil::string_toipv6(ip, _ip_data))
+    else if (net::CUtils::string_toipv6(ip, _ip_data))
     {
         _is_ipv6 = true;
     }

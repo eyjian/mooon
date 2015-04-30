@@ -16,15 +16,15 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#ifndef MOOON_SYS_DATETIME_UTIL_H
-#define MOOON_SYS_DATETIME_UTIL_H
+#ifndef MOOON_SYS_DATETIME_UTILS_H
+#define MOOON_SYS_DATETIME_UTILS_H
 #include <time.h>
 #include "sys/util.h"
 SYS_NAMESPACE_BEGIN
 
 /** 日期时间工具类
   */
-class CDatetimeUtil
+class CDatetimeUtils
 {
 public:
     /** 判断指定年份是否为闰年 */
@@ -103,4 +103,4 @@ public:
 };
 
 SYS_NAMESPACE_END
-#endif // MOOON_SYS_DATETIME_UTIL_H
+#endif // MOOON_SYS_DATETIME_UTILS_H

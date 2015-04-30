@@ -16,8 +16,8 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#ifndef MOOON_NET_UTIL_H
-#define MOOON_NET_UTIL_H
+#ifndef MOOON_NET_UTILS_H
+#define MOOON_NET_UTILS_H
 #include <poll.h>
 #include <vector>
 #include "net/config.h"
@@ -27,7 +27,7 @@ NET_NAMESPACE_BEGIN
 /***
   * 与网络相关的工具类
   */
-class CUtil
+class CUtils
 {
 public:    
     /** 判断是否为小字节序，如果是返回true，否则返回false */
@@ -83,7 +83,7 @@ public:
     template <typename DataType>
     static void reverse_bytes(const DataType* source, DataType* result)
     {
-        CUtil::reverse_bytes(source, result, sizeof(DataType));
+        CUtils::reverse_bytes(source, result, sizeof(DataType));
     }
 
     /***
@@ -134,7 +134,7 @@ public:
     template <typename DataType>
     static void net2host(const DataType& source, DataType& result)
     {
-        CUtil::host2net<DataType>(source, result);
+        CUtils::host2net<DataType>(source, result);
     }    
 
     /***
@@ -145,7 +145,7 @@ public:
     template <typename DataType>
     static DataType net2host(const DataType& source)
     {
-        return CUtil::host2net<DataType>(source);
+        return CUtils::host2net<DataType>(source);
     } 
 
     /** 判断给定的字符串是否为主机名或域名 */
@@ -239,4 +239,4 @@ public:
 };
 
 NET_NAMESPACE_END
-#endif // MOOON_NET_UTIL_H
+#endif // MOOON_NET_UTILS_H

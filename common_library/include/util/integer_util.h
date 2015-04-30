@@ -16,8 +16,8 @@
  *
  * Author: JianYi, eyjian@qq.com or eyjian@gmail.com
  */
-#ifndef MOOON_UTILS_INTEGER_UTIL_H
-#define MOOON_UTILS_INTEGER_UTIL_H
+#ifndef MOOON_UTILS_INTEGER_UTILS_H
+#define MOOON_UTILS_INTEGER_UTILS_H
 #include <math.h>
 #include "util/config.h"
 UTILS_NAMESPACE_BEGIN
@@ -25,7 +25,7 @@ UTILS_NAMESPACE_BEGIN
 /***
   * 整数数字操作工具类
   */
-class CIntegerUtil
+class CIntegerUtils
 {
 public:	
 	template <typename DataType>
@@ -58,4 +58,4 @@ public:
 };
 
 UTILS_NAMESPACE_END
-#endif // MOOON_UTILS_INTEGER_UTIL_H
+#endif // MOOON_UTILS_INTEGER_UTILS_H

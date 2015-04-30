@@ -446,13 +446,13 @@ template<typename DataType>
 void CIntArgInfo<DataType>::set_value(const std::string& value)
 {
 	parent_cArgInfo::_has_value = true;
-	CStringUtil::string2int(value.data(), parent_cArgInfo::_value,value.length(), true);
+	CStringUtils::string2int(value.data(), parent_cArgInfo::_value,value.length(), true);
 }
 
 template<typename DataType>
 std::string CIntArgInfo<DataType>::to_string()
 {
-	return CStringUtil::int_tostring(parent_cArgInfo::_value);
+	return CStringUtils::int_tostring(parent_cArgInfo::_value);
 }
 
 /**
@@ -462,7 +462,7 @@ template<typename DataType>
 bool CIntArgInfo<DataType>::validate_value(const std::string& value_str) const
 {
 	DataType value;
-	if (CStringUtil::string2int(value_str.data(), value, value_str.length(), true))
+	if (CStringUtils::string2int(value_str.data(), value, value_str.length(), true))
 	{
 		if ((value < _min_value) || (value > _max_value))
 		{

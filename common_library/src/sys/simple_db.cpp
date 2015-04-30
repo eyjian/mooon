@@ -326,7 +326,7 @@ CMySQLConnection::~CMySQLConnection()
 
 void CMySQLConnection::open() throw (CDBException)
 {    
-    _id = utils::CStringUtil::format_string("mysql://%s@%s:%d", _db_name.c_str(), _db_ip.c_str(), _db_port);
+    _id = utils::CStringUtils::format_string("mysql://%s@%s:%d", _db_name.c_str(), _db_ip.c_str(), _db_port);
     do_open();
 }
 
@@ -489,7 +489,7 @@ void CSQLite3Connection::open() throw (CDBException)
     }
     else
     {
-        _id = utils::CStringUtil::format_string("sqlite3://%s", _db_name.c_str());
+        _id = utils::CStringUtils::format_string("sqlite3://%s", _db_name.c_str());
 
         if (sqlite3_open(_db_name.c_str(), &_sqlite) != SQLITE_OK)
         {

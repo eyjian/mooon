@@ -121,7 +121,7 @@ ssize_t CDataChannel::timed_receive(char* buffer, size_t buffer_size, uint32_t m
 
     for (;;)
     {
-        if (!CUtil::timed_poll(_fd, POLLIN, milliseconds))
+        if (!CUtils::timed_poll(_fd, POLLIN, milliseconds))
         {
             break;
         }
@@ -150,7 +150,7 @@ ssize_t CDataChannel::timed_send(const char* buffer, size_t buffer_size, uint32_
     
     for (;;)
     {
-        if (!CUtil::timed_poll(_fd, POLLOUT, milliseconds))
+        if (!CUtils::timed_poll(_fd, POLLOUT, milliseconds))
         {
             break;
         }
@@ -277,7 +277,7 @@ bool CDataChannel::full_map_tofile(int file_fd, size_t& size, size_t offset)
 bool CDataChannel::full_write_tofile(int file_fd, size_t& size, size_t offset)
 {
     
-    char* buffer = new char[sys::CUtil::get_page_size()];
+    char* buffer = new char[sys::CUtils::get_page_size()];
     utils::DeleteHelper<char> dh(buffer, true);    
     size_t remaining_size = size;
     size_t current_offset = offset;

@@ -16,8 +16,8 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#ifndef MOOON_SYS_FS_UTIL_H
-#define MOOON_SYS_FS_UTIL_H
+#ifndef MOOON_SYS_FS_UTILS_H
+#define MOOON_SYS_FS_UTILS_H
 #include "sys/util.h"
 
 #if COMPILE_FS_UTIL_CPP==1 /** 必须在sys/sys_config.h之后 */
@@ -42,7 +42,7 @@ SYS_NAMESPACE_BEGIN
   * 操作文件系统的工具类
   * 通过与CFSTable类的结合，可以得到各分区的总大小和剩余大小等数据
   */
-class CFSUtil
+class CFSUtils
 {
 public:    
     typedef struct
@@ -130,4 +130,4 @@ private:
 
 SYS_NAMESPACE_END
 #endif // COMPILE_FS_UTIL_CPP
-#endif // MOOON_SYS_FS_UTIL_H
+#endif // MOOON_SYS_FS_UTILS_H

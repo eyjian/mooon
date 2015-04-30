@@ -32,7 +32,7 @@ SYS_NAMESPACE_BEGIN
 // fstab.h: #define  _PATH_FSTAB    "/etc/fstab"
 // paths.h: #define  _PATH_MOUNTED  "/etc/mtab"
 
-void CFSUtil::stat_fs(int fd, fs_stat_t& stat_buf)
+void CFSUtils::stat_fs(int fd, fs_stat_t& stat_buf)
 {
     struct statvfs buf;
     if (-1 == fstatvfs(fd, &buf)) // 不使用statfs
@@ -48,7 +48,7 @@ void CFSUtil::stat_fs(int fd, fs_stat_t& stat_buf)
     stat_buf.file_name_length_max = buf.f_namemax;
 }
 
-void CFSUtil::stat_fs(const char* path, fs_stat_t& stat_buf)
+void CFSUtils::stat_fs(const char* path, fs_stat_t& stat_buf)
 {
     int fd = open(path, O_RDONLY);
     if (-1 == fd)

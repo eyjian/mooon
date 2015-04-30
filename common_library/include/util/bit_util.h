@@ -16,15 +16,15 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#ifndef MOOON_UTILS_BIT_UTIL_H
-#define MOOON_UTILS_BIT_UTIL_H
+#ifndef MOOON_UTILS_BIT_UTILS_H
+#define MOOON_UTILS_BIT_UTILS_H
 #include "util/config.h"
 UTILS_NAMESPACE_BEGIN
 
 /***
   * 位操作工具类
   */
-class CBitUtil
+class CBitUtils
 {
 public:
     /***
@@ -58,4 +58,4 @@ public:
 };
 
 UTILS_NAMESPACE_END
-#endif // MOOON_UTILS_BIT_UTIL_H
+#endif // MOOON_UTILS_BIT_UTILS_H

@@ -68,7 +68,7 @@ int main_template(IMainHelper* main_helper, int argc, char* argv[])
     {
         if (SIG_ERR == signal(SIGPIPE, SIG_IGN))
         {
-            fprintf(stderr, "Ignored SIGPIPE error: %s.\n", sys::CUtil::get_last_error_message().c_str());
+            fprintf(stderr, "Ignored SIGPIPE error: %s.\n", sys::CUtils::get_last_error_message().c_str());
             return 1;
         }
     }
@@ -79,7 +79,7 @@ int main_template(IMainHelper* main_helper, int argc, char* argv[])
         if (-1 == pid)
         {
             // fork失败
-            fprintf(stderr, "fork error: %s.\n", sys::CUtil::get_last_error_message().c_str());
+            fprintf(stderr, "fork error: %s.\n", sys::CUtils::get_last_error_message().c_str());
             break;
         }
         else if (0 == pid)
@@ -98,7 +98,7 @@ int main_template(IMainHelper* main_helper, int argc, char* argv[])
 bool self_restart(IMainHelper* main_helper)
 {
     std::string env_name = main_helper->get_restart_env_name();
-    utils::CStringUtil::trim(env_name);
+    utils::CStringUtils::trim(env_name);
 
     // 如果环境变量名为空，则认为不自重启
     if (env_name.empty()) return false;
@@ -121,17 +121,17 @@ void child_process(IMainHelper* main_helper, int argc, char* argv[])
         // 收到SIGUSR1信号时，则退出进程
         if (-1 == sigemptyset(&sigset))
         {
-            fprintf(stderr, "Initialized signal set error: %s.\n", sys::CUtil::get_last_error_message().c_str());
+            fprintf(stderr, "Initialized signal set error: %s.\n", sys::CUtils::get_last_error_message().c_str());
             exit(1);
         }
         if (-1 == sigaddset(&sigset, exit_signo))
         {
-            fprintf(stderr, "Added %s to signal set error: %s.\n", strsignal(exit_signo), sys::CUtil::get_last_error_message().c_str());
+            fprintf(stderr, "Added %s to signal set error: %s.\n", strsignal(exit_signo), sys::CUtils::get_last_error_message().c_str());
             exit(1);
         }
         if (-1 == sigprocmask(SIG_BLOCK, &sigset, &old_sigset))
         {
-            fprintf(stderr, "Blocked SIGUSR1 error: %s\n", sys::CUtil::get_last_error_message().c_str());
+            fprintf(stderr, "Blocked SIGUSR1 error: %s\n", sys::CUtils::get_last_error_message().c_str());
             exit(1);
         }    
     }
@@ -154,7 +154,7 @@ void child_process(IMainHelper* main_helper, int argc, char* argv[])
 	//__MYLOG_INFO(main_helper->get_logger(), "Exit signal is %s .\n", strsignal(exit_signo));
 	
 	// 记录工作进程号
-    //__MYLOG_INFO(main_helper->get_logger(), "Work process is %d.\n", sys::CUtil::get_current_process_id());
+    //__MYLOG_INFO(main_helper->get_logger(), "Work process is %d.\n", sys::CUtils::get_current_process_id());
 
     while (exit_signo > 0)   
     {
@@ -184,7 +184,7 @@ bool parent_process(IMainHelper* main_helper, pid_t child_pid, int& child_exit_c
 {
     // 是否重启动
     bool restart = false;
-    fprintf(stdout, "Parent process is %d, and its work process is %d.\n", sys::CUtil::get_current_process_id(), child_pid);
+    fprintf(stdout, "Parent process is %d, and its work process is %d.\n", sys::CUtils::get_current_process_id(), child_pid);
 
     while (true)
     {
@@ -198,7 +198,7 @@ bool parent_process(IMainHelper* main_helper, pid_t child_pid, int& child_exit_c
             }
             else
             {
-                fprintf(stderr, "Wait %d error: %s.\n", child_pid, sys::CUtil::get_last_error_message().c_str());
+                fprintf(stderr, "Wait %d error: %s.\n", child_pid, sys::CUtils::get_last_error_message().c_str());
             }
         }
         else if (WIFSTOPPED(status))
@@ -227,7 +227,7 @@ bool parent_process(IMainHelper* main_helper, pid_t child_pid, int& child_exit_c
                 fprintf(stderr, "Process %d will restart self for signal %s.\n", child_pid, strsignal(signo));
 
                 // 延迟一秒，避免极端情况下拉起即coredump带来的死循环问题
-                sys::CUtil::millisleep(main_helper->get_restart_milliseconds());
+                sys::CUtils::millisleep(main_helper->get_restart_milliseconds());
             }
         }
         else

@@ -16,15 +16,15 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#ifndef MOOON_SYS_FILE_UTIL_H
-#define MOOON_SYS_FILE_UTIL_H
+#ifndef MOOON_SYS_FILE_UTILS_H
+#define MOOON_SYS_FILE_UTILS_H
 #include "sys/util.h"
 SYS_NAMESPACE_BEGIN
 
 /**
   * 文件相关的工具类
   */
-class CFileUtil
+class CFileUtils
 {
 public:
     /** 文件复制函数
@@ -71,4 +71,4 @@ public:
 };
 
 SYS_NAMESPACE_END
-#endif // MOOON_SYS_FILE_UTIL_H
+#endif // MOOON_SYS_FILE_UTILS_H

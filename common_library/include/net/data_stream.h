@@ -112,7 +112,7 @@ public:
         if (!_reverse_bytes)
             m = n;
         else
-            CUtil::reverse_bytes<DataType>(&n, &m);
+            CUtils::reverse_bytes<DataType>(&n, &m);
         
         return true;
     }
@@ -229,7 +229,7 @@ public:
         if (!_reverse_bytes)
             n = m;
         else
-            CUtil::reverse_bytes<DataType>(&m, &n);
+            CUtils::reverse_bytes<DataType>(&m, &n);
         
         memcpy(_buffer, &n, sizeof(m));
         _offset += sizeof(m);

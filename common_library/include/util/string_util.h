@@ -16,14 +16,14 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#ifndef MOOON_UTILS_STRING_UTIL_H
-#define MOOON_UTILS_STRING_UTIL_H
+#ifndef MOOON_UTILS_STRING_UTILS_H
+#define MOOON_UTILS_STRING_UTILS_H
 #include <math.h>
 #include <sstream>
 #include "util/config.h"
 UTILS_NAMESPACE_BEGIN
 
-class CStringUtil
+class CStringUtils
 {
 public:
     /** 删除字符串尾部从指定字符开始的内容
@@ -257,4 +257,4 @@ public:
 };
 
 UTILS_NAMESPACE_END
-#endif // MOOON_UTILS_STRING_UTIL_H
+#endif // MOOON_UTILS_STRING_UTILS_H

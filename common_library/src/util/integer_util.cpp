@@ -20,34 +20,34 @@
 #include "util/integer_util.h"
 UTILS_NAMESPACE_BEGIN
 
-bool CIntegerUtil::is_int16(int32_t num)
+bool CIntegerUtils::is_int16(int32_t num)
 {    
     return (num >= std::numeric_limits<int16_t>::min())
         && (num <= std::numeric_limits<int16_t>::max());
 }
 
-bool CIntegerUtil::is_uint16(int32_t num)
+bool CIntegerUtils::is_uint16(int32_t num)
 {
     return (num >= 0) && (num <= std::numeric_limits<uint16_t>::max());
 }
 
-bool CIntegerUtil::is_uint16(uint32_t num)
+bool CIntegerUtils::is_uint16(uint32_t num)
 {
     return (num <= std::numeric_limits<uint16_t>::max());
 }
 
-bool CIntegerUtil::is_int32(int64_t num)
+bool CIntegerUtils::is_int32(int64_t num)
 {
     return (num >= std::numeric_limits<int32_t>::min())
         && (num <= std::numeric_limits<int32_t>::max());
 }
 
-bool CIntegerUtil::is_uint32(int64_t num)
+bool CIntegerUtils::is_uint32(int64_t num)
 {
     return (num >= 0) && (num <= std::numeric_limits<uint32_t>::max());
 }
 
-bool CIntegerUtil::is_uint32(uint64_t num)
+bool CIntegerUtils::is_uint32(uint64_t num)
 {
     return (num <= std::numeric_limits<uint32_t>::max());
 }

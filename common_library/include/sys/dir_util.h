@@ -16,8 +16,8 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#ifndef MOOON_SYS_DIR_UTIL_H
-#define MOOON_SYS_DIR_UTIL_H
+#ifndef MOOON_SYS_DIR_UTILS_H
+#define MOOON_SYS_DIR_UTILS_H
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -30,7 +30,7 @@
 #include "sys/util.h"
 SYS_NAMESPACE_BEGIN
 
-class CDirUtil
+class CDirUtils
 {
 public:
     /***
@@ -54,4 +54,4 @@ public:
 };
 
 SYS_NAMESPACE_END
-#endif // MOOON_SYS_DIR_UTIL_H
+#endif // MOOON_SYS_DIR_UTILS_H

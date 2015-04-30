@@ -97,14 +97,14 @@ static bool fast_string2int(const char* str, IntType& result, uint8_t max_length
     return true;
 }
 
-void CStringUtil::remove_last(std::string& source, char c)
+void CStringUtils::remove_last(std::string& source, char c)
 {
     std::string::size_type pos = source.rfind(c);
     if (pos+1 != source.length())
         source.erase(pos);
 }
 
-void CStringUtil::remove_last(std::string& source, const std::string& sep)
+void CStringUtils::remove_last(std::string& source, const std::string& sep)
 {
     // std: $HOME/bin/exe
     // sep: /bin/
@@ -114,7 +114,7 @@ void CStringUtil::remove_last(std::string& source, const std::string& sep)
         source.erase(pos);
 }
 
-void CStringUtil::to_upper(char* source)
+void CStringUtils::to_upper(char* source)
 {
     char* tmp_source = source;
     while (*tmp_source != '\0')
@@ -126,7 +126,7 @@ void CStringUtil::to_upper(char* source)
     }
 }
 
-void CStringUtil::to_lower(char* source)
+void CStringUtils::to_lower(char* source)
 {
     char* tmp_source = source;
     while (*tmp_source != '\0')
@@ -138,14 +138,14 @@ void CStringUtil::to_lower(char* source)
     }
 }
 
-void CStringUtil::to_upper(std::string& source)
+void CStringUtils::to_upper(std::string& source)
 {
     // 只修改大小写，可以这样做
     char* tmp_source = (char *)source.c_str();
     to_upper(tmp_source);
 }
 
-void CStringUtil::to_lower(std::string& source)
+void CStringUtils::to_lower(std::string& source)
 {
     // 只修改大小写，可以这样做
     char* tmp_source = (char *)source.c_str();
@@ -153,13 +153,13 @@ void CStringUtil::to_lower(std::string& source)
 }
 
 /** 判断指定字符是否为空格或TAB符(\t)或回车符(\r)或换行符(\n) */
-bool CStringUtil::is_space(char c)
+bool CStringUtils::is_space(char c)
 {
     return (' ' == c) || ('\t' == c) || ('\r' == c) || ('\n' == c);
 }
 
 // 不使用trim_left和trim_right组合实现，以保持效率
-void CStringUtil::trim(char* source)
+void CStringUtils::trim(char* source)
 {
     char* space = NULL;
     char* tmp_source = source;
@@ -189,7 +189,7 @@ void CStringUtil::trim(char* source)
     }
 }
 
-void CStringUtil::trim_left(char* source)
+void CStringUtils::trim_left(char* source)
 {
     char* tmp_source = source;
     while (is_space(*tmp_source)) ++tmp_source;
@@ -204,7 +204,7 @@ void CStringUtil::trim_left(char* source)
     }
 }
 
-void CStringUtil::trim_right(char* source)
+void CStringUtils::trim_right(char* source)
 {
     char* space = NULL;
     char* tmp_source = source;
@@ -231,13 +231,13 @@ void CStringUtil::trim_right(char* source)
     }
 }
 
-void CStringUtil::trim(std::string& source)
+void CStringUtils::trim(std::string& source)
 {
     trim_left(source);
     trim_right(source);
 }
 
-void CStringUtil::trim_left(std::string& source)
+void CStringUtils::trim_left(std::string& source)
 {
     // 不能直接对c_str()进行修改，因为长度发生了变化
     size_t length = source.length();
@@ -251,7 +251,7 @@ void CStringUtil::trim_left(std::string& source)
     source = tmp_source;
 }
 
-void CStringUtil::trim_right(std::string& source)
+void CStringUtils::trim_right(std::string& source)
 {
     // 不能直接对c_str()进行修改，因为长度发生了变化
     size_t length = source.length();
@@ -265,12 +265,12 @@ void CStringUtil::trim_right(std::string& source)
     source = tmp_source;
 }
 
-bool CStringUtil::string2int8(const char* source, int8_t& result, uint8_t converted_length, bool ignored_zero)
+bool CStringUtils::string2int8(const char* source, int8_t& result, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, result, converted_length, ignored_zero);
 }
 
-bool CStringUtil::string2int(const char* source, int8_t& result, uint8_t converted_length, bool ignored_zero)
+bool CStringUtils::string2int(const char* source, int8_t& result, uint8_t converted_length, bool ignored_zero)
 {
     int16_t value = 0;
 
@@ -282,12 +282,12 @@ bool CStringUtil::string2int(const char* source, int8_t& result, uint8_t convert
     return true;
 }
 
-bool CStringUtil::string2int16(const char* source, int16_t& result, uint8_t converted_length, bool ignored_zero)
+bool CStringUtils::string2int16(const char* source, int16_t& result, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, result, converted_length, ignored_zero);
 }
 
-bool CStringUtil::string2int(const char* source, int16_t& result, uint8_t converted_length, bool ignored_zero)
+bool CStringUtils::string2int(const char* source, int16_t& result, uint8_t converted_length, bool ignored_zero)
 {
     int32_t value = 0;
 
@@ -299,12 +299,12 @@ bool CStringUtil::string2int(const char* source, int16_t& result, uint8_t conver
     return true;
 }
 
-bool CStringUtil::string2int32(const char* source, int32_t& result, uint8_t converted_length, bool ignored_zero)
+bool CStringUtils::string2int32(const char* source, int32_t& result, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, result, converted_length, ignored_zero);
 }
 
-bool CStringUtil::string2int(const char* source, int32_t& result, uint8_t converted_length, bool ignored_zero)
+bool CStringUtils::string2int(const char* source, int32_t& result, uint8_t converted_length, bool ignored_zero)
 {
     if (NULL == source) return false;
 
@@ -317,12 +317,12 @@ bool CStringUtil::string2int(const char* source, int32_t& result, uint8_t conver
     return true;
 }
 
-bool CStringUtil::string2int64(const char* source, int64_t& result, uint8_t converted_length, bool ignored_zero)
+bool CStringUtils::string2int64(const char* source, int64_t& result, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, result, converted_length, ignored_zero);
 }
 
-bool CStringUtil::string2int(const char* source, int64_t& result, uint8_t converted_length, bool ignored_zero)
+bool CStringUtils::string2int(const char* source, int64_t& result, uint8_t converted_length, bool ignored_zero)
 {
     long long value;
     if (!fast_string2int<long long>(source, value, sizeof("-9223372036854775808")-1, converted_length, ignored_zero)) return false;
@@ -331,12 +331,12 @@ bool CStringUtil::string2int(const char* source, int64_t& result, uint8_t conver
     return true;
 }
 
-bool CStringUtil::string2uint8(const char* source, uint8_t& result, uint8_t converted_length, bool ignored_zero)
+bool CStringUtils::string2uint8(const char* source, uint8_t& result, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, result, converted_length, ignored_zero);
 }
 
-bool CStringUtil::string2int(const char* source, uint8_t& result, uint8_t converted_length, bool ignored_zero)
+bool CStringUtils::string2int(const char* source, uint8_t& result, uint8_t converted_length, bool ignored_zero)
 {
     uint16_t value = 0;
     if (!string2uint16(source, value, converted_length, ignored_zero)) return false;
@@ -346,12 +346,12 @@ bool CStringUtil::string2int(const char* source, uint8_t& result, uint8_t conver
     return true;
 }
 
-bool CStringUtil::string2uint16(const char* source, uint16_t& result, uint8_t converted_length, bool ignored_zero)
+bool CStringUtils::string2uint16(const char* source, uint16_t& result, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, result, converted_length, ignored_zero);
 }
 
-bool CStringUtil::string2int(const char* source, uint16_t& result, uint8_t converted_length, bool ignored_zero)
+bool CStringUtils::string2int(const char* source, uint16_t& result, uint8_t converted_length, bool ignored_zero)
 {
     uint32_t value = 0;
     if (!string2uint32(source, value, converted_length, ignored_zero)) return false;
@@ -361,12 +361,12 @@ bool CStringUtil::string2int(const char* source, uint16_t& result, uint8_t conve
     return true;
 }
 
-bool CStringUtil::string2uint32(const char* source, uint32_t& result, uint8_t converted_length, bool ignored_zero)
+bool CStringUtils::string2uint32(const char* source, uint32_t& result, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, result, converted_length, ignored_zero);
 }
 
-bool CStringUtil::string2int(const char* source, uint32_t& result, uint8_t converted_length, bool ignored_zero)
+bool CStringUtils::string2int(const char* source, uint32_t& result, uint8_t converted_length, bool ignored_zero)
 {
     unsigned long value;
     if (!fast_string2int<unsigned long>(source, value, sizeof("4294967295")-1, converted_length, ignored_zero)) return false;
@@ -375,12 +375,12 @@ bool CStringUtil::string2int(const char* source, uint32_t& result, uint8_t conve
     return true;
 }
 
-bool CStringUtil::string2uint64(const char* source, uint64_t& result, uint8_t converted_length, bool ignored_zero)
+bool CStringUtils::string2uint64(const char* source, uint64_t& result, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, result, converted_length, ignored_zero);
 }
 
-bool CStringUtil::string2int(const char* source, uint64_t& result, uint8_t converted_length, bool ignored_zero)
+bool CStringUtils::string2int(const char* source, uint64_t& result, uint8_t converted_length, bool ignored_zero)
 {
     unsigned long long value;
     if (!fast_string2int<unsigned long long>(source, value, sizeof("18446744073709551615")-1, converted_length, ignored_zero)) return false;
@@ -389,36 +389,36 @@ bool CStringUtil::string2int(const char* source, uint64_t& result, uint8_t conve
     return true;
 }
 
-std::string CStringUtil::int16_tostring(int16_t source)
+std::string CStringUtils::int16_tostring(int16_t source)
 {
     return int_tostring(source);
 }
 
-std::string CStringUtil::int_tostring(int16_t source)
+std::string CStringUtils::int_tostring(int16_t source)
 {
     char str[sizeof("065535")]; // 0xFFFF
     snprintf(str, sizeof(str), "%d", source);
     return str;
 }
 
-std::string CStringUtil::int32_tostring(int32_t source)
+std::string CStringUtils::int32_tostring(int32_t source)
 {
     return int_tostring(source);
 }
 
-std::string CStringUtil::int_tostring(int32_t source)
+std::string CStringUtils::int_tostring(int32_t source)
 {
     char str[sizeof("04294967295")]; // 0xFFFFFFFF
     snprintf(str, sizeof(str), "%d", source);
     return str;
 }
 
-std::string CStringUtil::int64_tostring(int64_t source)
+std::string CStringUtils::int64_tostring(int64_t source)
 {
     return int_tostring(source);
 }
 
-std::string CStringUtil::int_tostring(int64_t source)
+std::string CStringUtils::int_tostring(int64_t source)
 {
     char str[sizeof("018446744073709551615")]; // 0xFFFFFFFFFFFFFFFF
     snprintf(str, sizeof(str), "%"PRId64, source);
@@ -430,36 +430,36 @@ std::string CStringUtil::int_tostring(int64_t source)
     return str;
 }
 
-std::string CStringUtil::uint16_tostring(uint16_t source)
+std::string CStringUtils::uint16_tostring(uint16_t source)
 {
     return int_tostring(source);
 }
 
-std::string CStringUtil::int_tostring(uint16_t source)
+std::string CStringUtils::int_tostring(uint16_t source)
 {
     char str[sizeof("065535")]; // 0xFFFF
     snprintf(str, sizeof(str), "%u", source);
     return str;
 }
 
-std::string CStringUtil::uint32_tostring(uint32_t source)
+std::string CStringUtils::uint32_tostring(uint32_t source)
 {
     return int_tostring(source);
 }
 
-std::string CStringUtil::int_tostring(uint32_t source)
+std::string CStringUtils::int_tostring(uint32_t source)
 {
     char str[sizeof("04294967295")]; // 0xFFFFFFFF
     snprintf(str, sizeof(str), "%u", source);
     return str;
 }
 
-std::string CStringUtil::uint64_tostring(uint64_t source)
+std::string CStringUtils::uint64_tostring(uint64_t source)
 {
     return int_tostring(source);
 }
 
-std::string CStringUtil::int_tostring(uint64_t source)
+std::string CStringUtils::int_tostring(uint64_t source)
 {
     char str[sizeof("018446744073709551615")]; // 0xFFFFFFFFFFFFFFFF
 #if __WORDSIZE==64
@@ -470,7 +470,7 @@ std::string CStringUtil::int_tostring(uint64_t source)
     return str;
 }
 
-char* CStringUtil::skip_spaces(char* buffer)
+char* CStringUtils::skip_spaces(char* buffer)
 {
     char* iter = buffer;
     while (' ' == *iter) ++iter;
@@ -478,7 +478,7 @@ char* CStringUtil::skip_spaces(char* buffer)
     return iter;
 }
 
-const char* CStringUtil::skip_spaces(const char* buffer)
+const char* CStringUtils::skip_spaces(const char* buffer)
 {
     const char* iter = buffer;
     while (' ' == *iter) ++iter;
@@ -486,7 +486,7 @@ const char* CStringUtil::skip_spaces(const char* buffer)
     return iter;
 }
 
-uint32_t CStringUtil::hash(const char *str, int len)
+uint32_t CStringUtils::hash(const char *str, int len)
 {
     uint32_t g;
     uint32_t h = 0;
@@ -510,7 +510,7 @@ uint32_t CStringUtil::hash(const char *str, int len)
 // 1) 当str为"abc"时，它的返回值的大小是3，"abc"的字符个数刚好是3；
 // 2) 当str为"1234567890"时，它的返回值大小是10，"1234567890"的字符个数刚好是10；
 // 3) 当str为"1234567890X"时，它的返回值大小是11，"1234567890X"的字符个数刚好是11。
-int CStringUtil::fix_snprintf(char *str, size_t size, const char *format, ...)
+int CStringUtils::fix_snprintf(char *str, size_t size, const char *format, ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -520,7 +520,7 @@ int CStringUtil::fix_snprintf(char *str, size_t size, const char *format, ...)
     return expected;
 }
 
-int CStringUtil::fix_vsnprintf(char *str, size_t size, const char *format, va_list ap)
+int CStringUtils::fix_vsnprintf(char *str, size_t size, const char *format, va_list ap)
 {
     int expected = vsnprintf(str, size, format, ap);
 
@@ -530,7 +530,7 @@ int CStringUtil::fix_vsnprintf(char *str, size_t size, const char *format, va_li
     return static_cast<int>(size);
 }
 
-std::string CStringUtil::path2filename(const std::string& path, const std::string& join_string)
+std::string CStringUtils::path2filename(const std::string& path, const std::string& join_string)
 {
     std::string filename;
     CTokenList::TTokenList token_list;
@@ -550,19 +550,19 @@ std::string CStringUtil::path2filename(const std::string& path, const std::strin
     return filename;
 }
 
-int CStringUtil::chr_index(const char* str, char c) 
+int CStringUtils::chr_index(const char* str, char c) 
 {
     const char* c_position = strchr(str, c);
     return (NULL == c_position)? -1: c_position-str;
 }
 
-int CStringUtil::chr_rindex(const char* str, char c) 
+int CStringUtils::chr_rindex(const char* str, char c) 
 {
     const char* c_position = strrchr(str, c);
     return (NULL == c_position)? -1: c_position-str;
 }
 
-std::string CStringUtil::extract_dirpath(const char* filepath)
+std::string CStringUtils::extract_dirpath(const char* filepath)
 {
     std::string dirpath;
     int index = chr_rindex(filepath, '/');
@@ -572,7 +572,7 @@ std::string CStringUtil::extract_dirpath(const char* filepath)
     return dirpath;
 }
 
-std::string CStringUtil::extract_filename(const std::string& filepath)
+std::string CStringUtils::extract_filename(const std::string& filepath)
 {
     std::string filename;
     const char* slash_position = strrchr(filepath.c_str(), '/');
@@ -590,7 +590,7 @@ std::string CStringUtil::extract_filename(const std::string& filepath)
 // 2) 当str为"1234567890"时，它的返回值大小是10，"1234567890"的字符个数刚好是10；
 // 3) 当str为"1234567890X"时，它的返回值大小是11，"1234567890X"的字符个数刚好是11。
 // 最多支持10240个ANSI字符，超过的会被截断，但调用者可能不清楚是否发生了截断@_@
-std::string CStringUtil::format_string(const char* format, ...)
+std::string CStringUtils::format_string(const char* format, ...)
 {
     va_list ap;
     va_start(ap, format);

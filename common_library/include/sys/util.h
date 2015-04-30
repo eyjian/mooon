@@ -16,8 +16,8 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#ifndef MOOON_SYS_UTIL_H
-#define MOOON_SYS_UTIL_H
+#ifndef MOOON_SYS_UTILS_H
+#define MOOON_SYS_UTILS_H
 #include "sys/error.h"
 #include "sys/syscall_exception.h"
 SYS_NAMESPACE_BEGIN
@@ -25,7 +25,7 @@ SYS_NAMESPACE_BEGIN
 /***
   * 与系统调用有关的工具类函数实现
   */
-class CUtil
+class CUtils
 {
 public:
     /** 线程安全的毫秒级sleep函数
@@ -174,4 +174,4 @@ public:
 };
 
 SYS_NAMESPACE_END
-#endif // MOOON_SYS_UTIL_H
+#endif // MOOON_SYS_UTILS_H
