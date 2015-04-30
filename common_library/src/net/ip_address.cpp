@@ -55,7 +55,7 @@ bool ip_address_t::is_broadcast_address() const
     return CUtil::is_broadcast_address(to_string().c_str());
 }
 
-void ip_address_t::from_string(const char* ip)
+void ip_address_t::from_string(const char* ip) throw (util::CException)
 {
     if (NULL == ip)
     {
@@ -78,7 +78,7 @@ void ip_address_t::from_string(const char* ip)
     }
     else
     {
-        throw sys::CSyscallException(EINVAL, __FILE__, __LINE__, ip);
+        THROW_EXCEPTION(ip, EINVAL);
     }
 }
 

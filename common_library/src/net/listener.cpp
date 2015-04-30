@@ -31,14 +31,14 @@ void CListener::listen(const ip_address_t& ip, uint16_t port, bool nonblock, boo
 {    
     // 是否允许是任意地址上监听
     if (!enabled_address_zero && ip.is_zero_address())
-        throw sys::CSyscallException(EINVAL, __FILE__, __LINE__, "forbid listening on 0.0.0.0 address");
+        THROW_EXCEPTION("forbid listening on 0.0.0.0 address", EINVAL);
 
     // 禁止监听广播地址
     if ( ip.is_broadcast_address())
-        throw sys::CSyscallException(EINVAL, __FILE__, __LINE__, "forbid listening on broadcast address");        
+        THROW_EXCEPTION("forbid listening on broadcast address", EINVAL);
 
     socklen_t addr_len;           // 地址长度，如果为IPV6则等于sizeof(struct sockaddr_in6)，否则等于sizeof(struct sockaddr_in)
-    struct sockaddr* addr;        // 监听地址，如果为IPV6则指向addr_in6，否则指向addr_in   
+    struct sockaddr* addr;        // 监听地址，如果为IPV6则指向addr_in6，否则指向addr_in
     struct sockaddr_in addr_in;
     struct sockaddr_in6 addr_in6;
     
@@ -63,7 +63,8 @@ void CListener::listen(const ip_address_t& ip, uint16_t port, bool nonblock, boo
 
     // 创建一个socket
     int fd = ::socket(AF_INET, SOCK_STREAM, 0);
-    if (-1 == fd) throw sys::CSyscallException(errno, __FILE__, __LINE__, "socket error");
+    if (-1 == fd)
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "socket");
 
     try
     {
@@ -72,11 +73,13 @@ void CListener::listen(const ip_address_t& ip, uint16_t port, bool nonblock, boo
         // IP地址重用
         int reuse = 1;
         retval = ::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
-        if (-1 == retval) throw sys::CSyscallException(errno, __FILE__, __LINE__, "setsockopt error");
+        if (-1 == retval)
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "setsockopt");
 
         // 防止子进程继承
         retval = ::fcntl(fd, F_SETFD, FD_CLOEXEC);
-        if (-1 == retval) throw sys::CSyscallException(errno, __FILE__, __LINE__, "fcntl error");
+        if (-1 == retval)
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "fcntl");
 
         int retry_times = 50; // 重试次数
         for (;;)
@@ -87,12 +90,13 @@ void CListener::listen(const ip_address_t& ip, uint16_t port, bool nonblock, boo
             if ((EADDRINUSE == errno) && (--retry_times > 0))
                 sys::CUtil::millisleep(100);
             else
-                throw sys::CSyscallException(errno, __FILE__, __LINE__, "bind error");
+                THROW_SYSCALL_EXCEPTION(NULL, errno, "bind");
         }
 
         // 如果没有bind，则会随机选一个IP和端口，所以listen之前必须有bind
         retval = ::listen(fd, 10000);
-        if (-1 == retval) throw sys::CSyscallException(errno, __FILE__, __LINE__, "listen error");
+        if (-1 == retval)
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "listen");
 
         // 设置为非阻塞模式
         if (nonblock)
@@ -132,7 +136,7 @@ int CListener::accept(ip_address_t& peer_ip, uint16_t& peer_port)
     if (-1 == newfd) 
     {
         if (sys::Error::code() != EWOULDBLOCK)
-            throw sys::CSyscallException(sys::Error::code(), __FILE__, __LINE__, "accept error");
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "accept");
         
         return -1;      
     }

@@ -19,6 +19,7 @@
 #ifndef MOOON_SYS_POOL_THREAD_H
 #define MOOON_SYS_POOL_THREAD_H
 #include "sys/event.h"
+#include "sys/syscall_exception.h"
 #include "sys/thread.h"
 SYS_NAMESPACE_BEGIN
 
@@ -36,7 +37,7 @@ private:
 
     private:
         virtual void run();
-        virtual bool before_start();
+        virtual void before_start() throw (util::CException, CSyscallException);
         virtual void before_stop();
 
     private:		

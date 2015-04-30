@@ -64,7 +64,7 @@ const char* get_log_level_name(log_level_t log_level)
 CLogProber::CLogProber()
 {
     if (-1 == pipe(_pipe_fd))
-        throw CSyscallException(Error::code(), __FILE__, __LINE__, "logger pipe");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "pipe");
 }
 
 CLogProber::~CLogProber()
@@ -85,7 +85,7 @@ void CLogProber::send_signal()
         if (-1 == write(_pipe_fd[1], &c, 1))
         {
             if (EINTR == Error::code()) continue;
-            throw CSyscallException(Error::code(), __FILE__, __LINE__, "write logger pipe");
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "write");
         }
 
         break;
@@ -101,7 +101,7 @@ void CLogProber::read_signal(int signal_number)
         if (-1 == read(_pipe_fd[0], reinterpret_cast<void*>(signals), static_cast<size_t>(signal_number)))
         {
             if (EINTR == Error::code()) continue;
-            throw CSyscallException(Error::code(), __FILE__, __LINE__, "read logger pipe");
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "read");
         }
 
         break;
@@ -243,7 +243,7 @@ bool CLogger::execute()
     }
     catch (CSyscallException& ex )
     {
-        fprintf(stderr, "Writed log %s/%s error: %s.\n", _log_path, _log_filename, ex.to_string().c_str());
+        fprintf(stderr, "Writed log %s/%s error: %s.\n", _log_path, _log_filename, ex.str().c_str());
         close_logfile();
     }
 
@@ -271,7 +271,7 @@ bool CLogger::single_write()
     int retval;
     log_message_t* log_message = NULL;
     
-    { // 限定锁的范围    
+    { // 限定锁的范围
         LockHelper<CLock> lh(_queue_lock);        
         log_message = _log_queue->pop_front();
         if (_waiter_number > 0)
@@ -313,7 +313,7 @@ bool CLogger::single_write()
         // 错误处理
         if (-1 == retval)
         {
-            throw CSyscallException(Error::code(), __FILE__, __LINE__, "logger write");
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "write");
         }      
     }
 
@@ -729,11 +729,11 @@ void CLogger::create_logfile(bool truncate)
 
     if (-1 == _log_fd)
     {
-        throw sys::CSyscallException(Error::code(), __FILE__, __LINE__, "create log file");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "open");
     }    
     if (-1 == fstat(_log_fd, &st))
     {
-        throw sys::CSyscallException(Error::code(), __FILE__, __LINE__, "create log file");        
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "fstat");
     }       
            
     _current_bytes = st.st_size;
@@ -802,7 +802,7 @@ void CLogThread::run()
         if (-1 == ret)
         {
             if (EINTR == Error::code()) continue;
-            throw CSyscallException(Error::code(), __FILE__, __LINE__, "logger epoll wait");
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "epoll_wait");
         }
 
         for (int i=0; i<ret; ++i)
@@ -828,27 +828,18 @@ void CLogThread::before_stop()
     send_signal();
 }
 
-bool CLogThread::before_start()
+void CLogThread::before_start() throw (util::CException, CSyscallException)
 {
     // 创建Epoll
     _epoll_fd = epoll_create(LOGGER_NUMBER_MAX);
     if (-1 == _epoll_fd)
     {
         fprintf(stderr, "Logger created epoll error: %s.\n", Error::to_string().c_str());
-        return false;
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "epoll_create");
     }
 
     // 将pipe放入epoll中
-    try
-    {
-        register_object(this);
-        return true;
-    }
-    catch (CSyscallException& ex)
-    {
-        fprintf(stderr, "Register logthread error: %s.\n", Error::to_string().c_str());
-        return false;
-    }    
+    register_object(this);
 }
 
 bool CLogThread::execute()
@@ -893,7 +884,7 @@ void CLogThread::remove_object(CLogProber* log_prober)
 {
     if (-1 == epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, log_prober->get_fd(), NULL))
     {
-        throw CSyscallException(Error::code(), __FILE__, __LINE__, "logger epoll_del");        
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "epoll_ctl");
     }
 }
 
@@ -905,7 +896,7 @@ void CLogThread::register_object(CLogProber* log_prober)
 
     if (-1 == epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, log_prober->get_fd(), &event))
     {
-        throw CSyscallException(Error::code(), __FILE__, __LINE__, "logger epoll_add");        
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "epoll_ctl");
     }
 }
 

@@ -21,68 +21,39 @@
 #include "util/string_formatter.h"
 #include <exception>
 #include <string>
+
+#define THROW_EXCEPTION(errmsg, errcode) \
+    throw util::CException(errmsg, errcode, __FILE__, __LINE__)
+
 UTIL_NAMESPACE_BEGIN
 
+// 异常基类，继承自标准库的exception
 class CException: public std::exception
 {
 public:
-    explicit CException(const char* errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
-    {
-        if (errmsg != NULL)
-            _errmsg = errmsg;
-        _errcode = errcode;
-        
-        if (file != NULL)
-            _file = file;
-        _line = line;
-    }
+    // errmsg 错误信息
+    // errcode 错误代码
+    // file 发生错误的源代码文件
+    // line 发生错误的代码行号
+    CException(const char* errmsg, int errcode, const char* file, int line) throw ();
+    CException(const std::string& errmsg, int errcode, const std::string& file, int line) throw ();
+    virtual ~CException() throw () {}
 
-    explicit CException(const std::string& errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
-    {
-        _errmsg = errmsg;
-        _errcode = errcode;
-        
-        if (file != NULL)
-            _file = file;
-        _line = line;
-    }
+    virtual const char* what() const throw ();
+    const char* file() const throw ();
+    int line() const throw ();
+    int errcode() const throw ();
 
-    explicit CException(const StringFormatter& errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
-    {
-        _errmsg = errmsg.str();
-        _errcode = errcode;
-        
-        if (file != NULL)
-            _file = file;
-        _line = line;
-    }
-    
-    virtual ~CException() throw()
-    {
-    }
-    
-    int errcode() const throw()
-    {
-        return _errcode;
-    }
-
-    const char* file() const throw()
-    {
-        return _file.c_str();
-    }
-
-    int line() const throw()
-    {
-        return _line;
-    }
-    
-public:
-    virtual const char* what() const throw()
-    {
-        return _errmsg.c_str();
-    }
+    // 返回一个可读的字符串
+    virtual std::string str() const throw ();
 
 private:
+    virtual std::string prefix() const throw ();
+
+private:
+    void init(const char* errmsg, int errcode, const char* file, int line) throw ();
+
+protected:
     std::string _errmsg;
     int _errcode;
     std::string _file;

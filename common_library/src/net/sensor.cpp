@@ -29,7 +29,7 @@ CSensor::CSensor()
 void CSensor::create()
 {
     if (-1 == pipe(_pipe_fd))
-        throw sys::CSyscallException(errno, __FILE__, __LINE__, "pipe");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "pipe");
 
     set_fd(_pipe_fd[0]);
 }
@@ -54,13 +54,13 @@ void CSensor::touch()
 {
     char finger = 'x';
     if (-1 == write(_pipe_fd[1], &finger, sizeof(finger)))
-        throw sys::CSyscallException(errno, __FILE__, __LINE__, "write");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "write");
 }
 
 void CSensor::feel(uint16_t bytes)
 {
     if (-1 == read(_pipe_fd[0], _finger, bytes<sizeof(_finger)? bytes: sizeof(_finger)))
-        throw sys::CSyscallException(errno, __FILE__, __LINE__, "read");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "read");
 }
 
 epoll_event_t CSensor::handle_epoll_event(void* input_ptr, uint32_t events, void* ouput_ptr)

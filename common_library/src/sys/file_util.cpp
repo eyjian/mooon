@@ -39,7 +39,7 @@ size_t CFileUtil::file_copy(int src_fd, int dst_fd)
                 if (write(dst_fd, buf, ret) != ret)
                 {
                     if (EINTR == errno) continue;
-                    throw CSyscallException(errno, __FILE__, __LINE__);
+                    THROW_SYSCALL_EXCEPTION(NULL, errno, "write");
                 }
 
                 break;
@@ -54,7 +54,7 @@ size_t CFileUtil::file_copy(int src_fd, int dst_fd)
         else
         {
             if (EINTR == errno) continue;
-            throw CSyscallException(errno, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "read");
         }
     }
 
@@ -65,7 +65,7 @@ size_t CFileUtil::file_copy(int src_fd, const char* dst_filename)
 {    
     int dst_fd = open(dst_filename, O_WRONLY|O_CREAT|O_EXCL);
     if (-1 == src_fd)
-        throw CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "open");
 
     sys::CloseHelper<int> ch(dst_fd);
     return file_copy(src_fd, dst_fd);
@@ -75,7 +75,7 @@ size_t CFileUtil::file_copy(const char* src_filename, int dst_fd)
 {
     int src_fd = open(src_filename, O_RDONLY);
     if (-1 == src_fd)
-        throw CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "open");
 
     sys::CloseHelper<int> ch(src_fd);
     return file_copy(src_fd, dst_fd);
@@ -85,12 +85,12 @@ size_t CFileUtil::file_copy(const char* src_filename, const char* dst_filename)
 { 
     int src_fd = open(src_filename, O_RDONLY);
     if (-1 == src_fd)
-        throw CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "open");
 
     sys::CloseHelper<int> src_ch(src_fd);
     int dst_fd = open(dst_filename, O_WRONLY|O_CREAT|O_EXCL);
     if (-1 == dst_fd)
-        throw CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "open");
 
     sys::CloseHelper<int> dst_ch(dst_fd);
     return file_copy(src_fd, dst_fd);
@@ -100,9 +100,10 @@ off_t CFileUtil::get_file_size(int fd)
 {
     struct stat buf;
     if (-1 == fstat(fd, &buf))
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "fstat");
+
     if (!S_ISREG(buf.st_mode))
-        throw sys::CSyscallException(EISDIR, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "fstat");
 
     return buf.st_size;
 }
@@ -111,7 +112,7 @@ off_t CFileUtil::get_file_size(const char* filepath)
 {
     int fd = open(filepath, O_RDONLY);
     if (-1 == fd)
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "fstat");
 
     sys::CloseHelper<int> ch(fd);
     return get_file_size(fd);
@@ -126,7 +127,7 @@ uint32_t CFileUtil::crc32_file(int fd)
 
     if (-1 == lseek(fd, 0, SEEK_SET))
     {
-        throw sys::CSyscallException(errno, __FILE__, __LINE__, "seek");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "lseek");
     }
     for (;;)
     {
@@ -137,7 +138,7 @@ uint32_t CFileUtil::crc32_file(int fd)
         }
         if (-1 == retval)
         {
-            throw sys::CSyscallException(errno, __FILE__, __LINE__, "read");
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "read");
         }
 
         crc = crc32(crc, (unsigned char*)buffer, retval);
@@ -148,7 +149,7 @@ uint32_t CFileUtil::crc32_file(int fd)
     }
     if (-1 == lseek(fd, 0, SEEK_SET))
     {
-        throw sys::CSyscallException(errno, __FILE__, __LINE__, "seek");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "lseek");
     }
     
     return crc;
@@ -158,7 +159,7 @@ uint32_t CFileUtil::crc32_file(const char* filepath)
 {
     int fd = open(filepath, O_RDONLY);
     if (-1 == fd)
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "open");
 
     sys::CloseHelper<int> ch(fd);
     return crc32_file(fd);
@@ -168,7 +169,7 @@ uint32_t CFileUtil::get_file_mode(int fd)
 {
     struct stat st;
     if (-1 == fstat(fd, &st))
-        throw sys::CSyscallException(errno, __FILE__, __LINE__, "stat");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "fstat");
 
     return st.st_mode;
 }
@@ -178,7 +179,7 @@ void CFileUtil::remove(const char* filepath)
     if (-1 == unlink(filepath))
     {
         if (errno != ENOENT)
-            throw sys::CSyscallException(errno, __FILE__, __LINE__, "unlink");
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "unlink");
     }
 }
 

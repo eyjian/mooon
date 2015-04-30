@@ -45,7 +45,7 @@ bool has_the_flags(int fd, int flags)
 {
     int curr_flags = fcntl(fd, F_GETFL, 0);
     if (-1 == curr_flags)
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "fcntl");
 
     return (curr_flags & flags) == flags;
 }
@@ -84,12 +84,12 @@ void set_socket_flags(int fd, bool yes, int flags)
 	// Get the file status flags
 	int curr_flags = fcntl(fd, F_GETFL, 0);
 	if (-1 == curr_flags)
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+	    THROW_SYSCALL_EXCEPTION(NULL, errno, "fcntl");
 
 	// keep and set the file status flags
 	int new_flags = yes? (curr_flags | flags): (curr_flags & ~flags);
 	if (-1 == fcntl(fd, F_SETFL, new_flags))
-        throw sys::CSyscallException(errno, __FILE__, __LINE__, "fcntl");
+	    THROW_SYSCALL_EXCEPTION(NULL, errno, "fcntl");
 }
 
 void set_tcp_option(int fd, bool yes, int option)
@@ -97,7 +97,7 @@ void set_tcp_option(int fd, bool yes, int option)
     // TCP_CORK
     int on = yes? 1: 0;
     if (-1 == setsockopt(fd, SOL_TCP, option, &on, sizeof(on)))
-        throw sys::CSyscallException(errno, __FILE__, __LINE__, "setsockopt");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "setsockopt");
 }
 
 /***

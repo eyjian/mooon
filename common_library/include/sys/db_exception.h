@@ -16,7 +16,7 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  * 代码采用商业友好的Apache协议，可任意修改和分发，但请保留版权说明文字。
- * 如遇到的问题，请发送到上述邮箱，以便及时修复。谢谢合作，共创开源！ 
+ * 如遇到的问题，请发送到上述邮箱，以便及时修复。谢谢合作，共创开源！
  *
  * 数据库操作出错时，均要求以CDBException异常的方式处理
  */
@@ -61,21 +61,6 @@ public:
     }
     
     CDBException(const std::string& sql, const std::string& errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
-        : CException(errmsg, errcode, file, line)
-    {
-        _sql = sql;
-    }
-    
-    CDBException(const char* sql, const util::StringFormatter& errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
-        : CException(errmsg, errcode, file, line)
-    {
-        if (sql != NULL)
-        {
-            _sql = sql;        
-        }
-    }
-
-    CDBException(const std::string& sql, const util::StringFormatter& errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
         : CException(errmsg, errcode, file, line)
     {
         _sql = sql;

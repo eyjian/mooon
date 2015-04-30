@@ -28,15 +28,15 @@ CSysVSharedMemory::CSysVSharedMemory()
 void CSysVSharedMemory::open(const char* path)
 {
     if (NULL == path)
-        throw CSyscallException(EINVAL, __FILE__, __LINE__, "path null");
+        THROW_SYSCALL_EXCEPTION(NULL, EINVAL, NULL);
 
     key_t key = ftok(path, getpid());
     if (-1 == key)
-        throw CSyscallException(errno, __FILE__, __LINE__, "ftok error");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "ftok");
 
     _shmid = shmget(key, 1, 0);
-    if (-1 == _shmid)    
-        throw CSyscallException(errno, __FILE__, __LINE__, "shmget error");    
+    if (-1 == _shmid)
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "shmget");
 }
 
 bool CSysVSharedMemory::create(const char* path, mode_t mode)
@@ -48,7 +48,7 @@ bool CSysVSharedMemory::create(const char* path, mode_t mode)
     {    
         key_t key = ftok(path, getpid());
         if (-1 == key)
-            throw CSyscallException(errno, __FILE__, __LINE__, "ftok error");
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "ftok");
     }
 
     // 创建共享内存
@@ -56,7 +56,7 @@ bool CSysVSharedMemory::create(const char* path, mode_t mode)
     if (-1 == _shmid)
     {
         if (EEXIST == errno) return false;
-        throw CSyscallException(errno, __FILE__, __LINE__, "shmget error");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "shmget");
     }
         
     return true;
@@ -68,7 +68,7 @@ void CSysVSharedMemory::close()
     {    
         //struct shmid_ds buf;
         if (-1 == shmctl(_shmid, IPC_RMID, NULL))
-            throw CSyscallException(errno, __FILE__, __LINE__, "remove shared memory error");
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "shmctl");
 
         _shmid = -1;
     }
@@ -89,7 +89,7 @@ void* CSysVSharedMemory::attach(int flag)
     {    
         _shmaddr = shmat(_shmid, NULL, flag);
         if ((void *)-1 == _shmaddr)
-            throw CSyscallException(errno, __FILE__, __LINE__, "shmat error");
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "shmat");
     }
 
     return _shmaddr;

@@ -36,7 +36,7 @@ void CFSUtil::stat_fs(int fd, fs_stat_t& stat_buf)
 {
     struct statvfs buf;
     if (-1 == fstatvfs(fd, &buf)) // 不使用statfs
-        throw CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "fstatvfs");
 
     stat_buf.block_bytes = buf.f_bsize;
     stat_buf.total_block_nubmer = buf.f_blocks;
@@ -52,7 +52,7 @@ void CFSUtil::stat_fs(const char* path, fs_stat_t& stat_buf)
 {
     int fd = open(path, O_RDONLY);
     if (-1 == fd)
-        throw CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "open");
 
     CloseHelper<int> ch(fd);
     stat_fs(fd, stat_buf);

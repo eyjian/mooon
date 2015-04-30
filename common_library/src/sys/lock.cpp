@@ -23,32 +23,34 @@ SYS_NAMESPACE_BEGIN
 
 CLock::CLock(bool recursive)
 {
-    int retval = 0;
+    int errcode = 0;
     if (recursive)
     {    
 #if defined(__linux) && !defined(__USE_UNIX98)        
         const pthread_mutexattr_t attr = { PTHREAD_MUTEX_RECURSIVE_NP };
 #else
-        retval = pthread_mutexattr_init(&_attr);
-        if (retval != 0) {
-            throw CSyscallException(retval, __FILE__, __LINE__);
-        }
+        errcode = pthread_mutexattr_init(&_attr);
+        if (errcode != 0)
+            THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_mutexattr_init");
         
         pthread_mutexattr_settype(&_attr, PTHREAD_MUTEX_RECURSIVE);
-        if (retval != 0) {
+        if (errcode != 0)
+        {
             pthread_mutexattr_destroy(&_attr);        
-            throw CSyscallException(retval, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_mutexattr_settype");
         }
 #endif    
-        retval = pthread_mutex_init(&_mutex, &_attr);
+        errcode = pthread_mutex_init(&_mutex, &_attr);
     }
-    else {
-        retval = pthread_mutex_init(&_mutex, NULL);
+    else
+    {
+        errcode = pthread_mutex_init(&_mutex, NULL);
     }
     
-    if (retval != 0) {
+    if (errcode != 0)
+    {
         pthread_mutexattr_destroy(&_attr);    
-        throw CSyscallException(retval, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_mutex_init");
     }
 }
 
@@ -63,35 +65,35 @@ CLock::~CLock()
 
 void CLock::lock()
 {
-    int retval = pthread_mutex_lock(&_mutex);
-    if (retval != 0)
-        throw CSyscallException(retval, __FILE__, __LINE__);
+    int errcode = pthread_mutex_lock(&_mutex);
+    if (errcode != 0)
+        THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_mutex_lock");
 }
 
 void CLock::unlock()
 {
-    int retval = pthread_mutex_unlock(&_mutex);
-    if (retval != 0)
-        throw CSyscallException(retval, __FILE__, __LINE__);
+    int errcode = pthread_mutex_unlock(&_mutex);
+    if (errcode != 0)
+        THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_mutex_unlock");
 }
 
 bool CLock::try_lock()
 {
-    int retval = pthread_mutex_trylock(&_mutex);
+    int errcode = pthread_mutex_trylock(&_mutex);
 
-    if (0 == retval) return true;
-	if (EBUSY == retval) return false;
+    if (0 == errcode) return true;
+	if (EBUSY == errcode) return false;
 
-    throw CSyscallException(retval, __FILE__, __LINE__);
+	THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_mutex_trylock");
 }
 
 bool CLock::timed_lock(uint32_t millisecond)
 {
-	int retval;
+	int errcode;
 
 	if (0 == millisecond)
 	{
-		retval = pthread_mutex_lock(&_mutex);
+	    errcode = pthread_mutex_lock(&_mutex);
 	}
 	else
 	{	
@@ -105,20 +107,20 @@ bool CLock::timed_lock(uint32_t millisecond)
 #endif // _POSIX_C_SOURCE
         struct timeval tv;
         if (-1 == gettimeofday(&tv, NULL))
-            throw CSyscallException(errno, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "gettimeofday");
 
         abstime.tv_sec = tv.tv_sec;
         abstime.tv_nsec = tv.tv_usec * 1000;
         abstime.tv_sec  += millisecond / 1000;
         abstime.tv_nsec += (millisecond % 1000) * 1000000;
         
-		retval = pthread_mutex_timedlock(&_mutex, &abstime);
+        errcode = pthread_mutex_timedlock(&_mutex, &abstime);
 	}
 	
-	if (0 == retval) return true;
-    if (ETIMEDOUT == retval) return false;
+	if (0 == errcode) return true;
+    if (ETIMEDOUT == errcode) return false;
 	
-    throw CSyscallException(retval, __FILE__, __LINE__);
+    THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_mutex_timedlock");
 }
 
 SYS_NAMESPACE_END

@@ -82,7 +82,7 @@ class CLogger: public ILogger, public CLogProber, public CRefCountable
 {
 public:
     /** 构造一个Logger对象
-      * @log_line_size: 默认情况下每行日志的最大长度，最长不会超过LOG_LINE_SIZE_MAX，否则截断   
+      * @log_line_size: 默认情况下每行日志的最大长度，最长不会超过LOG_LINE_SIZE_MAX，否则截断
       */
     CLogger(uint16_t log_line_size=512);
 private:
@@ -97,7 +97,7 @@ public:
 
     /** 日志器初始化，非线程安全，只有被一个线程调用一次
       * @log_path: 日志文件存放位置
-      * @log_filename: 日志文件名，一包括路径部分 
+      * @log_filename: 日志文件名，一包括路径部分
       * @log_queue_size: 所有日志队列加起来的总大小
       * @log_queue_number: 日志队列个数
       * @thread_orderly: 同一个线程的日志是否按时间顺序写
@@ -185,7 +185,7 @@ private:
     util::CArrayQueue<log_message_t*>* _log_queue;
     volatile int _waiter_number; // 等待PUSH消息的线程个数
     CEvent _queue_event;
-    CLock _queue_lock; // 保护_log_queue的锁       
+    CLock _queue_lock; // 保护_log_queue的锁
 
 private: // 所有Logger共享同一个CLogThread
     static CLock _thread_lock; // 保护_log_thread的锁
@@ -209,7 +209,7 @@ public:
 private:
     virtual void run();   
     virtual void before_stop();
-    virtual bool before_start();
+    virtual void before_start() throw (util::CException, CSyscallException);
     virtual bool execute();
 
 private:

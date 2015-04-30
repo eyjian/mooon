@@ -86,7 +86,7 @@ bool CUtil::is_valid_ipv4(const char* str)
         ++strp;
     }
     
-    // 排除长度    
+    // 排除长度
     // 127.127.127.127
     if (strp-str >= 16)
         return false;
@@ -209,14 +209,14 @@ void CUtil::get_ethx_ip(eth_ip_array_t& eth_ip_array)
         
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (-1 == fd)
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "socket");
     
     sys::CloseHelper<int> ch(fd);
     ifc.ifc_len = sizeof(ifr);
     ifc.ifc_buf = (caddr_t)&ifr[0];
     
     if (-1 == ioctl(fd, SIOCGIFCONF, (char*)&ifc))
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "ioctl");
         
     // 计算网卡个数
     int ethx_count = ifc.ifc_len / sizeof(struct ifreq);     
@@ -239,7 +239,7 @@ void CUtil::get_ethx_ip(eth_ip_array_t& eth_ip_array)
         {
             int errcode = errno;                
             eth_ip_array.clear();
-            throw sys::CSyscallException(errcode, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, errcode, "inet_ntop");
         }
      
         eth_ip_array.push_back(std::pair<std::string, std::string>(ifr[i].ifr_name, ip));                
@@ -354,13 +354,13 @@ bool CUtil::timed_poll(int fd, int events_requested, int milliseconds, int* even
             // 中断，则继续
             if (EINTR == errno)
             {
-                // 保证时间总是递减的，虽然会引入不精确问题，但总是好些，极端情况下也不会死循环                
+                // 保证时间总是递减的，虽然会引入不精确问题，但总是好些，极端情况下也不会死循环
                 time_t gone_milliseconds = (time(NULL)-begin_seconds) * 1000 + 10;
                 remaining_milliseconds = (remaining_milliseconds > gone_milliseconds)? remaining_milliseconds - gone_milliseconds: 0;                
                 continue;
             }
 
-            throw sys::CSyscallException(errno, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "poll");
         }
     }
 

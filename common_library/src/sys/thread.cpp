@@ -35,11 +35,9 @@ CThread::CThread()
     ,_current_state(state_sleeping)
     ,_stack_size(0)
 {
-    int retval = pthread_attr_init(&_attr);
-    if (retval != 0)
-    {
-        throw CSyscallException(retval, __FILE__, __LINE__);
-    }
+    int errcode = pthread_attr_init(&_attr);
+    if (errcode != 0)
+        THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_attr_init");
 }
 
 CThread::~CThread()
@@ -52,38 +50,43 @@ uint32_t CThread::get_current_thread_id()
     return pthread_self();
 }
 
-void CThread::start(bool detach)
+void CThread::start(bool detach) throw (util::CException, CSyscallException)
 {
-    if (!before_start()) throw CSyscallException(0, __FILE__, __LINE__);
+    int errcode = 0;
+
+    // 回调
+    before_start();
+
+    // 设置线程栈大小
+    if (_stack_size > 0)
+    {
+        errcode = pthread_attr_setstacksize(&_attr, _stack_size);
+        if (errcode != 0)
+            THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_attr_setstacksize");
+    }
+
+    errcode = pthread_attr_setdetachstate(&_attr, detach?PTHREAD_CREATE_DETACHED:PTHREAD_CREATE_JOINABLE);
+    if (errcode != 0)
+        THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_attr_setdetachstate");
 
     // 如果本过程成功，则线程体run结束后再减引用计数，
     // 否则在失败的分支减引用计数
     this->inc_refcount();
 
-    int retval = 0;
-
-    // 设置线程栈大小
-    if (_stack_size > 0)
-        retval = pthread_attr_setstacksize(&_attr, _stack_size);
-    if (0 == retval)
-        retval = pthread_attr_setdetachstate(&_attr, detach?PTHREAD_CREATE_DETACHED:PTHREAD_CREATE_JOINABLE);
-       
-    if (0 == retval)
-        retval = pthread_create(&_thread , &_attr, thread_proc, this);
-
-    if (retval != 0)
+    errcode = pthread_create(&_thread , &_attr, thread_proc, this);
+    if (errcode != 0)
     {
         this->dec_refcount();
-        throw CSyscallException(retval, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_create");
     }
 }
 
 size_t CThread::get_stack_size() const
 {
     size_t stack_size = 0;
-    int retval = pthread_attr_getstacksize(&_attr, &stack_size);
-    if (retval != 0)
-        throw CSyscallException(retval, __FILE__, __LINE__);
+    int errcode = pthread_attr_getstacksize(&_attr, &stack_size);
+    if (errcode != 0)
+        THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_attr_getstacksize");
 
     return stack_size;
 }
@@ -93,25 +96,25 @@ void CThread::join()
     // 线程自己不能调用join
     if (CThread::get_current_thread_id() != this->get_thread_id())
     {    
-        int retval = pthread_join(_thread, NULL);
-        if (retval != 0)
-            throw CSyscallException(retval, __FILE__, __LINE__);
+        int errcode = pthread_join(_thread, NULL);
+        if (errcode != 0)
+            THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_join");
     }
 }
 
 void CThread::detach()
 {
-    int retval = pthread_detach(_thread);
-    if (retval != 0)
-        throw CSyscallException(retval, __FILE__, __LINE__);
+    int errcode = pthread_detach(_thread);
+    if (errcode != 0)
+        THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_detach");
 }
 
 bool CThread::can_join() const
 {
     int detachstate;
-    int retval = pthread_attr_getdetachstate(&_attr, &detachstate);
-    if (retval != 0)
-        throw CSyscallException(retval, __FILE__, __LINE__);
+    int errcode = pthread_attr_getdetachstate(&_attr, &detachstate);
+    if (errcode != 0)
+        THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_attr_getdetachstate");
 
     return (PTHREAD_CREATE_JOINABLE == detachstate);
 }

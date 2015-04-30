@@ -23,9 +23,9 @@ SYS_NAMESPACE_BEGIN
 
 CEvent::CEvent()
 {
-    int retval = pthread_cond_init(&_cond, NULL);
-    if (retval != 0)
-        throw CSyscallException(retval, __FILE__, __LINE__);
+    int errcode = pthread_cond_init(&_cond, NULL);
+    if (errcode != 0)
+        THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_cond_init");
 }
 
 CEvent::~CEvent()
@@ -35,18 +35,18 @@ CEvent::~CEvent()
 
 void CEvent::wait(CLock& lock)
 {
-    int retval = pthread_cond_wait(&_cond, &lock._mutex);
-    if (retval != 0)
-        throw CSyscallException(retval, __FILE__, __LINE__);
+    int errcode = pthread_cond_wait(&_cond, &lock._mutex);
+    if (errcode != 0)
+        THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_cond_wait");
 }
 
 bool CEvent::timed_wait(CLock& lock, uint32_t millisecond)
 {
-	int retval;
+	int errcode;
 
 	if (0 == millisecond)
 	{
-		retval = pthread_cond_wait(&_cond, &lock._mutex);
+	    errcode = pthread_cond_wait(&_cond, &lock._mutex);
 	}
 	else
 	{
@@ -54,7 +54,7 @@ bool CEvent::timed_wait(CLock& lock, uint32_t millisecond)
 
 #if _POSIX_C_SOURCE >= 199309L
         if (-1 == clock_gettime(CLOCK_REALTIME, &abstime))
-            throw CSyscallException(errno, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, errcode, "clock_gettime");
 
         abstime.tv_sec  += millisecond / 1000;
         abstime.tv_nsec += (millisecond % 1000) * 1000000;
@@ -76,27 +76,27 @@ bool CEvent::timed_wait(CLock& lock, uint32_t millisecond)
             abstime.tv_nsec %= 1000000000L;
         }
 
-		retval = pthread_cond_timedwait(&_cond, &lock._mutex, &abstime);
+        errcode = pthread_cond_timedwait(&_cond, &lock._mutex, &abstime);
 	}
 
-    if (0 == retval) return true;
-    if (ETIMEDOUT == retval) return false;
+    if (0 == errcode) return true;
+    if (ETIMEDOUT == errcode) return false;
 
-    throw CSyscallException(retval, __FILE__, __LINE__);
+    THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_cond_timedwait");
 }
 
 void CEvent::signal()
 {
-    int retval = pthread_cond_signal(&_cond);
-    if (retval != 0)
-        throw CSyscallException(retval, __FILE__, __LINE__);
+    int errcode = pthread_cond_signal(&_cond);
+    if (errcode != 0)
+        THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_cond_signal");
 }
 
 void CEvent::broadcast()
 {
-    int retval = pthread_cond_broadcast(&_cond);
-    if (retval != 0)
-        throw CSyscallException(retval, __FILE__, __LINE__);
+    int errcode = pthread_cond_broadcast(&_cond);
+    if (errcode != 0)
+        THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_cond_broadcast");
 }
 
 SYS_NAMESPACE_END

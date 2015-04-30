@@ -20,43 +20,28 @@
 #define MOOON_SYS_SYSCALL_EXCEPTION_H
 #include "sys/config.h"
 #include "util/exception.h"
+
+#define THROW_SYSCALL_EXCEPTION(errmsg, errcode, syscall) \
+    throw sys::CSyscallException(errmsg, errcode, __FILE__, __LINE__, syscall)
+
 SYS_NAMESPACE_BEGIN
 
 /** 系统调用出错异常，多数系统调用出错时，均以此异常型反馈给调用者 */
 class CSyscallException: public util::CException
 {
 public:
-    /** 构造系统调用异常
-      * @errcode: 系统调用出错代码
-      * @filename: 出错所发生的文件名
-      * @linenumber: 出错发生的行号
-      * @tips: 额外的增强信息，用以进一步区分是什么错误
-      */
-	CSyscallException(int errcode, const char* filename, int linenumber, const char* tips=NULL);
-	~CSyscallException() throw() {}
+    CSyscallException(const char* errmsg, int errcode, const char* file, int line, const char* syscall) throw ();
+    CSyscallException(const std::string& errmsg, int errcode, const std::string& file, int line, const std::string& syscall) throw ();
+    virtual ~CSyscallException() throw () {}
 
-    /** 得到调用出错发生的文件名 */
-    const char* get_filename() const { return file(); }
-
-    /** 得到调用出错时发生的文件行号 */
-    int get_linenumber() const { return line(); }
-
-    /** 得到调用出错时的系统出错码，在Linux上为errno值 */
-    int get_errcode() const { return errcode(); }
-
-    /** 得到出错信息 */
-    std::string get_errmessage() const;
-
-    /** 得到调用出错时的提示信息，提示信息用于辅助明确问题，为可选内容
-      * 如果返回非NULL，则表示有提示信息，否则表示无提示信息
-      */
-    const char* get_tips() const { return _tips.empty()? NULL: _tips.c_str(); }
-
-    /** 异常信息打包成字符串，内容包括文件名、行号、出错代码和出错信息 */
-    std::string to_string() const;
+    virtual std::string str() const throw ();
+    const char* syscall() const throw ();
 
 private:
-    std::string _tips;
+    virtual std::string prefix() const throw ();
+
+private:
+    std::string _syscall; // 哪个系统调用失败了
 };
 
 SYS_NAMESPACE_END

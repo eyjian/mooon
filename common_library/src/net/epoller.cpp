@@ -46,7 +46,7 @@ void CEpoller::create(uint32_t epoll_size)
     {
         delete []_events;
         _events = NULL;
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "epoll_create");
     }
 
     // 将Sensor注入Epoll
@@ -82,7 +82,7 @@ int CEpoller::timed_wait(uint32_t milliseconds)
             continue;
         }
 
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "epoll_wait");
     }
 
     return retval;
@@ -105,7 +105,7 @@ void CEpoller::set_events(CEpollable* epollable, int events, bool force)
         int op = (-1 == old_epoll_events) ? EPOLL_CTL_ADD: EPOLL_CTL_MOD;
         int retval = epoll_ctl(_epfd, op, epollable->get_fd(), &event);
         if (-1 == retval)
-            throw sys::CSyscallException(errno, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "epoll_ctl");
 
         epollable->set_epoll_events(events);
     }
@@ -118,7 +118,7 @@ void CEpoller::del_events(CEpollable* epollable)
     {    
         int retval = epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL);
         if (-1 == retval)
-            throw sys::CSyscallException(errno, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "epoll_ctl");
 
         epollable->set_epoll_events(-1);
     }

@@ -21,11 +21,11 @@ SYS_NAMESPACE_BEGIN
 
 CReadWriteLock::CReadWriteLock()
 {
-	int retval = pthread_rwlock_init(&_rwlock, NULL);
-	if (retval != 0) 
+	int errcode = pthread_rwlock_init(&_rwlock, NULL);
+	if (errcode != 0)
 	{
 		pthread_rwlock_destroy(&_rwlock);
-		throw CSyscallException(retval, __FILE__, __LINE__);
+		THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_rwlock_init");
 	}
 }
 
@@ -36,52 +36,52 @@ CReadWriteLock::~CReadWriteLock()
 
 void CReadWriteLock::lock_read()
 {
-	int retval = pthread_rwlock_rdlock(&_rwlock);
-	if (retval != 0)
-		throw CSyscallException(retval, __FILE__, __LINE__);
+	int errcode = pthread_rwlock_rdlock(&_rwlock);
+	if (errcode != 0)
+	    THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_rwlock_rdlock");
 }
 
 void CReadWriteLock::lock_write()
 {
-	int retval = pthread_rwlock_wrlock(&_rwlock);
-	if (retval != 0)
-		throw CSyscallException(retval, __FILE__, __LINE__);
+	int errcode = pthread_rwlock_wrlock(&_rwlock);
+	if (errcode != 0)
+	    THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_rwlock_wrlock");
 }
 
 void CReadWriteLock::unlock()
 {
-	int retval = pthread_rwlock_unlock(&_rwlock);
-	if (retval != 0)
-        throw CSyscallException(retval, __FILE__, __LINE__);
+	int errcode = pthread_rwlock_unlock(&_rwlock);
+	if (errcode != 0)
+	    THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_rwlock_unlock");
 }
 
 bool CReadWriteLock::try_lock_read()
 {
-	int retval = pthread_rwlock_tryrdlock(&_rwlock);
+	int errcode = pthread_rwlock_tryrdlock(&_rwlock);
 
-	if (0 == retval) return true;	
-	if (EBUSY == retval) return false;
+	if (0 == errcode) return true;
+	if (EBUSY == errcode) return false;
 
-	throw CSyscallException(retval, __FILE__, __LINE__);
+	THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_rwlock_tryrdlock");
 }
 
 bool CReadWriteLock::try_lock_write()
 {
-	int retval = pthread_rwlock_trywrlock(&_rwlock);
+	int errcode = pthread_rwlock_trywrlock(&_rwlock);
 	
-	if (0 == retval) return true;	
-	if (EBUSY == retval) return false;
+	if (0 == errcode) return true;
+	if (EBUSY == errcode) return false;
 
-	throw CSyscallException(retval, __FILE__, __LINE__);
+	THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_rwlock_trywrlock");
 }
 
 bool CReadWriteLock::timed_lock_read(uint32_t millisecond)
 {
-	int retval;
+	int errcode;
 
 	if (0 == millisecond)
 	{
-		retval = pthread_rwlock_rdlock(&_rwlock);
+	    errcode = pthread_rwlock_rdlock(&_rwlock);
 	}
 	else
 	{	
@@ -91,22 +91,22 @@ bool CReadWriteLock::timed_lock_read(uint32_t millisecond)
 		abstime.tv_sec  += millisecond / 1000;
 		abstime.tv_nsec += (millisecond % 1000) * 1000000;
 
-		retval = pthread_rwlock_timedrdlock(&_rwlock, &abstime);
+		errcode = pthread_rwlock_timedrdlock(&_rwlock, &abstime);
 	}
 
-	if (0 == retval) return true;
-	if (ETIMEDOUT == retval) return false;
+	if (0 == errcode) return true;
+	if (ETIMEDOUT == errcode) return false;
 
-	throw CSyscallException(retval, __FILE__, __LINE__);
+	THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_rwlock_timedrdlock");
 }
 
 bool CReadWriteLock::timed_lock_write(uint32_t millisecond)
 {
-	int retval;
+	int errcode;
 
 	if (0 == millisecond)
 	{
-		retval = pthread_rwlock_trywrlock(&_rwlock);
+	    errcode = pthread_rwlock_trywrlock(&_rwlock);
 	}
 	else
 	{	
@@ -116,13 +116,13 @@ bool CReadWriteLock::timed_lock_write(uint32_t millisecond)
 		abstime.tv_sec  += millisecond / 1000;
 		abstime.tv_nsec += (millisecond % 1000) * 1000000;
 
-		retval = pthread_rwlock_timedwrlock(&_rwlock, &abstime);
+		errcode = pthread_rwlock_timedwrlock(&_rwlock, &abstime);
 	}
 
-	if (0 == retval) return true;
-	if (ETIMEDOUT == retval) return false;
+	if (0 == errcode) return true;
+	if (ETIMEDOUT == errcode) return false;
 
-	throw CSyscallException(retval, __FILE__, __LINE__);
+	THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_rwlock_timedwrlock");
 }
 
 SYS_NAMESPACE_END

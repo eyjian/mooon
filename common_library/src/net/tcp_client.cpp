@@ -135,7 +135,7 @@ bool CTcpClient::do_connect(int& fd, bool nonblock)
     
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (-1 == fd)
-		throw sys::CSyscallException(errno, __FILE__, __LINE__, "socket error");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "socket");
 
     if (nonblock)
         net::set_nonblock(fd, true);
@@ -207,7 +207,7 @@ bool CTcpClient::async_connect()
         if (errno != EINPROGRESS)    
         {
             on_connect_failure(); // 连接失败
-            throw sys::CSyscallException(errno, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "connect");
         }
     }
     
@@ -242,18 +242,18 @@ void CTcpClient::timed_connect()
             
             // 连接出错，不能继续
             if ((0 == _milli_seconds) || (errno != EINPROGRESS))
-                throw sys::CSyscallException(errno, __FILE__, __LINE__);
+                THROW_SYSCALL_EXCEPTION(NULL, errno, "connect");
 
-            // 异步连接中，使用poll超时探测          
-            if (!CUtil::timed_poll(fd, POLLIN | POLLOUT | POLLERR, _milli_seconds))		    
-			    throw sys::CSyscallException(ETIMEDOUT, __FILE__, __LINE__);
+            // 异步连接中，使用poll超时探测
+            if (!CUtil::timed_poll(fd, POLLIN | POLLOUT | POLLERR, _milli_seconds))
+                THROW_SYSCALL_EXCEPTION(NULL, ETIMEDOUT, "poll");
 
 		    int errcode = 0;
 		    socklen_t errcode_length = sizeof(errcode);
 		    if (-1 == getsockopt(fd, SOL_SOCKET, SO_ERROR, &errcode, &errcode_length))
-			    throw sys::CSyscallException(errno, __FILE__, __LINE__);
+		        THROW_SYSCALL_EXCEPTION(NULL, ETIMEDOUT, "getsockopt");
 		    if (errcode != 0)
-			    throw sys::CSyscallException(errcode, __FILE__, __LINE__);
+		        THROW_SYSCALL_EXCEPTION(NULL, errcode, "connect");
 
             // 能够走到这里，肯定是_milli_seconds > 0
             net::set_nonblock(fd, false);

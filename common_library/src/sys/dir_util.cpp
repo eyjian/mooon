@@ -26,7 +26,7 @@ void CDirUtil::list(const std::string& dirpath
 {
     DIR* dir = opendir(dirpath.c_str());
     if (NULL == dir)
-        throw CSyscallException(errno, __FILE__, __LINE__, "opendir");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "opendir");
 
     for (;;)
     {        
@@ -39,18 +39,18 @@ void CDirUtil::list(const std::string& dirpath
                 int errcode = errno;
                 if (EACCES == errcode)
                 {
-                    // Èç¹ûÊÇÈ¨ÏÞÎÊÌâ£¬ÔòºöÂÔ¼ÌÐø
+                    // 跳过无权限的
                     continue;
                 }
                 
                 closedir(dir);
-                throw CSyscallException(errcode, __FILE__, __LINE__, "readdir");
+                THROW_SYSCALL_EXCEPTION(NULL, errcode, "readdir");
             }
 
             break; // over
         }
 
-        // ¹ýÂËµôµ±Ç°Ä¿Â¼ºÍËüµÄ¸¸Ä¿Â¼
+        // 排除当前目录和父目录
         if ((0 == strcmp(ent->d_name, "."))
          || (0 == strcmp(ent->d_name, "..")))
         {
@@ -80,7 +80,7 @@ void CDirUtil::list(const std::string& dirpath
 void CDirUtil::remove(const std::string& dirpath)
 {
     if (-1 == rmdir(dirpath.c_str()))
-        throw CSyscallException(errno, __FILE__, __LINE__, "rmdir");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "rmdir");
 }
 
 SYS_NAMESPACE_END

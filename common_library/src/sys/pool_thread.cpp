@@ -46,9 +46,9 @@ void CPoolThread::CPoolThreadHelper::run()
     }
 }
 
-bool CPoolThread::CPoolThreadHelper::before_start()
+void CPoolThread::CPoolThreadHelper::before_start() throw (util::CException, CSyscallException)
 {
-    return _pool_thread->before_start();
+    _pool_thread->before_start();
 }
 
 void CPoolThread::CPoolThreadHelper::before_stop()

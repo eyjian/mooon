@@ -27,7 +27,7 @@ mmap_t* CMMap::map_read(const char* filename, size_t size_max)
 {
     int fd = open(filename, O_RDONLY);
     if (-1 == fd)
-        throw CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "open");
     
     return do_map(PROT_READ, fd, 0, 0, size_max, false);
 }
@@ -41,7 +41,7 @@ mmap_t* CMMap::map_write(const char* filename, size_t size_max)
 {
     int fd = open(filename, O_WRONLY);
     if (-1 == fd)
-        throw CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "open");
     
     return do_map(PROT_WRITE, fd, 0, 0, size_max, false);
 }
@@ -55,7 +55,7 @@ mmap_t* CMMap::map_both(const char* filename, size_t size_max)
 {
     int fd = open(filename, O_RDONLY|O_WRONLY);
     if (-1 == fd)
-        throw CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "open");
     
     return do_map(PROT_READ|PROT_WRITE, fd, 0, 0, size_max, false);
 }
@@ -73,7 +73,7 @@ mmap_t* CMMap::do_map(int prot, int fd, size_t size, size_t offset, size_t size_
     {        
         struct stat st;
         if (-1 == fstat(fd, &st))
-            throw CSyscallException(errno, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "fstat");
 		
         ptr->fd = byfd? -fd: fd;
         ptr->len = (0 == size)? ((size_t)st.st_size-offset): (size+offset > (size_t)st.st_size)? (size_t)st.st_size: (size+offset);
@@ -83,7 +83,7 @@ mmap_t* CMMap::do_map(int prot, int fd, size_t size, size_t offset, size_t size_
 		{
 			void* addr = mmap(NULL, ptr->len, prot, MAP_SHARED, fd, offset);
 			if (MAP_FAILED == addr)
-				throw CSyscallException(errno, __FILE__, __LINE__);
+			    THROW_SYSCALL_EXCEPTION(NULL, errno, "mmap");
 
 			ptr->addr = addr;
 		}        
@@ -109,7 +109,7 @@ void CMMap::unmap(mmap_t* ptr)
 	if (ptr->addr != NULL)
     {
 		if (-1 == munmap(ptr->addr, ptr->len))
-		   throw CSyscallException(errno, __FILE__, __LINE__);
+		    THROW_SYSCALL_EXCEPTION(NULL, errno, "munmap");
 	}
 
     // 谁打开谁关闭
@@ -126,22 +126,22 @@ void CMMap::sync_flush(mmap_t* ptr, size_t offset, size_t length, bool invalid)
 {
     // 无效参数
     if (offset >= ptr->len)
-        throw CSyscallException(EINVAL, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, EINVAL, NULL);
     
     int flags = invalid? MS_SYNC|MS_INVALIDATE: MS_SYNC;
     if (-1 == msync(((char*)(ptr->addr))+offset, (offset+length > ptr->len)? ptr->len-offset: length, flags))
-        throw CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "msync");
 }
 
 void CMMap::async_flush(mmap_t* ptr, size_t offset, size_t length, bool invalid)
 {
     // 无效参数
     if (offset >= ptr->len)
-        throw CSyscallException(EINVAL, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, EINVAL, NULL);
     
     int flags = invalid? MS_ASYNC|MS_INVALIDATE: MS_ASYNC;
     if (-1 == msync(((char*)(ptr->addr))+offset, (offset+length > ptr->len)? ptr->len-offset: length, flags))
-        throw CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "msync");
 }
 
 SYS_NAMESPACE_END

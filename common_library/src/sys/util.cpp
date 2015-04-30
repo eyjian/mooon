@@ -82,7 +82,7 @@ std::string CUtil::get_program_path()
     {
         buf[retval] = '\0';
 
-#if 0 // 保留这段废代码，以牢记deleted的存在，但由于这里只取路径部分，所以不关心它的存在        
+#if 0 // 保留这段废代码，以牢记deleted的存在，但由于这里只取路径部分，所以不关心它的存在
         if (!strcmp(buf+retval-10," (deleted)"))
             buf[retval-10] = '\0';
 #else
@@ -225,7 +225,7 @@ void CUtil::create_directory(const char* dirpath, mode_t permissions)
 {
     if (-1 == mkdir(dirpath, permissions))
         if (errno != EEXIST)
-            throw sys::CSyscallException(errno, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "mkdir");
 }
 
 void CUtil::create_directory_recursive(const char* dirpath, mode_t permissions)
@@ -245,12 +245,12 @@ void CUtil::create_directory_recursive(const char* dirpath, mode_t permissions)
             if (0 == mkdir(pathname, permissions)) break;            
             if (EEXIST == errno) break;
             
-            throw sys::CSyscallException(errno, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "mkdir");
         }
 
         *slash = '\0';
         if ((-1 == mkdir(pathname, permissions)) && (errno != EEXIST))        
-            throw sys::CSyscallException(errno, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "mkdir");
         
         *slash++ = '/';
         while ('/' == *slash) ++slash; // 过滤掉相连的斜杠
@@ -268,7 +268,7 @@ bool CUtil::is_file(int fd)
 {
     struct stat buf;
     if (-1 == fstat(fd, &buf))
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "fstat");
 
     return S_ISREG(buf.st_mode);
 }
@@ -277,7 +277,7 @@ bool CUtil::is_file(const char* path)
 {
     struct stat buf;
     if (-1 == stat(path, &buf))
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "stat");
 
     return S_ISREG(buf.st_mode);
 }
@@ -286,7 +286,7 @@ bool CUtil::is_link(int fd)
 {
     struct stat buf;
     if (-1 == fstat(fd, &buf))
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "fstat");
 
     return S_ISLNK(buf.st_mode);
 }
@@ -295,7 +295,7 @@ bool CUtil::is_link(const char* path)
 {
     struct stat buf;
     if (-1 == stat(path, &buf))
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "stat");
 
     return S_ISLNK(buf.st_mode);
 }
@@ -304,7 +304,7 @@ bool CUtil::is_directory(int fd)
 {
     struct stat buf;
     if (-1 == fstat(fd, &buf))
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "fstat");
 
     return S_ISDIR(buf.st_mode);
 }
@@ -313,7 +313,7 @@ bool CUtil::is_directory(const char* path)
 {
     struct stat buf;
     if (-1 == stat(path, &buf))
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "stat");
 
     return S_ISDIR(buf.st_mode);
 }
@@ -327,11 +327,11 @@ void CUtil::enable_core_dump(bool enabled, int core_file_size)
         rlim.rlim_max = rlim.rlim_cur;
 
         if (-1 == setrlimit(RLIMIT_CORE, &rlim))
-            throw sys::CSyscallException(errno, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "setrlimit");
     }       
     
     if (-1 == prctl(PR_SET_DUMPABLE, enabled? 1: 0))
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "prctl");
 }
 
 const char* CUtil::get_program_name()
@@ -349,7 +349,7 @@ void CUtil::set_process_name(const std::string& new_name)
     if (!new_name.empty())
     {
         if (-1 == prctl(PR_SET_NAME, new_name.c_str()))
-            throw sys::CSyscallException(errno, __FILE__, __LINE__, "prctl name");
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "prctl");
     }
 }
 
@@ -452,7 +452,7 @@ void CUtil::common_pipe_read(int fd, char** buffer, int32_t* buffer_size)
 		if ((-1 == ret) && (EINTR == errno))
 			continue;
 		if (-1 == ret)
-			throw sys::CSyscallException(errno, __FILE__, __LINE__, "common_pipe_read size");
+		    THROW_SYSCALL_EXCEPTION(NULL, errno, "read");
 
 		break;
 	}
@@ -472,7 +472,7 @@ void CUtil::common_pipe_read(int fd, char** buffer, int32_t* buffer_size)
 		if (-1 == ret)
 		{
 			delete *buffer;
-			throw sys::CSyscallException(errno, __FILE__, __LINE__, "common_pipe_read buffer");
+			THROW_SYSCALL_EXCEPTION(NULL, errno, "read");
 		}
 
 		bufferp += ret;
@@ -492,7 +492,7 @@ void CUtil::common_pipe_write(int fd, const char* buffer, int32_t buffer_size)
 		if ((-1 == ret) && (EINTR == errno))
 			continue;
 		if (-1 == ret)
-			throw sys::CSyscallException(errno, __FILE__, __LINE__, "common_pipe_write size");
+		    THROW_SYSCALL_EXCEPTION(NULL, errno, "write");
 
 		break;
 	}
@@ -506,7 +506,7 @@ void CUtil::common_pipe_write(int fd, const char* buffer, int32_t buffer_size)
 		if ((-1 == ret) && (EINTR == errno))
 			continue;
 		if (-1 == ret)
-			throw sys::CSyscallException(errno, __FILE__, __LINE__, "common_pipe_write buffer");
+		    THROW_SYSCALL_EXCEPTION(NULL, errno, "write");
 
 		size -= ret;
 		bufferp += ret;

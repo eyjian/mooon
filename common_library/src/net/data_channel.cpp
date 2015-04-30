@@ -74,7 +74,7 @@ ssize_t CDataChannel::receive(char* buffer, size_t buffer_size)
 
     if (0 == buffer_size)
     {
-        throw sys::CSyscallException(EINVAL, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, EINVAL, NULL);
     }
     for (;;)
     {
@@ -84,7 +84,7 @@ ssize_t CDataChannel::receive(char* buffer, size_t buffer_size)
         if (EWOULDBLOCK == errno) break;
         if (EINTR == errno) continue;
 
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);        
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "recv");
     }
 
     atomic_add(retval, &gs_recv_buffer_bytes);
@@ -98,7 +98,7 @@ ssize_t CDataChannel::send(const char* buffer, size_t buffer_size)
 
     if (0 == buffer_size)
     {
-        throw sys::CSyscallException(EINVAL, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, EINVAL, NULL);
     }
     for (;;)
     {
@@ -108,7 +108,7 @@ ssize_t CDataChannel::send(const char* buffer, size_t buffer_size)
         if (EWOULDBLOCK == errno) break;
         if (EINTR == errno) continue;
 
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);        
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "send");
     }
     
     atomic_add(retval, &gs_send_buffer_bytes);
@@ -182,11 +182,6 @@ bool CDataChannel::full_receive(char* buffer, size_t& buffer_size)
             buffer_size = buffer_size - remaining_size;
             return false;
         }
-        if (-1 == retval)
-        {
-            buffer_size = buffer_size - remaining_size;
-            throw sys::CSyscallException(errno, __FILE__, __LINE__);
-        }
 
         buffer_offset += retval;
         remaining_size -= retval;        
@@ -204,11 +199,6 @@ void CDataChannel::full_send(const char* buffer, size_t& buffer_size)
     while (remaining_size > 0)
     {
         ssize_t retval = CDataChannel::send(buffer_offset, remaining_size);
-        if (-1 == retval)
-        {
-            buffer_size = buffer_size - remaining_size;
-            throw sys::CSyscallException(errno, __FILE__, __LINE__);
-        }
 
         buffer_offset += retval;
         remaining_size -= retval;        
@@ -228,7 +218,7 @@ ssize_t CDataChannel::send_file(int file_fd, off_t *offset, size_t count)
         if (EWOULDBLOCK == errno) break;
         if (EINTR == errno) continue;
 
-        throw sys::CSyscallException(errno, __FILE__, __LINE__); 
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "sendfile");
     }
 
     atomic_add(retval, &gs_send_file_bytes);
@@ -244,7 +234,7 @@ void CDataChannel::full_send_file(int file_fd, off_t *offset, size_t& count)
         if (-1 == retval)
         {
             count = count - remaining_size;
-            throw sys::CSyscallException(errno, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "send");
         }
 
         offset += retval;
@@ -297,9 +287,9 @@ bool CDataChannel::full_write_tofile(int file_fd, size_t& size, size_t offset)
         ssize_t retval = CDataChannel::receive(buffer, remaining_size);
         if (0 == retval) 
         {
-            // 连接被对端关闭  
+            // 连接被对端关闭
             size = size - remaining_size;
-            throw sys::CSyscallException(-1, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, -1, "recv");
         }
         else if (-1 == retval)
         {
@@ -313,7 +303,7 @@ bool CDataChannel::full_write_tofile(int file_fd, size_t& size, size_t offset)
             if (written != retval)
             {
                 size = size - remaining_size;
-                throw sys::CSyscallException((-1 == written)? errno: EIO, __FILE__, __LINE__); 
+                THROW_SYSCALL_EXCEPTION(NULL, (-1 == written)? errno: EIO, "pwrite");
             }
 
             current_offset += written;
@@ -340,7 +330,7 @@ ssize_t CDataChannel::readv(const struct iovec *iov, int iovcnt)
         if (EINTR == errno) continue;
         if (EWOULDBLOCK == errno) break;
 
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "readv");
     }
 
     atomic_add(retval, &gs_recv_buffer_bytes);
@@ -359,7 +349,7 @@ ssize_t CDataChannel::writev(const struct iovec *iov, int iovcnt)
         if (EINTR == errno) continue;
         if (EWOULDBLOCK == errno) break;
 
-        throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "writev");
     }
 
     atomic_add(retval, &gs_send_buffer_bytes);

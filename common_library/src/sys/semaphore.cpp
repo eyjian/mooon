@@ -35,15 +35,15 @@ CSysVSemaphore::CSysVSemaphore()
 void CSysVSemaphore::open(const char* path)
 {
     if (NULL == path)
-        throw CSyscallException(EINVAL, __FILE__, __LINE__, "path null");
+        THROW_SYSCALL_EXCEPTION(NULL, EINVAL, NULL);
 
     key_t key = ftok(path, getpid());
     if (-1 == key)
-        throw CSyscallException(errno, __FILE__, __LINE__, "ftok error");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "ftok");
 
     _semid = semget(key, 1, 0);
-    if (-1 == _semid)    
-        throw CSyscallException(errno, __FILE__, __LINE__, "semget error");    
+    if (-1 == _semid)
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "semget");
 }
 
 bool CSysVSemaphore::create(const char* path, int16_t init_value, mode_t mode)
@@ -55,7 +55,7 @@ bool CSysVSemaphore::create(const char* path, int16_t init_value, mode_t mode)
     {    
         key_t key = ftok(path, getpid());
         if (-1 == key)
-            throw CSyscallException(errno, __FILE__, __LINE__, "ftok error");
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "ftok");
     }
 
     // 创建信号量
@@ -63,7 +63,7 @@ bool CSysVSemaphore::create(const char* path, int16_t init_value, mode_t mode)
     if (-1 == _semid)
     {
         if (EEXIST == errno) return false;
-        throw CSyscallException(errno, __FILE__, __LINE__, "semget error");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "semget");
     }
 
     // 设置信号量初始值
@@ -72,7 +72,7 @@ bool CSysVSemaphore::create(const char* path, int16_t init_value, mode_t mode)
     if (-1 == semctl(_semid, 0, SETVAL, &semopts))
     {
         remove();
-        throw CSyscallException(errno, __FILE__, __LINE__, "set value of sempahore error");
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "semctl");
     }
         
     return true;
@@ -83,7 +83,7 @@ void CSysVSemaphore::remove()
     if (_semid != -1)
     {    
         if (-1 == semctl(_semid, 0, IPC_RMID))
-            throw CSyscallException(errno, __FILE__, __LINE__, "remove semaphore error");
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "semctl");
 
         _semid = -1;
     }
@@ -129,7 +129,7 @@ bool CSysVSemaphore::semaphore_operation(int value, int flag, int milliseconds)
         if (-1 == semop(_semid, sops, sizeof(sops)/sizeof(sops[0])))
         {
             if (EAGAIN == errno) return false;
-            throw CSyscallException(errno, __FILE__, __LINE__, "semop error");
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "semop");
         }
     }
     else
@@ -140,7 +140,7 @@ bool CSysVSemaphore::semaphore_operation(int value, int flag, int milliseconds)
         if (-1 == semtimedop(_semid, sops, sizeof(sops)/sizeof(sops[0]), &timeout))
         {
             if (errno == EAGAIN) return false;
-            throw CSyscallException(errno, __FILE__, __LINE__, "semtimedop error");
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "semtimedop");
         }
     }
 

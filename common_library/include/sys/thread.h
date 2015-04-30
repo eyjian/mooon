@@ -40,7 +40,7 @@ private:
     /** 在启动线程之前被调用的回调函数，如果返回false，则会导致start调用也返回false。
       * 可以重写该函数，将线程启动之前的逻辑放在这里。
       */
-    virtual bool before_start() { return true; }
+    virtual void before_start() throw (util::CException, CSyscallException) {}
 
     /***
       * stop执行前可安插的动作
@@ -55,7 +55,7 @@ public:
 	CThread();
 	virtual ~CThread();
 
-    /** 将_stop成员设置为true，线程可以根据_stop状态来决定是否退出线程      
+    /** 将_stop成员设置为true，线程可以根据_stop状态来决定是否退出线程
       * @wait_stop: 是否等待线程结束，只有当线程是可Join时才有效
       * @exception: 当wait_stop为true时，抛出和join相同的异常，否则不抛异常
       */
@@ -66,7 +66,7 @@ public:
       * @exception: 如果失败，则抛出CSyscallException异常，
       *             如果是因为before_start返回false，则出错码为0
       */
-	void start(bool detach=false);
+	void start(bool detach=false) throw (util::CException, CSyscallException);
 
     /** 设置线程栈大小。应当在start之前调用，否则设置无效，如放在before_start当中。
       * @stack_size: 栈大小字节数
