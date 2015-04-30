@@ -1,5 +1,5 @@
 ﻿#include <assert.h>
-#include <sys/sys_utils.h>
+#include <sys/utils.h>
 #include <sys/pool_thread.h>
 #include <sys/thread_pool.h>
 
@@ -58,7 +58,7 @@ int main()
 		}
 		
 		// 让CTestThread有足够的时间完成任务
-		sys::CSysUtil::millisleep(5000);
+		sys::CUtils::millisleep(5000);
 		// 等待所有线程退出，然后销毁线程池		
 		thread_pool.destroy();
 	}
@@ -66,7 +66,7 @@ int main()
 	{
 		// 将异常信息打印出来，方便定位原因
 		printf("Create thread pool exception: %s.\n"
-			,sys::CSysUtil::get_error_message(ex.get_errcode()).c_str());
+			,ex.str().c_str());
 	}
 	
 	return 0;

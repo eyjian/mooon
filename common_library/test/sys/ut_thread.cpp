@@ -42,13 +42,13 @@ int main()
 	catch (sys::CSyscallException& ex)
 	{
 	    printf("Start thread error: %s\n"
-	         , sys::CSysUtil::get_error_message(ex.get_errcode()).c_str());
+	         , ex.str().c_str());
 	    thread->dec_refcount();
 	    exit(1);
 	}
 	
 	// 主线程睡眠10秒钟
-	sys::CSysUtil::millisleep(10000);
+	sys::CUtils::millisleep(10000);
 	
 	thread->stop(); // 停止并待线程退出
 	thread->dec_refcount(); // 记得增加了引用计数，就需要在使用完后，相应的减引用计数

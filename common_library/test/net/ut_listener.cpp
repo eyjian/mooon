@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     else if (2 == argc) // 一个参数
     {
         ip = (char*)NULL;
-        if (!util::CStringUtil::string2uint16(argv[2], port))
+        if (!utils::CStringUtils::string2uint16(argv[2], port))
         {
             fprintf(stderr, "Invalid port: %s.\n", argv[2]);
             exit(1);
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
     else if (3 == argc) // 两个参数
     {            
         ip =  argv[1];
-        if (!util::CStringUtil::string2uint16(argv[2], port))
+        if (!utils::CStringUtils::string2uint16(argv[2], port))
         {
             fprintf(stderr, "Invalid port: %s.\n", argv[2]);
             exit(1);
@@ -107,8 +107,8 @@ int main(int argc, char* argv[])
     {
         // 监听或连接异常
         fprintf(stderr, "exception %s at %s:%d.\n"
-            , sys::CSysUtil::get_error_message(ex.get_errcode()).c_str()
-            , ex.get_filename(), ex.get_linenumber());
+            , ex.str().c_str()
+            , ex.file(), ex.line());
         exit(1);
     }
 

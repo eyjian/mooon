@@ -38,8 +38,8 @@ int main()
 	{
 		try
 		{
-			CFSUtil::fs_stat_t stat_buf;
-			CFSUtil::stat_fs(fs_entry.dir_path.c_str(), stat_buf);
+			CFSUtils::fs_stat_t stat_buf;
+			CFSUtils::stat_fs(fs_entry.dir_path.c_str(), stat_buf);
 
 			unsigned long total = stat_buf.total_block_nubmer * (stat_buf.block_bytes/1024);
 			unsigned long used = (stat_buf.total_block_nubmer-stat_buf.free_block_nubmer) * (stat_buf.block_bytes/1024);
@@ -56,7 +56,7 @@ int main()
 		}
 		catch (CSyscallException& ex)
 		{
-			printf("stat_fs exception: %s\n", ex.to_string().c_str());
+			printf("stat_fs exception: %s\n", ex.str().c_str());
 		}
 	}
 

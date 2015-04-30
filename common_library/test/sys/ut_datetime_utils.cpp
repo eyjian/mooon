@@ -24,7 +24,7 @@ int main()
     struct tm datetime_struct;
     const char* str = "2010-09-18 17:28:30";
 
-    if (!CDatetimeUtil::datetime_struct_from_string(str, &datetime_struct))
+    if (!CDatetimeUtils::datetime_struct_from_string(str, &datetime_struct))
         printf("ERROR datetime_struct_from_string: %s\n", str);
     else
         printf("%s ==> \n"
