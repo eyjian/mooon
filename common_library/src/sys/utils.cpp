@@ -25,9 +25,9 @@
 #include <sys/prctl.h> // prctl
 #include <sys/types.h>
 #include <sys/resource.h>
-#include <util/token_list.h>
-#include <util/string_util.h>
-#include "sys/util.h"
+#include <utils/token_list.h>
+#include <utils/string_utils.h>
+#include "sys/utils.h"
 #include "sys/close_helper.h"
 
 #ifndef PR_SET_NAME

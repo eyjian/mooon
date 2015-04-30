@@ -17,8 +17,8 @@
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
 #include <pthread.h> // localtime_r
-#include <util/string_util.h>
-#include "sys/datetime_util.h"
+#include <utils/string_utils.h>
+#include "sys/datetime_utils.h"
 SYS_NAMESPACE_BEGIN
 
 bool CDatetimeUtils::is_leap_year(int year)

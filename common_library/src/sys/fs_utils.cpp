@@ -23,7 +23,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/statvfs.h>
-#include "sys/fs_util.h"
+#include "sys/fs_utils.h"
 #include "sys/close_helper.h"
 
 #if COMPILE_FS_UTIL_CPP==1 // 必须在sys/sys_config.h之后
