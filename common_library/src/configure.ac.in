@@ -95,7 +95,7 @@ AM_CONDITIONAL(SQLITE3_INSTALLED_3RD, test -d /usr/local/thirdparty/sqlite3)
 
 AC_CONFIG_FILES([
 		Makefile
-		util/Makefile
+		utils/Makefile
 		sys/Makefile
 		net/Makefile
 		common/Makefile

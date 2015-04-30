@@ -17,10 +17,10 @@
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
 #include <sys/thread.h>
-#include <sys/sys_util.h>
+#include <sys/sys_utils.h>
 #include <sys/event_queue.h>
-#include <util/array_queue.h>
-#include <sys/datetime_util.h>
+#include <utils/array_queue.h>
+#include <sys/datetime_utils.h>
 
 // 定义处理消息线程，由主线程向它发消息
 class CMyThread: public sys::CThread

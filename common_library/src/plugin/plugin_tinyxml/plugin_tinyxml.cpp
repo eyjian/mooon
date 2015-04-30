@@ -20,8 +20,8 @@
 #include <strings.h>
 #include <sys/types.h>
 #include "tinyxml.h"
-#include "util/token_list.h"
-#include "util/string_util.h"
+#include "utils/token_list.h"
+#include "utils/string_utils.h"
 #include "plugin/plugin_tinyxml/plugin_tinyxml.h"
 LIBPLUGIN_NAMESPACE_BEGIN
 

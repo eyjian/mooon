@@ -25,7 +25,7 @@
 //#include <mysql.h>
 #include <mysql/mysql.h>
 #include "mysql_connection.h"
-#include "util/string_util.h"
+#include "utils/string_utils.h"
 LIBPLUGIN_NAMESPACE_BEGIN
 
 inline MYSQL_RES* get_resultset(void* resultset)

@@ -1,5 +1,5 @@
 ﻿#include <sys/thread.h>
-#include <sys/sys_util.h>
+#include <sys/sys_utils.h>
 
 // 所有非线程池线程都应当是CThread的子类
 // Exam线程CDemoThread运行后，每隔1秒往标准输出打印一行“continue...”

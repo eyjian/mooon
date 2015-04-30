@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_NET_IP_NODE_H
 #define MOOON_NET_IP_NODE_H
-#include <util/hash_map.h>
+#include <utils/hash_map.h>
 #include <net/ip_address.h>
 NET_NAMESPACE_BEGIN
 

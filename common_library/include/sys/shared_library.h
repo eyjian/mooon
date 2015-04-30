@@ -19,7 +19,7 @@
 #ifndef MOOON_SYS_SHARED_LIBRARY_H
 #define MOOON_SYS_SHARED_LIBRARY_H
 #include <dlfcn.h>
-#include "sys/util.h"
+#include "sys/utils.h"
 SYS_NAMESPACE_BEGIN
 
 /***

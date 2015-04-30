@@ -34,7 +34,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef MOOON_UTILS_SCOPED_PTR_H
 #define MOOON_UTILS_SCOPED_PTR_H
-#include "util/config.h"
+#include "utils/config.h"
 #include <assert.h>
 #include <cstddef>
 UTILS_NAMESPACE_BEGIN
@@ -47,7 +47,7 @@ template <class T> class ScopedArray;
 
 /***
  * 面向非对象数组和非数组变量的智能指针，使用示例:
-#include "util/scoped_ptr.h"
+#include "utils/scoped_ptr.h"
 #include <stdio.h>
 #include <string.h>
 

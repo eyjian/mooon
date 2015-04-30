@@ -54,7 +54,7 @@ LDADD      += -L$(MYSQL_PATH)/lib -L$(MYSQL_PATH)/lib/mysql -lmysqlclient
 INCLUDES   += -I$(SQLITE3_PATH)/include
 LDADD      +=   $(SQLITE3_PATH)/lib/libsqlite3.a
 
-LDADD      += -L$(top_srcdir)/util -lutil
+LDADD      += -L$(top_srcdir)/utils -lutils
 AM_LDFLAGS  += -fPIC -shared -pthread -lrt -ldl -lz
 AM_CXXFLAGS += -fPIC
 

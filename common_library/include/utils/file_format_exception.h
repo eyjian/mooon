@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_UTILS_FILE_FORMAT_EXCEPTION_H
 #define MOOON_UTILS_FILE_FORMAT_EXCEPTION_H
-#include "util/exception.h"
+#include "utils/exception.h"
 UTILS_NAMESPACE_BEGIN
 
 class CFileFormatException: public CException

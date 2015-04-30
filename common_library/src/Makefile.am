@@ -1,2 +1,2 @@
 EXTRA_DIST =
-SUBDIRS = util sys net common plugin
+SUBDIRS = utils sys net common plugin

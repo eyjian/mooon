@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_UTILS_PRINT_COLOR_H
 #define MOOON_UTILS_PRINT_COLOR_H
-#include <util/config.h>
+#include <utils/config.h>
 
 // 示例：
 // printf(PRINT_COLOR_YELLOW"[WARN][%s:%d]"PRINT_COLOR_NONE, __FILE__, __LINE__);

@@ -19,7 +19,7 @@
 #ifndef MOOON_SYS_DATETIME_UTILS_H
 #define MOOON_SYS_DATETIME_UTILS_H
 #include <time.h>
-#include "sys/util.h"
+#include "sys/utils.h"
 SYS_NAMESPACE_BEGIN
 
 /** 日期时间工具类

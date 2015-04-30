@@ -16,7 +16,7 @@
  *
  * Author: JianYi, eyjian@qq.com or eyjian@gmail.com
  */
-#include "util/file_format_exception.h"
+#include "utils/file_format_exception.h"
 UTILS_NAMESPACE_BEGIN
 
 CFileFormatException::CFileFormatException(const char* file, int line, int field)

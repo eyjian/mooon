@@ -22,9 +22,9 @@
 #include <strings.h>
 #include <stdexcept>
 #include <sys/wait.h>
-#include <util/string_util.h>
+#include <utils/string_utils.h>
 #include "sys/log.h"
-#include "sys/util.h"
+#include "sys/utils.h"
 #include "sys/main_template.h"
 SYS_NAMESPACE_BEGIN
 

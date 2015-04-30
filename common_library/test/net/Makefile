@@ -4,5 +4,5 @@ unit_test:
 	for cpp_file in $(CPP_FILES); \
 	do \
 		name=`basename $$cpp_file .cpp`; \
-		g++ -g -o $$name -I../../include -L../../src/util -lutil -L../../src/sys -lsys -L../../src/net -lnet $$cpp_file; \
+		g++ -g -o $$name -I../../include -L../../src/utils -lutils -L../../src/sys -lsys -L../../src/net -lnet $$cpp_file; \
 	done

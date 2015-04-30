@@ -17,7 +17,7 @@
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
 #include <signal.h>
-#include "net/util.h"
+#include "net/utils.h"
 #include "net/epollable.h"
 NET_NAMESPACE_BEGIN
 

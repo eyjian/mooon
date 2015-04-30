@@ -16,7 +16,7 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include <util/bit_util.h>
+#include <utils/bit_utils.h>
 #include "sys/mem_pool.h"
 SYS_NAMESPACE_BEGIN
 

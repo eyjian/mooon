@@ -16,10 +16,10 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include "net/net_util.h"
-#include "sys/sys_util.h"
+#include "net/net_utils.h"
+#include "sys/sys_utils.h"
 #include "net/tcp_client.h"
-#include "util/string_util.h"
+#include "utils/string_utils.h"
 
 // 需要两个参数：
 // argv[1]: 连接IP地址

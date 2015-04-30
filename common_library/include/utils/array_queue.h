@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_UTILS_ARRAY_QUEUE_H
 #define MOOON_UTILS_ARRAY_QUEUE_H
-#include "util/config.h"
+#include "utils/config.h"
 UTILS_NAMESPACE_BEGIN
 
 /** 用数组实现的队列, 非线程安全 */

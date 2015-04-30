@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <string>
 #include <vector>
-#include "sys/util.h"
+#include "sys/utils.h"
 SYS_NAMESPACE_BEGIN
 
 class CDirUtils

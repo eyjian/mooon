@@ -19,7 +19,7 @@
 #ifndef MOOON_UTILS_TIMEOUTABLE_H
 #define MOOON_UTILS_TIMEOUTABLE_H
 #include <time.h>
-#include "util/config.h"
+#include "utils/config.h"
 UTILS_NAMESPACE_BEGIN
 
 /***

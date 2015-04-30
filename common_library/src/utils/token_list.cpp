@@ -16,7 +16,7 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#include "util/token_list.h"
+#include "utils/token_list.h"
 UTILS_NAMESPACE_BEGIN
 
 void CTokenList::parse(TTokenList& token_list, const std::string& source, const std::string& sep)

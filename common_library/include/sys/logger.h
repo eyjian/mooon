@@ -34,7 +34,7 @@
 #include <sys/epoll.h>
 #include <sys/thread.h>
 #include <sys/atomic.h>
-#include <util/array_queue.h>
+#include <utils/array_queue.h>
 SYS_NAMESPACE_BEGIN
 
 class CLogger;

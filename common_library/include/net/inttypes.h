@@ -35,8 +35,8 @@
  */
 #ifndef MOOON_NET_INTTYPES_H
 #define MOOON_NET_INTTYPES_H
-#include <net/util.h>
-#include <util/bit_util.h>
+#include <net/utils.h>
+#include <utils/bit_utils.h>
 NET_NAMESPACE_BEGIN
 
 template <typename RawInt>

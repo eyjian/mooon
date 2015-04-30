@@ -16,7 +16,7 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#include "util/exception.h"
+#include "utils/exception.h"
 #include <sstream>
 UTILS_NAMESPACE_BEGIN
 

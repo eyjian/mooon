@@ -17,7 +17,7 @@
  * Author: JianYi, eyjian@qq.com or eyjian@gmail.com
  */
 #include <limits>
-#include "util/integer_util.h"
+#include "utils/integer_utils.h"
 UTILS_NAMESPACE_BEGIN
 
 bool CIntegerUtils::is_int16(int32_t num)

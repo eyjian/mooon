@@ -19,7 +19,7 @@
 #ifndef MOOON_NET_CONFIG_H
 #define MOOON_NET_CONFIG_H
 #include <vector>
-#include <util/config.h>
+#include <utils/config.h>
 
 // 定义名字空间宏
 #define NET_NAMESPACE_BEGIN namespace mooon { namespace net {

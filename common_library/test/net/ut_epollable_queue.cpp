@@ -18,9 +18,9 @@
  */
 #include "sys/thread.h"
 #include "net/epoller.h"
-#include "sys/sys_util.h"
-#include "util/array_queue.h"
-#include "sys/datetime_util.h"
+#include "sys/sys_utils.h"
+#include "utils/array_queue.h"
+#include "sys/datetime_utils.h"
 #include "net/epollable_queue.h"
 
 #define QUEUE_SIZE  10000 // 队列大小

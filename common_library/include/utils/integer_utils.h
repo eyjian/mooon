@@ -19,7 +19,7 @@
 #ifndef MOOON_UTILS_INTEGER_UTILS_H
 #define MOOON_UTILS_INTEGER_UTILS_H
 #include <math.h>
-#include "util/config.h"
+#include "utils/config.h"
 UTILS_NAMESPACE_BEGIN
 
 /***

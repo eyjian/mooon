@@ -18,8 +18,8 @@
  */
 #ifndef MOOON_UTILS_TIMEOUT_MANAGER_H
 #define MOOON_UTILS_TIMEOUT_MANAGER_H
-#include "util/timeoutable.h"
-#include "util/list_queue.h"
+#include "utils/timeoutable.h"
+#include "utils/list_queue.h"
 UTILS_NAMESPACE_BEGIN
 
 /***

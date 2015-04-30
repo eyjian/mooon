@@ -17,7 +17,7 @@
  * Author: jian yi, eyjian@qq.com
  */
 #include <sstream>
-#include "net/util.h"
+#include "net/utils.h"
 #include "net/tcp_client.h"
 #include "net/data_channel.h"
 #define CONNECT_UNESTABLISHED 0

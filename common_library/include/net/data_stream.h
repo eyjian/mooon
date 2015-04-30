@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_NET_DATA_STREAM_H
 #define MOOON_NET_DATA_STREAM_H
-#include "net/util.h"
+#include "net/utils.h"
 NET_NAMESPACE_BEGIN
 
 /***

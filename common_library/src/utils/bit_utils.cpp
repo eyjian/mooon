@@ -16,7 +16,7 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include "util/bit_util.h"
+#include "utils/bit_utils.h"
 UTILS_NAMESPACE_BEGIN
 
 void CBitUtils::flip(char* bitmap, uint32_t position)

@@ -17,9 +17,9 @@
  * Author: JianYi, eyjian@qq.com or eyjian@gmail.com
  */
 #include "sys/simple_db.h"
-#include "util/scoped_ptr.h"
-#include "util/string_formatter.h"
-#include "util/string_util.h"
+#include "utils/scoped_ptr.h"
+#include "utils/string_formatter.h"
+#include "utils/string_utils.h"
 //#include <my_global.h> // 有些版本的MySQL可能需要包含此头文件
 //#include <my_sys.h>    // 有些版本的MySQL可能需要包含此头文件
 #include <mysql/errmsg.h> // CR_SERVER_GONE_ERROR

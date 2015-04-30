@@ -21,7 +21,7 @@
 #include <sys/resource.h>
 #include "sys/info.h"
 #include "sys/close_helper.h"
-#include "util/string_util.h"
+#include "utils/string_utils.h"
 SYS_NAMESPACE_BEGIN
 
 bool CInfo::get_sys_info(sys_info_t& sys_info)

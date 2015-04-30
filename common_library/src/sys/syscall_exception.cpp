@@ -18,7 +18,7 @@
  */
 #include <sstream>
 #include <string.h>
-#include "sys/util.h"
+#include "sys/utils.h"
 #include "sys/syscall_exception.h"
 SYS_NAMESPACE_BEGIN
 

@@ -17,8 +17,8 @@
  * Author: jian yi, eyjian@qq.com
  */
 #include <fcntl.h>
-#include <sys/util.h>
-#include "net/util.h"
+#include <sys/utils.h>
+#include "net/utils.h"
 #include "net/listener.h"
 NET_NAMESPACE_BEGIN
 

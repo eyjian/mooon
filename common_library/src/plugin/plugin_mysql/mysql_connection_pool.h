@@ -24,7 +24,7 @@
 #define MOOON_PLUGIN_MYSQL_CONNECTION_POOL_H
 #include "sys/lock.h"
 #include "mysql_connection.h"
-#include "util/array_queue.h"
+#include "utils/array_queue.h"
 LIBPLUGIN_NAMESPACE_BEGIN
 
 /***

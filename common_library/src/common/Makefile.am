@@ -3,7 +3,7 @@ AUTOMAKE_OPTIONS= foreign
 
 lib_LIBRARIES = libmcommon.a
 
-libmcommon_OBJECTS=../util/*.o ../sys/*.o ../net/*.o
+libmcommon_OBJECTS=../utils/*.o ../sys/*.o ../net/*.o
 AM_LDFLAGS  += -fPIC -shared 
 AM_CXXFLAGS += -fPIC
 

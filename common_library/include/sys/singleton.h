@@ -24,7 +24,7 @@
 #include "sys/lock.h"
 
 /** 
- * util/configh.h 中的 singleton(SINGLETON_DECLARE) 是非线程安全
+ * utils/configh.h 中的 singleton(SINGLETON_DECLARE) 是非线程安全
  * 这里实现的 singleton 是线程安全的
  */
 
