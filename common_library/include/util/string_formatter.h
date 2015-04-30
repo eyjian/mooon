@@ -16,10 +16,10 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#ifndef MOOON_UTIL_STRING_FORMATTER_H
-#define MOOON_UTIL_STRING_FORMATTER_H
+#ifndef MOOON_UTILS_STRING_FORMATTER_H
+#define MOOON_UTILS_STRING_FORMATTER_H
 #include "util/config.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 /***
  * StringFormatter解决什么问题？看下列一段代码：
@@ -136,5 +136,5 @@ private:
     size_t _buffer_size;
 };
 
-UTIL_NAMESPACE_END
-#endif // MOOON_UTIL_STRING_FORMATTER_H
+UTILS_NAMESPACE_END
+#endif // MOOON_UTILS_STRING_FORMATTER_H

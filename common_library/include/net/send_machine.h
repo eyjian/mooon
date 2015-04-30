@@ -27,8 +27,8 @@ class CSendMachine
 public:
     CSendMachine(Connector* connector);
     bool is_finish() const;
-    util::handle_result_t continue_send();
-    util::handle_result_t send(const char* msg, size_t msg_size);
+    utils::handle_result_t continue_send();
+    utils::handle_result_t send(const char* msg, size_t msg_size);
     void reset(bool delete_message);
     
 private:
@@ -56,7 +56,7 @@ bool CSendMachine<Connector>::is_finish() const
 
 // 发送消息，可能是一个消息的第一次发送，也可能是一个消息的非第一次发送
 template <class Connector>
-util::handle_result_t CSendMachine<Connector>::continue_send()
+utils::handle_result_t CSendMachine<Connector>::continue_send()
 {
     ssize_t bytes_sent = _connector->send(_cursor, _remain_size);
     if (bytes_sent > -1)
@@ -66,8 +66,8 @@ util::handle_result_t CSendMachine<Connector>::continue_send()
     }
     
     return is_finish() 
-         ? util::handle_finish 
-         : util::handle_continue;
+         ? utils::handle_finish 
+         : utils::handle_continue;
 }
 
 // 发送消息，总是一个消息的第一次发送
@@ -75,7 +75,7 @@ util::handle_result_t CSendMachine<Connector>::continue_send()
 // msg - 需要发送的消息
 // msg_size - 需要发送的消息字节数
 template <class Connector>
-util::handle_result_t CSendMachine<Connector>::send(const char* msg, size_t msg_size)
+utils::handle_result_t CSendMachine<Connector>::send(const char* msg, size_t msg_size)
 {
     _message = msg;
     _cursor = msg;

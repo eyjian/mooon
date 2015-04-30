@@ -182,7 +182,7 @@ private:
     uint32_t _current_bytes;
     char _log_path[PATH_MAX];
     char _log_filename[FILENAME_MAX];
-    util::CArrayQueue<log_message_t*>* _log_queue;
+    utils::CArrayQueue<log_message_t*>* _log_queue;
     volatile int _waiter_number; // 等待PUSH消息的线程个数
     CEvent _queue_event;
     CLock _queue_lock; // 保护_log_queue的锁
@@ -209,7 +209,7 @@ public:
 private:
     virtual void run();   
     virtual void before_stop();
-    virtual void before_start() throw (util::CException, CSyscallException);
+    virtual void before_start() throw (utils::CException, CSyscallException);
     virtual bool execute();
 
 private:

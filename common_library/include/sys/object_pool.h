@@ -102,7 +102,7 @@ public:
         _avaliable_number = _object_number;
 
         _object_array = new ObjectClass[_object_number];
-        _object_queue = new util::CArrayQueue<ObjectClass*>(_object_number);
+        _object_queue = new utils::CArrayQueue<ObjectClass*>(_object_number);
         
         for (uint32_t i=0; i<_object_number; ++i)
         {
@@ -196,7 +196,7 @@ private:
     uint32_t _object_number;
     volatile uint32_t _avaliable_number;
     ObjectClass* _object_array;
-    util::CArrayQueue<ObjectClass*>* _object_queue;
+    utils::CArrayQueue<ObjectClass*>* _object_queue;
 };
 
 /***

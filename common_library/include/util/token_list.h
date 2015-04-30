@@ -16,11 +16,11 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#ifndef MOOON_UTIL_TOKEN_LIST_H
-#define MOOON_UTIL_TOKEN_LIST_H
+#ifndef MOOON_UTILS_TOKEN_LIST_H
+#define MOOON_UTILS_TOKEN_LIST_H
 #include <list>
 #include "util/config.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 /***
   * 将字符串按指定的分隔字符串解析到一个链表中
@@ -40,5 +40,5 @@ public:
     static void parse(TTokenList& token_list, const std::string& source, const std::string& sep);
 };
 
-UTIL_NAMESPACE_END
-#endif // MOOON_UTIL_TOKEN_LIST_H
+UTILS_NAMESPACE_END
+#endif // MOOON_UTILS_TOKEN_LIST_H

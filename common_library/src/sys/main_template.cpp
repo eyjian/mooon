@@ -98,7 +98,7 @@ int main_template(IMainHelper* main_helper, int argc, char* argv[])
 bool self_restart(IMainHelper* main_helper)
 {
     std::string env_name = main_helper->get_restart_env_name();
-    util::CStringUtil::trim(env_name);
+    utils::CStringUtil::trim(env_name);
 
     // 如果环境变量名为空，则认为不自重启
     if (env_name.empty()) return false;

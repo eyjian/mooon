@@ -72,7 +72,7 @@ void CMySQLConnectionPool::create(uint16_t pool_size, const char* db_ip, uint16_
 
     // 创建连接队列
     uint16_t db_connection_number = (0 ==pool_size)? 1: pool_size;
-    _connection_queue = new util::CArrayQueue<CMySQLPoolConnection*>(db_connection_number);    
+    _connection_queue = new utils::CArrayQueue<CMySQLPoolConnection*>(db_connection_number);    
     _connect_array = new CMySQLPoolConnection[db_connection_number];
 
     try

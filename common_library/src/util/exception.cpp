@@ -18,7 +18,7 @@
  */
 #include "util/exception.h"
 #include <sstream>
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 CException::CException(const char* errmsg, int errcode, const char* file, int line) throw ()
 {
@@ -74,4 +74,4 @@ void CException::init(const char* errmsg, int errcode, const char* file, int lin
     _line = line;
 }
 
-UTIL_NAMESPACE_END
+UTILS_NAMESPACE_END

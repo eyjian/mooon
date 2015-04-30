@@ -24,7 +24,7 @@ SYS_NAMESPACE_BEGIN
 /** 事件队列，总是线程安全
   * 特性1: 如果队列为空，则可等待队列有数据时
   * 特性2: 如果队列已满，则可等待队列为非满时
-  * RawQueueClass为原始队列类名，如util::CArrayQueue
+  * RawQueueClass为原始队列类名，如utils::CArrayQueue
   */
 template <class RawQueueClass>
 class CEventQueue
@@ -92,7 +92,7 @@ public:
             // 如果不等待，则立即返回
             if (0 == _pop_milliseconds) return false;
             // 使用助手类管理计数，因为timed_wait可能抛异常
-            util::CountHelper<volatile int> ch(_pop_waiter_number); 
+            utils::CountHelper<volatile int> ch(_pop_waiter_number); 
             
             // 超时则立即返回
             if (!_event.timed_wait(_lock, _pop_milliseconds)) return false;
@@ -123,7 +123,7 @@ public:
             // 如果不等待，则立即返回
             if (0 == _push_milliseconds) return false;  
             // 使用助手类管理计数，因为timed_wait可能抛异常
-            util::CountHelper<volatile int> ch(_push_waiter_number); 
+            utils::CountHelper<volatile int> ch(_push_waiter_number); 
 
             // 超时则立即返回
             if (!_event.timed_wait(_lock, _push_milliseconds)) return false;

@@ -175,7 +175,7 @@ bool CMySQLConnection::is_established() const
 CMySQLRecordset* CMySQLConnection::query(const char* format, va_list& args)
 {
     char sql[SQL_MAX];    
-    int sql_length = util::CStringUtil::fix_vsnprintf(sql, sizeof(sql), format, args);
+    int sql_length = utils::CStringUtil::fix_vsnprintf(sql, sizeof(sql), format, args);
 
     // 如果查询成功，返回0。如果出现错误，返回非0值
     if (mysql_real_query(get_mysql_handler(_mysql_handler), sql, (unsigned long)sql_length) != 0)
@@ -207,7 +207,7 @@ CMySQLRecordset* CMySQLConnection::query(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    util::VaListHelper vlh(args);
+    utils::VaListHelper vlh(args);
 
     return query(format, args);
 }
@@ -245,7 +245,7 @@ int CMySQLConnection::query(sys::DbTable* table, const char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    util::VaListHelper vlh(args);
+    utils::VaListHelper vlh(args);
 
     return query(table, format, args);
 }
@@ -264,7 +264,7 @@ int CMySQLConnection::get_field_value(std::string* value, const char* format, ..
 {
     va_list args;
     va_start(args, format);
-    util::VaListHelper vlh(args);
+    utils::VaListHelper vlh(args);
 
     return get_field_value(value, format, args);
 }
@@ -282,7 +282,7 @@ int CMySQLConnection::get_fields_value(sys::DbFields *values, const char* format
 {
     va_list args;
     va_start(args, format);
-    util::VaListHelper vlh(args);
+    utils::VaListHelper vlh(args);
 
     return get_fields_value(values, format, args);
 }
@@ -295,7 +295,7 @@ void CMySQLConnection::free_recordset(sys::IRecordset* recordset)
 size_t CMySQLConnection::update(const char* format, va_list& args)
 {
     char sql[SQL_MAX];    
-    int sql_length = util::CStringUtil::fix_vsnprintf(sql, sizeof(sql), format, args);
+    int sql_length = utils::CStringUtil::fix_vsnprintf(sql, sizeof(sql), format, args);
 
     // 如果查询成功，返回0。如果出现错误，返回非0值
     if (mysql_real_query(get_mysql_handler(_mysql_handler), sql, (unsigned long)sql_length) != 0)
@@ -315,7 +315,7 @@ size_t CMySQLConnection::update(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    util::VaListHelper vlh(args);
+    utils::VaListHelper vlh(args);
     
     size_t num_rows_affected = update(format, args);
     return num_rows_affected;

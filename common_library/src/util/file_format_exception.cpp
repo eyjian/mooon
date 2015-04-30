@@ -17,7 +17,7 @@
  * Author: JianYi, eyjian@qq.com or eyjian@gmail.com
  */
 #include "util/file_format_exception.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 CFileFormatException::CFileFormatException(const char* file, int line, int field)
     :CException("format error", -1, file, line)
@@ -25,4 +25,4 @@ CFileFormatException::CFileFormatException(const char* file, int line, int field
 {
 }
 
-UTIL_NAMESPACE_END
+UTILS_NAMESPACE_END

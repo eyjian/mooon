@@ -16,10 +16,10 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#ifndef MOOON_UTIL_HASH_UTIL_H
-#define MOOON_UTIL_HASH_UTIL_H
+#ifndef MOOON_UTILS_HASH_UTIL_H
+#define MOOON_UTILS_HASH_UTIL_H
 #include "util/config.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 /** 求128类型的hash函数 */
 struct uint128_hasher
@@ -39,5 +39,5 @@ struct uint128_comparer
 	}
 };
 
-UTIL_NAMESPACE_END
-#endif // MOOON_UTIL_HASH_UTIL_H
+UTILS_NAMESPACE_END
+#endif // MOOON_UTILS_HASH_UTIL_H

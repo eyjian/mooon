@@ -37,7 +37,7 @@ private:
 
     private:
         virtual void run();
-        virtual void before_start() throw (util::CException, CSyscallException);
+        virtual void before_start() throw (utils::CException, CSyscallException);
         virtual void before_stop();
 
     private:		

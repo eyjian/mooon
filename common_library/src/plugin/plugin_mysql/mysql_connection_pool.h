@@ -86,7 +86,7 @@ private: // 连接数据库用
 private:
     sys::CLock _lock;
     CMySQLPoolConnection* _connect_array;
-    util::CArrayQueue<CMySQLPoolConnection*>* _connection_queue;    
+    utils::CArrayQueue<CMySQLPoolConnection*>* _connection_queue;    
 };
 
 /***

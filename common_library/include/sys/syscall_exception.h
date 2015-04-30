@@ -27,7 +27,7 @@
 SYS_NAMESPACE_BEGIN
 
 /** 系统调用出错异常，多数系统调用出错时，均以此异常型反馈给调用者 */
-class CSyscallException: public util::CException
+class CSyscallException: public utils::CException
 {
 public:
     CSyscallException(const char* errmsg, int errcode, const char* file, int line, const char* syscall) throw ();

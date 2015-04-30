@@ -132,8 +132,8 @@ CConfigReader::CConfigReader(TiXmlElement* root)
 
 TiXmlElement* CConfigReader::select_element(const std::string& path)
 {
-    util::CTokenList::TTokenList token_list;
-    util::CTokenList::parse(token_list, path, "/");
+    utils::CTokenList::TTokenList token_list;
+    utils::CTokenList::parse(token_list, path, "/");
 	
     // 用以支持：get_string_value("/", "name", value);
     if (token_list.empty()) return _root;
@@ -197,9 +197,9 @@ bool CConfigReader::select_elements(const std::string& path, TTiXmlElementArray&
     TiXmlElement* element = NULL;
     TTiXmlElementArray child_element_array;
     TTiXmlElementArray parent_element_array;
-    util::CTokenList::TTokenList token_list;
+    utils::CTokenList::TTokenList token_list;
 
-    util::CTokenList::parse(token_list, path, "/");
+    utils::CTokenList::parse(token_list, path, "/");
     parent_element_array.push_back(_root);
 
     while (!token_list.empty())
@@ -307,7 +307,7 @@ bool CConfigReader::get_int16_value(const std::string& path, const std::string& 
     if (NULL == value_tmp) return false;
 
     int16_t result = 0;
-    if (!util::CStringUtil::string2int16(value_tmp, result)) return false;
+    if (!utils::CStringUtil::string2int16(value_tmp, result)) return false;
 
     value = result;
     return true;
@@ -322,7 +322,7 @@ bool CConfigReader::get_int32_value(const std::string& path, const std::string& 
     if (NULL == value_tmp) return false;
 
     int32_t result = 0;
-    if (!util::CStringUtil::string2int32(value_tmp, result)) return false;
+    if (!utils::CStringUtil::string2int32(value_tmp, result)) return false;
 
     value = result;
     return true;
@@ -337,7 +337,7 @@ bool CConfigReader::get_int64_value(const std::string& path, const std::string& 
     if (NULL == value_tmp) return false;
 
     int64_t result = 0;
-    if (!util::CStringUtil::string2int64(value_tmp, result)) return false;
+    if (!utils::CStringUtil::string2int64(value_tmp, result)) return false;
 
     value = result;
     return true;
@@ -352,7 +352,7 @@ bool CConfigReader::get_uint16_value(const std::string& path, const std::string&
     if (NULL == value_tmp) return false;
 
     uint16_t result = 0;
-    if (!util::CStringUtil::string2uint16(value_tmp, result)) return false;
+    if (!utils::CStringUtil::string2uint16(value_tmp, result)) return false;
 
     value = result;
     return true;
@@ -367,7 +367,7 @@ bool CConfigReader::get_uint32_value(const std::string& path, const std::string&
     if (NULL == value_tmp) return false;
 
     uint32_t result = 0;
-    if (!util::CStringUtil::string2uint32(value_tmp, result)) return false;
+    if (!utils::CStringUtil::string2uint32(value_tmp, result)) return false;
 
     value = result;
     return true;
@@ -382,7 +382,7 @@ bool CConfigReader::get_uint64_value(const std::string& path, const std::string&
     if (NULL == value_tmp) return false;
 
     uint64_t result = 0;
-    if (!util::CStringUtil::string2uint64(value_tmp, result)) return false;
+    if (!utils::CStringUtil::string2uint64(value_tmp, result)) return false;
 
     value = result;
     return true;
@@ -426,7 +426,7 @@ bool CConfigReader::get_int16_values(const std::string& path, const std::string&
         int16_t value_int16 = 0;
         if (this->get_value(element_array[i], name, value))
         {
-            if (!util::CStringUtil::string2int16(value.c_str(), value_int16)) return false;
+            if (!utils::CStringUtil::string2int16(value.c_str(), value_int16)) return false;
             values.push_back(value_int16);
         }
     }
@@ -445,7 +445,7 @@ bool CConfigReader::get_int32_values(const std::string& path, const std::string&
         int32_t value_int = 0;
         if (this->get_value(element_array[i], name, value))
         {
-            if (!util::CStringUtil::string2int32(value.c_str(), value_int)) return false;
+            if (!utils::CStringUtil::string2int32(value.c_str(), value_int)) return false;
             values.push_back(value_int);
         }
     }
@@ -464,7 +464,7 @@ bool CConfigReader::get_int64_values(const std::string& path, const std::string&
         int64_t value_int = 0;
         if (this->get_value(element_array[i], name, value))
         {
-            if (!util::CStringUtil::string2int64(value.c_str(), value_int)) return false;
+            if (!utils::CStringUtil::string2int64(value.c_str(), value_int)) return false;
             values.push_back(value_int);
         }
     }
@@ -483,7 +483,7 @@ bool CConfigReader::get_uint16_values(const std::string& path, const std::string
         uint16_t value_int = 0;
         if (this->get_value(element_array[i], name, value))
         {
-            if (!util::CStringUtil::string2uint16(value.c_str(), value_int)) return false;
+            if (!utils::CStringUtil::string2uint16(value.c_str(), value_int)) return false;
             values.push_back(value_int);
         }
     }
@@ -502,7 +502,7 @@ bool CConfigReader::get_uint32_values(const std::string& path, const std::string
         uint32_t value_int = 0;
         if (this->get_value(element_array[i], name, value))
         {
-            if (!util::CStringUtil::string2uint32(value.c_str(), value_int)) return false;
+            if (!utils::CStringUtil::string2uint32(value.c_str(), value_int)) return false;
             values.push_back(value_int);
         }
     }
@@ -521,7 +521,7 @@ bool CConfigReader::get_uint64_values(const std::string&path, const std::string&
         uint64_t value_int = 0;
         if (this->get_value(element_array[i], name, value))
         {
-            if (!util::CStringUtil::string2uint64(value.c_str(), value_int)) return false;
+            if (!utils::CStringUtil::string2uint64(value.c_str(), value_int)) return false;
             values.push_back(value_int);
         }
     }

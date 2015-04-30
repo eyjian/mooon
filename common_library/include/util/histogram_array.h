@@ -16,10 +16,10 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#ifndef MOOON_UTIL_HISTOGRAM_ARRAY_H
-#define MOOON_UTIL_HISTOGRAM_ARRAY_H
+#ifndef MOOON_UTILS_HISTOGRAM_ARRAY_H
+#define MOOON_UTILS_HISTOGRAM_ARRAY_H
 #include "util/config.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 /***
   * 直方图数组
@@ -162,5 +162,5 @@ private:
     uint32_t* _histogram_size_array; /** 直方图大小数组 */
 };
 
-UTIL_NAMESPACE_END
-#endif // MOOON_UTIL_HISTOGRAM_ARRAY_H
+UTILS_NAMESPACE_END
+#endif // MOOON_UTILS_HISTOGRAM_ARRAY_H

@@ -24,7 +24,7 @@ SYS_NAMESPACE_BEGIN
 
 CSyscallException::CSyscallException(
         const char* errmsg, int errcode, const char* file, int line, const char* syscall) throw ()
-    : util::CException(errmsg, errcode, file, line)
+    : utils::CException(errmsg, errcode, file, line)
 {
     if (NULL == errmsg)
         _errmsg = strerror(errno);

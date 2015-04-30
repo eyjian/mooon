@@ -222,7 +222,7 @@ private:
     {
         va_list args;
         va_start(args, format);
-        util::VaListHelper vlh(args);
+        utils::VaListHelper vlh(args);
 
         return _mysql_connection.query(format, args);
     }
@@ -231,7 +231,7 @@ private:
     {
         va_list args;
         va_start(args, format);
-        util::VaListHelper vlh(args);
+        utils::VaListHelper vlh(args);
 
         return _mysql_connection.query(table, format, args);
     }
@@ -250,7 +250,7 @@ private:
     {
         va_list args;
         va_start(args, format);
-        util::VaListHelper vlh(args);
+        utils::VaListHelper vlh(args);
 
         return _mysql_connection.get_field_value(value, format, args);
     }
@@ -267,7 +267,7 @@ private:
     {
         va_list args;
         va_start(args, format);
-        util::VaListHelper vlh(args);
+        utils::VaListHelper vlh(args);
 
         return _mysql_connection.get_fields_value(values, format, args);
     }
@@ -289,7 +289,7 @@ private:
     {
         va_list args;
         va_start(args, format);
-        util::VaListHelper vlh(args);
+        utils::VaListHelper vlh(args);
         
         size_t num_rows_affected = _mysql_connection.update(format, args);
         return num_rows_affected;
@@ -356,7 +356,7 @@ private:
     {
         va_list args;
         va_start(args, format);
-        util::VaListHelper vlh(args);
+        utils::VaListHelper vlh(args);
 
         return _mysql_connection.query(format, args);
     }
@@ -365,7 +365,7 @@ private:
     {
         va_list args;
         va_start(args, format);
-        util::VaListHelper vlh(args);
+        utils::VaListHelper vlh(args);
 
         return _mysql_connection.query(table, format, args);
     }
@@ -384,7 +384,7 @@ private:
     {
         va_list args;
         va_start(args, format);
-        util::VaListHelper vlh(args);
+        utils::VaListHelper vlh(args);
 
         return _mysql_connection.get_field_value(value, format, args);
     }
@@ -401,7 +401,7 @@ private:
     {
         va_list args;
         va_start(args, format);
-        util::VaListHelper vlh(args);
+        utils::VaListHelper vlh(args);
 
         return _mysql_connection.get_fields_value(values, format, args);
     }
@@ -423,7 +423,7 @@ private:
     {
         va_list args;
         va_start(args, format);
-        util::VaListHelper vlh(args);
+        utils::VaListHelper vlh(args);
         
         size_t num_rows_affected = _mysql_connection.update(format, args);
         return num_rows_affected;

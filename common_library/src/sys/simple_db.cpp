@@ -244,7 +244,7 @@ void CDBConnectionBase::query(DBRow& db_row, const char* format, ...) throw (CDB
         }
         else if (db_table.size() > 1)
         {
-            throw CDBException(NULL, util::StringFormatter("too many rows: %d", (int)db_table.size()).c_str(),
+            throw CDBException(NULL, utils::StringFormatter("too many rows: %d", (int)db_table.size()).c_str(),
                     DB_ERROR_TOO_MANY_ROWS, __FILE__, __LINE__);
         }
 
@@ -270,7 +270,7 @@ std::string CDBConnectionBase::query(const char* format, ...) throw (CDBExceptio
 
         if (db_table.size() > 1)
         {
-            throw CDBException(NULL, util::StringFormatter("too many rows: %d", (int)db_table.size()).c_str(),
+            throw CDBException(NULL, utils::StringFormatter("too many rows: %d", (int)db_table.size()).c_str(),
                     DB_ERROR_TOO_MANY_ROWS, __FILE__, __LINE__);
         }
         else if (1 == db_table.size())
@@ -282,7 +282,7 @@ std::string CDBConnectionBase::query(const char* format, ...) throw (CDBExceptio
             }
             else if (db_row.size() > 1)
             {
-                throw CDBException(NULL, util::StringFormatter("too many cols: %d", (int)db_row.size()).c_str(),
+                throw CDBException(NULL, utils::StringFormatter("too many cols: %d", (int)db_row.size()).c_str(),
                         DB_ERROR_TOO_MANY_COLS, __FILE__, __LINE__);
             }
         }
@@ -300,13 +300,13 @@ std::string CDBConnectionBase::query(const char* format, ...) throw (CDBExceptio
 
 void CDBConnectionBase::do_query(DBTable& db_table, const char* format, va_list& args) throw (CDBException)
 {
-    util::ScopedArray<char> sql(new char[_sql_max + 1]);
+    utils::ScopedArray<char> sql(new char[_sql_max + 1]);
 
     // 拼成SQL语句
     int bytes_printed = vsnprintf(sql.get(), _sql_max + 1, format, args);
     if (bytes_printed >= ((int)_sql_max + 1))
     {
-        throw CDBException(NULL, util::StringFormatter("sql[%s] too long: %d over %d", sql.get(), bytes_printed, (int)_sql_max).c_str(),
+        throw CDBException(NULL, utils::StringFormatter("sql[%s] too long: %d over %d", sql.get(), bytes_printed, (int)_sql_max).c_str(),
                 -1, __FILE__, __LINE__);
     }
 
@@ -326,7 +326,7 @@ CMySQLConnection::~CMySQLConnection()
 
 void CMySQLConnection::open() throw (CDBException)
 {    
-    _id = util::CStringUtil::format_string("mysql://%s@%s:%d", _db_name.c_str(), _db_ip.c_str(), _db_port);
+    _id = utils::CStringUtil::format_string("mysql://%s@%s:%d", _db_name.c_str(), _db_ip.c_str(), _db_port);
     do_open();
 }
 
@@ -351,7 +351,7 @@ int CMySQLConnection::update(const char* format, ...) throw (CDBException)
 {
     va_list args;
     va_start(args, format);
-    util::ScopedArray<char> sql(new char[_sql_max + 1]);
+    utils::ScopedArray<char> sql(new char[_sql_max + 1]);
 
     // 拼成SQL语句
     int bytes_printed = vsnprintf(sql.get(), _sql_max + 1, format, args);
@@ -359,14 +359,14 @@ int CMySQLConnection::update(const char* format, ...) throw (CDBException)
 
     if (bytes_printed >= ((int)_sql_max + 1))
     {
-        throw CDBException(NULL, util::StringFormatter("sql[%s] too long: %d over %d", sql.get(), bytes_printed, (int)_sql_max).c_str(),
+        throw CDBException(NULL, utils::StringFormatter("sql[%s] too long: %d over %d", sql.get(), bytes_printed, (int)_sql_max).c_str(),
                 -1, __FILE__, __LINE__);
     }
 
     // 如果查询成功，返回0。如果出现错误，返回非0值
     if (mysql_real_query(_mysql_handler, sql.get(), (unsigned long)bytes_printed) != 0)
     {
-        throw CDBException(NULL, util::StringFormatter("sql[%s] error: %s", sql.get(), mysql_error(_mysql_handler)).c_str(),
+        throw CDBException(NULL, utils::StringFormatter("sql[%s] error: %s", sql.get(), mysql_error(_mysql_handler)).c_str(),
                 mysql_errno(_mysql_handler), __FILE__, __LINE__);
     }
 
@@ -383,7 +383,7 @@ void CMySQLConnection::_do_query(DBTable& db_table, const char* format, va_list&
     // 如果查询成功，返回0。如果出现错误，返回非0值
     if (mysql_real_query(_mysql_handler, sql, (unsigned long)bytes_printed) != 0)
     {
-        throw CDBException(NULL, util::StringFormatter("sql[%s] error: %s", sql, mysql_error(_mysql_handler)).c_str(),
+        throw CDBException(NULL, utils::StringFormatter("sql[%s] error: %s", sql, mysql_error(_mysql_handler)).c_str(),
                 mysql_errno(_mysql_handler), __FILE__, __LINE__);
     }
 
@@ -391,7 +391,7 @@ void CMySQLConnection::_do_query(DBTable& db_table, const char* format, va_list&
     MYSQL_RES* result_set = mysql_store_result(_mysql_handler);
     if (NULL == result_set)
     {
-        throw CDBException(NULL, util::StringFormatter("sql[%s] error: %s", sql, mysql_error(_mysql_handler)).c_str(),
+        throw CDBException(NULL, utils::StringFormatter("sql[%s] error: %s", sql, mysql_error(_mysql_handler)).c_str(),
                 mysql_errno(_mysql_handler), __FILE__, __LINE__);
     }
     else
@@ -489,7 +489,7 @@ void CSQLite3Connection::open() throw (CDBException)
     }
     else
     {
-        _id = util::CStringUtil::format_string("sqlite3://%s", _db_name.c_str());
+        _id = utils::CStringUtil::format_string("sqlite3://%s", _db_name.c_str());
 
         if (sqlite3_open(_db_name.c_str(), &_sqlite) != SQLITE_OK)
         {
@@ -522,7 +522,7 @@ int CSQLite3Connection::update(const char* format, ...) throw (CDBException)
 {
     va_list args;
     va_start(args, format);
-    util::ScopedArray<char> sql(new char[_sql_max + 1]);
+    utils::ScopedArray<char> sql(new char[_sql_max + 1]);
 
     // 拼成SQL语句
     int bytes_printed = vsnprintf(sql.get(), _sql_max + 1, format, args);
@@ -530,7 +530,7 @@ int CSQLite3Connection::update(const char* format, ...) throw (CDBException)
 
     if (bytes_printed >= ((int)_sql_max + 1))
     {
-        throw CDBException(NULL, util::StringFormatter("sql[%s] too long: %d over %d", sql.get(), bytes_printed, (int)_sql_max).c_str(),
+        throw CDBException(NULL, utils::StringFormatter("sql[%s] too long: %d over %d", sql.get(), bytes_printed, (int)_sql_max).c_str(),
                 -1, __FILE__, __LINE__);
     }
     
@@ -543,7 +543,7 @@ int CSQLite3Connection::update(const char* format, ...) throw (CDBException)
         std::string errmsg_ = errmsg;
         sqlite3_free(errmsg);
 
-        throw CDBException(NULL, util::StringFormatter("sql[%s] error: %s", sql.get(), errmsg_.c_str()).c_str(),
+        throw CDBException(NULL, utils::StringFormatter("sql[%s] error: %s", sql.get(), errmsg_.c_str()).c_str(),
                 -1, __FILE__, __LINE__);
     }
 
@@ -575,7 +575,7 @@ void CSQLite3Connection::_do_query(DBTable& db_table, const char* format, va_lis
 
         sqlite3_free(errmsg);
         throw CDBException(NULL,
-                util::StringFormatter("sql[%s] error: %s", sql, errmsg_.c_str()).c_str(),
+                utils::StringFormatter("sql[%s] error: %s", sql, errmsg_.c_str()).c_str(),
                 -1, __FILE__, __LINE__);
     }
     else

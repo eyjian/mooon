@@ -39,7 +39,7 @@ enum
     DB_ERROR_TOO_MANY_ROWS  // 查询结果返回超出预期的行数
 };
 
-class CDBException: public util::CException
+class CDBException: public utils::CException
 {
 public:
     /***

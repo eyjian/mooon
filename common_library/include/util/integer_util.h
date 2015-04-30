@@ -16,11 +16,11 @@
  *
  * Author: JianYi, eyjian@qq.com or eyjian@gmail.com
  */
-#ifndef MOOON_UTIL_INTEGER_UTIL_H
-#define MOOON_UTIL_INTEGER_UTIL_H
+#ifndef MOOON_UTILS_INTEGER_UTIL_H
+#define MOOON_UTILS_INTEGER_UTIL_H
 #include <math.h>
 #include "util/config.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 /***
   * 整数数字操作工具类
@@ -57,5 +57,5 @@ public:
     static bool is_uint32(uint64_t num);
 };
 
-UTIL_NAMESPACE_END
-#endif // MOOON_UTIL_INTEGER_UTIL_H
+UTILS_NAMESPACE_END
+#endif // MOOON_UTILS_INTEGER_UTIL_H

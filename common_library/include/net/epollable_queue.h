@@ -23,7 +23,7 @@
 NET_NAMESPACE_BEGIN
 
 /** 可以放入Epoll监控的队列
-  * RawQueueClass为原始队列类名，如util::CArrayQueue
+  * RawQueueClass为原始队列类名，如utils::CArrayQueue
   * 为线程安全类
   */
 template <class RawQueueClass>
@@ -150,7 +150,7 @@ public:
             if (0 == millisecond) return false;
 
             // 超时等待
-            util::CountHelper<volatile int32_t> ch(_push_waiter_number);            
+            utils::CountHelper<volatile int32_t> ch(_push_waiter_number);            
             if (!_event.timed_wait(_lock, millisecond)) 
             {
                 return false;

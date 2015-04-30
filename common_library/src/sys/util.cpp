@@ -152,7 +152,7 @@ uint16_t CUtil::get_cpu_number()
 		*value++ = 0;		
 		if (0 == strncmp("processor", name, sizeof("processor")-1))
 		{
-			 if (!util::CStringUtil::string2uint16(value, cpu_number))
+			 if (!utils::CStringUtil::string2uint16(value, cpu_number))
              {
                  return 0;
              }
@@ -260,7 +260,7 @@ void CUtil::create_directory_recursive(const char* dirpath, mode_t permissions)
 
 void CUtil::create_directory_byfilepath(const char* filepath, mode_t permissions)
 {
-    std::string dirpath = util::CStringUtil::extract_dirpath(filepath);
+    std::string dirpath = utils::CStringUtil::extract_dirpath(filepath);
     create_directory_recursive(dirpath.c_str(),  permissions);
 }
 
@@ -357,7 +357,7 @@ void CUtil::set_process_name(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    util::VaListHelper vlh(args);
+    utils::VaListHelper vlh(args);
 
     char name[NAME_MAX];
     vsnprintf(name, sizeof(name), format, args);
@@ -433,7 +433,7 @@ void CUtil::set_process_title(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    util::VaListHelper vlh(args);
+    utils::VaListHelper vlh(args);
 
     char title[PATH_MAX];
     vsnprintf(title, sizeof(title), format, args);

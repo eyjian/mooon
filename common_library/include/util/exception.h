@@ -16,16 +16,16 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#ifndef MOOON_UTIL_EXCEPTION_H
-#define MOOON_UTIL_EXCEPTION_H
+#ifndef MOOON_UTILS_EXCEPTION_H
+#define MOOON_UTILS_EXCEPTION_H
 #include "util/string_formatter.h"
 #include <exception>
 #include <string>
 
 #define THROW_EXCEPTION(errmsg, errcode) \
-    throw util::CException(errmsg, errcode, __FILE__, __LINE__)
+    throw utils::CException(errmsg, errcode, __FILE__, __LINE__)
 
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 // 异常基类，继承自标准库的exception
 class CException: public std::exception
@@ -60,5 +60,5 @@ protected:
     int _line;
 };
 
-UTIL_NAMESPACE_END
-#endif // MOOON_UTIL_EXCEPTION_H
+UTILS_NAMESPACE_END
+#endif // MOOON_UTILS_EXCEPTION_H

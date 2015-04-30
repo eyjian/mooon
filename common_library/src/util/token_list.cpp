@@ -17,7 +17,7 @@
  * Author: jian yi, eyjian@qq.com
  */
 #include "util/token_list.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 void CTokenList::parse(TTokenList& token_list, const std::string& source, const std::string& sep)
 {    
@@ -93,4 +93,4 @@ int main()
 }
 */
 
-UTIL_NAMESPACE_END
+UTILS_NAMESPACE_END

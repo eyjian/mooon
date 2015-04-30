@@ -16,8 +16,8 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#ifndef MOOON_UTIL_HASH_SET_H
-#define MOOON_UTIL_HASH_SET_H
+#ifndef MOOON_UTILS_HASH_SET_H
+#define MOOON_UTILS_HASH_SET_H
 
 /***
   * 处理stdext和tr1中hash_set兼容问题，
@@ -30,4 +30,4 @@
 #define hash_set __gnu_cxx::hash_set
 #endif // __DEPRECATED
 
-#endif // MOOON_UTIL_HASH_SET_H
+#endif // MOOON_UTILS_HASH_SET_H

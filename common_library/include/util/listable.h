@@ -16,10 +16,10 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#ifndef MOOON_UTIL_LISTABLE_H
-#define MOOON_UTIL_LISTABLE_H
+#ifndef MOOON_UTILS_LISTABLE_H
+#define MOOON_UTILS_LISTABLE_H
 #include "util/config.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 /***
   * 可链表对象的基类
@@ -55,5 +55,5 @@ private:
     ListableClass* _prev;
 };
 
-UTIL_NAMESPACE_END
-#endif // MOOON_UTIL_LISTABLE_H
+UTILS_NAMESPACE_END
+#endif // MOOON_UTILS_LISTABLE_H

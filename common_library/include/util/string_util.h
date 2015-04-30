@@ -16,12 +16,12 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#ifndef MOOON_UTIL_STRING_UTIL_H
-#define MOOON_UTIL_STRING_UTIL_H
+#ifndef MOOON_UTILS_STRING_UTIL_H
+#define MOOON_UTILS_STRING_UTIL_H
 #include <math.h>
 #include <sstream>
 #include "util/config.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 class CStringUtil
 {
@@ -256,5 +256,5 @@ public:
     static std::string format_string(const char* format, ...) __attribute__((format(printf, 1, 2)));
 };
 
-UTIL_NAMESPACE_END
-#endif // MOOON_UTIL_STRING_UTIL_H
+UTILS_NAMESPACE_END
+#endif // MOOON_UTILS_STRING_UTIL_H

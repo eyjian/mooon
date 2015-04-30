@@ -18,7 +18,7 @@
  */
 #include <limits>
 #include "util/integer_util.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 bool CIntegerUtil::is_int16(int32_t num)
 {    
@@ -52,4 +52,4 @@ bool CIntegerUtil::is_uint32(uint64_t num)
     return (num <= std::numeric_limits<uint32_t>::max());
 }
 
-UTIL_NAMESPACE_END
+UTILS_NAMESPACE_END

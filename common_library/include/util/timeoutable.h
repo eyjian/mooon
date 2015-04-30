@@ -16,11 +16,11 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#ifndef MOOON_UTIL_TIMEOUTABLE_H
-#define MOOON_UTIL_TIMEOUTABLE_H
+#ifndef MOOON_UTILS_TIMEOUTABLE_H
+#define MOOON_UTILS_TIMEOUTABLE_H
 #include <time.h>
 #include "util/config.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 /***
   * 可超时对象的基类
@@ -44,5 +44,5 @@ private:
     time_t _timestamp;
 };
 
-UTIL_NAMESPACE_END
-#endif // MOOON_UTIL_TIMEOUTABLE_H
+UTILS_NAMESPACE_END
+#endif // MOOON_UTILS_TIMEOUTABLE_H

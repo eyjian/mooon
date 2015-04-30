@@ -16,10 +16,10 @@
  *
  * Author: JianYi, eyjian@qq.com or eyjian@gmail.com
  */
-#ifndef MOOON_UTIL_FILE_FORMAT_EXCEPTION_H
-#define MOOON_UTIL_FILE_FORMAT_EXCEPTION_H
+#ifndef MOOON_UTILS_FILE_FORMAT_EXCEPTION_H
+#define MOOON_UTILS_FILE_FORMAT_EXCEPTION_H
 #include "util/exception.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 class CFileFormatException: public CException
 {
@@ -31,5 +31,5 @@ private:
     int _field; /** 错误发生的列号或字段号 */
 };
 
-UTIL_NAMESPACE_END
-#endif // MOOON_UTIL_FILE_FORMAT_EXCEPTION_H
+UTILS_NAMESPACE_END
+#endif // MOOON_UTILS_FILE_FORMAT_EXCEPTION_H

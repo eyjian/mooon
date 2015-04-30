@@ -16,10 +16,10 @@
  *
  * Author: JianYi, eyjian@qq.com or eyjian@gmail.com
  */
-#ifndef MOOON_UTIL_ARRAY_QUEUE_H
-#define MOOON_UTIL_ARRAY_QUEUE_H
+#ifndef MOOON_UTILS_ARRAY_QUEUE_H
+#define MOOON_UTILS_ARRAY_QUEUE_H
 #include "util/config.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 /** 用数组实现的队列, 非线程安全 */
 template <typename DataType>
@@ -118,5 +118,5 @@ private:
 	DataType* _elem_array; /** 用来实现队列的数组 */
 };
 
-UTIL_NAMESPACE_END
-#endif // MOOON_UTIL_ARRAY_QUEUE_H
+UTILS_NAMESPACE_END
+#endif // MOOON_UTILS_ARRAY_QUEUE_H

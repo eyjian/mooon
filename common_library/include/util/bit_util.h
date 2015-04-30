@@ -16,10 +16,10 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#ifndef MOOON_UTIL_BIT_UTIL_H
-#define MOOON_UTIL_BIT_UTIL_H
+#ifndef MOOON_UTILS_BIT_UTIL_H
+#define MOOON_UTILS_BIT_UTIL_H
 #include "util/config.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 /***
   * 位操作工具类
@@ -57,5 +57,5 @@ public:
     static void set_bit(char* bitmap, uint32_t position, bool zero);
 };
 
-UTIL_NAMESPACE_END
-#endif // MOOON_UTIL_BIT_UTIL_H
+UTILS_NAMESPACE_END
+#endif // MOOON_UTILS_BIT_UTIL_H

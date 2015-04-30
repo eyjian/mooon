@@ -123,7 +123,7 @@ uint32_t CFileUtil::crc32_file(int fd)
     uint32_t crc = 0;
     int page_size = sys::CUtil::get_page_size();
     char* buffer = new char[page_size];
-    util::DeleteHelper<char> dh(buffer, true);
+    utils::DeleteHelper<char> dh(buffer, true);
 
     if (-1 == lseek(fd, 0, SEEK_SET))
     {

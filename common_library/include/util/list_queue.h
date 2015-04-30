@@ -17,10 +17,10 @@
  * Author: jian yi, eyjian@qq.com
  * 20110326: 通过增加一个空闲的头结点，简化CListQueue实现
  */
-#ifndef MOOON_UTIL_LIST_QUEUE_H
-#define MOOON_UTIL_LIST_QUEUE_H
+#ifndef MOOON_UTILS_LIST_QUEUE_H
+#define MOOON_UTILS_LIST_QUEUE_H
 #include "util/listable.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 /***
   * 可链表对象模板队列，非线程安全类
@@ -121,5 +121,5 @@ private:
     ListableClass* _tail;
 };
 
-UTIL_NAMESPACE_END
-#endif // MOOON_UTIL_LIST_QUEUE_H
+UTILS_NAMESPACE_END
+#endif // MOOON_UTILS_LIST_QUEUE_H

@@ -16,8 +16,8 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#ifndef MOOON_UTIL_PRINT_COLOR_H
-#define MOOON_UTIL_PRINT_COLOR_H
+#ifndef MOOON_UTILS_PRINT_COLOR_H
+#define MOOON_UTILS_PRINT_COLOR_H
 #include <util/config.h>
 
 // 示例：
@@ -40,4 +40,4 @@
 #define PRINT_COLOR_LIGHT_PURPLE "\033[1;35m"
 #define PRINT_COLOR_LIGHT_GRAY   "\033[0;37m"      // 亮灰色
 
-#endif // MOOON_UTIL_PRINT_COLOR_H
+#endif // MOOON_UTILS_PRINT_COLOR_H

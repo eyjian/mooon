@@ -186,7 +186,7 @@ void CLogger::create(const char* log_path, const char* log_filename, uint32_t lo
     uint32_t log_queue_size_ = log_queue_size;
     if (0 == log_queue_size_)
         log_queue_size_ = 1;
-    _log_queue = new util::CArrayQueue<log_message_t*>(log_queue_size_);
+    _log_queue = new utils::CArrayQueue<log_message_t*>(log_queue_size_);
     
     // 创建和启动日志线程
     create_thread();          
@@ -497,7 +497,7 @@ void CLogger::do_log(log_level_t log_level, const char* filename, int lineno, co
 {    
     va_list args_copy;
     va_copy(args_copy, args);
-    util::VaListHelper vh(args_copy);
+    utils::VaListHelper vh(args_copy);
     log_message_t* log_message = (log_message_t*)malloc(_log_line_size+sizeof(log_message_t)+1);
     
     char datetime[sizeof("2012-12-12 12:12:12")];
@@ -511,7 +511,7 @@ void CLogger::do_log(log_level_t log_level, const char* filename, int lineno, co
     }
 
     // 在构造时，已经保证_log_line_size不会小于指定的值，所以下面的操作是安全的
-    int head_length = util::CStringUtil::fix_snprintf(
+    int head_length = utils::CStringUtil::fix_snprintf(
             log_message->content
           , _log_line_size
           , "[%s][0x%08x][%s]%s[%s:%d]"
@@ -546,8 +546,8 @@ void CLogger::do_log(log_level_t log_level, const char* filename, int lineno, co
             log_message = new_log_message;
                                     
             // 这里不需要关心返回值了
-            head_length  = util::CStringUtil::fix_snprintf(log_message->content, new_line_length, "[%s][0x%08x][%s]", datetime, CThread::get_current_thread_id(), get_log_level_name(log_level));
-            log_line_length = util::CStringUtil::fix_vsnprintf(log_message->content+head_length, new_line_length-head_length, format, args_copy);            
+            head_length  = utils::CStringUtil::fix_snprintf(log_message->content, new_line_length, "[%s][0x%08x][%s]", datetime, CThread::get_current_thread_id(), get_log_level_name(log_level));
+            log_line_length = utils::CStringUtil::fix_vsnprintf(log_message->content+head_length, new_line_length-head_length, format, args_copy);            
             log_message->length = head_length + log_line_length;
         }
     }
@@ -606,7 +606,7 @@ void CLogger::log_detail(const char* filename, int lineno, const char* module_na
     {
         va_list args;
         va_start(args, format);
-        util::VaListHelper vh(args);
+        utils::VaListHelper vh(args);
         
         do_log(LOG_LEVEL_DETAIL, filename, lineno, module_name, format, args);
     }
@@ -618,7 +618,7 @@ void CLogger::log_debug(const char* filename, int lineno, const char* module_nam
     {
         va_list args;
         va_start(args, format);
-        util::VaListHelper vh(args);
+        utils::VaListHelper vh(args);
 
         do_log(LOG_LEVEL_DEBUG, filename, lineno, module_name, format, args);
     }
@@ -630,7 +630,7 @@ void CLogger::log_info(const char* filename, int lineno, const char* module_name
     {
         va_list args;
         va_start(args, format);
-        util::VaListHelper vh(args);
+        utils::VaListHelper vh(args);
 
         do_log(LOG_LEVEL_INFO, filename, lineno, module_name, format, args);
     }
@@ -642,7 +642,7 @@ void CLogger::log_warn(const char* filename, int lineno, const char* module_name
     {
         va_list args;
         va_start(args, format);
-        util::VaListHelper vh(args);
+        utils::VaListHelper vh(args);
 
         do_log(LOG_LEVEL_WARN, filename, lineno, module_name, format, args);
     }
@@ -654,7 +654,7 @@ void CLogger::log_error(const char* filename, int lineno, const char* module_nam
     {
         va_list args;
         va_start(args, format);
-        util::VaListHelper vh(args);
+        utils::VaListHelper vh(args);
 
         do_log(LOG_LEVEL_ERROR, filename, lineno, module_name, format, args);
     }
@@ -666,7 +666,7 @@ void CLogger::log_fatal(const char* filename, int lineno, const char* module_nam
     {
         va_list args;        
         va_start(args, format);
-        util::VaListHelper vh(args);
+        utils::VaListHelper vh(args);
 
         do_log(LOG_LEVEL_FATAL, filename, lineno, module_name, format, args);
     }
@@ -678,7 +678,7 @@ void CLogger::log_state(const char* filename, int lineno, const char* module_nam
     {
         va_list args;        
         va_start(args, format);
-        util::VaListHelper vh(args);
+        utils::VaListHelper vh(args);
 
         do_log(LOG_LEVEL_STATE, filename, lineno, module_name, format, args);
     }
@@ -690,7 +690,7 @@ void CLogger::log_trace(const char* filename, int lineno, const char* module_nam
     {
         va_list args;
         va_start(args, format);
-        util::VaListHelper vh(args);
+        utils::VaListHelper vh(args);
 
         do_log(LOG_LEVEL_TRACE, filename, lineno, module_name, format, args);
     }
@@ -828,7 +828,7 @@ void CLogThread::before_stop()
     send_signal();
 }
 
-void CLogThread::before_start() throw (util::CException, CSyscallException)
+void CLogThread::before_start() throw (utils::CException, CSyscallException)
 {
     // 创建Epoll
     _epoll_fd = epoll_create(LOGGER_NUMBER_MAX);

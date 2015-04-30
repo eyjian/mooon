@@ -50,7 +50,7 @@ uint32_t CThread::get_current_thread_id()
     return pthread_self();
 }
 
-void CThread::start(bool detach) throw (util::CException, CSyscallException)
+void CThread::start(bool detach) throw (utils::CException, CSyscallException)
 {
     int errcode = 0;
 

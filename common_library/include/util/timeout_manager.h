@@ -16,11 +16,11 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#ifndef MOOON_UTIL_TIMEOUT_MANAGER_H
-#define MOOON_UTIL_TIMEOUT_MANAGER_H
+#ifndef MOOON_UTILS_TIMEOUT_MANAGER_H
+#define MOOON_UTILS_TIMEOUT_MANAGER_H
 #include "util/timeoutable.h"
 #include "util/list_queue.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 /***
   * 超时处理器抽象接口
@@ -147,8 +147,8 @@ private:
 private:
     time_t _timeout_seconds;
     ITimeoutHandler<TimeoutableClass>* _timeout_handler;    
-    typename util::CListQueue<TimeoutableClass> _list_queue;
+    typename utils::CListQueue<TimeoutableClass> _list_queue;
 };
 
-UTIL_NAMESPACE_END
-#endif // MOOON_UTIL_TIMEOUT_MANAGER_H
+UTILS_NAMESPACE_END
+#endif // MOOON_UTILS_TIMEOUT_MANAGER_H

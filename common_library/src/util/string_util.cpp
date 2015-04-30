@@ -21,7 +21,7 @@
 #include <limits>
 #include "util/token_list.h"
 #include "util/string_util.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 /***
   * 快速字符串转换成整数模板通用函数
@@ -622,4 +622,4 @@ std::string CStringUtil::format_string(const char* format, ...)
     return buffer;
 }
 
-UTIL_NAMESPACE_END
+UTILS_NAMESPACE_END

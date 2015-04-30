@@ -17,7 +17,7 @@
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
 #include "util/bit_util.h"
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 void CBitUtil::flip(char* bitmap, uint32_t position)
 {
@@ -46,4 +46,4 @@ void CBitUtil::set_bit(char* bitmap, uint32_t position, bool zero)
     }
 }
 
-UTIL_NAMESPACE_END
+UTILS_NAMESPACE_END

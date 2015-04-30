@@ -55,7 +55,7 @@ bool ip_address_t::is_broadcast_address() const
     return CUtil::is_broadcast_address(to_string().c_str());
 }
 
-void ip_address_t::from_string(const char* ip) throw (util::CException)
+void ip_address_t::from_string(const char* ip) throw (utils::CException)
 {
     if (NULL == ip)
     {

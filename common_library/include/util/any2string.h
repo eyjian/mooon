@@ -7,12 +7,12 @@
 // 使用示例1: std::string str = any2string(20141227);
 // 使用示例2: std::string str = any2string(20141227, "22:07:10");
 // 使用示例3: std::string str = any2string(1, "2", '3', std::string("4"));
-#ifndef MOOON_UTIL_ANY2STRING_H
-#define MOOON_UTIL_ANY2STRING_H
+#ifndef MOOON_UTILS_ANY2STRING_H
+#define MOOON_UTILS_ANY2STRING_H
 #include "util/config.h"
 #include <string>
 #include <sstream>
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 template <typename T0>
 inline std::string any2string(const T0& t0)
@@ -255,6 +255,6 @@ inline std::string any2string(const T0& t0, const T1& t1, const T2& t2, const T3
 }
 
 
-UTIL_NAMESPACE_END
-#endif // MOOON_UTIL_ANY2STRING_H
+UTILS_NAMESPACE_END
+#endif // MOOON_UTILS_ANY2STRING_H
 

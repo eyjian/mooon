@@ -278,7 +278,7 @@ bool CDataChannel::full_write_tofile(int file_fd, size_t& size, size_t offset)
 {
     
     char* buffer = new char[sys::CUtil::get_page_size()];
-    util::DeleteHelper<char> dh(buffer, true);    
+    utils::DeleteHelper<char> dh(buffer, true);    
     size_t remaining_size = size;
     size_t current_offset = offset;
      

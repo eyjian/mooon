@@ -108,7 +108,7 @@ void* CRawMemPool::allocate()
         char*  ptr = _bucket_stack[--_stack_top_index];
         uint32_t bitmap_index = (ptr - _stack_bottom) / _bucket_size;
 
-        util::CBitUtil::set_bit(_bucket_bitmap, bitmap_index, false);  
+        utils::CBitUtil::set_bit(_bucket_bitmap, bitmap_index, false);  
         return ptr;
     }
 }
@@ -134,11 +134,11 @@ bool CRawMemPool::reclaim(void* bucket)
     }
 
     uint32_t bitmap_index = (ptr - _stack_bottom) / _bucket_size;
-    if (util::CBitUtil::test(_bucket_bitmap, bitmap_index))
+    if (utils::CBitUtil::test(_bucket_bitmap, bitmap_index))
     {
         ++_available_number;
         _bucket_stack[_stack_top_index++] = ptr;
-        util::CBitUtil::set_bit(_bucket_bitmap, bitmap_index, true); 
+        utils::CBitUtil::set_bit(_bucket_bitmap, bitmap_index, true); 
     }
 
     return true;

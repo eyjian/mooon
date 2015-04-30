@@ -16,8 +16,8 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#ifndef MOOON_UTIL_CONFIG_H
-#define MOOON_UTIL_CONFIG_H
+#ifndef MOOON_UTILS_CONFIG_H
+#define MOOON_UTILS_CONFIG_H
 #include <limits> // std::numeric_limits<>
 #include <string>
 #include <errno.h>
@@ -40,9 +40,9 @@
 #define MOOON_NAMESPACE_BEGIN namespace mooon {
 #define MOOON_NAMESPACE_END                   }
 
-#define UTIL_NAMESPACE_BEGIN namespace mooon { namespace util {
-#define UTIL_NAMESPACE_END                   }}
-#define UTIL_NAMESPACE_USE using namespace mooon::util;
+#define UTILS_NAMESPACE_BEGIN namespace mooon { namespace utils {
+#define UTILS_NAMESPACE_END                   }}
+#define UTIL_NAMESPACE_USE using namespace mooon::utils;
 
 #define SINGLETON_DECLARE(ClassName) \
     private: \
@@ -111,7 +111,7 @@
 #define get_struct_head_address(struct_type, member_name, member_address) \
         ((struct_type *)((char *)(member_address) - offsetof(struct_type, member_name)))
 
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 
 /***
   * delete帮助类，用来自动释放new分配的内存
@@ -234,5 +234,5 @@ typedef enum
     handle_close     = 5    /** 可以关闭了 */
 }handle_result_t;
 
-UTIL_NAMESPACE_END
-#endif // MOOON_UTIL_CONFIG_H
+UTILS_NAMESPACE_END
+#endif // MOOON_UTILS_CONFIG_H

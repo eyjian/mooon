@@ -16,8 +16,8 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#ifndef MOOON_UTIL_HASH_MAP_H
-#define MOOON_UTIL_HASH_MAP_H
+#ifndef MOOON_UTILS_HASH_MAP_H
+#define MOOON_UTILS_HASH_MAP_H
 
 /***
   * 处理stdext和tr1中hash_map兼容问题，
@@ -30,4 +30,4 @@
 #define hash_map __gnu_cxx::hash_map
 #endif // __DEPRECATED
 
-#endif // MOOON_UTIL_HASH_MAP_H
+#endif // MOOON_UTILS_HASH_MAP_H

@@ -85,22 +85,22 @@ public:
     // buffer - 本次收到的数据，注意不是总的
     // buffer_size - 本次收到的数据字节数
     // 返回值：
-    // 1) 如果出错，则返回util::handle_error
-    // 2) 如果未到包的边界，则返回util::handle_continue
-    // 3) 如果刚好到包的边界，则返回util::handle_finish
+    // 1) 如果出错，则返回utils::handle_error
+    // 2) 如果未到包的边界，则返回utils::handle_continue
+    // 3) 如果刚好到包的边界，则返回utils::handle_finish
     // 注意：未到包的边界，并不表示还没有接收到一个完整的包，
     // 因为可能是两个包连着的，第一个包在work过程中已经收完，
-    // buffer还包含第二个包的部分时，也是返回util::handle_continue
-    util::handle_result_t work(const char* buffer, size_t buffer_size);
+    // buffer还包含第二个包的部分时，也是返回utils::handle_continue
+    utils::handle_result_t work(const char* buffer, size_t buffer_size);
 
     // 复位状态，再次以包头开始
     void reset();
 
 private:
     void set_next_state(recv_state_t next_state);
-    util::handle_result_t handle_header(const RecvStateContext& cur_ctx, RecvStateContext* next_ctx);
-    util::handle_result_t handle_body(const RecvStateContext& cur_ctx, RecvStateContext* next_ctx);
-    util::handle_result_t handle_error(const RecvStateContext& cur_ctx, RecvStateContext* next_ctx);
+    utils::handle_result_t handle_header(const RecvStateContext& cur_ctx, RecvStateContext* next_ctx);
+    utils::handle_result_t handle_body(const RecvStateContext& cur_ctx, RecvStateContext* next_ctx);
+    utils::handle_result_t handle_error(const RecvStateContext& cur_ctx, RecvStateContext* next_ctx);
 
 private:
     MessageHeaderType _header; /** 消息头，这个大小是固定的 */
@@ -117,15 +117,15 @@ CRecvMachine<MessageHeaderType, ProcessorManager>::CRecvMachine(ProcessorManager
 }
 
 template <typename MessageHeaderType, class ProcessorManager>
-util::handle_result_t CRecvMachine<MessageHeaderType, ProcessorManager>::work(
+utils::handle_result_t CRecvMachine<MessageHeaderType, ProcessorManager>::work(
     const char* buffer, 
     size_t buffer_size)
 {
     RecvStateContext next_ctx(buffer, buffer_size);
-    util::handle_result_t hr = util::handle_continue;
+    utils::handle_result_t hr = utils::handle_continue;
 
-    // 状态机循环条件为：util::handle_continue == hr
-    while (util::handle_continue == hr)
+    // 状态机循环条件为：utils::handle_continue == hr
+    while (utils::handle_continue == hr)
     {
         RecvStateContext cur_ctx(next_ctx);
 
@@ -142,7 +142,7 @@ util::handle_result_t CRecvMachine<MessageHeaderType, ProcessorManager>::work(
             break;
         }
     }
-    if (util::handle_error == hr)
+    if (utils::handle_error == hr)
     {
         set_next_state(rs_header);
     }
@@ -173,7 +173,7 @@ void CRecvMachine<MessageHeaderType, ProcessorManager>::reset()
 //           由于cur_ctx.buffer可能包含了消息体，所以在一次接收receive动作后，
 //           会涉及到消息头和消息体两个状态，这里的next_ctx实际为下一步handle_body的cur_ctx
 template <typename MessageHeaderType, class ProcessorManager>
-util::handle_result_t CRecvMachine<MessageHeaderType, ProcessorManager>::handle_header(
+utils::handle_result_t CRecvMachine<MessageHeaderType, ProcessorManager>::handle_header(
     const RecvStateContext& cur_ctx, 
     RecvStateContext* next_ctx)
 {
@@ -185,7 +185,7 @@ util::handle_result_t CRecvMachine<MessageHeaderType, ProcessorManager>::handle_
 
         _finished_size += cur_ctx.buffer_size;
         // 本次数据包已接收完
-        return util::handle_finish;
+        return utils::handle_finish;
     }
     else
     {
@@ -197,7 +197,7 @@ util::handle_result_t CRecvMachine<MessageHeaderType, ProcessorManager>::handle_
         // TODO: Check header here
         if (!_processor_manager->on_header(_header))
         {
-            return util::handle_error;
+            return utils::handle_error;
         }
 
         size_t remain_size = cur_ctx.buffer_size - need_size;
@@ -218,13 +218,13 @@ util::handle_result_t CRecvMachine<MessageHeaderType, ProcessorManager>::handle_
         {            
             if (!_processor_manager->on_message(_header, 0, NULL, 0))
             {
-                return util::handle_error;
+                return utils::handle_error;
             }
         }
 
         return (remain_size > 0)
-              ? util::handle_continue // 控制work过程是否继续循环
-              : util::handle_finish;
+              ? utils::handle_continue // 控制work过程是否继续循环
+              : utils::handle_finish;
     }
 }
 
@@ -237,7 +237,7 @@ util::handle_result_t CRecvMachine<MessageHeaderType, ProcessorManager>::handle_
 //           由于cur_ctx.buffer可能包含了消息头，所以在一次接收receive动作后，
 //           会涉及到消息头和消息体两个状态，这里的next_ctx实际为下一步handle_header的cur_ctx
 template <typename MessageHeaderType, class ProcessorManager>
-util::handle_result_t CRecvMachine<MessageHeaderType, ProcessorManager>::handle_body(
+utils::handle_result_t CRecvMachine<MessageHeaderType, ProcessorManager>::handle_body(
     const RecvStateContext& cur_ctx, 
     RecvStateContext* next_ctx)
 {
@@ -245,19 +245,19 @@ util::handle_result_t CRecvMachine<MessageHeaderType, ProcessorManager>::handle_
     {
         if (!_processor_manager->on_message(_header, _finished_size, cur_ctx.buffer, cur_ctx.buffer_size))
         {
-            return util::handle_error;
+            return utils::handle_error;
         }
 
         _finished_size += cur_ctx.buffer_size;
         // 本次数据包已接收完
-        return util::handle_finish;
+        return utils::handle_finish;
     }
     else
     {
         size_t need_size = _header.size - _finished_size;
         if (!_processor_manager->on_message(_header, _finished_size, cur_ctx.buffer, need_size))
         {
-            return util::handle_error;
+            return utils::handle_error;
         }
 
         // 切换状态
@@ -269,21 +269,21 @@ util::handle_result_t CRecvMachine<MessageHeaderType, ProcessorManager>::handle_
             // 下一个包
             next_ctx->buffer = cur_ctx.buffer + need_size;
             next_ctx->buffer_size = cur_ctx.buffer_size - need_size;
-            return util::handle_continue;
+            return utils::handle_continue;
         }
 
         // 刚好一个完整的包
-        return util::handle_finish;
+        return utils::handle_finish;
     }
 }
 
 template <typename MessageHeaderType, class ProcessorManager>
-util::handle_result_t CRecvMachine<MessageHeaderType, ProcessorManager>::handle_error(
+utils::handle_result_t CRecvMachine<MessageHeaderType, ProcessorManager>::handle_error(
     const RecvStateContext& cur_ctx, 
     RecvStateContext* next_ctx)
 {
     set_next_state(rs_header); // 无条件切换到rs_header，这个时候应当断开连接重连接
-    return util::handle_error;
+    return utils::handle_error;
 }
 
 NET_NAMESPACE_END

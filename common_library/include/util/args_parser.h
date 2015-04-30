@@ -91,7 +91,7 @@
 #define INTEGER_ARG_DEFINE(optional, integer_type, param_name, default_value, min_value, max_value, help_string) \
     namespace ArgsParser /** 保证不污染全局空间 */ \
     { \
-        util::CArgInfo<integer_type> *param_name= new util::CIntArgInfo<integer_type>(optional,#param_name, default_value,min_value,max_value,#help_string);\
+        utils::CArgInfo<integer_type> *param_name= new utils::CIntArgInfo<integer_type>(optional,#param_name, default_value,min_value,max_value,#help_string);\
     }
 
 /***
@@ -103,21 +103,21 @@
 #define STRING_ARG_DEFINE(optional, param_name, default_value, help_string)\
     namespace ArgsParser /** 保证不污染全局空间 */ \
     { \
-		util::CArgInfo<std::string> *param_name= new util::CStringArgInfo<std::string>(optional,#param_name,#default_value,#help_string);\
+		utils::CArgInfo<std::string> *param_name= new utils::CStringArgInfo<std::string>(optional,#param_name,#default_value,#help_string);\
     }
 
 // 整数类型参数声明
 #define INTEGER_ARG_DECLARE(integer_type, param_name) \
     namespace ArgsParser /** 保证不污染全局空间 */ \
     { \
-        extern util::CArgInfo<integer_type> *param_name; \
+        extern utils::CArgInfo<integer_type> *param_name; \
     }
 
 // 整数类型参数声明
 #define STRING_ARG_DECLARE(param_name) \
     namespace ArgsParser /** 保证不污染全局空间 */ \
     { \
-        extern util::CArgInfo<std::string> *param_name; \
+        extern utils::CArgInfo<std::string> *param_name; \
     }
 
 //////////////////////////////////////////////////////////////////////////
@@ -187,7 +187,7 @@ std::string get_help_info();
 
 } // The end of namespace ArgsParser
 
-UTIL_NAMESPACE_BEGIN
+UTILS_NAMESPACE_BEGIN
 ////////////下面为参数具体实现///////
 /***
  * 参数信息类
@@ -477,5 +477,5 @@ bool CIntArgInfo<DataType>::validate_value(const std::string& value_str) const
 	return false;
 }
 
-UTIL_NAMESPACE_END
+UTILS_NAMESPACE_END
 #endif // UTIL_ARGS_PARSER_H
