@@ -22,6 +22,7 @@
 #include "utils/array_queue.h"
 #include "sys/datetime_utils.h"
 #include "net/epollable_queue.h"
+using namespace mooon;
 
 #define QUEUE_SIZE  10000 // 队列大小
 #define LOOP_NUMBER 10000 // 循环次数
@@ -30,7 +31,7 @@
 class CUTEpollableQueueThread: public sys::CThread
 {
 public:
-    CUTEpollableQueueThread(net::CEpollableQueue<util::CArrayQueue<int> >* queue)
+    CUTEpollableQueueThread(net::CEpollableQueue<utils::CArrayQueue<int> >* queue)
         :_queue(queue)
     {
         uint32_t epoll_size = 10;
@@ -63,15 +64,14 @@ private:
             catch (sys::CSyscallException& ex)
             {
                 fprintf(stderr, "CUTEpollableQueueThread exception: %s at %s:%d.\n"
-                    ,sys::CSysUtil::get_error_message(ex.get_errcode()).c_str()
-                    ,ex.get_filename(), ex.get_linenumber());
+                    ,ex.str().c_str(), ex.file(), ex.line());
             }
         }
     }
 
 private:
     net::CEpoller _epoller;
-    net::CEpollableQueue<util::CArrayQueue<int> >* _queue; // 使用CArrayQueue作为队列容器
+    net::CEpollableQueue<utils::CArrayQueue<int> >* _queue; // 使用CArrayQueue作为队列容器
 };
 
 int main()
@@ -79,7 +79,7 @@ int main()
     try
     {
         uint32_t queue_size = QUEUE_SIZE;
-        net::CEpollableQueue<util::CArrayQueue<int> > queue(queue_size);
+        net::CEpollableQueue<utils::CArrayQueue<int> > queue(queue_size);
         CUTEpollableQueueThread* thread = new CUTEpollableQueueThread(&queue);
 
         thread->inc_refcount(); // 线程引用计数增一
@@ -89,12 +89,12 @@ int main()
         for (int i=1; i<LOOP_NUMBER; ++i)
         {
             if (queue.push_back(i))
-                fprintf(stdout, "<%s> push %d to queue.\n", sys::CDatetimeUtil::get_current_datetime().c_str(), i);
+                fprintf(stdout, "<%s> push %d to queue.\n", sys::CDatetimeUtils::get_current_datetime().c_str(), i);
             else
-                fprintf(stderr, "<%s> failed to push %d to queue.\n", sys::CDatetimeUtil::get_current_datetime().c_str(), i);
+                fprintf(stderr, "<%s> failed to push %d to queue.\n", sys::CDatetimeUtils::get_current_datetime().c_str(), i);
 
 						// 让线程sleep一秒钟
-            sys::CSysUtil::millisleep(1000);
+            sys::CUtils::millisleep(1000);
         }
 
         thread->stop(); // 停止线程
@@ -103,9 +103,7 @@ int main()
     catch (sys::CSyscallException& ex)
     {
     		// 异常处理
-        fprintf(stderr, "main exception: %s at %s:%d.\n"
-            ,sys::CSysUtil::get_error_message(ex.get_errcode()).c_str()
-            ,ex.get_filename(), ex.get_linenumber());
+        fprintf(stderr, "main exception: %s at %s:%d.\n", ex.str().c_str(), ex.file(), ex.line());
     }
 
     return 0;

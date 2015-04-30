@@ -18,7 +18,7 @@
  * df命令的实现
  */
 #include "sys/fs_utils.h"
-using namespace sys;
+SYS_NAMESPACE_USE
 
 int main()
 {

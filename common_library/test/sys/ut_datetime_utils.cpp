@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -17,7 +17,7 @@
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
 #include "sys/datetime_utils.h"
-using namespace sys;
+SYS_NAMESPACE_USE
 
 int main()
 {

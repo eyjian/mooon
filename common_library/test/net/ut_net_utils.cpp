@@ -18,6 +18,7 @@
  */
 #include <arpa/inet.h>
 #include <net/net_utils.h>
+using namespace mooon;
 
 void test_host2net()
 {
@@ -53,7 +54,7 @@ void test_host2net()
     char str[] = "123456789";
     size_t length = strlen(str);
     char* dst = new char[length+1];
-    util::delete_helper<char> dh(dst, true); // 自动调用delete []dst
+    utils::delete_helper<char> dh(dst, true); // 自动调用delete []dst
     net::CNetUtils::host2net(str, dst, length);
     dst[length] = '\0';
     printf("%s ==> %s\n",str, dst);

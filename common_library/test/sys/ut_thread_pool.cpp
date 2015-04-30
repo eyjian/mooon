@@ -1,11 +1,12 @@
-﻿#include <assert.h>
+#include <assert.h>
 #include <sys/utils.h>
 #include <sys/pool_thread.h>
 #include <sys/thread_pool.h>
+SYS_NAMESPACE_USE
 
 // 测试线程，请注意是继承池线程CPoolThread，而不是线程CThread，
 // 另外CPoolThread并不是CThread的子类
-class CTestThread: public sys::CPoolThread
+class CTestThread: public CPoolThread
 {
 public:
 	CTestThread()
@@ -40,7 +41,7 @@ private:
 
 int main()
 {
-	sys::CThreadPool<CTestThread> thread_pool; // 这里定义线程池实例
+	CThreadPool<CTestThread> thread_pool; // 这里定义线程池实例
 	
 	try
 	{
@@ -58,15 +59,14 @@ int main()
 		}
 		
 		// 让CTestThread有足够的时间完成任务
-		sys::CUtils::millisleep(5000);
+		CUtils::millisleep(5000);
 		// 等待所有线程退出，然后销毁线程池		
 		thread_pool.destroy();
 	}
-	catch (sys::CSyscallException& ex)
+	catch (CSyscallException& ex)
 	{
 		// 将异常信息打印出来，方便定位原因
-		printf("Create thread pool exception: %s.\n"
-			,ex.str().c_str());
+		printf("Create thread pool exception: %s.\n", ex.str().c_str());
 	}
 	
 	return 0;

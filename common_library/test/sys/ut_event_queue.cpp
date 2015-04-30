@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -17,13 +17,15 @@
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
 #include <sys/thread.h>
-#include <sys/sys_utils.h>
+#include <sys/utils.h>
 #include <sys/event_queue.h>
 #include <utils/array_queue.h>
 #include <sys/datetime_utils.h>
+using namespace mooon;
+SYS_NAMESPACE_USE
 
 // 定义处理消息线程，由主线程向它发消息
-class CMyThread: public sys::CThread
+class CMyThread: public CThread
 {
 public:
     // 设置队列大小为100
@@ -37,11 +39,9 @@ public:
     void push_message(int m)
     {
         if (_queue.push_back(m))
-            printf("push %d SUCCESS by thread %u\n", m
-                , sys::CThread::get_current_thread_id());
+            printf("push %d SUCCESS by thread %u\n", m, CThread::get_current_thread_id());
         else
-            printf("push %d FAILURE by thread %u\n", m
-                , sys::CThread::get_current_thread_id());
+            printf("push %d FAILURE by thread %u\n", m, CThread::get_current_thread_id());
     }
     
 private:
@@ -53,27 +53,24 @@ private:
             if (is_stop() && _queue.is_empty()) break;
             
             int m;
-            printf("before pop ==> %s\n"
-                    , sys::CDatetimeUtil::get_current_time().c_str());
+            printf("before pop ==> %s\n", CDatetimeUtils::get_current_time().c_str());
             if (_queue.pop_front(m))
-                printf("pop %d ==> %s\n", m
-                    , sys::CDatetimeUtil::get_current_time().c_str());
+                printf("pop %d ==> %s\n", m, CDatetimeUtils::get_current_time().c_str());
             else
-                printf("pop NONE ==> %s\n"
-                    , sys::CDatetimeUtil::get_current_time().c_str());
+                printf("pop NONE ==> %s\n", CDatetimeUtils::get_current_time().c_str());
         }
     }
 
 private:
     // 使用整数类型的数组队列
-    sys::CEventQueue<util::CArrayQueue<int> > _queue;
+    sys::CEventQueue<utils::CArrayQueue<int> > _queue;
 };
 
 int main()
 {
     CMyThread* thread = new CMyThread;
     // 使用引用计数帮助类，以协助自动销毁thread
-    sys::CRefCountHelper<CMyThread> ch(thread);
+    CRefCountHelper<CMyThread> ch(thread);
 
     try
     {
@@ -82,22 +79,19 @@ int main()
         // 给线程发消息
         for (int i=0; i<10; ++i)
         {
-            sys::CSysUtil::millisleep(2000);
+            sys::CUtil::millisleep(2000);
             thread->push_message(i);
         }        
 
         // 让CMyThread超时
-        sys::CSysUtil::millisleep(3000);
+        sys::CUtil::millisleep(3000);
 
         // 停止线程
         thread->stop();
     }
     catch (sys::CSyscallException& ex)
     {
-        printf("Main exception: %s at %s:%d\n"
-            , sys::CSysUtil::get_error_message(ex.get_errcode()).c_str()
-            , ex.get_filename()
-            , ex.get_linenumber());
+        printf("Main exception: %s at %s:%d\n", ex.str().c_str(), ex.file(), ex.line());
     }
     
     return 0;

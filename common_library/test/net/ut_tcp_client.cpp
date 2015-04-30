@@ -20,6 +20,7 @@
 #include "sys/sys_utils.h"
 #include "net/tcp_client.h"
 #include "utils/string_utils.h"
+using namespace mooon;
 
 // 需要两个参数：
 // argv[1]: 连接IP地址
@@ -33,12 +34,12 @@ int main(int argc, char* argv[])
     if (argc != 3)
     {
         fprintf(stderr, "usage: %s ip port\n"
-            , sys::CSysUtil::get_program_short_name());
+            , sys::CUtil::get_program_short_name());
         exit(1);
     }
              
     ip =  argv[1];
-    if (!util::CStringUtil::string2uint16(argv[2], port))
+    if (!utils::CStringUtils::string2uint16(argv[2], port))
     {
         fprintf(stderr, "Invalid port: %s.\n", argv[2]);
         exit(1);
@@ -52,8 +53,7 @@ int main(int argc, char* argv[])
 
         // 执行连接
         client.timed_connect();
-        fprintf(stdout, "Connected %s:%d success.\n"
-            , ip.to_string().c_str(), port);
+        fprintf(stdout, "Connected %s:%d success.\n", ip.to_string().c_str(), port);
 
         while (true)
         {
@@ -67,9 +67,7 @@ int main(int argc, char* argv[])
     catch (sys::CSyscallException& ex)
     {
         // 连接异常退出
-        fprintf(stderr, "exception %s at %s:%d.\n"
-            , sys::CSysUtil::get_error_message(ex.get_errcode()).c_str()
-            , ex.get_filename(), ex.get_linenumber());
+        fprintf(stderr, "exception %s at %s:%d.\n", ex.str().c_str(), ex.file(), ex.line());
         exit(1);
     }
 

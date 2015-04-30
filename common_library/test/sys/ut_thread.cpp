@@ -1,9 +1,10 @@
-﻿#include <sys/thread.h>
-#include <sys/sys_utils.h>
+#include <sys/thread.h>
+#include <sys/utils.h>
+SYS_NAMESPACE_USE
 
 // 所有非线程池线程都应当是CThread的子类
 // Exam线程CDemoThread运行后，每隔1秒往标准输出打印一行“continue...”
-class CExamThread: public sys::CThread
+class CExamThread: public CThread
 {
 private:
 	virtual void run();
@@ -48,10 +49,10 @@ int main()
 	}
 	
 	// 主线程睡眠10秒钟
-	sys::CUtils::millisleep(10000);
+	CUtils::millisleep(10000);
 	
 	thread->stop(); // 停止并待线程退出
 	thread->dec_refcount(); // 记得增加了引用计数，就需要在使用完后，相应的减引用计数
-	
+
 	return 0;
 }
