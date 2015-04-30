@@ -14,6 +14,9 @@ AUTOMAKE_OPTIONS= foreign
 #
 
 # MySQL
+if MYSQL_INSTALLED_3RD
+MYSQL_PATH=/usr/local/thirdparty/mysql
+else
 if MYSQL_INSTALLED_ENV
 MYSQL_PATH=$${MYSQL_HOME}
 else
@@ -25,8 +28,12 @@ MYSQL_PATH=/usr/local/mysql
 endif
 endif
 endif
+endif
 
 # SQLite3
+if SQLITE3_INSTALLED_3RD
+SQLITE3_PATH=/usr/local/thirdparty/sqlite3
+else
 if SQLITE3_INSTALLED_ENV
 SQLITE3_PATH=$${SQLITE3_HOME}
 else
@@ -35,6 +42,7 @@ SQLITE3_PATH=$${HOME}/sqlite3
 else
 if SQLITE3_INSTALLED_USR
 SQLITE3_PATH=/usr/local/sqlite3
+endif
 endif
 endif
 endif

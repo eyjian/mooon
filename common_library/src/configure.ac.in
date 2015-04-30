@@ -3,6 +3,7 @@
 #
 # configure.ac.in is a template, bootstrap.sh will translate it to configure.ac
 # eyjian@qq.com or eyjian@gmail.com
+# https://github.com/eyjian/mooon
 # http://code.google.com/p/mooon
 #
 
@@ -84,11 +85,13 @@ AC_SUBST(lt_age)
 AM_CONDITIONAL(MYSQL_INSTALLED_ENV, test $MYSQL_HOME -a -d $MYSQL_HOME)
 AM_CONDITIONAL(MYSQL_INSTALLED_HOME, test $HOME -a -d $HOME/mysql)
 AM_CONDITIONAL(MYSQL_INSTALLED_USR, test -d /usr/local/mysql)
+AM_CONDITIONAL(MYSQL_INSTALLED_3RD, test -d /usr/local/thirdparty/mysql)
 
 # 检查是否安装了SQLite3
 AM_CONDITIONAL(SQLITE3_INSTALLED_ENV, test $SQLITE3_HOME -a -d $SQLITE3_HOME)
 AM_CONDITIONAL(SQLITE3_INSTALLED_HOME, test $HOME -a -d $HOME/sqlite3)
 AM_CONDITIONAL(SQLITE3_INSTALLED_USR, test -d /usr/local/sqlite3)
+AM_CONDITIONAL(SQLITE3_INSTALLED_3RD, test -d /usr/local/thirdparty/sqlite3)
 
 AC_CONFIG_FILES([
 		Makefile
