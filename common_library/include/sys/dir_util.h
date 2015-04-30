@@ -34,12 +34,12 @@ class CDirUtil
 {
 public:
     /***
-      * ²»µİ¹éµØÁĞ³öÄ¿Â¼ÏÂµÄÎÄ¼ş»òÄ¿Â¼
-      * @dirpath Ä¿Â¼Â·¾¶
-      * @dirs ÓÃÀ´´æ´¢dirpathÏÂµÄ×ÓÄ¿Â¼Ãû£¬Èç¹ûÎªNULL£¬±íÊ¾ÂÔ¹ı
-      * @files ÓÃÀ´´æ´¢dirpathÏÂµÄÎÄ¼şÃû£¬Èç¹ûÎªNULL£¬±íÊ¾ÂÔ¹ı
-      * @links ÓÃÀ´´æ´¢dirpathÏÂµÄÁ´½ÓÃû£¬Èç¹ûÎªNULL£¬±íÊ¾ÂÔ¹ı
-      * @exception Èç¹û·¢Éú´íÎó£¬ÔòÅ×³ösys::CSyscallExceptionÒì³£
+      * ä¸é€’å½’åœ°åˆ—å‡ºç›®å½•ä¸‹çš„æ–‡ä»¶æˆ–ç›®å½•
+      * @dirpath ç›®å½•è·¯å¾„
+      * @dirs ç”¨æ¥å­˜å‚¨dirpathä¸‹çš„å­ç›®å½•åï¼Œå¦‚æœä¸ºNULLï¼Œè¡¨ç¤ºç•¥è¿‡
+      * @files ç”¨æ¥å­˜å‚¨dirpathä¸‹çš„æ–‡ä»¶åï¼Œå¦‚æœä¸ºNULLï¼Œè¡¨ç¤ºç•¥è¿‡
+      * @links ç”¨æ¥å­˜å‚¨dirpathä¸‹çš„é“¾æ¥åï¼Œå¦‚æœä¸ºNULLï¼Œè¡¨ç¤ºç•¥è¿‡
+      * @exception å¦‚æœå‘ç”Ÿé”™è¯¯ï¼Œåˆ™æŠ›å‡ºsys::CSyscallExceptionå¼‚å¸¸
       */
     static void list(const std::string& dirpath
                    , std::vector<std::string>* subdir_names
@@ -47,8 +47,8 @@ public:
                    , std::vector<std::string>* link_names=NULL);
 
     /***
-      * É¾³ıÒ»¸ö¿ÕÄ¿Â¼
-      * @exception Èç¹û·¢Éú´íÎó£¬ÔòÅ×³ösys::CSyscallExceptionÒì³£
+      * åˆ é™¤ä¸€ä¸ªç©ºç›®å½•
+      * @exception å¦‚æœå‘ç”Ÿé”™è¯¯ï¼Œåˆ™æŠ›å‡ºsys::CSyscallExceptionå¼‚å¸¸
       */
     static void remove(const std::string& dirpath);
 };
