@@ -39,6 +39,7 @@
 /* 定义名字空间宏 */
 #define MOOON_NAMESPACE_BEGIN namespace mooon {
 #define MOOON_NAMESPACE_END                   }
+#define MOOON_NAMESPACE_USE using namespace mooon;
 
 #define UTILS_NAMESPACE_BEGIN namespace mooon { namespace utils {
 #define UTILS_NAMESPACE_END                   }}
