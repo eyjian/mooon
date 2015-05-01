@@ -2,7 +2,7 @@ include $(top_srcdir)/Make.rules
 AUTOMAKE_OPTIONS= foreign
 
 INCLUDES   +=
-LDADD      += -L$(top_srcdir)/common -lmcommon
+LDADD      += -L$(top_srcdir)/common -lmooon
 AM_LDFLAGS  += -fPIC -shared
 AM_CXXFLAGS += -fPIC
 

@@ -27,7 +27,7 @@ endif
 
 INCLUDES += -I$(MYSQL_PATH)/include
 # libmysqlclient.a可能在$(MYSQL_PATH)/lib下，也可能在$(MYSQL_PATH)/lib/mysql下
-LDADD += -L$(MYSQL_PATH)/lib -L$(MYSQL_PATH)/lib/mysql -lmysqlclient -L$(top_srcdir)/common -lmcommon
+LDADD += -L$(MYSQL_PATH)/lib -L$(MYSQL_PATH)/lib/mysql -lmysqlclient -L$(top_srcdir)/common -lmooon
 
 AM_LDFLAGS += -fPIC -shared
 AM_CXXFLAGS += -fPIC
