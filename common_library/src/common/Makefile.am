@@ -1,28 +1,28 @@
 include $(top_srcdir)/Make.rules
 AUTOMAKE_OPTIONS= foreign
 
-lib_LIBRARIES = libmcommon.a
+lib_LIBRARIES = libmooon.a
 
-libmcommon_OBJECTS=../utils/*.o ../sys/*.o ../net/*.o
+libmooon_OBJECTS=../utils/*.o ../sys/*.o ../net/*.o
 AM_LDFLAGS  += -fPIC -shared 
 AM_CXXFLAGS += -fPIC
 
-all: $(lib_LIBRARIES) libmcommon.so
+all: $(lib_LIBRARIES) libmooon.so
 
-libmcommon.a:
-	$(AR) $(ARFLAGS) $@ $(libmcommon_OBJECTS)
+libmooon.a:
+	$(AR) $(ARFLAGS) $@ $(libmooon_OBJECTS)
 	ranlib $@
 
-libmcommon.so:
-	 $(CXX) -o $@ $(libmcommon_OBJECTS) $(AM_LDFLAGS) -pthread
+libmooon.so:
+	 $(CXX) -o $@ $(libmooon_OBJECTS) $(AM_LDFLAGS) -pthread
 
 clean:
-	rm -f $(lib_LIBRARIES) libmcommon.so
+	rm -f $(lib_LIBRARIES) libmooon.so
 
 install:
 	cp $(lib_LIBRARIES) $(prefix)/lib
-	cp libmcommon.so $(prefix)/lib
+	cp libmooon.so $(prefix)/lib
 
 uninstall:
 	rm -f $(prefix)/lib/$(lib_LIBRARIES)
-	rm -f $(prefix)/lib/libmcommon.so
+	rm -f $(prefix)/lib/libmooon.so
