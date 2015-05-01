@@ -42,7 +42,7 @@
 
 #define UTILS_NAMESPACE_BEGIN namespace mooon { namespace utils {
 #define UTILS_NAMESPACE_END                   }}
-#define UTIL_NAMESPACE_USE using namespace mooon::utils;
+#define UTILS_NAMESPACE_USE using namespace mooon::utils;
 
 #define SINGLETON_DECLARE(ClassName) \
     private: \
