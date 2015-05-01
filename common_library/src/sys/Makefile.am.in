@@ -54,21 +54,20 @@ LDADD      += -L$(MYSQL_PATH)/lib -L$(MYSQL_PATH)/lib/mysql -lmysqlclient
 INCLUDES   += -I$(SQLITE3_PATH)/include
 LDADD      +=   $(SQLITE3_PATH)/lib/libsqlite3.a
 
-LDADD      += -L$(top_srcdir)/utils -lutils
+LDADD      += -L$(top_srcdir)/utils -lmooon_utils
 AM_LDFLAGS  += -fPIC -shared -pthread -lrt -ldl -lz
 AM_CXXFLAGS += -fPIC
 
 libdir=$(prefix)/lib
-lib_LIBRARIES = libsys.a
-libsys_a_SOURCES = 
+lib_LIBRARIES = libmooon_sys.a
+libmooon_sys_a_SOURCES = 
 
 moduledir=$(prefix)/lib
-module_PROGRAMS = libsys.so
-libsys_so_SOURCES =
+module_PROGRAMS = libmooon_sys.so
+libmooon_sys_so_SOURCES =
 
 install-data-hook:
-	find $(prefix)/include/sys -name .svn |xargs rm -fr
-	mkdir -p $(prefix)/include&&cp -r $(top_srcdir)/../include/sys $(prefix)/include/
+	mkdir -p $(prefix)/include/mooon&&cp -r $(top_srcdir)/../include/mooon/sys $(prefix)/include/mooon/
 
 uninstall-hook:
-	rm -fr $(prefix)/include/sys
+	rm -fr $(prefix)/include/mooon/sys

@@ -16,8 +16,7 @@ endif
 endif
 
 install-data-hook:
-	find $(prefix)/include/plugin -name .svn |xargs rm -fr
-	mkdir -p $(prefix)/include/plugin&&cp $(top_srcdir)/../include/plugin/plugin.h $(prefix)/include/plugin/
+	mkdir -p $(prefix)/include/mooon/plugin&&cp $(top_srcdir)/../include/mooon/plugin/plugin.h $(prefix)/include/mooon/plugin/
 
 uninstall-hook:
-	rm -fr $(prefix)/include/plugin
+	rm -fr $(prefix)/include/mooon/plugin

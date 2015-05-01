@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_UTILS_EXCEPTION_H
 #define MOOON_UTILS_EXCEPTION_H
-#include "utils/string_formatter.h"
+#include "mooon/utils/string_formatter.h"
 #include <exception>
 #include <string>
 

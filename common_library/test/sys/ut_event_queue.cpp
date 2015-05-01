@@ -16,11 +16,11 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include <sys/thread.h>
-#include <sys/utils.h>
-#include <sys/event_queue.h>
-#include <utils/array_queue.h>
-#include <sys/datetime_utils.h>
+#include <mooon/sys/thread.h>
+#include <mooon/sys/utils.h>
+#include <mooon/sys/event_queue.h>
+#include <mooon/utils/array_queue.h>
+#include <mooon/sys/datetime_utils.h>
 MOOON_NAMESPACE_USE
 
 // 定义处理消息线程，由主线程向它发消息

@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_SYS_SIMPLE_DB_H
 #define MOOON_SYS_SIMPLE_DB_H
-#include "sys/db_exception.h"
+#include "mooon/sys/db_exception.h"
 #include <string>
 #include <vector>
 SYS_NAMESPACE_BEGIN

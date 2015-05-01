@@ -18,8 +18,8 @@
  */
 #ifndef MOOON_SYS_CONFIG_FILE_H
 #define MOOON_SYS_CONFIG_FILE_H
+#include "mooon/sys/config.h"
 #include <vector>
-#include "sys/config.h"
 SYS_NAMESPACE_BEGIN
 
 /**
@@ -124,7 +124,7 @@ public:
 };
 
 /***
-  * ConfigReader帮助类，用于自动释放已经获取的ConfigReader  
+  * ConfigReader帮助类，用于自动释放已经获取的ConfigReader
   */
 class ConfigReaderHelper
 {

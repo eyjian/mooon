@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_NET_SEND_MACHINE_H
 #define MOOON_NET_SEND_MACHINE_H
-#include <net/config.h>
+#include <mooon/net/config.h>
 NET_NAMESPACE_BEGIN
 
 template <class Connector>

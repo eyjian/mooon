@@ -18,8 +18,8 @@
  */
 #ifndef MOOON_NET_UTILS_H
 #define MOOON_NET_UTILS_H
-#include "net/config.h"
-#include "sys/syscall_exception.h"
+#include "mooon/net/config.h"
+#include "mooon/sys/syscall_exception.h"
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <poll.h>

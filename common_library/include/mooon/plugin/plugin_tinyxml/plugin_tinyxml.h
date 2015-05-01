@@ -18,8 +18,8 @@
  */
 #ifndef MOOON_PLUGIN_TINYXML_H
 #define MOOON_PLUGIN_TINYXML_H
-#include <plugin/plugin.h>
-#include <sys/config_file.h>
+#include <mooon/plugin/plugin.h>
+#include <mooon/sys/config_file.h>
 LIBPLUGIN_NAMESPACE_BEGIN
 
 extern sys::IConfigFile* create_config_file();

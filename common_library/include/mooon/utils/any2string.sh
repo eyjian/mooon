@@ -101,7 +101,7 @@ generate_any2string_h()
 
 	echo "#ifndef MOOON_UTIL_ANY2STRING_H" >> $h_filename
 	echo "#define MOOON_UTIL_ANY2STRING_H" >> $h_filename
-	echo "#include \"util/config.h\"" >> $h_filename
+	echo "#include \"mooon/utils/config.h\"" >> $h_filename
 	echo "#include <string>" >> $h_filename
 	echo "#include <sstream>" >> $h_filename
 	echo "UTIL_NAMESPACE_BEGIN" >> $h_filename

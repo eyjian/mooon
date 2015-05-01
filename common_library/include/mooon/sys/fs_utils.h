@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_SYS_FS_UTILS_H
 #define MOOON_SYS_FS_UTILS_H
-#include "sys/utils.h"
+#include "mooon/sys/utils.h"
 
 #if COMPILE_FS_UTIL_CPP==1 /** 必须在sys/sys_config.h之后 */
 SYS_NAMESPACE_BEGIN
@@ -30,7 +30,7 @@ SYS_NAMESPACE_BEGIN
   * /dev/test           87846516    16217732  2086744   23%   /test
   *
   * fs_stat_t的block_bytes可能是1K，但也可能是1K的整数倍，如4K
-  * fs_stat_t的avail_block_nubmer是可用的块个数  
+  * fs_stat_t的avail_block_nubmer是可用的块个数
   * fs_entry_t的fs_name对应于/dev/usr等
   * fs_entry_t的dir_path对应于/usr/local等
   *

@@ -18,6 +18,7 @@
  */
 #ifndef MOOON_SYS_DIR_UTILS_H
 #define MOOON_SYS_DIR_UTILS_H
+#include "mooon/sys/utils.h"
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -27,7 +28,6 @@
 #include <stdlib.h>
 #include <string>
 #include <vector>
-#include "sys/utils.h"
 SYS_NAMESPACE_BEGIN
 
 class CDirUtils

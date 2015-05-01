@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_SYS_EVENT_H
 #define MOOON_SYS_EVENT_H
-#include "sys/lock.h"
+#include "mooon/sys/lock.h"
 SYS_NAMESPACE_BEGIN
 
 /***

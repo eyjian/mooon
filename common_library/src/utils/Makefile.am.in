@@ -7,16 +7,15 @@ AM_LDFLAGS  += -fPIC -shared -lm
 AM_CXXFLAGS += -fPIC
 
 libdir=$(prefix)/lib
-lib_LIBRARIES = libutils.a
-libutils_a_SOURCES = 
+lib_LIBRARIES = libmooon_utils.a
+libmooon_utils_a_SOURCES = 
 
 moduledir=$(prefix)/lib
-module_PROGRAMS = libutils.so
-libutils_so_SOURCES = 
+module_PROGRAMS = libmooon_utils.so
+libmooon_utils_so_SOURCES = 
 
 install-data-hook:
-	find $(prefix)/include/utils -name .svn |xargs rm -fr
-	mkdir -p $(prefix)/include&&cp -r $(top_srcdir)/../include/utils $(prefix)/include/
+	mkdir -p $(prefix)/include/mooon&&cp -r $(top_srcdir)/../include/mooon/utils $(prefix)/include/mooon/
 
 uninstall-hook:
-	rm -fr $(prefix)/include/utils
+	rm -fr $(prefix)/include/mooon/utils

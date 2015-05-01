@@ -18,8 +18,8 @@
  */
 #ifndef MOOON_SYS_SYSCALL_EXCEPTION_H
 #define MOOON_SYS_SYSCALL_EXCEPTION_H
-#include "sys/config.h"
-#include "utils/exception.h"
+#include "mooon/sys/config.h"
+#include "mooon/utils/exception.h"
 
 #define THROW_SYSCALL_EXCEPTION(errmsg, errcode, syscall) \
     throw sys::CSyscallException(errmsg, errcode, __FILE__, __LINE__, syscall)

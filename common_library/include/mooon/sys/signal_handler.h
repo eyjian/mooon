@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_SYS_SIGNAL_HANDLER_H
 #define MOOON_SYS_SIGNAL_HANDLER_H
-#include "sys/config.h"
+#include "mooon/sys/config.h"
 #include <errno.h>
 #include <stdio.h>
 #include <signal.h>

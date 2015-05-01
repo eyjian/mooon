@@ -18,8 +18,8 @@
  */
 #ifndef MOOON_NET_IP_NODE_H
 #define MOOON_NET_IP_NODE_H
-#include <utils/hash_map.h>
-#include <net/ip_address.h>
+#include <mooon/utils/hash_map.h>
+#include <mooon/net/ip_address.h>
 NET_NAMESPACE_BEGIN
 
 //////////////////////////////////////////////////////////////////////////
@@ -80,7 +80,7 @@ inline bool ipv4_node_t::operator ==(const ipv4_node_t& other) const
 typedef struct ipv6_node_t
 {
     uint16_t port;  /** 端口号 */
-    uint32_t ip[4]; /** IPV6地址 */    
+    uint32_t ip[4]; /** IPV6地址 */
 
     /* 构造、赋值和比较函数 */
     ipv6_node_t();

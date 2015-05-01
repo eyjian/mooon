@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_SYS_EVENT_QUEUE_H
 #define MOOON_SYS_EVENT_QUEUE_H
-#include "sys/event.h"
+#include "mooon/sys/event.h"
 SYS_NAMESPACE_BEGIN
 
 /** 事件队列，总是线程安全
@@ -92,7 +92,7 @@ public:
             // 如果不等待，则立即返回
             if (0 == _pop_milliseconds) return false;
             // 使用助手类管理计数，因为timed_wait可能抛异常
-            utils::CountHelper<volatile int> ch(_pop_waiter_number); 
+            utils::CountHelper<volatile int> ch(_pop_waiter_number);
             
             // 超时则立即返回
             if (!_event.timed_wait(_lock, _pop_milliseconds)) return false;
@@ -121,9 +121,9 @@ public:
         while (_raw_queue.is_full())
         {
             // 如果不等待，则立即返回
-            if (0 == _push_milliseconds) return false;  
+            if (0 == _push_milliseconds) return false;
             // 使用助手类管理计数，因为timed_wait可能抛异常
-            utils::CountHelper<volatile int> ch(_push_waiter_number); 
+            utils::CountHelper<volatile int> ch(_push_waiter_number);
 
             // 超时则立即返回
             if (!_event.timed_wait(_lock, _push_milliseconds)) return false;
@@ -144,7 +144,7 @@ public:
 private:        
     CEvent _event;
     mutable CLock _lock;    
-    RawQueueClass _raw_queue;      /** 原始队列 */       
+    RawQueueClass _raw_queue;      /** 原始队列 */
 
 private:
     uint32_t _pop_milliseconds;    /** 出队时等待超时毫秒数 */

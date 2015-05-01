@@ -34,7 +34,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef MOOON_UTILS_SCOPED_PTR_H
 #define MOOON_UTILS_SCOPED_PTR_H
-#include "utils/config.h"
+#include "mooon/utils/config.h"
 #include <assert.h>
 #include <cstddef>
 UTILS_NAMESPACE_BEGIN

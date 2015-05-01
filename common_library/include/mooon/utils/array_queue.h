@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_UTILS_ARRAY_QUEUE_H
 #define MOOON_UTILS_ARRAY_QUEUE_H
-#include "utils/config.h"
+#include "mooon/utils/config.h"
 UTILS_NAMESPACE_BEGIN
 
 /** 用数组实现的队列, 非线程安全 */
@@ -112,9 +112,9 @@ public:
     
 private:        
     uint32_t _tail;       /** 队首 */
-    uint32_t _head;       /** 队尾 */    
-    uint32_t _queue_size; /** 队列当前容纳的元素个数 */	
-	uint32_t _queue_max;  /** 队列最多可容纳的元素个数 */	
+    uint32_t _head;       /** 队尾 */
+    uint32_t _queue_size; /** 队列当前容纳的元素个数 */
+	uint32_t _queue_max;  /** 队列最多可容纳的元素个数 */
 	DataType* _elem_array; /** 用来实现队列的数组 */
 };
 

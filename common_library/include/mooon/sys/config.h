@@ -18,11 +18,11 @@
  */
 #ifndef MOOON_SYS_CONFIG_H
 #define MOOON_SYS_CONFIG_H
+#include <mooon/utils/config.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <utils/config.h>
 
 // 编译控制宏
 #define HAVE_UIO_H 0          /** 是否可以使用writev和readv */

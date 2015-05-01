@@ -3,5 +3,5 @@ MY_CXXFLAGS=-march=pentium4
 AM_LDFLAGS = -rdynamic
 AM_CXXFLAGS = $(MY_CXXFLAGS) -D_GNU_SOURCE -rdynamic -Wall
 
-INCLUDES=-I$(top_srcdir)/../include
+INCLUDES=-I$(top_srcdir)/../include -I$(top_srcdir)/../include/mooon
 LDADD=

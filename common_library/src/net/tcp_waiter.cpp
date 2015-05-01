@@ -60,13 +60,13 @@ void CTcpWaiter::set_self(const ip_address_t& self_ip, port_t self_port)
     _self_port = self_port;
 }
 
-void CTcpWaiter::attach(int fd, const ip_address_t& peer_ip, port_t& peer_port)
+void CTcpWaiter::attach(int fd, const ip_address_t& peer_ip, port_t peer_port)
 { 
-	set_fd(fd); 
+    set_fd(fd);
     _peer_ip = peer_ip;
     _peer_port = peer_port;  
     
-	((CDataChannel *)_data_channel)->attach(fd); 
+    ((CDataChannel *)_data_channel)->attach(fd);
 }
 
 ssize_t CTcpWaiter::receive(char* buffer, size_t buffer_size) 

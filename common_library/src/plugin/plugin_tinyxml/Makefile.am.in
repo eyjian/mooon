@@ -7,15 +7,15 @@ AM_LDFLAGS  += -fPIC -shared
 AM_CXXFLAGS += -fPIC
 
 libdir=$(prefix)/lib
-lib_LIBRARIES = libxtinyxml.a
-libxtinyxml_a_SOURCES = 
+lib_LIBRARIES = libmooon_tinyxml.a
+libmooon_tinyxml_a_SOURCES = 
 
 moduledir=$(prefix)/lib
-module_PROGRAMS = libxtinyxml.so
-libxtinyxml_so_SOURCES =
+module_PROGRAMS = libmooon_tinyxml.so
+libmooon_tinyxml_so_SOURCES =
 
 install-data-hook:
-	mkdir -p $(prefix)/include/plugin&&cp -r $(top_srcdir)/../include/plugin/plugin_tinyxml $(prefix)/include/plugin/
+	mkdir -p $(prefix)/include/mooon/plugin&&cp -r $(top_srcdir)/../include/mooon/plugin/plugin_tinyxml $(prefix)/include/mooon/plugin/
 
 uninstall-hook:
-	rm -fr $(prefix)/include/plugin/plugin_tinyxml
+	rm -fr $(prefix)/include/mooon/plugin/plugin_tinyxml

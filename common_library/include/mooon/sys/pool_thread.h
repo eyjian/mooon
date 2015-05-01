@@ -18,9 +18,9 @@
  */
 #ifndef MOOON_SYS_POOL_THREAD_H
 #define MOOON_SYS_POOL_THREAD_H
-#include "sys/event.h"
-#include "sys/syscall_exception.h"
-#include "sys/thread.h"
+#include "mooon/sys/event.h"
+#include "mooon/sys/syscall_exception.h"
+#include "mooon/sys/thread.h"
 SYS_NAMESPACE_BEGIN
 
 // 用于线程池的线程抽象基类

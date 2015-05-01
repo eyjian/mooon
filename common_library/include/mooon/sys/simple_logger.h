@@ -28,6 +28,7 @@
  */
 #ifndef MOOON_SYS_SIMPLE_LOGGER_H
 #define MOOON_SYS_SIMPLE_LOGGER_H
+#include "mooon/sys/file_locker.h"
 #include <fcntl.h>
 #include <sstream>
 #include <stdarg.h>
@@ -37,7 +38,6 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <time.h>
-#include "sys/file_locker.h"
 SYS_NAMESPACE_BEGIN
 
 /**
@@ -493,7 +493,7 @@ inline void CSimpleLogger::rotate_log()
 {
     std::string new_path;  // 滚动后的文件路径，包含目录和文件名
     std::string old_path;  // 滚动前的文件路径，包含目录和文件名
-    
+
     // 轮回，一切重新开始
     reset();
 

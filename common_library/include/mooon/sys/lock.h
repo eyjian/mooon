@@ -18,8 +18,8 @@
  */
 #ifndef MOOON_SYS_LOCK_H
 #define MOOON_SYS_LOCK_H
+#include "mooon/sys/utils.h"
 #include <pthread.h>
-#include "sys/utils.h"
 SYS_NAMESPACE_BEGIN
 
 /***

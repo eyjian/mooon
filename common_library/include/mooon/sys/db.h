@@ -16,14 +16,14 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  * 代码采用商业友好的Apache协议，可任意修改和分发，但请保留版权说明文字。
- * 如遇到的问题，请发送到上述邮箱，以便及时修复。谢谢合作，共创开源！ 
+ * 如遇到的问题，请发送到上述邮箱，以便及时修复。谢谢合作，共创开源！
  *
  * 数据库操作出错时，均要求以CDBException异常的方式处理
  */
 #ifndef MOOON_SYS_DB_H
 #define MOOON_SYS_DB_H
+#include "mooon/sys/db_exception.h"
 #include <vector>
-#include "sys/db_exception.h"
 #define SQL_MAX 4096 /** 一条SQL语句允许的最大长度 */
 SYS_NAMESPACE_BEGIN
 
@@ -107,7 +107,7 @@ public:
     virtual void enable_autocommit(bool enabled) = 0;  
     
     /***
-      * 用来判断数据库连接是否正建立着 
+      * 用来判断数据库连接是否正建立着
       */
     virtual bool is_established() const = 0;
 
@@ -159,7 +159,7 @@ public:
     virtual void enable_autocommit(bool enabled) = 0;  
     
     /***
-      * 用来判断数据库连接是否正建立着 
+      * 用来判断数据库连接是否正建立着
       */
     virtual bool is_established() const = 0;
 
@@ -222,7 +222,7 @@ public:
 
     /***
       * 线程安全函数
-      * 将已经获取的数据库连接放回到数据库连接池中      
+      * 将已经获取的数据库连接放回到数据库连接池中
       * @exception: 不会抛出任何异常
       */
     virtual void put_connection(IDBPoolConnection* db_connection) = 0;

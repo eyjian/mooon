@@ -22,8 +22,8 @@
  */
 #ifndef MOOON_SYS_DB_EXCEPTION_H
 #define MOOON_SYS_DB_EXCEPTION_H
-#include "sys/config.h"
-#include "utils/exception.h"
+#include "mooon/sys/config.h"
+#include "mooon/utils/exception.h"
 
 #define THROW_DB_EXCEPTION(sql, errmsg, errcode) \
     throw sys::CDBException(sql, errmsg, errcode, __FILE__, __LINE__)

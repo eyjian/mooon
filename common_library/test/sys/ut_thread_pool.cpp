@@ -1,7 +1,7 @@
 #include <assert.h>
-#include <sys/utils.h>
-#include <sys/pool_thread.h>
-#include <sys/thread_pool.h>
+#include <mooon/sys/utils.h>
+#include <mooon/sys/pool_thread.h>
+#include <mooon/sys/thread_pool.h>
 SYS_NAMESPACE_USE
 
 // 测试线程，请注意是继承池线程CPoolThread，而不是线程CThread，
@@ -42,12 +42,12 @@ private:
 int main()
 {
 	CThreadPool<CTestThread> thread_pool; // 这里定义线程池实例
-	
+
 	try
 	{
 		// create可能抛出异常，所以需要捕获
 		thread_pool.create(10); // 创建10个线程的线程池
-		
+
 		// 池线程创建成功后，并不会立即进行运行状态，而是处于等待状态，
 		// 所以需要唤醒它们，方法如下：
 		uint16_t thread_count = thread_pool.get_thread_count();
@@ -60,7 +60,7 @@ int main()
 		
 		// 让CTestThread有足够的时间完成任务
 		CUtils::millisleep(5000);
-		// 等待所有线程退出，然后销毁线程池		
+		// 等待所有线程退出，然后销毁线程池
 		thread_pool.destroy();
 	}
 	catch (CSyscallException& ex)

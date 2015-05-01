@@ -18,8 +18,8 @@
  */
 #ifndef MOOON_SYS_UTILS_H
 #define MOOON_SYS_UTILS_H
-#include "sys/error.h"
-#include "sys/syscall_exception.h"
+#include "mooon/sys/error.h"
+#include "mooon/sys/syscall_exception.h"
 SYS_NAMESPACE_BEGIN
 
 /***
@@ -89,7 +89,7 @@ public:
 
     /***
       * 递归的创建目录
-      * @dirpath: 需要创建的目录      
+      * @dirpath: 需要创建的目录
       * @permissions: 目录权限，取值可以为下列的任意组合:
       *                    S_IRWXU, S_IRUSR, S_IWUSR, S_IXUSR
       *                    S_IRWXG, S_IRGRP, S_IWGRP, S_IXGRP
@@ -100,7 +100,7 @@ public:
 
     /***
       * 递归的创建目录
-      * @dirpath: 需要创建的目录      
+      * @dirpath: 需要创建的目录
       * @permissions: 目录权限
       * @exception: 出错则抛出CSyscallException
       */
@@ -108,7 +108,7 @@ public:
 
     /***
       * 根据文件路径，递归的创建目录
-      * @dirpath: 文件路径      
+      * @dirpath: 文件路径
       * @permissions: 目录权限
       * @exception: 出错则抛出CSyscallException
       */

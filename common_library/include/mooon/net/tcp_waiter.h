@@ -20,8 +20,9 @@
  */
 #ifndef MOOON_NET_TCP_WAITER_H
 #define MOOON_NET_TCP_WAITER_H
+#include "mooon/net/epollable.h"
+#include "mooon/net/ip_address.h"
 #include <sys/uio.h>
-#include "net/epollable.h"
 NET_NAMESPACE_BEGIN
 
 /***
@@ -114,7 +115,7 @@ public:
       * @file_fd: 打开的文件句柄
       * @offset: 文件偏移位置，如果成功则返回新的偏移位置
       * @count: 需要发送的大小
-      */    
+      */
     ssize_t send_file(int file_fd, off_t *offset, size_t count);
     void full_send_file(int file_fd, off_t *offset, size_t& count);
 
@@ -139,14 +140,14 @@ public:
     /***
       * 一次性读一组数据，和系统调用readv的用法相同
       * @return: 返回实际读取到的字节数
-      * @exception: 如果发生系统调用错误，则抛出CSyscallException异常 
+      * @exception: 如果发生系统调用错误，则抛出CSyscallException异常
       */
     ssize_t readv(const struct iovec *iov, int iovcnt);
 
     /***
       * 一次性写一组数据，和系统调用writev的用法相同
       * @return: 返回实际写入的字节数
-      * @exception: 如果发生系统调用错误，则抛出CSyscallException异常 
+      * @exception: 如果发生系统调用错误，则抛出CSyscallException异常
       */
     ssize_t writev(const struct iovec *iov, int iovcnt);
 
@@ -157,8 +158,8 @@ private:
     void* _data_channel;    
     ip_address_t _self_ip; /** 本端的IP地址 */
     ip_address_t _peer_ip; /** 对端的IP地址 */
-    port_t _self_port;     /** 本端的端口号 */    
-    port_t _peer_port;     /** 对端的端口号 */   
+    port_t _self_port;     /** 本端的端口号 */
+    port_t _peer_port;     /** 对端的端口号 */
 };
 
 NET_NAMESPACE_END

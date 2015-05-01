@@ -1,7 +1,7 @@
 #ifndef MOOON_SYS_READ_WRITE_LOCK
 #define MOOON_SYS_READ_WRITE_LOCK
+#include "mooon/sys/utils.h"
 #include <pthread.h>
-#include "sys/utils.h"
 SYS_NAMESPACE_BEGIN
 
 /***

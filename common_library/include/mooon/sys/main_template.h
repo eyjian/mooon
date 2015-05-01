@@ -24,8 +24,8 @@
  */
 #ifndef MOOON_SYS_MAIN_TEMPLATE_H
 #define MOOON_SYS_MAIN_TEMPLATE_H
+#include "mooon/sys/log.h"
 #include <signal.h>
-#include "sys/log.h"
 SYS_NAMESPACE_BEGIN
 
 /***

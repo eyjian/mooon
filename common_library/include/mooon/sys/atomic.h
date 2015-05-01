@@ -3,12 +3,12 @@
 #include <stdint.h>
 
 #if __GNUC__ < 4
-#include "sys/atomic_asm.h"
+#include "mooon/sys/atomic_asm.h"
 #else
-#include "sys/atomic_gcc.h"
+#include "mooon/sys/atomic_gcc.h"
 #if __WORDSIZE==64
-#include "sys/atomic_gcc8.h"
+#include "mooon/sys/atomic_gcc8.h"
 #endif
 #endif
-#include "sys/compiler.h"
+#include "mooon/sys/compiler.h"
 #endif /* __ATOMIC_H__ */

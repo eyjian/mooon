@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_UTILS_HISTOGRAM_ARRAY_H
 #define MOOON_UTILS_HISTOGRAM_ARRAY_H
-#include "utils/config.h"
+#include "mooon/utils/config.h"
 UTILS_NAMESPACE_BEGIN
 
 /***
@@ -157,7 +157,7 @@ public:
     }
     
 private:
-    uint32_t _array_size;            /** 直方图数组大小 */    
+    uint32_t _array_size;            /** 直方图数组大小 */
     DataType** _elem_array;          /** 直方图元素数组 */
     uint32_t* _histogram_size_array; /** 直方图大小数组 */
 };

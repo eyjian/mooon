@@ -19,7 +19,7 @@
 #ifndef MOOON_SYS_INFO_H
 #define MOOON_SYS_INFO_H
 #include <vector>
-#include "sys/config.h"
+#include "mooon/sys/config.h"
 SYS_NAMESPACE_BEGIN
 
 /***

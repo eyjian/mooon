@@ -1,8 +1,8 @@
 #ifndef SYS_ERROR_H
 #define SYS_ERROR_H
+#include "mooon/sys/config.h"
 #include <errno.h>
 #include <string.h>
-#include "sys/config.h"
 SYS_NAMESPACE_BEGIN
 
 class ErrorKeeper

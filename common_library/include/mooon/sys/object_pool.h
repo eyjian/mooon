@@ -18,8 +18,8 @@
  */
 #ifndef MOOON_SYS_OBJECT_POOL_H
 #define MOOON_SYS_OBJECT_POOL_H
-#include <utils/array_queue.h>
-#include "sys/lock.h"
+#include <mooon/utils/array_queue.h>
+#include "mooon/sys/lock.h"
 SYS_NAMESPACE_BEGIN
 
 /***

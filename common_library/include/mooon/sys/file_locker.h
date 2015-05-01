@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_SYS_FILE_LOCKER_H
 #define MOOON_SYS_FILE_LOCKER_H
-#include "sys/config.h"
+#include "mooon/sys/config.h"
 #include <errno.h>
 #include <stdio.h>
 #include <string>

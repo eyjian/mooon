@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_SYS_MMAP_H
 #define MOOON_SYS_MMAP_H
-#include "sys/utils.h"
+#include "mooon/sys/utils.h"
 SYS_NAMESPACE_BEGIN
 
 typedef struct
@@ -88,7 +88,7 @@ public:
 
     /***
       * 释放已创建的内存映射，如果是通过指定文件名映射的，则关闭在mmap中打开的句柄
-      * @ptr: 已创建的内存映射  
+      * @ptr: 已创建的内存映射
       * @exception: 出错抛出CSyscallException异常
       */
     static void unmap(mmap_t* ptr);

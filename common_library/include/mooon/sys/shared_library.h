@@ -18,13 +18,13 @@
  */
 #ifndef MOOON_SYS_SHARED_LIBRARY_H
 #define MOOON_SYS_SHARED_LIBRARY_H
+#include "mooon/sys/utils.h"
 #include <dlfcn.h>
-#include "sys/utils.h"
 SYS_NAMESPACE_BEGIN
 
 /***
   * 共享库加载工具类
-  * 非线程安全类，不要跨线程使用 
+  * 非线程安全类，不要跨线程使用
   */
 class CSharedLibrary
 {

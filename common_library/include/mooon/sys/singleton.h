@@ -16,19 +16,16 @@
  *
  * Author: laocai_liu@qq.com or laocailiu@gmail.com
  */
-
 #ifndef MOOON_SYS_SINGLETON_H
 #define MOOON_SYS_SINGLETON_H
-
+#include "mooon/sys/lock.h"
 #include <cstdlib>
-#include "sys/lock.h"
+SYS_NAMESPACE_BEGIN
 
 /** 
  * utils/configh.h 中的 singleton(SINGLETON_DECLARE) 是非线程安全
  * 这里实现的 singleton 是线程安全的
  */
-
-SYS_NAMESPACE_BEGIN
 
 template<typename ObjType>
 class CSingleton

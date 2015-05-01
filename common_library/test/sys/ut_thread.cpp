@@ -1,5 +1,5 @@
-#include <sys/thread.h>
-#include <sys/utils.h>
+#include <mooon/sys/thread.h>
+#include <mooon/sys/utils.h>
 MOOON_NAMESPACE_USE
 
 // 所有非线程池线程都应当是CThread的子类
