@@ -512,21 +512,4 @@ void CUtils::common_pipe_write(int fd, const char* buffer, int32_t buffer_size)
 	}
 }
 
-std::string to_string(const struct in_addr& sin_addr)
-{
-    return std::string(inet_ntoa(sin_addr));
-}
-
-std::string to_string(const sockaddr_in& addr)
-{
-    return to_string(addr.sin_addr) + std::string(":") + utils::CStringUtils::any2string(ntohs(addr.sin_port));
-}
-
-std::string ip2string(uint32_t ip)
-{
-    struct in_addr sin_addr;
-    sin_addr.s_addr = ip;
-    return to_string(sin_addr);
-}
-
 SYS_NAMESPACE_END

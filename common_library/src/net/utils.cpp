@@ -26,6 +26,7 @@
 #include "net/utils.h"
 #include "sys/close_helper.h"
 #include "sys/syscall_exception.h"
+#include "utils/string_utils.h"
 NET_NAMESPACE_BEGIN
 
 void CUtils::reverse_bytes(const void* source, void* result, size_t length)
@@ -366,6 +367,23 @@ bool CUtils::timed_poll(int fd, int events_requested, int milliseconds, int* eve
 
     if (events_returned != NULL) *events_returned = fds[0].revents;
     return true;
+}
+
+std::string to_string(const struct in_addr& sin_addr)
+{
+    return std::string(inet_ntoa(sin_addr));
+}
+
+std::string to_string(const sockaddr_in& addr)
+{
+    return to_string(addr.sin_addr) + std::string(":") + utils::CStringUtils::any2string(ntohs(addr.sin_port));
+}
+
+std::string ip2string(uint32_t ip)
+{
+    struct in_addr sin_addr;
+    sin_addr.s_addr = ip;
+    return to_string(sin_addr);
 }
 
 NET_NAMESPACE_END
