@@ -208,15 +208,15 @@ do { \
         logger->bin_log(__FILE__, __LINE__, module_name, log, size); \
 } while(false)
 
-#define MYLOG_BIN(log, size)         __MYLOG_BIN(sys::g_logger, log, size)
-#define MYLOG_TRACE(format, ...)     __MYLOG_TRACE(sys::g_logger, NULL, format, ##__VA_ARGS__)
-#define MYLOG_STATE(format, ...)     __MYLOG_STATE(sys::g_logger, NULL, format, ##__VA_ARGS__)
-#define MYLOG_FATAL(format, ...)     __MYLOG_FATAL(sys::g_logger, NULL, format, ##__VA_ARGS__)
-#define MYLOG_ERROR(format, ...)     __MYLOG_ERROR(sys::g_logger, NULL, format, ##__VA_ARGS__)
-#define MYLOG_WARN(format, ...)      __MYLOG_WARN(sys::g_logger, NULL, format, ##__VA_ARGS__)
-#define MYLOG_INFO(format, ...)      __MYLOG_INFO(sys::g_logger, NULL, format, ##__VA_ARGS__)
-#define MYLOG_DEBUG(format, ...)     __MYLOG_DEBUG(sys::g_logger, NULL, format, ##__VA_ARGS__)
-#define MYLOG_DETAIL(format, ...)    __MYLOG_DETAIL(sys::g_logger, NULL, format, ##__VA_ARGS__)
+#define MYLOG_BIN(log, size)         __MYLOG_BIN(mooon::sys::g_logger, log, size)
+#define MYLOG_TRACE(format, ...)     __MYLOG_TRACE(mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
+#define MYLOG_STATE(format, ...)     __MYLOG_STATE(mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
+#define MYLOG_FATAL(format, ...)     __MYLOG_FATAL(mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
+#define MYLOG_ERROR(format, ...)     __MYLOG_ERROR(mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
+#define MYLOG_WARN(format, ...)      __MYLOG_WARN(mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
+#define MYLOG_INFO(format, ...)      __MYLOG_INFO(mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
+#define MYLOG_DEBUG(format, ...)     __MYLOG_DEBUG(mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
+#define MYLOG_DETAIL(format, ...)    __MYLOG_DETAIL(mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
 
 SYS_NAMESPACE_END
 #endif // MOOON_SYS_LOG_H
