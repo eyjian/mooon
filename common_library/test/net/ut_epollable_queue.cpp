@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -18,7 +18,7 @@
  */
 #include "sys/thread.h"
 #include "net/epoller.h"
-#include "sys/sys_utils.h"
+#include "sys/utils.h"
 #include "utils/array_queue.h"
 #include "sys/datetime_utils.h"
 #include "net/epollable_queue.h"
@@ -57,9 +57,9 @@ private:
 
                 int m = 0;
                 if (_queue->pop_front(m)) // 弹出队首数据
-                    fprintf(stdout, "<%s> pop %d from queue.\n", sys::CDatetimeUtil::get_current_datetime().c_str(), m);
+                    fprintf(stdout, "<%s> pop %d from queue.\n", sys::CDatetimeUtils::get_current_datetime().c_str(), m);
                 else
-                    fprintf(stderr, "<%s> get nothing from queue.\n", sys::CDatetimeUtil::get_current_datetime().c_str());
+                    fprintf(stderr, "<%s> get nothing from queue.\n", sys::CDatetimeUtils::get_current_datetime().c_str());
             }
             catch (sys::CSyscallException& ex)
             {

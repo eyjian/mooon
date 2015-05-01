@@ -1,17 +1,18 @@
 
 #include "utils/token_list.h"
 #include<string>
+UTILS_NAMESPACE_USE
 
 void print_token_list(const std::string &str,const std::string &sep)
 {
 	printf("before token:\n");
 	printf("str = %s,sep = %s\n",str.c_str(),sep.c_str());
 
-	util::CTokenList::TTokenList token_list;
-	util::CTokenList::parse(token_list,str,sep);
+	CTokenList::TTokenList token_list;
+	CTokenList::parse(token_list,str,sep);
 
 	printf("after token:\n");
-	util::CTokenList::TTokenList::iterator iter = token_list.begin();
+	CTokenList::TTokenList::iterator iter = token_list.begin();
 	for (;iter != token_list.end(); ++iter)
 	{
 		printf("%s\n", iter->c_str());

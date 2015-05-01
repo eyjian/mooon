@@ -1,31 +1,71 @@
 #include <stdio.h>
 #include <sys/object_pool.h>
+#include <vector>
+
+class X: public mooon::sys::CPoolObject
+{
+public:
+    X()
+    {
+        reset();
+    }
+
+    void reset()
+    {
+        _m = -1;
+    }
+
+    void s(int m)
+    {
+        _m = m;
+    }
+
+    void p()
+    {
+        printf("%d\n", _m);
+    }
+
+private:
+    int _m;
+};
 
 int main()
 {
+    X* x;
     uint32_t i;
-    mooon::sys::CRawObjectPool rbp;
-    uint32_t pool_size = 1000; 
-    int** intptr_array = new int*[pool_size]; 
-    
-    rbp.create(sizeof(int), pool_size);
+    uint32_t pool_size = 10;
+    mooon::sys::CRawObjectPool<X> pool(false);
+    pool.create(pool_size);
 
-    for (i=0; i<pool_size; ++i)
+    std::vector<X*> vec_x;
+    for (i=0; i<=pool_size; ++i)
     {
-        intptr_array[i] = (int *)rbp.allocate();
-        int* x = intptr_array[i];
-        *x = (int)(i+1);
-        printf("==>%d\n", *x);
-    }
-    for (i=0; i<pool_size; ++i)
-    {
-        rbp.reclaim(intptr_array[i]);
-    }
-    
-    int* p = (int *)rbp.allocate();
-    *p = 8899;
-    printf("*p == %d\n", *p);
-    rbp.reclaim(p);
+        printf("[%d] ", i);
 
-    rbp.destroy();
+        x = pool.borrow();
+        if (NULL == x)
+        {
+            printf("borrow nothing\n");
+        }
+        else
+        {
+            x->s(2015);
+            x->p();
+
+            vec_x.push_back(x);
+        }
+    }
+
+    for (std::vector<X*>::size_type j=0; j<vec_x.size(); ++j)
+    {
+        x = vec_x[j];
+        pool.pay_back(x);
+    }
+
+    x = pool.borrow();
+    x->s(501);
+    x->p();
+    pool.pay_back(x);
+
+    return 0;
 }

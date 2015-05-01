@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,12 +16,12 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include "net/net_utils.h"
 #include "net/listener.h"
-#include "sys/sys_utils.h"
+#include "net/utils.h"
 #include "net/tcp_waiter.h"
+#include "sys/utils.h"
 #include "utils/string_utils.h"
-using namespace mooon;
+MOOON_NAMESPACE_USE
 
 // 无参数时：
 // 在0.0.0.0:5174上监听
@@ -76,12 +76,11 @@ int main(int argc, char* argv[])
         {
             // 接受一个连接请求
             int newfd = listener.accept(peer_ip, peer_port);
-            fprintf(stdout, "Accepted connect - %s:%d.\n"
-                , peer_ip.to_string().c_str(), peer_port);
+            fprintf(stdout, "Accepted connect - %s:%d.\n", peer_ip.to_string().c_str(), peer_port);
 
             // 将新的请求关联到CTcpWaiter上
             net::CTcpWaiter waiter;
-            waiter.attach(newfd);
+            waiter.attach(newfd, peer_ip, peer_port);
 
             while (true)
             {
@@ -91,8 +90,7 @@ int main(int argc, char* argv[])
                 if (0 == retval)
                 {           
                     // 对端关闭了连接
-                    fprintf(stdout, "Connect closed by peer %s:%d.\n"
-                        , peer_ip.to_string().c_str(), peer_port);
+                    fprintf(stdout, "Connect closed by peer %s:%d.\n", peer_ip.to_string().c_str(), peer_port);
                     break;
                 }
                 else
@@ -107,9 +105,7 @@ int main(int argc, char* argv[])
     catch (sys::CSyscallException& ex)
     {
         // 监听或连接异常
-        fprintf(stderr, "exception %s at %s:%d.\n"
-            , ex.str().c_str()
-            , ex.file(), ex.line());
+        fprintf(stderr, "exception %s at %s:%d.\n", ex.str().c_str(), ex.file(), ex.line());
         exit(1);
     }
 

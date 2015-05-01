@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -17,8 +17,9 @@
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
 #include <arpa/inet.h>
-#include <net/net_utils.h>
-using namespace mooon;
+#include <net/utils.h>
+#include <stdio.h>
+MOOON_NAMESPACE_USE
 
 void test_host2net()
 {
@@ -30,7 +31,7 @@ void test_host2net()
     uint16_t b1;
     uint16_t a1 = 0x0103;
 
-    net::CNetUtils::host2net<uint16_t>(a1, b1);
+    net::CUtils::host2net<uint16_t>(a1, b1);
     printf("a1 = 0x%04x, b1=0x%04x\n", a1, b1);
     if (b1 == htons(a1)) /** 和系统库函数比较，以验证是否正确 */
         printf("host2net success\n");
@@ -42,7 +43,7 @@ void test_host2net()
     uint32_t b2;
     uint32_t a2 = 0x01016070;
 
-    net::CNetUtils::host2net<uint32_t>(a2, b2);
+    net::CUtils::host2net<uint32_t>(a2, b2);
     printf("a2 = 0x%04x, b2=0x%04x\n", a2, b2);
     if (b2 == htonl(a2)) /** 和系统库函数比较，以验证是否正确 */
         printf("host2net success\n");
@@ -54,8 +55,8 @@ void test_host2net()
     char str[] = "123456789";
     size_t length = strlen(str);
     char* dst = new char[length+1];
-    utils::delete_helper<char> dh(dst, true); // 自动调用delete []dst
-    net::CNetUtils::host2net(str, dst, length);
+    utils::DeleteHelper<char> dh(dst, true); // 自动调用delete []dst
+    net::CUtils::host2net(str, dst, length);
     dst[length] = '\0';
     printf("%s ==> %s\n",str, dst);
 }
@@ -67,16 +68,16 @@ void test_get_ip_address()
     //////////////////////////////////
 
     std::string errinfo;
-    net::CNetUtils::TStringIPArray ip_array;
+    net::string_ip_array_t ip_array;
     std::string hostname = "www.sina.com.cn";
     
-    if (!net::CNetUtils::get_ip_address(hostname.c_str(), ip_array, errinfo))
+    if (!net::CUtils::get_ip_address(hostname.c_str(), ip_array, errinfo))
     {
         fprintf(stderr, "get_ip_address error: %s.\n", errinfo.c_str());
     }
     else
     {
-        for (net::CNetUtils::TStringIPArray::size_type i=0; i<ip_array.size(); ++i)
+        for (net::string_ip_array_t::size_type i=0; i<ip_array.size(); ++i)
         {
             fprintf(stdout, "%s ===> %s\n", hostname.c_str(), ip_array[i].c_str());
         }

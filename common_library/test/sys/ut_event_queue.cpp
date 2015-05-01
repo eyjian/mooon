@@ -21,11 +21,10 @@
 #include <sys/event_queue.h>
 #include <utils/array_queue.h>
 #include <sys/datetime_utils.h>
-using namespace mooon;
-SYS_NAMESPACE_USE
+MOOON_NAMESPACE_USE
 
 // 定义处理消息线程，由主线程向它发消息
-class CMyThread: public CThread
+class CMyThread: public sys::CThread
 {
 public:
     // 设置队列大小为100
@@ -39,9 +38,9 @@ public:
     void push_message(int m)
     {
         if (_queue.push_back(m))
-            printf("push %d SUCCESS by thread %u\n", m, CThread::get_current_thread_id());
+            printf("push %d SUCCESS by thread %u\n", m, sys::CThread::get_current_thread_id());
         else
-            printf("push %d FAILURE by thread %u\n", m, CThread::get_current_thread_id());
+            printf("push %d FAILURE by thread %u\n", m, sys::CThread::get_current_thread_id());
     }
     
 private:
@@ -53,11 +52,11 @@ private:
             if (is_stop() && _queue.is_empty()) break;
             
             int m;
-            printf("before pop ==> %s\n", CDatetimeUtils::get_current_time().c_str());
+            printf("before pop ==> %s\n", sys::CDatetimeUtils::get_current_time().c_str());
             if (_queue.pop_front(m))
-                printf("pop %d ==> %s\n", m, CDatetimeUtils::get_current_time().c_str());
+                printf("pop %d ==> %s\n", m, sys::CDatetimeUtils::get_current_time().c_str());
             else
-                printf("pop NONE ==> %s\n", CDatetimeUtils::get_current_time().c_str());
+                printf("pop NONE ==> %s\n", sys::CDatetimeUtils::get_current_time().c_str());
         }
     }
 
@@ -70,7 +69,7 @@ int main()
 {
     CMyThread* thread = new CMyThread;
     // 使用引用计数帮助类，以协助自动销毁thread
-    CRefCountHelper<CMyThread> ch(thread);
+    sys::CRefCountHelper<CMyThread> ch(thread);
 
     try
     {
@@ -79,12 +78,12 @@ int main()
         // 给线程发消息
         for (int i=0; i<10; ++i)
         {
-            sys::CUtil::millisleep(2000);
+            sys::CUtils::millisleep(2000);
             thread->push_message(i);
         }        
 
         // 让CMyThread超时
-        sys::CUtil::millisleep(3000);
+        sys::CUtils::millisleep(3000);
 
         // 停止线程
         thread->stop();

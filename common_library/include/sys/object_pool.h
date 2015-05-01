@@ -117,7 +117,7 @@ public:
     /** 销毁对象池 */
     void destroy()
     {
-        delete []_object_queue;        
+        delete _object_queue;
         delete []_object_array;
 
         _object_queue = NULL;
@@ -154,7 +154,7 @@ public:
     }
 
     /***
-      * 将一个对象归还给对象池      
+      * 将一个对象归还给对象池
       * @object: 指向待归还给对象池的对象指针，如果对象并不是对象池中的对象，则delete它，
       *          否则将它放回对象池，并将是否在对象池中的状态设置为true
       */

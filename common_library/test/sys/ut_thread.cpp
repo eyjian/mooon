@@ -1,20 +1,18 @@
 #include <sys/thread.h>
 #include <sys/utils.h>
-SYS_NAMESPACE_USE
+MOOON_NAMESPACE_USE
 
 // 所有非线程池线程都应当是CThread的子类
 // Exam线程CDemoThread运行后，每隔1秒往标准输出打印一行“continue...”
-class CExamThread: public CThread
+class CExamThread: public sys::CThread
 {
 private:
 	virtual void run();
-	virtual bool before_start();
+	virtual void before_start() throw (utils::CException, sys::CSyscallException);
 };
 
-bool CExamThread::before_start()
+void CExamThread::before_start() throw (utils::CException, sys::CSyscallException)
 {
-    // start的返回值和before_start的相同，一般用于线程启动前的初始化
-	return true;
 }
 
 // 线程每秒钟往标准输出打印一次continue...
@@ -49,7 +47,7 @@ int main()
 	}
 	
 	// 主线程睡眠10秒钟
-	CUtils::millisleep(10000);
+	sys::CUtils::millisleep(10000);
 	
 	thread->stop(); // 停止并待线程退出
 	thread->dec_refcount(); // 记得增加了引用计数，就需要在使用完后，相应的减引用计数

@@ -60,7 +60,7 @@ void CTcpWaiter::set_self(const ip_address_t& self_ip, port_t self_port)
     _self_port = self_port;
 }
 
-void CTcpWaiter::attach(int fd, const ip_address_t& peer_ip, port_t peer_port) 
+void CTcpWaiter::attach(int fd, const ip_address_t& peer_ip, port_t& peer_port)
 { 
 	set_fd(fd); 
     _peer_ip = peer_ip;

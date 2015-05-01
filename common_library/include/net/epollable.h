@@ -27,6 +27,7 @@
 #include <netinet/tcp.h>
 #include "net/ip_address.h"
 #include "sys/ref_countable.h"
+#include "sys/syscall_exception.h"
 NET_NAMESPACE_BEGIN
 
 /***

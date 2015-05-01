@@ -36,11 +36,13 @@ public:
       * @queue_max: 队列最大可容纳的元素个数
       * @exception: 如果出错，则抛出CSyscallException异常
       */
-    CEpollableQueue(uint32_t queue_max)
+    CEpollableQueue(uint32_t queue_max) throw (sys::CSyscallException)
         :_raw_queue(queue_max)
         ,_push_waiter_number(0)
     {
-        if (-1 == pipe(_pipefd)) throw sys::CSyscallException(errno, __FILE__, __LINE__);
+        if (-1 == pipe(_pipefd))
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "pipe");
+
         set_fd(_pipefd[0]);
     }
     
@@ -141,7 +143,7 @@ public:
       * @return: 如果队列已经满，则返回false，否则插入成功并返回true
       * @exception: 如果出错，则抛出CSyscallException异常
       */
-    bool push_back(DataType elem, uint32_t millisecond=0) 
+    bool push_back(DataType elem, uint32_t millisecond=0) throw (sys::CSyscallException)
 	{
         sys::LockHelper<sys::CLock> lock_helper(_lock);
         while (_raw_queue.is_full())
@@ -159,11 +161,11 @@ public:
 
         char c = 'x';
         _raw_queue.push_back(elem);
-        // write还有相当于signal的作用        
+        // write还有相当于signal的作用
         while (-1 == write(_pipefd[1], &c, sizeof(c)))
         {
             if (errno != EINTR)
-                throw sys::CSyscallException(errno, __FILE__, __LINE__);
+                THROW_SYSCALL_EXCEPTION(NULL, errno, "write");
         }
 
         return true;
@@ -177,17 +179,17 @@ public:
 	}
 
 private:
-    bool do_pop_front(DataType& elem)
+    bool do_pop_front(DataType& elem) throw (sys::CSyscallException)
     {            
         // 没有数据，也不阻塞，如果需要阻塞，应当使用事件队列CEventQueue
         if (_raw_queue.is_empty()) return false;
 
         char c;
-        // read还有相当于CEvent::wait的作用        
+        // read还有相当于CEvent::wait的作用
         while (-1 == read(_pipefd[0], &c, sizeof(c)))
         {
             if (errno != EINTR)
-                throw sys::CSyscallException(errno, __FILE__, __LINE__);
+                THROW_SYSCALL_EXCEPTION(NULL, errno, "read");
         }
 
         elem = _raw_queue.pop_front();
@@ -198,7 +200,7 @@ private:
     }
 
 private:
-    int _pipefd[2]; /** 管道句柄 */    
+    int _pipefd[2]; /** 管道句柄 */
     sys::CEvent _event;
     mutable sys::CLock _lock;    
     RawQueueClass _raw_queue; /** 普通队列实例 */

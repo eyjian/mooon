@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,11 +16,11 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include "net/net_utils.h"
-#include "sys/sys_utils.h"
+#include "net/utils.h"
+#include "sys/utils.h"
 #include "net/tcp_client.h"
 #include "utils/string_utils.h"
-using namespace mooon;
+MOOON_NAMESPACE_USE
 
 // 需要两个参数：
 // argv[1]: 连接IP地址
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     if (argc != 3)
     {
         fprintf(stderr, "usage: %s ip port\n"
-            , sys::CUtil::get_program_short_name());
+            , sys::CUtils::get_program_short_name());
         exit(1);
     }
              
