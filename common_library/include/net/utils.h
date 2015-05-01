@@ -18,10 +18,14 @@
  */
 #ifndef MOOON_NET_UTILS_H
 #define MOOON_NET_UTILS_H
-#include <poll.h>
-#include <vector>
 #include "net/config.h"
 #include "sys/syscall_exception.h"
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <poll.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <vector>
 NET_NAMESPACE_BEGIN
 
 /***
@@ -91,7 +95,7 @@ public:
       * @source: 需要转换的主机字节序源数据
       * @result: 存放转换后的网络字节序结果数据
       * @length: 需要转换的字节长度
-      */    
+      */
     static void host2net(const void* source, void* result, size_t length);
 
     /***
@@ -237,6 +241,10 @@ public:
       */
     static bool timed_poll(int fd, int events_requested, int milliseconds, int* events_returned=NULL);
 };
+
+extern std::string to_string(const struct in_addr& sin_addr);
+extern std::string to_string(const sockaddr_in& addr);
+extern std::string ip2string(uint32_t ip);
 
 NET_NAMESPACE_END
 #endif // MOOON_NET_UTILS_H
