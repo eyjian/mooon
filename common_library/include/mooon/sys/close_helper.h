@@ -35,24 +35,32 @@ public:
       * 构造一个CloseHelper对象
       * @obj: 需要CloseHelper自动调用其公有close方法的对象(非指针)
       */
-    CloseHelper(ClassType& obj)
+    CloseHelper(ClassType* obj)
         :_obj(obj)
     {
     }
-    
+
     /** 析构函数，用于自动调用对象的close方法 */
     ~CloseHelper()
     {
-        _obj.close();
+        if (_obj != NULL)
+            _obj->close();
     }
 
     ClassType* operator ->()
     {
-        return &_obj;
+        return _obj;
     }
- 
+
+    ClassType* release()
+    {
+        ClassType* obj = _obj;
+        _obj = NULL;
+        return obj;
+    }
+
 private:
-    ClassType& _obj;
+    ClassType* _obj;
 };
  
 /***
@@ -62,7 +70,7 @@ template <>
 class CloseHelper<int>
 {
 public:
-    CloseHelper<int>(int& fd)
+    CloseHelper<int>(int fd)
         :_fd(fd)
     {
     }
@@ -71,14 +79,28 @@ public:
     ~CloseHelper<int>()
     {
         if (_fd != -1)
-        {
             ::close(_fd);
-            _fd = -1;
-        }
     }
- 
+
+    operator int() const
+    {
+        return _fd;
+    }
+
+    int get() const
+    {
+        return _fd;
+    }
+
+    int release()
+    {
+        int fd = _fd;
+        _fd = -1;
+        return fd;
+    }
+
 private:
-    int& _fd;
+    int _fd;
 };
  
 /***
@@ -88,7 +110,7 @@ template <>
 class CloseHelper<FILE*>
 {
 public:
-    CloseHelper<FILE*>(FILE*& fp)
+    CloseHelper<FILE*>(FILE* fp)
         :_fp(fp)
     {
     }
@@ -97,14 +119,23 @@ public:
     ~CloseHelper<FILE*>()
     {
         if (_fp != NULL)
-        {
             fclose(_fp);
-            _fp = NULL;
-        }
+    }
+
+    operator FILE*() const
+    {
+        return _fp;
+    }
+
+    FILE* release()
+    {
+        FILE* fp = _fp;
+        _fp = NULL;
+        return fp;
     }
  
 private:
-    FILE*& _fp;
+    FILE* _fp;
 };
 
 /***
