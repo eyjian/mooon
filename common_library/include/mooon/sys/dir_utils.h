@@ -44,13 +44,13 @@ public:
     static void list(const std::string& dirpath
                    , std::vector<std::string>* subdir_names
                    , std::vector<std::string>* file_names
-                   , std::vector<std::string>* link_names=NULL);
+                   , std::vector<std::string>* link_names=NULL) throw (CSyscallException);
 
     /***
       * 删除一个空目录
       * @exception 如果发生错误，则抛出sys::CSyscallException异常
       */
-    static void remove(const std::string& dirpath);
+    static void remove(const std::string& dirpath) throw (CSyscallException);
 };
 
 SYS_NAMESPACE_END

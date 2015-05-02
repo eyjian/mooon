@@ -52,7 +52,7 @@ typedef enum
   * @return: 如果具有指定的标志值，则返回true，否则返回false
   * @exception: 如果发生错误，则抛出CSyscallException异常
   */
-bool has_the_flags(int fd, int flags);
+bool has_the_flags(int fd, int flags) throw (sys::CSyscallException);
 
 /***
   * 判断指定fd是否为非阻塞的
@@ -60,7 +60,7 @@ bool has_the_flags(int fd, int flags);
   * @return: 如果fd为非阻塞的，则返回true，否则返回false
   * @exception: 如果发生错误，则抛出CSyscallException异常
   */
-bool is_nonblock(int fd);
+bool is_nonblock(int fd) throw (sys::CSyscallException);
 
 /***
   * 判断指定fd是否为非延迟的
@@ -68,7 +68,7 @@ bool is_nonblock(int fd);
   * @return: 如果fd为非延迟的，则返回true，否则返回false
   * @exception: 如果发生错误，则抛出CSyscallException异常
   */
-bool is_nodelay(int fd);
+bool is_nodelay(int fd) throw (sys::CSyscallException);
 
 /***
   * 为指定的fd增加或删除指定的标志
@@ -77,13 +77,13 @@ bool is_nodelay(int fd);
   * @flags: 标志值
   * @exception: 如果发生错误，则抛出CSyscallException异常
   */
-void set_socket_flags(int fd, bool yes, int flags);
+void set_socket_flags(int fd, bool yes, int flags) throw (sys::CSyscallException);
 
 /***
   * 设置TCP选项（TCP_CORK，TCP_NODELAY）
   * @exception: 如果发生错误，则抛出CSyscallException异常
   */
-void set_tcp_option(int fd, bool yes, int option);
+void set_tcp_option(int fd, bool yes, int option) throw (sys::CSyscallException);
 
 /***
   * 为指定fd的增加或删除非阻塞标志
@@ -91,7 +91,7 @@ void set_tcp_option(int fd, bool yes, int option);
   * @yes: 是否设置为非阻塞标志，如果为true，则设置为非阻塞，否则设置为阻塞
   * @exception: 如果发生错误，则抛出CSyscallException异常
   */
-void set_nonblock(int fd, bool yes);
+void set_nonblock(int fd, bool yes) throw (sys::CSyscallException);
 
 /***
   * 为指定fd的增加或删除非延迟标志
@@ -99,11 +99,11 @@ void set_nonblock(int fd, bool yes);
   * @yes: 是否设置为非延迟标志，如果为true，则设置为非延迟，否则设置为延迟
   * @exception: 如果发生错误，则抛出CSyscallException异常
   */
-void set_nodelay(int fd, bool yes);
+void set_nodelay(int fd, bool yes) throw (sys::CSyscallException);
 
 /** 关闭指定的句柄
   */
-void close_fd(int fd);
+void close_fd(int fd) throw ();
 
 /***
   * 得到已经发送的文件总字节数

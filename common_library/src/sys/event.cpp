@@ -21,26 +21,26 @@
 #include "sys/event.h"
 SYS_NAMESPACE_BEGIN
 
-CEvent::CEvent()
+CEvent::CEvent() throw (CSyscallException)
 {
     int errcode = pthread_cond_init(&_cond, NULL);
     if (errcode != 0)
         THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_cond_init");
 }
 
-CEvent::~CEvent()
+CEvent::~CEvent() throw ()
 {
     pthread_cond_destroy(&_cond);
 }
 
-void CEvent::wait(CLock& lock)
+void CEvent::wait(CLock& lock) throw (CSyscallException)
 {
     int errcode = pthread_cond_wait(&_cond, &lock._mutex);
     if (errcode != 0)
         THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_cond_wait");
 }
 
-bool CEvent::timed_wait(CLock& lock, uint32_t millisecond)
+bool CEvent::timed_wait(CLock& lock, uint32_t millisecond) throw (CSyscallException)
 {
 	int errcode;
 
@@ -85,14 +85,14 @@ bool CEvent::timed_wait(CLock& lock, uint32_t millisecond)
     THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_cond_timedwait");
 }
 
-void CEvent::signal()
+void CEvent::signal() throw (CSyscallException)
 {
     int errcode = pthread_cond_signal(&_cond);
     if (errcode != 0)
         THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_cond_signal");
 }
 
-void CEvent::broadcast()
+void CEvent::broadcast() throw (CSyscallException)
 {
     int errcode = pthread_cond_broadcast(&_cond);
     if (errcode != 0)

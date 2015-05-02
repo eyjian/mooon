@@ -19,7 +19,7 @@
 #include "sys/read_write_lock.h"
 SYS_NAMESPACE_BEGIN
 
-CReadWriteLock::CReadWriteLock()
+CReadWriteLock::CReadWriteLock() throw (CSyscallException)
 {
 	int errcode = pthread_rwlock_init(&_rwlock, NULL);
 	if (errcode != 0)
@@ -29,33 +29,33 @@ CReadWriteLock::CReadWriteLock()
 	}
 }
 
-CReadWriteLock::~CReadWriteLock()
+CReadWriteLock::~CReadWriteLock() throw ()
 {
 	pthread_rwlock_destroy(&_rwlock);
 }
 
-void CReadWriteLock::lock_read()
+void CReadWriteLock::lock_read() throw (CSyscallException)
 {
 	int errcode = pthread_rwlock_rdlock(&_rwlock);
 	if (errcode != 0)
 	    THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_rwlock_rdlock");
 }
 
-void CReadWriteLock::lock_write()
+void CReadWriteLock::lock_write() throw (CSyscallException)
 {
 	int errcode = pthread_rwlock_wrlock(&_rwlock);
 	if (errcode != 0)
 	    THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_rwlock_wrlock");
 }
 
-void CReadWriteLock::unlock()
+void CReadWriteLock::unlock() throw (CSyscallException)
 {
 	int errcode = pthread_rwlock_unlock(&_rwlock);
 	if (errcode != 0)
 	    THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_rwlock_unlock");
 }
 
-bool CReadWriteLock::try_lock_read()
+bool CReadWriteLock::try_lock_read() throw (CSyscallException)
 {
 	int errcode = pthread_rwlock_tryrdlock(&_rwlock);
 
@@ -65,7 +65,7 @@ bool CReadWriteLock::try_lock_read()
 	THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_rwlock_tryrdlock");
 }
 
-bool CReadWriteLock::try_lock_write()
+bool CReadWriteLock::try_lock_write() throw (CSyscallException)
 {
 	int errcode = pthread_rwlock_trywrlock(&_rwlock);
 	
@@ -75,7 +75,7 @@ bool CReadWriteLock::try_lock_write()
 	THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_rwlock_trywrlock");
 }
 
-bool CReadWriteLock::timed_lock_read(uint32_t millisecond)
+bool CReadWriteLock::timed_lock_read(uint32_t millisecond) throw (CSyscallException)
 {
 	int errcode;
 
@@ -100,7 +100,7 @@ bool CReadWriteLock::timed_lock_read(uint32_t millisecond)
 	THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_rwlock_timedrdlock");
 }
 
-bool CReadWriteLock::timed_lock_write(uint32_t millisecond)
+bool CReadWriteLock::timed_lock_write(uint32_t millisecond) throw (CSyscallException)
 {
 	int errcode;
 

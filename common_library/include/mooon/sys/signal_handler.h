@@ -50,21 +50,21 @@ public:
      * @signo 需要被忽略的信号
      * 调用成功返回true，否则返回false，出错原因可通过errno取得
      */
-    static bool ignore_signal(int signo);
+    static bool ignore_signal(int signo) throw ();
 
     /***
      * 阻塞指定的信号
      * @signo 需要被阻塞的信号
      * 调用成功返回true，否则返回false，出错原因可通过errno取得
      */
-    static bool block_signal(int signo);
+    static bool block_signal(int signo) throw ();
 
     /***
      * 等待信号发生
      * ，如果没有信号发生，则调用阻塞，直到有信号发生时，才会解除阻塞立即返回
      * 出错返回-1，出错原因可通过errno取得，调用成功返回非-1值
      */
-    static int wait_signal();
+    static int wait_signal() throw ();
 
     /***
      * 等待信号
@@ -83,7 +83,7 @@ public:
             void (*on_terminated)(),
             void (*on_child_end)(pid_t child_pid, int child_exited_status),
             void (*on_signal_handler)(int signo),
-            void (*on_exception)(int errcode));
+            void (*on_exception)(int errcode)) throw ();
 
 private:
     static sigset_t _sigset;
@@ -191,12 +191,12 @@ void on_signal_handler(int signo)
 sigset_t CSignalHandler::_sigset;
 std::vector<int> CSignalHandler::_signo_array;
 
-inline bool CSignalHandler::ignore_signal(int signo)
+inline bool CSignalHandler::ignore_signal(int signo) throw ()
 {
     return signal(signo, SIG_IGN) != SIG_ERR;
 }
 
-inline bool CSignalHandler::block_signal(int signo)
+inline bool CSignalHandler::block_signal(int signo) throw ()
 {
     if (_signo_array.empty())
     {
@@ -225,7 +225,7 @@ inline bool CSignalHandler::block_signal(int signo)
     }
 }
 
-inline int CSignalHandler::wait_signal()
+inline int CSignalHandler::wait_signal() throw ()
 {
     int signo; // 发生的信号
     sigset_t sigset;
@@ -259,7 +259,7 @@ inline void CSignalHandler::handle(
         void (*on_terminated)(),
         void (*on_child_end)(pid_t child_pid, int child_exited_status),
         void (*on_signal_handler)(int signo),
-        void (*on_exception)(int errcode))
+        void (*on_exception)(int errcode)) throw ()
 {
     int signo = wait_signal();
     if (-1 == signo)

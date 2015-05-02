@@ -32,26 +32,26 @@ private:
     class CPoolThreadHelper: public CThread
     {
     public:
-        CPoolThreadHelper(CPoolThread* pool_thread);  
-        void millisleep(int milliseconds);
+        CPoolThreadHelper(CPoolThread* pool_thread) throw (CSyscallException);
+        void millisleep(int milliseconds) throw (CSyscallException);
 
     private:
         virtual void run();
         virtual void before_start() throw (utils::CException, CSyscallException);
-        virtual void before_stop();
+        virtual void before_stop() throw (utils::CException, CSyscallException);
 
     private:		
         CPoolThread* _pool_thread;
     };
 
 protected: // 禁止直接创建CPoolThread的实例
-    CPoolThread();
-    virtual ~CPoolThread();
+    CPoolThread() throw (utils::CException, CSyscallException);
+    virtual ~CPoolThread() throw ();
     /***
       * 毫秒级sleep，线程可以调用它进入睡眠状态，并且可以通过调用wakeup唤醒，
       * 请注意只本线程可以调用此函数，其它线程调用无效
       */
-    void do_millisleep(int milliseconds);
+    void do_millisleep(int milliseconds) throw (CSyscallException);
 
 private:    
     /***
@@ -63,24 +63,22 @@ private:
       * 在run之前被调用
       * @return 如果返回true，则会进入run，否则线程直接退出
       */
-    virtual bool before_run() { return true; }
+    virtual bool before_run() throw () { return true; }
 
     /***
       * 在run之后被调用
       */
-    virtual void after_run() { }
+    virtual void after_run() throw () { }
 
     /***
       * start执行前被调用
-      * @return 如果返回false，则会导致start抛出CSyscallException异常，
-      *  但此时的错误码为0；否则如果返回true，则执行start
       */
-    virtual bool before_start() { return true; }   
+    virtual void before_start() throw (utils::CException, CSyscallException) {}
 
     /***
       * stop执行前可安插的动作
       */
-    virtual void before_stop() {}
+    virtual void before_stop() throw (utils::CException, CSyscallException) {}
 
     /** 设置线程在池中的顺序号 */
     void set_index(uint16_t index) { _index = index; }    
@@ -94,31 +92,31 @@ public:
       * 唤醒池线程，池线程启动后，都会进入睡眠状态，
       * 直接调用wakeup将它唤醒
       */
-    void wakeup();
+    void wakeup() throw (CSyscallException);
 
     /***
       * 得到池线程在线程池中的序号，序号从0开始，
       * 且连续，但总是小于线程个数值。
       */
-    uint16_t get_index() const { return _index; }
+    uint16_t get_index() const throw () { return _index; }
 
     /** 设置线程栈大小，应当在before_start中设置。
       * @stack_size: 栈大小字节数
       * @exception: 不抛出异常
       */
-    void set_stack_size(size_t stack_size);
+    void set_stack_size(size_t stack_size) throw ();
     
     /** 得到线程栈大小字节数
       * @exception: 如果失败，则抛出CSyscallException异常
       */
-    size_t get_stack_size() const;
+    size_t get_stack_size() const throw (CSyscallException);
 
     /** 得到本线程号 */
-    uint32_t get_thread_id() const;
+    uint32_t get_thread_id() const throw ();
 
 private:
-    void start();  /** 仅供CThreadPool调用 */
-    void stop();   /** 仅供CThreadPool调用 */
+    void start() throw (CSyscallException);  /** 仅供CThreadPool调用 */
+    void stop() throw (CSyscallException);   /** 仅供CThreadPool调用 */
 	
 private:	
     uint16_t _index;  /** 池线程在池中的位置 */

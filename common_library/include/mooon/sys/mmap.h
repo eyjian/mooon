@@ -40,7 +40,7 @@ public:
       * @return: 返回指向mmap_t结构的指针，返回值总是不会为NULL
       * @exception: 出错抛出CSyscallException异常
       */
-    static mmap_t* map_read(int fd, size_t size=0, size_t offset=0, size_t size_max=0);
+    static mmap_t* map_read(int fd, size_t size=0, size_t offset=0, size_t size_max=0) throw (CSyscallException);
 
     /** 以只读方式将文件映射到内存
       * @filename: 文件名，mmap_t结构的fd成员为打开此文件的句柄
@@ -48,7 +48,7 @@ public:
       * @return: 返回指向mmap_t结构的指针，返回值总是不会为NULL
       * @exception: 出错抛出CSyscallException异常
       */
-    static mmap_t* map_read(const char* filename, size_t size_max=0);
+    static mmap_t* map_read(const char* filename, size_t size_max=0) throw (CSyscallException);
 
     /** 以只写方式将文件映射到内存
       * @fd: 文件句柄，调用者需要负责关闭此句柄，mmap_t结构的fd成员为它的负值
@@ -58,7 +58,7 @@ public:
       * @return: 返回指向mmap_t结构的指针，返回值总是不会为NULL
       * @exception: 出错抛出CSyscallException异常
       */
-    static mmap_t* map_write(int fd, size_t size=0, size_t offset=0, size_t size_max=0);
+    static mmap_t* map_write(int fd, size_t size=0, size_t offset=0, size_t size_max=0) throw (CSyscallException);
 
     /** 以只写方式将文件映射到内存
       * @filename: 文件名，mmap_t结构的fd成员为打开此文件的句柄
@@ -66,7 +66,7 @@ public:
       * @return: 返回指向mmap_t结构的指针，返回值总是不会为NULL
       * @exception: 出错抛出CSyscallException异常
       */
-    static mmap_t* map_write(const char* filename, size_t size_max=0);
+    static mmap_t* map_write(const char* filename, size_t size_max=0) throw (CSyscallException);
 
     /** 以读和写方式将文件映射到内存
       * @fd: 文件句柄，调用者需要负责关闭此句柄，mmap_t结构的fd成员为它的负值
@@ -76,7 +76,7 @@ public:
       * @return: 返回指向mmap_t结构的指针，返回值总是不会为NULL
       * @exception: 出错抛出CSyscallException异常
       */
-    static mmap_t* map_both(int fd, size_t size=0, size_t offset=0, size_t size_max=0);
+    static mmap_t* map_both(int fd, size_t size=0, size_t offset=0, size_t size_max=0) throw (CSyscallException);
 
     /** 以读和写方式将文件映射到内存
       * @filename: 文件名，mmap_t结构的fd成员为打开此文件的句柄
@@ -84,14 +84,14 @@ public:
       * @return: 返回指向mmap_t结构的指针，返回值总是不会为NULL
       * @exception: 出错抛出CSyscallException异常
       */
-    static mmap_t* map_both(const char* filename, size_t size_max=0);
+    static mmap_t* map_both(const char* filename, size_t size_max=0) throw (CSyscallException);
 
     /***
       * 释放已创建的内存映射，如果是通过指定文件名映射的，则关闭在mmap中打开的句柄
       * @ptr: 已创建的内存映射
       * @exception: 出错抛出CSyscallException异常
       */
-    static void unmap(mmap_t* ptr);
+    static void unmap(mmap_t* ptr) throw (CSyscallException);
 
     /***
       * 同步地将内存刷新到磁盘
@@ -102,7 +102,7 @@ public:
       * @invalid: 是否标识内存为无效
       * @exception: 出错抛出CSyscallException异常
       */
-    static void sync_flush(mmap_t* ptr, size_t offset=0, size_t length=0, bool invalid=false);
+    static void sync_flush(mmap_t* ptr, size_t offset=0, size_t length=0, bool invalid=false) throw (CSyscallException);
 
     /***
       * 异步地将内存刷新到磁盘
@@ -113,10 +113,10 @@ public:
       * @invalid: 是否标识内存为无效
       * @exception: 出错抛出CSyscallException异常
       */
-    static void async_flush(mmap_t* ptr, size_t offset=0, size_t length=0, bool invalid=false);
+    static void async_flush(mmap_t* ptr, size_t offset=0, size_t length=0, bool invalid=false) throw (CSyscallException);
 
 private:
-    static mmap_t* do_map(int prot, int fd, size_t size, size_t offset, size_t size_max, bool byfd);
+    static mmap_t* do_map(int prot, int fd, size_t size, size_t offset, size_t size_max, bool byfd) throw (CSyscallException);
 };
 
 /***

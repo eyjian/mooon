@@ -30,32 +30,32 @@ class CPoolObject
 {
 public:
     /** 构造一个池对象 */
-    CPoolObject()
+    CPoolObject() throw ()
         :_in_pool(false)
         ,_index(0)
     {
     }
 
     /** 设置池对象的在池对象数组中的序号，0表示不是池中的对象 */
-    void set_index(uint32_t index)
+    void set_index(uint32_t index) throw ()
     {
         _index = index;
     }
 
     /** 得到池对象的在池对象数组中的序号 */
-    uint32_t get_index() const
+    uint32_t get_index() const throw ()
     {
         return _index;
     }
 
     /** 设置对象是否在池中的状态 */
-    void set_in_pool(bool in_pool)
+    void set_in_pool(bool in_pool) throw ()
     {
         _in_pool = in_pool;
     }
 
     /** 判断池对象是否在池中 */
-    bool is_in_pool() const
+    bool is_in_pool() const throw ()
     {
         return _in_pool;
     }
@@ -77,7 +77,7 @@ public:
       * 构造一个非线程安全的裸对象池
       * @use_heap: 当对象池中无对象时，是否从堆中创建对象
       */
-    CRawObjectPool(bool use_heap)
+    CRawObjectPool(bool use_heap) throw ()
         :_use_heap(use_heap)
         ,_object_number(0)
         ,_avaliable_number(0)
@@ -87,7 +87,7 @@ public:
     }
 
     /** 析构裸对象池 */
-    ~CRawObjectPool()
+    ~CRawObjectPool() throw ()
     {     
         destroy();
     }
@@ -96,7 +96,7 @@ public:
       * 创建对象池
       * @object_number: 需要创建的对象个数
       */
-    void create(uint32_t object_number)
+    void create(uint32_t object_number) throw ()
     {
         _object_number = object_number;
         _avaliable_number = _object_number;
@@ -115,7 +115,7 @@ public:
     }
 
     /** 销毁对象池 */
-    void destroy()
+    void destroy() throw ()
     {
         delete _object_queue;
         delete []_object_array;
@@ -130,7 +130,7 @@ public:
       *          如果对象池为空，且不允许从堆中创建对象，则返回NULL，
       *          如果对象池不为空，则从池中取一个对象，并返回指向这个对象的指针
       */
-    ObjectClass* borrow()
+    ObjectClass* borrow() throw ()
     {
         ObjectClass* object = NULL;
         
@@ -158,7 +158,7 @@ public:
       * @object: 指向待归还给对象池的对象指针，如果对象并不是对象池中的对象，则delete它，
       *          否则将它放回对象池，并将是否在对象池中的状态设置为true
       */
-    void pay_back(ObjectClass* object)
+    void pay_back(ObjectClass* object) throw ()
     {
         // 如果是对象池中的对象
         if (0 == object->get_index())
@@ -180,13 +180,13 @@ public:
     }
 
     /** 得到总的对象个数，包括已经借出的和未借出的 */
-    uint32_t get_pool_size() const
+    uint32_t get_pool_size() const throw ()
     {
         return _object_number;
     }
     
     /** 得到对象池中还未借出的对象个数 */
-    volatile uint32_t get_avaliable_number() const
+    volatile uint32_t get_avaliable_number() const throw ()
     {
         return _avaliable_number;
     }
@@ -211,7 +211,7 @@ public:
       * 构造一个线程安全的裸对象池
       * @use_heap: 当对象池中无对象时，是否从堆中创建对象
       */
-    CThreadObjectPool(bool use_heap)
+    CThreadObjectPool(bool use_heap) throw (CSyscallException)
         :_raw_object_pool(use_heap)
     {        
     }   
@@ -220,42 +220,42 @@ public:
       * 创建对象池
       * @object_number: 需要创建的对象个数
       */
-    void create(uint32_t object_number)
+    void create(uint32_t object_number) throw (CSyscallException)
     {
         LockHelper<CLock> lock_helper(_lock);
         _raw_object_pool.create(object_number);
     }
 
     /** 销毁对象池 */
-    void destroy()
+    void destroy() throw (CSyscallException)
     {
         LockHelper<CLock> lock_helper(_lock);
         _raw_object_pool.destroy();
     }
 
     /** 向对象池借用一个对象 */
-    ObjectClass* borrow()
+    ObjectClass* borrow() throw (CSyscallException)
     {
         LockHelper<CLock> lock_helper(_lock);
         return _raw_object_pool.borrow();
     }
 
     /** 将一个对象归还给对象池 */
-    void pay_back(ObjectClass* object)
+    void pay_back(ObjectClass* object) throw (CSyscallException)
     {
         LockHelper<CLock> lock_helper(_lock);
         _raw_object_pool.pay_back(object);
     }
 
     /** 得到总的对象个数，包括已经借出的和未借出的 */
-    uint32_t get_pool_size() const
+    uint32_t get_pool_size() const throw (CSyscallException)
     {
         LockHelper<CLock> lock_helper(_lock);
         return _raw_object_pool.get_pool_size();
     }
     
     /** 得到对象池中还未借出的对象个数 */
-    volatile uint32_t get_avaliable_number() const
+    volatile uint32_t get_avaliable_number() const throw (CSyscallException)
     {
         LockHelper<CLock> lock_helper(_lock);
         return _raw_object_pool.get_avaliable_number();

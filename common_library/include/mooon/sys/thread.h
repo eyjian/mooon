@@ -31,12 +31,11 @@ SYS_NAMESPACE_BEGIN
  */
 class CThread: public CRefCountable
 {
-	friend void* thread_proc(void* thread_param);
-
-private:
+public:
     /** 线程执行体函数，子类必须实现该函数，此函数内的代码半在一个独立的线程中执行 */
 	virtual void run() = 0;
     
+private:
     /** 在启动线程之前被调用的回调函数，如果返回false，则会导致start调用也返回false。
       * 可以重写该函数，将线程启动之前的逻辑放在这里。
       */
@@ -45,21 +44,21 @@ private:
     /***
       * stop执行前可安插的动作
       */
-    virtual void before_stop() {}
+    virtual void before_stop() throw (utils::CException, CSyscallException) {}
 
 public:
     /** 得到当前线程号 */
-    static uint32_t get_current_thread_id();
+    static uint32_t get_current_thread_id() throw ();
 
 public:
-	CThread();
-	virtual ~CThread();
+	CThread() throw (utils::CException, CSyscallException);
+	virtual ~CThread() throw ();
 
     /** 将_stop成员设置为true，线程可以根据_stop状态来决定是否退出线程
       * @wait_stop: 是否等待线程结束，只有当线程是可Join时才有效
       * @exception: 当wait_stop为true时，抛出和join相同的异常，否则不抛异常
       */
-    virtual void stop(bool wait_stop=true);
+    virtual void stop(bool wait_stop=true) throw (utils::CException, CSyscallException);
 
     /** 启动线程
       * @detach: 是否以可分离模式启动线程
@@ -72,12 +71,12 @@ public:
       * @stack_size: 栈大小字节数
       * @exception: 不抛出异常
       */
-    void set_stack_size(size_t stack_size) { _stack_size = stack_size; }
+    void set_stack_size(size_t stack_size) throw () { _stack_size = stack_size; }
     
     /** 得到线程栈大小字节数
       * @exception: 如果失败，则抛出CSyscallException异常
       */
-    size_t get_stack_size() const;
+    size_t get_stack_size() const throw (CSyscallException);
 
     /** 得到本线程号 */
     uint32_t get_thread_id() const { return _thread; }
@@ -85,19 +84,19 @@ public:
     /** 等待线程返回
       * @exception: 如果失败，则抛出CSyscallException异常
       */
-    void join();
+    void join() throw (CSyscallException);
 
     /** 将线程设置为可分离的，
       * 请注意一旦将线程设置为可分离的，则不能再转换为可join。
       * @exception: 如果失败，则抛出CSyscallException异常
       */
-    void detach();
+    void detach() throw (CSyscallException);
 
     /** 返回线程是否可join
       * @return: 如果线程可join则返回true，否则返回false
       * @exception: 如果失败，则抛出CSyscallException异常
       */
-    bool can_join() const;
+    bool can_join() const throw (CSyscallException);
 
     /***
       * 如果线程正处于等待状态，则唤醒
@@ -108,16 +107,16 @@ protected: // 仅供子类使用
     /***
       * 判断线程是否应当退出，默认返回_stop的值
       */
-    virtual bool is_stop() const;
+    virtual bool is_stop() const throw ();
 
     /***
       * 毫秒级sleep，线程可以调用它进入睡眠状态，并且可以通过调用do_wakeup唤醒，
       * 请注意只本线程可以调用此函数，其它线程调用无效
       */
-    void do_millisleep(int milliseconds);
+    void do_millisleep(int milliseconds) throw (CSyscallException);
 
 private:
-    void do_wakeup(bool stop);
+    void do_wakeup(bool stop) throw (CSyscallException);
 
 protected:
     CLock _lock; /** 同步锁，可供子类使用 */

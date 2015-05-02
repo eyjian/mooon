@@ -27,12 +27,12 @@ union semun
     struct seminfo  *__buf;  /* Buffer for IPC_INFO(Linux-specific) */
 };
 
-CSysVSemaphore::CSysVSemaphore()
+CSysVSemaphore::CSysVSemaphore() throw ()
     :_semid(-1)
 {
 }
 
-void CSysVSemaphore::open(const char* path)
+void CSysVSemaphore::open(const char* path) throw (CSyscallException)
 {
     if (NULL == path)
         THROW_SYSCALL_EXCEPTION(NULL, EINVAL, NULL);
@@ -46,7 +46,7 @@ void CSysVSemaphore::open(const char* path)
         THROW_SYSCALL_EXCEPTION(NULL, errno, "semget");
 }
 
-bool CSysVSemaphore::create(const char* path, int16_t init_value, mode_t mode)
+bool CSysVSemaphore::create(const char* path, int16_t init_value, mode_t mode) throw (CSyscallException)
 {
     key_t key = IPC_PRIVATE;
     
@@ -78,7 +78,7 @@ bool CSysVSemaphore::create(const char* path, int16_t init_value, mode_t mode)
     return true;
 }
 
-void CSysVSemaphore::remove()
+void CSysVSemaphore::remove() throw (CSyscallException)
 {
     if (_semid != -1)
     {    
@@ -89,31 +89,31 @@ void CSysVSemaphore::remove()
     }
 }
 
-void CSysVSemaphore::verhoog(uint16_t value)
+void CSysVSemaphore::verhoog(uint16_t value) throw (CSyscallException)
 {
     int op_val = value;
     (void)semaphore_operation(op_val, SEM_UNDO, -1);
 }
 
-void CSysVSemaphore::passeren(uint16_t value)
+void CSysVSemaphore::passeren(uint16_t value) throw (CSyscallException)
 {
     int op_val = value;
     (void)semaphore_operation(-op_val, SEM_UNDO, -1);
 }
 
-bool CSysVSemaphore::try_passeren(uint16_t value)
+bool CSysVSemaphore::try_passeren(uint16_t value) throw (CSyscallException)
 {
     int op_val = value;
     return semaphore_operation(op_val, SEM_UNDO|IPC_NOWAIT, -1);
 }
 
-bool CSysVSemaphore::timed_passeren(uint16_t value, int milliseconds)
+bool CSysVSemaphore::timed_passeren(uint16_t value, int milliseconds) throw (CSyscallException)
 {
     int op_val = value;
     return semaphore_operation(op_val, SEM_UNDO, milliseconds);
 }
 
-bool CSysVSemaphore::semaphore_operation(int value, int flag, int milliseconds)
+bool CSysVSemaphore::semaphore_operation(int value, int flag, int milliseconds) throw (CSyscallException)
 {
     /* If an operation specifies SEM_UNDO, 
        it will be automatically undone when the process terminates.

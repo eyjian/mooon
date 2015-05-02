@@ -22,7 +22,7 @@ SYS_NAMESPACE_BEGIN
 //////////////////////////////////////////////////////////////////////////
 // CPoolThread::CPoolThreadHelper
 
-CPoolThread::CPoolThreadHelper::CPoolThreadHelper(CPoolThread* pool_thread)
+CPoolThread::CPoolThreadHelper::CPoolThreadHelper(CPoolThread* pool_thread) throw (CSyscallException)
     :_pool_thread(pool_thread)
 {
 }
@@ -51,12 +51,12 @@ void CPoolThread::CPoolThreadHelper::before_start() throw (utils::CException, CS
     _pool_thread->before_start();
 }
 
-void CPoolThread::CPoolThreadHelper::before_stop()
+void CPoolThread::CPoolThreadHelper::before_stop() throw (utils::CException, CSyscallException)
 {
     _pool_thread->before_stop();
 }
 
-void CPoolThread::CPoolThreadHelper::millisleep(int milliseconds)
+void CPoolThread::CPoolThreadHelper::millisleep(int milliseconds) throw (CSyscallException)
 {
     do_millisleep(milliseconds);
 }
@@ -64,49 +64,49 @@ void CPoolThread::CPoolThreadHelper::millisleep(int milliseconds)
 //////////////////////////////////////////////////////////////////////////
 // CPoolThread
 
-CPoolThread::CPoolThread()
+CPoolThread::CPoolThread() throw (utils::CException, CSyscallException)
 	:_index(std::numeric_limits<uint16_t>::max())
 {
     _pool_thread_helper = new CPoolThreadHelper(this);
     _pool_thread_helper->inc_refcount(); // 保证生命周期内都是可以用的
 }
 
-CPoolThread::~CPoolThread()
+CPoolThread::~CPoolThread() throw ()
 {
     _pool_thread_helper->dec_refcount();
 }
 
-void CPoolThread::wakeup()
+void CPoolThread::wakeup() throw (CSyscallException)
 {
 	_pool_thread_helper->wakeup();
 }
 
-void CPoolThread::start()
+void CPoolThread::start() throw (CSyscallException)
 {
     _pool_thread_helper->start();
 }
 
-void CPoolThread::stop()
+void CPoolThread::stop() throw (CSyscallException)
 {
     _pool_thread_helper->stop();    
 }
 
-void CPoolThread::set_stack_size(size_t stack_size)
+void CPoolThread::set_stack_size(size_t stack_size) throw ()
 {
     _pool_thread_helper->set_stack_size(stack_size);
 }
 
-size_t CPoolThread::get_stack_size() const
+size_t CPoolThread::get_stack_size() const throw (CSyscallException)
 {
     return _pool_thread_helper->get_stack_size();
 }
 
-uint32_t CPoolThread::get_thread_id() const
+uint32_t CPoolThread::get_thread_id() const throw ()
 {
     return _pool_thread_helper->get_thread_id();
 }
 
-void CPoolThread::do_millisleep(int milliseconds)
+void CPoolThread::do_millisleep(int milliseconds) throw (CSyscallException)
 {
     _pool_thread_helper->millisleep(milliseconds);
 }

@@ -64,7 +64,7 @@ public:
       * @stat_buf: 存储统计信息
       * @exception: 如果发生错误，则抛出CSyscallException异常
       */
-    static void stat_fs(int fd, fs_stat_t& stat_buf);
+    static void stat_fs(int fd, fs_stat_t& stat_buf) throw (CSyscallException);
 
     /***
       * 统计指定路径所指向的文件所在的文件系统，得到该文件系统的数据信息
@@ -72,7 +72,7 @@ public:
       * @stat_buf: 存储统计信息
       * @exception: 如果发生错误，则抛出CSyscallException异常
       */
-    static void stat_fs(const char* path, fs_stat_t& stat_buf);
+    static void stat_fs(const char* path, fs_stat_t& stat_buf) throw (CSyscallException);
 };
 
 /***
@@ -105,23 +105,23 @@ public:
       * @mounted: 是否只针对已经加载的文件系统
       * @fsname_prefix: 所关心的文件系统名前缀，只有匹配的才关心，如果为NULL，则表示所有的
       */
-    CFSTable(bool mounted=true, const char* fsname_prefix=NULL);
-    ~CFSTable();
+    CFSTable(bool mounted=true, const char* fsname_prefix=NULL) throw ();
+    ~CFSTable() throw ();
 
     /** 复位，可重新调用get_entry获取文件系统列表 */
-    void reset();
+    void reset() throw ();
 
     /***
       * 从文件系统表中取一条记录
       * @return: 如果取到记录，则返回指针entry的指针，否则返回NULL，表示已经遍历完所有的
       */
-    fs_entry_t* get_entry(fs_entry_t& entry);
+    fs_entry_t* get_entry(fs_entry_t& entry) throw ();
 
     /***
       * 判断在构造函数中是否成功打开了文件系统表
       * @return: 如果已经打开，则返回true，否则返回false
       */
-    operator bool() const { return _fp != NULL; }
+    operator bool() const throw () { return _fp != NULL; }
 
 private:
     FILE* _fp;

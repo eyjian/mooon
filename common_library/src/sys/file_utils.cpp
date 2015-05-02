@@ -24,7 +24,7 @@
 #include "sys/close_helper.h"
 SYS_NAMESPACE_BEGIN
 
-size_t CFileUtils::file_copy(int src_fd, int dst_fd)
+size_t CFileUtils::file_copy(int src_fd, int dst_fd) throw (CSyscallException)
 {
     char buf[IO_BUFFER_MAX];
     size_t file_size = 0;
@@ -61,7 +61,7 @@ size_t CFileUtils::file_copy(int src_fd, int dst_fd)
     return file_size;
 }
 
-size_t CFileUtils::file_copy(int src_fd, const char* dst_filename)
+size_t CFileUtils::file_copy(int src_fd, const char* dst_filename) throw (CSyscallException)
 {    
     int dst_fd = open(dst_filename, O_WRONLY|O_CREAT|O_EXCL);
     if (-1 == src_fd)
@@ -71,7 +71,7 @@ size_t CFileUtils::file_copy(int src_fd, const char* dst_filename)
     return file_copy(src_fd, dst_fd);
 }
 
-size_t CFileUtils::file_copy(const char* src_filename, int dst_fd)
+size_t CFileUtils::file_copy(const char* src_filename, int dst_fd) throw (CSyscallException)
 {
     int src_fd = open(src_filename, O_RDONLY);
     if (-1 == src_fd)
@@ -81,7 +81,7 @@ size_t CFileUtils::file_copy(const char* src_filename, int dst_fd)
     return file_copy(src_fd, dst_fd);
 }
 
-size_t CFileUtils::file_copy(const char* src_filename, const char* dst_filename)
+size_t CFileUtils::file_copy(const char* src_filename, const char* dst_filename) throw (CSyscallException)
 { 
     int src_fd = open(src_filename, O_RDONLY);
     if (-1 == src_fd)
@@ -96,7 +96,7 @@ size_t CFileUtils::file_copy(const char* src_filename, const char* dst_filename)
     return file_copy(src_fd, dst_fd);
 }
 
-off_t CFileUtils::get_file_size(int fd)
+off_t CFileUtils::get_file_size(int fd) throw (CSyscallException)
 {
     struct stat buf;
     if (-1 == fstat(fd, &buf))
@@ -108,7 +108,7 @@ off_t CFileUtils::get_file_size(int fd)
     return buf.st_size;
 }
 
-off_t CFileUtils::get_file_size(const char* filepath)
+off_t CFileUtils::get_file_size(const char* filepath) throw (CSyscallException)
 {
     int fd = open(filepath, O_RDONLY);
     if (-1 == fd)
@@ -118,7 +118,7 @@ off_t CFileUtils::get_file_size(const char* filepath)
     return get_file_size(fd);
 }
 
-uint32_t CFileUtils::crc32_file(int fd)
+uint32_t CFileUtils::crc32_file(int fd) throw (CSyscallException)
 {
     uint32_t crc = 0;
     int page_size = sys::CUtils::get_page_size();
@@ -155,7 +155,7 @@ uint32_t CFileUtils::crc32_file(int fd)
     return crc;
 }
 
-uint32_t CFileUtils::crc32_file(const char* filepath)
+uint32_t CFileUtils::crc32_file(const char* filepath) throw (CSyscallException)
 {
     int fd = open(filepath, O_RDONLY);
     if (-1 == fd)
@@ -165,7 +165,7 @@ uint32_t CFileUtils::crc32_file(const char* filepath)
     return crc32_file(fd);
 }
 
-uint32_t CFileUtils::get_file_mode(int fd)
+uint32_t CFileUtils::get_file_mode(int fd) throw (CSyscallException)
 {
     struct stat st;
     if (-1 == fstat(fd, &st))
@@ -174,7 +174,7 @@ uint32_t CFileUtils::get_file_mode(int fd)
     return st.st_mode;
 }
 
-void CFileUtils::remove(const char* filepath)
+void CFileUtils::remove(const char* filepath) throw (CSyscallException)
 {
     if (-1 == unlink(filepath))
     {

@@ -189,7 +189,7 @@ void CLogger::create(const char* log_path, const char* log_filename, uint32_t lo
     _log_queue = new utils::CArrayQueue<log_message_t*>(log_queue_size_);
     
     // 创建和启动日志线程
-    create_thread();          
+    create_thread();
 
     // 创建日志文件
     inc_refcount(); // 和destroy一一对应
@@ -776,7 +776,7 @@ CLogThread::CLogThread()
     _epoll_events = new struct epoll_event[LOGGER_NUMBER_MAX];
 }
 
-CLogThread::~CLogThread()
+CLogThread::~CLogThread() throw ()
 {    
     if (_epoll_fd != -1)
     {
@@ -823,7 +823,7 @@ void CLogThread::run()
     remove_object(this);
 }
 
-void CLogThread::before_stop()
+void CLogThread::before_stop() throw (utils::CException, CSyscallException)
 {
     send_signal();
 }

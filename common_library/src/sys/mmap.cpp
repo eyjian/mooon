@@ -23,7 +23,7 @@
 #include "sys/mmap.h"
 SYS_NAMESPACE_BEGIN
 
-mmap_t* CMMap::map_read(const char* filename, size_t size_max)
+mmap_t* CMMap::map_read(const char* filename, size_t size_max) throw (CSyscallException)
 {
     int fd = open(filename, O_RDONLY);
     if (-1 == fd)
@@ -32,12 +32,12 @@ mmap_t* CMMap::map_read(const char* filename, size_t size_max)
     return do_map(PROT_READ, fd, 0, 0, size_max, false);
 }
 
-mmap_t* CMMap::map_read(int fd, size_t size, size_t offset, size_t size_max)
+mmap_t* CMMap::map_read(int fd, size_t size, size_t offset, size_t size_max) throw (CSyscallException)
 {
     return do_map(PROT_READ, fd, size, offset, size_max, true);
 }
 
-mmap_t* CMMap::map_write(const char* filename, size_t size_max)
+mmap_t* CMMap::map_write(const char* filename, size_t size_max) throw (CSyscallException)
 {
     int fd = open(filename, O_WRONLY);
     if (-1 == fd)
@@ -46,12 +46,12 @@ mmap_t* CMMap::map_write(const char* filename, size_t size_max)
     return do_map(PROT_WRITE, fd, 0, 0, size_max, false);
 }
 
-mmap_t* CMMap::map_write(int fd, size_t size, size_t offset, size_t size_max)
+mmap_t* CMMap::map_write(int fd, size_t size, size_t offset, size_t size_max) throw (CSyscallException)
 {
     return do_map(PROT_WRITE, fd, size, offset, size_max, true);
 }
 
-mmap_t* CMMap::map_both(const char* filename, size_t size_max)
+mmap_t* CMMap::map_both(const char* filename, size_t size_max) throw (CSyscallException)
 {
     int fd = open(filename, O_RDONLY|O_WRONLY);
     if (-1 == fd)
@@ -60,12 +60,12 @@ mmap_t* CMMap::map_both(const char* filename, size_t size_max)
     return do_map(PROT_READ|PROT_WRITE, fd, 0, 0, size_max, false);
 }
 
-mmap_t* CMMap::map_both(int fd, size_t size, size_t offset, size_t size_max)
+mmap_t* CMMap::map_both(int fd, size_t size, size_t offset, size_t size_max) throw (CSyscallException)
 {
     return do_map(PROT_READ|PROT_WRITE, fd, size, offset, size_max, true);
 }
 
-mmap_t* CMMap::do_map(int prot, int fd, size_t size, size_t offset, size_t size_max, bool byfd)
+mmap_t* CMMap::do_map(int prot, int fd, size_t size, size_t offset, size_t size_max, bool byfd) throw (CSyscallException)
 {
 	mmap_t* ptr = new mmap_t;
 
@@ -104,7 +104,7 @@ mmap_t* CMMap::do_map(int prot, int fd, size_t size, size_t offset, size_t size_
     }    
 }
 
-void CMMap::unmap(mmap_t* ptr)
+void CMMap::unmap(mmap_t* ptr) throw (CSyscallException)
 {
 	if (ptr->addr != NULL)
     {
@@ -122,7 +122,7 @@ void CMMap::unmap(mmap_t* ptr)
     delete ptr;
 }
 
-void CMMap::sync_flush(mmap_t* ptr, size_t offset, size_t length, bool invalid)
+void CMMap::sync_flush(mmap_t* ptr, size_t offset, size_t length, bool invalid) throw (CSyscallException)
 {
     // 无效参数
     if (offset >= ptr->len)
@@ -133,7 +133,7 @@ void CMMap::sync_flush(mmap_t* ptr, size_t offset, size_t length, bool invalid)
         THROW_SYSCALL_EXCEPTION(NULL, errno, "msync");
 }
 
-void CMMap::async_flush(mmap_t* ptr, size_t offset, size_t length, bool invalid)
+void CMMap::async_flush(mmap_t* ptr, size_t offset, size_t length, bool invalid) throw (CSyscallException)
 {
     // 无效参数
     if (offset >= ptr->len)

@@ -45,7 +45,7 @@ public:
     /***
      * 不加锁构造函数，由调用者决定何时加锁
      */
-    explicit FileLocker(const char* filepath)
+    explicit FileLocker(const char* filepath) throw ()
         : _fd(-1), _filepath(filepath)
     {
     }
@@ -55,13 +55,13 @@ public:
      * ，建议使用SharedFileLocker或ExclusiveFileLocker，替代此构造函数调用
      * @exclusive 是否独占锁
      */
-    explicit FileLocker(const char* filepath, bool exclusive)
+    explicit FileLocker(const char* filepath, bool exclusive) throw ()
         : _fd(-1), _filepath(filepath)
     {
         lock(exclusive);
     }
 
-    ~FileLocker()
+    ~FileLocker() throw ()
     {
         unlock();
     }
@@ -70,7 +70,7 @@ public:
      * 加锁
      * @exclusive 是否独占锁
      */
-    bool lock(bool exclusive)
+    bool lock(bool exclusive) throw ()
     {
         // 独占还是共享
         int operation = exclusive? LOCK_EX: LOCK_SH;
@@ -91,7 +91,7 @@ public:
         return _fd != -1;
     }
 
-    bool unlock()
+    bool unlock() throw ()
     {
         bool ret = false;
     
@@ -106,7 +106,7 @@ public:
         return ret;
     }
 
-    bool is_locked() const
+    bool is_locked() const throw ()
     {
         return _fd != -1;
     }
@@ -119,7 +119,7 @@ public:
     /***
      * 返回锁文件路径
      */
-    const std::string& get_filepath() const
+    const std::string& get_filepath() const throw ()
     {
         return _filepath;
     }

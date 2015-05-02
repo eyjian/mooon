@@ -178,6 +178,33 @@ d2x()
     done
 }
 
+check_thirdparty()
+{
+    local thirdparty_name=$1
+    local dir_name=$2
+
+    if test -d /usr/local/thirdparty/$dir_name; then
+        printf "\033[1;33m"
+        printf "OK: FOUND $thirdparty_name at /usr/local/thirdparty/$dir_name"
+        printf "\033[m\n"
+    elif test -d $HOME/$dir_name; then
+        printf "\033[1;33m"
+        printf "OK: FOUND $thirdparty_name at $HOME/$dir_name"
+        printf "\033[m\n"
+    elif test -d /usr/local/$dir_name; then
+        printf "\033[1;33m"
+        printf "OK: FOUND $thirdparty_name at /usr/local/$dir_name"
+        printf "\033[m\n"
+    else
+        printf "\033[1;33m"
+        printf "WARNING: NOT FOUND $thirdparty_name at any following directories:\n"
+        printf "1) /usr/local/thirdparty\n"
+        printf "2) $HOME/thirdparty\n"
+        printf "3) /usr/local\n"
+        printf "\033[m\n"
+    fi
+}
+
 # 需要DOS格式转换的文件
 #d2x ltmain.sh # 用来生成libtool文件，而它本身则由libtoolize生成
 d2x configure.ac.in
@@ -226,7 +253,9 @@ fi
 #chmod +x *.sh
 chmod +x configure
 
-
+# 检查依赖的第三方库
+check_thirdparty MySQL mysql
+check_thirdparty SQLite3 sqlite3
 #################################################
 # 接下来就可以开始执行configure生成Makefile文件了
 #################################################

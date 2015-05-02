@@ -198,7 +198,7 @@ class CLogThread: public CThread, public CLogProber
 {
 public:
     CLogThread();
-    ~CLogThread();
+    ~CLogThread() throw ();
 
     void remove_logger(CLogger* logger);
     void register_logger(CLogger* logger);
@@ -207,8 +207,8 @@ public:
     int get_log_number() const { return atomic_read(&_log_number); }
 
 private:
-    virtual void run();   
-    virtual void before_stop();
+    virtual void run();
+    virtual void before_stop() throw (utils::CException, CSyscallException);
     virtual void before_start() throw (utils::CException, CSyscallException);
     virtual bool execute();
 

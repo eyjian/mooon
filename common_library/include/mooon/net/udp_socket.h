@@ -27,7 +27,7 @@ NET_NAMESPACE_BEGIN
 class CUdpSocket: public CEpollable
 {
 public:
-    CUdpSocket() throw (sys::CSyscallException);
+    CUdpSocket();
     void listen(uint16_t port) throw (sys::CSyscallException);
 
     int send_to(const void* buffer, size_t buffer_size, uint32_t to_ip, uint16_t to_port) throw (sys::CSyscallException);

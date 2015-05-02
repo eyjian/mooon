@@ -33,7 +33,7 @@ public:
     CListener();
 
     /** 是否为IPV6监听者 */
-    bool is_ipv6() const { return _ip.is_ipv6(); }
+    bool is_ipv6() const throw () { return _ip.is_ipv6(); }
     
     /***
       * 启动在指定IP和端口上的监听
@@ -42,9 +42,9 @@ public:
       * @enabled_address_zero: 是否允许在0.0.0.0上监听，安全起见，默认不允许
       * @exception: 如果发生错误，则抛出CSyscallException异常
       */
-    void listen(const ip_address_t& ip, uint16_t port, bool nonblock=true, bool enabled_address_zero=false);
-    void listen(const ipv4_node_t& ip_node, bool nonblock=true, bool enabled_address_zero=false);
-    void listen(const ipv6_node_t& ip_node, bool nonblock=true, bool enabled_address_zero=false);
+    void listen(const ip_address_t& ip, uint16_t port, bool nonblock=true, bool enabled_address_zero=false) throw (sys::CSyscallException);
+    void listen(const ipv4_node_t& ip_node, bool nonblock=true, bool enabled_address_zero=false) throw (sys::CSyscallException);
+    void listen(const ipv6_node_t& ip_node, bool nonblock=true, bool enabled_address_zero=false) throw (sys::CSyscallException);
 
     /***
       * 接受连接请求
@@ -53,13 +53,13 @@ public:
       * @return: 新的SOCKET句柄
       * @exception: 如果发生错误，则抛出CSyscallException异常
       */
-    int accept(ip_address_t& peer_ip, uint16_t& peer_port);
+    int accept(ip_address_t& peer_ip, uint16_t& peer_port) throw (sys::CSyscallException);
     
     /** 得到监听的IP地址 */
-    const ip_address_t& get_listen_ip() const { return _ip; }
+    const ip_address_t& get_listen_ip() const throw () { return _ip; }
 
     /** 得到监听的端口号 */
-    uint16_t get_listen_port() const { return _port; }
+    uint16_t get_listen_port() const throw () { return _port; }
 
 private:    
     uint16_t _port;

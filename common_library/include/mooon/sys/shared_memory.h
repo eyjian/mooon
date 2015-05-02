@@ -28,13 +28,13 @@ SYS_NAMESPACE_BEGIN
 class CSysVSharedMemory
 {
 public:
-    CSysVSharedMemory();
+    CSysVSharedMemory() throw ();
     /***
       * 打开一个已经存在的共享内存
       * @path: 用来创建共享内存的路径(包含文件名)，不能为NULL
       * @exception: 如果出错则抛出CSyscallException异常
       */
-    void open(const char* path);
+    void open(const char* path) throw (CSyscallException);
 
     /***
       * 创建一个共享内存
@@ -43,26 +43,26 @@ public:
       * @return: 如果已经存在则返回false，否则返回true
       * @exception: 如果出错则抛出CSyscallException异常
       */
-    bool create(const char* path, mode_t mode=IPC_DEFAULT_PERM);
+    bool create(const char* path, mode_t mode=IPC_DEFAULT_PERM) throw (CSyscallException);
     
     /***
       * 关闭已经创建或打开的共享内存，
       * 如果已经没有进程关联到此共享内存，则删除它
       * @exception: 如果出错则抛出CSyscallException异常
       */
-    void close();
+    void close() throw (CSyscallException);
 
     /***
       * 解除和共享内存的关联，将共享内存从进程空间中移除
       * @exception: 如果出错则抛出CSyscallException异常
       */
-    void detach();
+    void detach() throw (CSyscallException);
 
     /***
       * 关联共享内存，将共享内存映射到进程空间
       * @exception: 如果出错则抛出CSyscallException异常
       */
-    void* attach(int flag); 
+    void* attach(int flag) throw (CSyscallException);
 
     /***
       * 得到共享内存的地址

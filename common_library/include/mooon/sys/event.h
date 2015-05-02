@@ -33,28 +33,28 @@ public:
       * 构造通知事件实例
       * @exception: 出错抛出CSyscallException异常，通常可不捕获此异常
       */
-    CEvent();
-    ~CEvent();
+    CEvent() throw (CSyscallException);
+    ~CEvent() throw ();
 
     /***
       * 让调用者进入等待状态，直接到被唤醒
       * @exception: 出错抛出CSyscallException异常，通常可不捕获此异常
       */
-    void wait(CLock& lock);
+    void wait(CLock& lock) throw (CSyscallException);
 
     /***
       * 让调用者进入等待状态，直接到被唤醒，或等待的时长超过指定的毫秒数
       * @return: 如果在指定的毫秒数之前被唤醒，则返回true，否则返回false
       * @exception: 出错抛出CSyscallException异常，通常可不捕获此异常
       */
-    bool timed_wait(CLock& mutex, uint32_t millisecond);
+    bool timed_wait(CLock& mutex, uint32_t millisecond) throw (CSyscallException);
 
     /***
       * 唤醒一个进入等待状态的线程，如果没有线程正处于等待状态，则唤醒动作忽略
       * 只有当signal调用发生在wait调用之后才有效
       * @exception: 出错抛出CSyscallException异常，通常可不捕获此异常
       */
-    void signal();
+    void signal() throw (CSyscallException);
 
     /***
       * 广播唤醒信号，将所有进入等待状态的线程全部唤醒，
@@ -62,7 +62,7 @@ public:
       * 只有当broadcast调用发生在wait调用之后才有效
       * @exception: 出错抛出CSyscallException异常，通常可不捕获此异常
       */
-    void broadcast();
+    void broadcast() throw (CSyscallException);
     
 private:
     pthread_cond_t _cond;

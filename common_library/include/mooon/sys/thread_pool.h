@@ -29,7 +29,7 @@ class CThreadPool
 {
 public:
     /** 构造一个线程池 */
-    CThreadPool()
+    CThreadPool() throw ()
         :_next_thread(0)
         ,_thread_count(0)
         ,_thread_array(NULL)
@@ -44,7 +44,7 @@ public:
       * @exception: 可抛出CSyscallException异常，
       *             如果是因为CPoolThread::before_start返回false，则出错码为0
       */
-    void create(uint16_t thread_count, void* parameter=NULL)
+    void create(uint16_t thread_count, void* parameter=NULL) throw (CSyscallException)
     {
         _thread_array = new ThreadClass*[thread_count];
         for (uint16_t i=0; i<thread_count; ++i)
@@ -70,7 +70,7 @@ public:
     }
 
     /** 销毁线程池，这里会等待所有线程退出，然后删除线程 */
-    void destroy()
+    void destroy() throw (CSyscallException)
     {
         if (_thread_array != NULL)
         {
@@ -91,21 +91,21 @@ public:
       * 激活线程池，将池中的所有线程唤醒，
       * 也可以单独调用各池线程的wakeup将它们唤醒
       */
-    void activate()
+    void activate() throw (CSyscallException)
     {
         for (uint16_t i=0; i<_thread_count; ++i)
             _thread_array[i]->wakeup();
     }
 
     /** 得到线程池中的线程个数 */
-    uint16_t get_thread_count() const { return _thread_count; }
+    uint16_t get_thread_count() const throw () { return _thread_count; }
 
     /** 得到线程池中的线程数组 */
-    ThreadClass** get_thread_array() { return _thread_array; }
-    ThreadClass** get_thread_array() const { return _thread_array; }
+    ThreadClass** get_thread_array() throw () { return _thread_array; }
+    ThreadClass** get_thread_array() const throw () { return _thread_array; }
 
     /** 根据线程编号，得到对应的线程 */
-    ThreadClass* get_thread(uint16_t thread_index)
+    ThreadClass* get_thread(uint16_t thread_index) throw ()
     {
         if (0 == _thread_count) return NULL;
         if (thread_index > _thread_count) return NULL;
@@ -113,7 +113,7 @@ public:
     }
     
     /** 根据线程编号，得到对应的线程 */
-    ThreadClass* get_thread(uint16_t thread_index) const
+    ThreadClass* get_thread(uint16_t thread_index) const throw ()
     {
         if (0 == _thread_count) return NULL;
         if (thread_index > _thread_count) return NULL;
@@ -124,7 +124,7 @@ public:
       * 得到指向下个线程的指针，从第一个开始循环遍历，无终结点，即达到最后一个时，又指向第一个，
       * 主要应用于采用轮询方式将一堆任务分配均衡分配给池线程。
       */
-    ThreadClass* get_next_thread()
+    ThreadClass* get_next_thread() throw ()
     {
         if (0 == _thread_count) return NULL;
         if (_next_thread >= _thread_count)

@@ -20,7 +20,7 @@
 #include "sys/mem_pool.h"
 SYS_NAMESPACE_BEGIN
 
-CRawMemPool::CRawMemPool()
+CRawMemPool::CRawMemPool() throw ()
     :_use_heap(false)
     ,_guard_size(0)
     ,_bucket_size(0)
@@ -34,12 +34,12 @@ CRawMemPool::CRawMemPool()
 {
 }
 
-CRawMemPool::~CRawMemPool()
+CRawMemPool::~CRawMemPool() throw ()
 {
     destroy();
 }
 
-void CRawMemPool::destroy()
+void CRawMemPool::destroy() throw ()
 {
     _use_heap = false;
     _guard_size = 0;
@@ -65,7 +65,7 @@ void CRawMemPool::destroy()
     }
 }
 
-void CRawMemPool::create(uint16_t bucket_size, uint32_t bucket_number, bool use_heap, uint8_t guard_size, char guard_flag)
+void CRawMemPool::create(uint16_t bucket_size, uint32_t bucket_number, bool use_heap, uint8_t guard_size, char guard_flag) throw ()
 {
     // 释放之前已经创建的
     destroy();
@@ -96,7 +96,7 @@ void CRawMemPool::create(uint16_t bucket_size, uint32_t bucket_number, bool use_
     memset(_bucket_bitmap, 1, (bucket_number+8) / 8);
 }
 
-void* CRawMemPool::allocate()
+void* CRawMemPool::allocate() throw ()
 {
     if (0 == _stack_top_index)
     {
@@ -113,7 +113,7 @@ void* CRawMemPool::allocate()
     }
 }
 
-bool CRawMemPool::reclaim(void* bucket)
+bool CRawMemPool::reclaim(void* bucket) throw ()
 {
     char* ptr = (char*)bucket;
 
@@ -144,27 +144,27 @@ bool CRawMemPool::reclaim(void* bucket)
     return true;
 }
 
-bool CRawMemPool::use_heap() const
+bool CRawMemPool::use_heap() const throw ()
 {
     return _use_heap;
 }
 
-uint8_t CRawMemPool::get_guard_size() const
+uint8_t CRawMemPool::get_guard_size() const throw ()
 {
     return _guard_size;
 }
 
-uint32_t CRawMemPool::get_pool_size() const
+uint32_t CRawMemPool::get_pool_size() const throw ()
 {
     return _bucket_number;
 }
 
-uint16_t CRawMemPool::get_bucket_size() const
+uint16_t CRawMemPool::get_bucket_size() const throw ()
 {
     return _bucket_size;
 }
 
-uint32_t CRawMemPool::get_available_number() const
+uint32_t CRawMemPool::get_available_number() const throw ()
 {
     return _available_number;
 }
@@ -172,51 +172,51 @@ uint32_t CRawMemPool::get_available_number() const
 //////////////////////////////////////////////////////////////////////////
 // CThreadMemPool
 
-void CThreadMemPool::destroy()
+void CThreadMemPool::destroy() throw (CSyscallException)
 {
     LockHelper<CLock> lock_helper(_lock);
     _raw_mem_pool.destroy();
 }
 
-void CThreadMemPool::create(uint16_t bucket_size, uint32_t bucket_number, bool use_heap, uint8_t guard_size, char guard_flag)
+void CThreadMemPool::create(uint16_t bucket_size, uint32_t bucket_number, bool use_heap, uint8_t guard_size, char guard_flag) throw (CSyscallException)
 {
     LockHelper<CLock> lock_helper(_lock);
     _raw_mem_pool.create(bucket_size, bucket_number, use_heap, guard_size, guard_flag);
 }
 
-void* CThreadMemPool::allocate()
+void* CThreadMemPool::allocate() throw (CSyscallException)
 {
     LockHelper<CLock> lock_helper(_lock);
     return _raw_mem_pool.allocate();
 }
 
-bool CThreadMemPool::reclaim(void* bucket)
+bool CThreadMemPool::reclaim(void* bucket) throw (CSyscallException)
 {
     LockHelper<CLock> lock_helper(_lock);
     return _raw_mem_pool.reclaim(bucket);
 }
 
-bool CThreadMemPool::use_heap() const
+bool CThreadMemPool::use_heap() const throw ()
 {
     return _raw_mem_pool.use_heap();
 }
 
-uint8_t CThreadMemPool::get_guard_size() const
+uint8_t CThreadMemPool::get_guard_size() const throw ()
 {
     return _raw_mem_pool.get_guard_size();
 }
 
-uint32_t CThreadMemPool::get_pool_size() const
+uint32_t CThreadMemPool::get_pool_size() const throw ()
 {
     return _raw_mem_pool.get_pool_size();
 }
 
-uint16_t CThreadMemPool::get_bucket_size() const
+uint16_t CThreadMemPool::get_bucket_size() const throw ()
 {
     return _raw_mem_pool.get_bucket_size();
 }
 
-uint32_t CThreadMemPool::get_available_number() const
+uint32_t CThreadMemPool::get_available_number() const throw ()
 {
     return _raw_mem_pool.get_available_number();
 }

@@ -37,35 +37,35 @@ public:
       * @recursive: 是否构造为递归锁
       * @exception: 出错抛出CSyscallException异常
       */
-    CLock(bool recursive = false);
+    CLock(bool recursive = false) throw (CSyscallException);
     ~CLock();
 
     /***
       * 加锁操作，如果不能获取到锁，则一直等待到获取到锁为止
       * @exception: 出错抛出CSyscallException异常
       */
-    void lock();
+    void lock() throw (CSyscallException);
 
     /***
       * 解锁操作
       * 请注意必须已经调用了lock加锁，才能调用unlock解锁
       * @exception: 出错抛出CSyscallException异常
       */
-    void unlock();
+    void unlock() throw (CSyscallException);
 
     /***
       * 尝试性的去获取锁，如果得不到锁，则立即返回
       * @return: 如果获取到了锁，则返回true，否则返回false
       * @exception: 出错抛出CSyscallException异常
       */
-    bool try_lock(); 
+    bool try_lock() throw (CSyscallException);
 
     /***
       * 以超时方式去获取锁，如果指定的毫秒时间内不能获取到锁，则一直等待直到超时
       * @return: 如果在指定的毫秒时间内获取到了锁，则返回true，否则如果超时则返回false
       * @exception: 出错抛出CSyscallException异常
       */
-	bool timed_lock(uint32_t millisecond);
+	bool timed_lock(uint32_t millisecond) throw (CSyscallException);
 
 private:
     pthread_mutex_t _mutex;
@@ -84,7 +84,7 @@ public:
       * 构造一个递归锁
       * @exception: 出错抛出CSyscallException异常
       */
-    CRecLock()
+    CRecLock() throw (CSyscallException)
         :CLock(true)
     {
     }
@@ -101,7 +101,7 @@ public:
       * 构造锁帮助类对象
       * @exception: 出错抛出CSyscallException异常
       */
-    LockHelper(LockClass& lock)
+    LockHelper(LockClass& lock) throw (CSyscallException)
         :_lock(lock)
     {
         lock.lock();

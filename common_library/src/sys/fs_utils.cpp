@@ -32,7 +32,7 @@ SYS_NAMESPACE_BEGIN
 // fstab.h: #define  _PATH_FSTAB    "/etc/fstab"
 // paths.h: #define  _PATH_MOUNTED  "/etc/mtab"
 
-void CFSUtils::stat_fs(int fd, fs_stat_t& stat_buf)
+void CFSUtils::stat_fs(int fd, fs_stat_t& stat_buf) throw (CSyscallException)
 {
     struct statvfs buf;
     if (-1 == fstatvfs(fd, &buf)) // 不使用statfs
@@ -48,7 +48,7 @@ void CFSUtils::stat_fs(int fd, fs_stat_t& stat_buf)
     stat_buf.file_name_length_max = buf.f_namemax;
 }
 
-void CFSUtils::stat_fs(const char* path, fs_stat_t& stat_buf)
+void CFSUtils::stat_fs(const char* path, fs_stat_t& stat_buf) throw (CSyscallException)
 {
     int fd = open(path, O_RDONLY);
     if (-1 == fd)
@@ -61,7 +61,7 @@ void CFSUtils::stat_fs(const char* path, fs_stat_t& stat_buf)
 //////////////////////////////////////////////////////////////////////////
 // CFSTable
 
-CFSTable::CFSTable(bool mounted, const char* fsname_prefix)
+CFSTable::CFSTable(bool mounted, const char* fsname_prefix) throw ()
 {
     if (mounted)
         _fp = setmntent(_PATH_MOUNTED, "r");
@@ -72,7 +72,7 @@ CFSTable::CFSTable(bool mounted, const char* fsname_prefix)
         _fsname_prefix = fsname_prefix;
 }
 
-CFSTable::~CFSTable()
+CFSTable::~CFSTable() throw ()
 {
     if (_fp != NULL)
     {        
@@ -81,13 +81,13 @@ CFSTable::~CFSTable()
     }
 }
 
-void CFSTable::reset()
+void CFSTable::reset() throw ()
 {
     if (_fp != NULL)
         rewind(_fp);
 }
 
-CFSTable::fs_entry_t* CFSTable::get_entry(fs_entry_t& entry)
+CFSTable::fs_entry_t* CFSTable::get_entry(fs_entry_t& entry) throw ()
 {
     struct mntent* ent = NULL;
 

@@ -27,11 +27,11 @@ SYS_NAMESPACE_BEGIN
 class CRawMemPool
 {
 public:
-    CRawMemPool();
-    ~CRawMemPool();
+    CRawMemPool() throw ();
+    ~CRawMemPool() throw ();
 
     /** 销毁由create创建的内存池 */
-    void destroy();
+    void destroy() throw ();
 
     /***
       * 创建内存池
@@ -41,14 +41,14 @@ public:
       * @guard_size: 警戒大小
       * @guard_flag: 警戒标识
       */
-    void create(uint16_t bucket_size, uint32_t bucket_number, bool use_heap=true, uint8_t guard_size=1, char guard_flag='m');
+    void create(uint16_t bucket_size, uint32_t bucket_number, bool use_heap=true, uint8_t guard_size=1, char guard_flag='m') throw ();
 
     /***
       * 分配内存内存
       * @return: 如果内存池不够，且设置了从堆上分配内存，则返回从堆上分配的内存，
       *          否则如果内存池不够时返回NULL，否则返回从内存池中分配的内存
       */
-    void* allocate();
+    void* allocate() throw ();
 
     /***
       * 回收内存内存
@@ -57,22 +57,22 @@ public:
       *          则检查是否为正确的池内存，如果是则回收并返回true，其它情况返回false
       * @return: 如果被回收或删除返回true，否则返回false
       */
-    bool reclaim(void* bucket);
+    bool reclaim(void* bucket) throw ();
 
     /** 返回当内存池不够用时，是否从堆上分配内存 */
-    bool use_heap() const;
+    bool use_heap() const throw ();
 
     /** 得到警戒值大小 */
-    uint8_t get_guard_size() const;
+    uint8_t get_guard_size() const throw ();
 
     /** 得到池大小，也就是池中可分配的内存个数 */
-    uint32_t get_pool_size() const;        
+    uint32_t get_pool_size() const throw ();
 
     /** 得到内存池可分配的内存大小 */
-    uint16_t get_bucket_size() const;
+    uint16_t get_bucket_size() const throw ();
 
     /** 得到内存池中，当前还可以分配的内存个数 */
-    uint32_t get_available_number() const;
+    uint32_t get_available_number() const throw ();
 
 private:    
     bool _use_heap;             /** 内存池不够时，是否从堆上分配 */
@@ -95,8 +95,10 @@ private:
 class CThreadMemPool
 {
 public:
+    CThreadMemPool() throw (CSyscallException) {}
+
     /** 销毁由create创建的内存池 */
-    void destroy();
+    void destroy() throw (CSyscallException);
 
     /***
       * 创建内存池
@@ -106,14 +108,14 @@ public:
       * @guard_size: 警戒大小
       * @guard_flag: 警戒标识
       */
-    void create(uint16_t bucket_size, uint32_t bucket_number, bool use_heap=true, uint8_t guard_size=1, char guard_flag='m');
+    void create(uint16_t bucket_size, uint32_t bucket_number, bool use_heap=true, uint8_t guard_size=1, char guard_flag='m') throw (CSyscallException);
 
     /***
       * 分配内存内存
       * @return: 如果内存池不够，且设置了从堆上分配内存，则返回从堆上分配的内存，
       *          否则如果内存池不够时返回NULL，否则返回从内存池中分配的内存
       */
-    void* allocate();
+    void* allocate() throw (CSyscallException);
 
     /***
       * 回收内存内存
@@ -122,22 +124,22 @@ public:
       *          则检查是否为正确的池内存，如果是则回收并返回true，其它情况返回false
       * @return: 如果被回收或删除返回true，否则返回false
       */
-    bool reclaim(void* bucket);
+    bool reclaim(void* bucket) throw (CSyscallException);
 
     /** 返回当内存池不够用时，是否从堆上分配内存 */
-    bool use_heap() const;
+    bool use_heap() const throw ();
 
     /** 得到警戒值大小 */
-    uint8_t get_guard_size() const;
+    uint8_t get_guard_size() const throw ();
 
     /** 得到池大小，也就是池中可分配的内存个数 */
-    uint32_t get_pool_size() const;        
+    uint32_t get_pool_size() const throw ();
 
     /** 得到内存池可分配的内存大小 */
-    uint16_t get_bucket_size() const;
+    uint16_t get_bucket_size() const throw ();
 
     /** 得到内存池中，当前还可以分配的内存个数 */
-    uint32_t get_available_number() const;
+    uint32_t get_available_number() const throw ();
     
 private:
     CLock _lock;
