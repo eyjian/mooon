@@ -22,7 +22,7 @@ SYS_NAMESPACE_BEGIN
 //////////////////////////////////////////////////////////////////////////
 // CPoolThread::CPoolThreadHelper
 
-CPoolThread::CPoolThreadHelper::CPoolThreadHelper(CPoolThread* pool_thread) throw (CSyscallException)
+CPoolThread::CPoolThreadHelper::CPoolThreadHelper(CPoolThread* pool_thread)
     :_pool_thread(pool_thread)
 {
 }
@@ -71,7 +71,7 @@ CPoolThread::CPoolThread() throw (utils::CException, CSyscallException)
     _pool_thread_helper->inc_refcount(); // 保证生命周期内都是可以用的
 }
 
-CPoolThread::~CPoolThread() throw ()
+CPoolThread::~CPoolThread()
 {
     _pool_thread_helper->dec_refcount();
 }

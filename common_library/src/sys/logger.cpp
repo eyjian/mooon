@@ -776,7 +776,7 @@ CLogThread::CLogThread()
     _epoll_events = new struct epoll_event[LOGGER_NUMBER_MAX];
 }
 
-CLogThread::~CLogThread() throw ()
+CLogThread::~CLogThread()
 {    
     if (_epoll_fd != -1)
     {

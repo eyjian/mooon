@@ -198,7 +198,7 @@ class CLogThread: public CThread, public CLogProber
 {
 public:
     CLogThread();
-    ~CLogThread() throw ();
+    ~CLogThread();
 
     void remove_logger(CLogger* logger);
     void register_logger(CLogger* logger);

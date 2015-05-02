@@ -52,7 +52,7 @@ public:
 
 public:
 	CThread() throw (utils::CException, CSyscallException);
-	virtual ~CThread() throw ();
+	virtual ~CThread();
 
     /** 将_stop成员设置为true，线程可以根据_stop状态来决定是否退出线程
       * @wait_stop: 是否等待线程结束，只有当线程是可Join时才有效

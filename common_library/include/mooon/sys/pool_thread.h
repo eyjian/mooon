@@ -32,7 +32,7 @@ private:
     class CPoolThreadHelper: public CThread
     {
     public:
-        CPoolThreadHelper(CPoolThread* pool_thread) throw (CSyscallException);
+        CPoolThreadHelper(CPoolThread* pool_thread);
         void millisleep(int milliseconds) throw (CSyscallException);
 
     private:
@@ -46,7 +46,7 @@ private:
 
 protected: // 禁止直接创建CPoolThread的实例
     CPoolThread() throw (utils::CException, CSyscallException);
-    virtual ~CPoolThread() throw ();
+    virtual ~CPoolThread();
     /***
       * 毫秒级sleep，线程可以调用它进入睡眠状态，并且可以通过调用wakeup唤醒，
       * 请注意只本线程可以调用此函数，其它线程调用无效

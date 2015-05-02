@@ -31,7 +31,7 @@ static void* thread_proc(void* thread_param)
 
 CThread::CThread() throw (utils::CException, CSyscallException)
     :_lock(true)
-    ,_stop(false)    
+    ,_stop(false)
     ,_current_state(state_sleeping)
     ,_stack_size(0)
 {
@@ -40,7 +40,7 @@ CThread::CThread() throw (utils::CException, CSyscallException)
         THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_attr_init");
 }
 
-CThread::~CThread() throw ()
+CThread::~CThread()
 {
 	pthread_attr_destroy(&_attr);
 }
