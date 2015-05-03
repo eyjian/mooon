@@ -20,12 +20,22 @@
  */
 #ifndef MOOON_SYS_THREAD_ENGINE_H
 #define MOOON_SYS_THREAD_ENGINE_H
+
+// 如果测试，请不需注释掉TEST_THREAD_ENGINE的定义
+//#define TEST_THREAD_ENGINE 1
+
+#if !defined(TEST_THREAD_ENGINE)
 #include "mooon/sys/config.h" // 如果需要脱离mooon运行，请注释掉这行
+#endif // TEST_THREAD_ENGINE
+
 #include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
-//#define SYS_NAMESPACE_BEGIN // 如果需要脱离mooon运行，请不要注释掉这行
-//#define SYS_NAMESPACE_END // 如果需要脱离mooon运行，请不要注释掉这行
+
+#if defined(TEST_THREAD_ENGINE)
+#define SYS_NAMESPACE_BEGIN
+#define SYS_NAMESPACE_END
+#endif // TEST_THREAD_ENGINE
 SYS_NAMESPACE_BEGIN
 
 // 基类
@@ -125,6 +135,102 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+// 带2个参数
+
+template <typename Parameter1Type, typename Parameter2Type>
+class FunctionWith2Parameter: public Function
+{
+public:
+    typedef void (*FunctionPtr)(Parameter1Type, Parameter2Type);
+
+    FunctionWith2Parameter(FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2)
+        : _function_ptr(function_ptr), _parameter1(parameter1), _parameter2(parameter2)
+    {
+    }
+
+    virtual void operator ()()
+    {
+        (*_function_ptr)(_parameter1, _parameter2);
+    }
+
+private:
+    FunctionPtr _function_ptr;
+    Parameter1Type _parameter1;
+    Parameter2Type _parameter2;
+};
+
+template <class ObjectType, typename Parameter1Type, typename Parameter2Type>
+class MemberFunctionWith2Parameter: public Function
+{
+public:
+    typedef void (ObjectType::*MemberFunctionPtr)(Parameter1Type, Parameter2Type);
+    MemberFunctionWith2Parameter(MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2)
+        : _member_function_ptr(member_function_ptr), _object(object), _parameter1(parameter1), _parameter2(parameter2)
+    {
+    }
+
+    virtual void operator ()()
+    {
+        (_object->*_member_function_ptr)(_parameter1, _parameter2);
+    }
+
+private:
+    MemberFunctionPtr _member_function_ptr;
+    ObjectType* _object;
+    Parameter1Type _parameter1;
+    Parameter2Type _parameter2;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// 带3个参数
+
+template <typename Parameter1Type, typename Parameter2Type, typename Parameter3Type>
+class FunctionWith3Parameter: public Function
+{
+public:
+    typedef void (*FunctionPtr)(Parameter1Type, Parameter2Type, Parameter3Type);
+
+    FunctionWith3Parameter(FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3)
+        : _function_ptr(function_ptr), _parameter1(parameter1), _parameter2(parameter2), _parameter3(parameter3)
+    {
+    }
+
+    virtual void operator ()()
+    {
+        (*_function_ptr)(_parameter1, _parameter2, _parameter3);
+    }
+
+private:
+    FunctionPtr _function_ptr;
+    Parameter1Type _parameter1;
+    Parameter2Type _parameter2;
+    Parameter3Type _parameter3;
+};
+
+template <class ObjectType, typename Parameter1Type, typename Parameter2Type, typename Parameter3Type>
+class MemberFunctionWith3Parameter: public Function
+{
+public:
+    typedef void (ObjectType::*MemberFunctionPtr)(Parameter1Type, Parameter2Type, Parameter3Type);
+    MemberFunctionWith3Parameter(MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3)
+        : _member_function_ptr(member_function_ptr), _object(object), _parameter1(parameter1), _parameter2(parameter2), _parameter3(parameter3)
+    {
+    }
+
+    virtual void operator ()()
+    {
+        (_object->*_member_function_ptr)(_parameter1, _parameter2, _parameter3);
+    }
+
+private:
+    MemberFunctionPtr _member_function_ptr;
+    ObjectType* _object;
+    Parameter1Type _parameter1;
+    Parameter2Type _parameter2;
+    Parameter3Type _parameter3;
+};
+
+////////////////////////////////////////////////////////////////////////////////
 class Functor
 {
 public:
@@ -186,6 +292,32 @@ public:
         _function = new MemberFunctionWith1Parameter<ObjectType, ParameterType>(member_function_ptr, object, parameter);
     }
 
+    // 带2个参数
+    template <typename Parameter1Type, typename Parameter2Type>
+    Functor(typename FunctionWith2Parameter<Parameter1Type, Parameter2Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2)
+    {
+        _function = new FunctionWith2Parameter<Parameter1Type, Parameter2Type>(function_ptr, parameter1, parameter2);
+    }
+
+    template <class ObjectType, typename Parameter1Type, typename Parameter2Type>
+    Functor(typename MemberFunctionWith2Parameter<ObjectType, Parameter1Type, Parameter2Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2)
+    {
+        _function = new MemberFunctionWith2Parameter<ObjectType, Parameter1Type, Parameter2Type>(member_function_ptr, object, parameter1, parameter2);
+    }
+
+    // 带3个参数
+    template <typename Parameter1Type, typename Parameter2Type, typename Parameter3Type>
+    Functor(typename FunctionWith3Parameter<Parameter1Type, Parameter2Type, Parameter3Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3)
+    {
+        _function = new FunctionWith3Parameter<Parameter1Type, Parameter2Type, Parameter3Type>(function_ptr, parameter1, parameter2, parameter3);
+    }
+
+    template <class ObjectType, typename Parameter1Type, typename Parameter2Type, typename Parameter3Type>
+    Functor(typename MemberFunctionWith3Parameter<ObjectType, Parameter1Type, Parameter2Type, Parameter3Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3)
+    {
+        _function = new MemberFunctionWith3Parameter<ObjectType, Parameter1Type, Parameter2Type, Parameter3Type>(member_function_ptr, object, parameter1, parameter2, parameter3);
+    }
+
 public:
     Function* _function;
 };
@@ -217,6 +349,36 @@ template <class ObjectType, typename ParameterType>
 Functor bind(typename MemberFunctionWith1Parameter<ObjectType, ParameterType>::MemberFunctionPtr member_function_ptr, ObjectType* object, ParameterType parameter)
 {
     return Functor(member_function_ptr, object, parameter);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// 带2个参数
+
+template <typename Parameter1Type, typename Parameter2Type>
+Functor bind(typename FunctionWith2Parameter<Parameter1Type, Parameter2Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2)
+{
+    return Functor(function_ptr, parameter1, parameter2);
+}
+
+template <class ObjectType, typename Parameter1Type, typename Parameter2Type>
+Functor bind(typename MemberFunctionWith2Parameter<ObjectType, Parameter1Type, Parameter2Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2)
+{
+    return Functor(member_function_ptr, object, parameter1, parameter2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// 带3个参数
+
+template <typename Parameter1Type, typename Parameter2Type, typename Parameter3Type>
+Functor bind(typename FunctionWith3Parameter<Parameter1Type, Parameter2Type, Parameter3Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3)
+{
+    return Functor(function_ptr, parameter1, parameter2, parameter3);
+}
+
+template <class ObjectType, typename Parameter1Type, typename Parameter2Type, typename Parameter3Type>
+Functor bind(typename MemberFunctionWith3Parameter<ObjectType, Parameter1Type, Parameter2Type, Parameter3Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3)
+{
+    return Functor(member_function_ptr, object, parameter1, parameter2, parameter3);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -270,8 +432,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 // 以下为测试代码
-#define TEST_THREAD_ENGINE 1
-#if TEST_THREAD_ENGINE == 1
+#if defined(TEST_THREAD_ENGINE)
 
 ////////////////////////////////////////////////////////////////////////////////
 // 非类成员函数
@@ -296,12 +457,36 @@ static void world(int m)
     printf("[%u] world: %d\n", pthread_self(), m);
 }
 
+static void hello(int m, int n)
+{
+    printf("[%u] hello: %d/%d\n", pthread_self(), m, n);
+}
+
+static void world(int m, int n)
+{
+    printf("[%u] world: %d/%d\n", pthread_self(), m, n);
+}
+
+static void hello(int m, int n, int l)
+{
+    printf("[%u] hello: %d/%d/%d\n", pthread_self(), m, n, l);
+}
+
+static void world(int m, int n, int l)
+{
+    printf("[%u] world: %d/%d/%d\n", pthread_self(), m, n, l);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // 类成员函数
 
 class X
 {
 public:
+    //
+    // 不带参数
+    //
+
     void hello()
     {
         printf("[%u] X::hello\n", pthread_self());
@@ -312,6 +497,10 @@ public:
         printf("[%u] X::world\n", pthread_self());
     }
     
+    //
+    // 带1个参数
+    //
+
     void hello(int m)
     {
         printf("[%u] X::hello: %d\n", pthread_self(), m);
@@ -320,6 +509,34 @@ public:
     void world(int m)
     {
         printf("[%u] X::world: %d\n", pthread_self(), m);
+    }
+
+    //
+    // 带2个参数
+    //
+
+    void hello(int m, int n)
+    {
+        printf("[%u] X::hello: %d/%d\n", pthread_self(), m, n);
+    }
+
+    void world(int m, int n)
+    {
+        printf("[%u] X::world: %d/%d\n", pthread_self(), m, n);
+    }
+
+    //
+    // 带3个参数
+    //
+
+    void hello(int m, int n, int l)
+    {
+        printf("[%u] X::hello: %d/%d/%d\n", pthread_self(), m, n, l);
+    }
+
+    void world(int m, int n, int l)
+    {
+        printf("[%u] X::world: %d/%d/%d\n", pthread_self(), m, n, l);
     }
 };
 
@@ -335,12 +552,26 @@ int main()
     CThreadEngine engine3(bind(&X::hello, x1));
     CThreadEngine engine4(bind(&X::world, x2));
 
-    // 带一个参数
+    // 带1个参数
     CThreadEngine engine5(bind(&hello, 2015));
     CThreadEngine engine6(bind(&world, 2016));
     
     CThreadEngine engine7(bind(&X::hello, x1, 2015));
     CThreadEngine engine8(bind(&X::world, x2, 2016));    
+
+    // 带2个参数
+    CThreadEngine engine9(bind(&hello, 2015, 5));
+    CThreadEngine engine10(bind(&world, 2016, 5));
+
+    CThreadEngine engine11(bind(&X::hello, x1, 2015, 5));
+    CThreadEngine engine12(bind(&X::world, x2, 2016, 5));
+
+    // 带3个参数
+    CThreadEngine engine13(bind(&hello, 2015, 5, 3));
+    CThreadEngine engine14(bind(&world, 2016, 5, 3));
+
+    CThreadEngine engine15(bind(&X::hello, x1, 2015, 5, 3));
+    CThreadEngine engine16(bind(&X::world, x2, 2016, 5, 3));
 
     // 按任意键继续继续
     printf("Press ENTER to exit ...\n");
@@ -355,6 +586,15 @@ int main()
     engine7.join();
     engine8.join();
     
+    engine9.join();
+    engine10.join();
+    engine11.join();
+    engine12.join();
+    engine13.join();
+    engine14.join();
+    engine15.join();
+    engine16.join();
+
     delete x1;
     delete x2;
     

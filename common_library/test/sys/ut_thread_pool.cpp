@@ -2,11 +2,12 @@
 #include <mooon/sys/utils.h>
 #include <mooon/sys/pool_thread.h>
 #include <mooon/sys/thread_pool.h>
-SYS_NAMESPACE_USE
+#include <mooon/utils/exception.h>
+MOOON_NAMESPACE_USE
 
 // 测试线程，请注意是继承池线程CPoolThread，而不是线程CThread，
 // 另外CPoolThread并不是CThread的子类
-class CTestThread: public CPoolThread
+class CTestThread: public sys::CPoolThread
 {
 public:
 	CTestThread()
@@ -29,10 +30,8 @@ private:
 		do_millisleep(1000);
 	}
 	
-	virtual bool before_start()
+	virtual void before_start() throw (utils::CException, sys::CSyscallException)
 	{
-		// 在这个函数里完成线程启动前的准备工作
-		return true;
 	}
 	
 private:
@@ -41,7 +40,7 @@ private:
 
 int main()
 {
-	CThreadPool<CTestThread> thread_pool; // 这里定义线程池实例
+    sys::CThreadPool<CTestThread> thread_pool; // 这里定义线程池实例
 
 	try
 	{
@@ -59,11 +58,11 @@ int main()
 		}
 		
 		// 让CTestThread有足够的时间完成任务
-		CUtils::millisleep(5000);
+		sys::CUtils::millisleep(5000);
 		// 等待所有线程退出，然后销毁线程池
 		thread_pool.destroy();
 	}
-	catch (CSyscallException& ex)
+	catch (sys::CSyscallException& ex)
 	{
 		// 将异常信息打印出来，方便定位原因
 		printf("Create thread pool exception: %s.\n", ex.str().c_str());
