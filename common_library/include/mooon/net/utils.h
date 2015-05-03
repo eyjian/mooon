@@ -245,6 +245,7 @@ public:
 extern std::string to_string(const struct in_addr& sin_addr);
 extern std::string to_string(const sockaddr_in& addr);
 extern std::string ip2string(uint32_t ip);
+extern uint32_t string2ipv4(const std::string& ip);
 
 NET_NAMESPACE_END
 #endif // MOOON_NET_UTILS_H

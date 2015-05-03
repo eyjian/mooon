@@ -386,4 +386,9 @@ std::string ip2string(uint32_t ip)
     return to_string(sin_addr);
 }
 
+uint32_t string2ipv4(const std::string& ip)
+{
+    return inet_addr(ip.c_str());
+}
+
 NET_NAMESPACE_END

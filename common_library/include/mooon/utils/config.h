@@ -237,7 +237,7 @@ typedef enum
 
 // 复制容器
 // 将容器C1中的元素复制到容器C2中
-// 容器C1可以为set/list/vector等，容器C2可为vector/list等
+// 容器C1可以为set/list/map/vector等，容器C2只可为vector/list等
 // 返回int是为便于C2为vector时的遍历
 template <class C1, class C2>
 int copy_container(const C1& c1, C2* c2)
@@ -246,6 +246,30 @@ int copy_container(const C1& c1, C2* c2)
         c2->push_back(*iter);
 
     return static_cast<int>(c2->size());
+}
+
+// 删除序列容器中的元素，并清空序列容器
+template <class ContainerClass>
+void clear_sequence_container(ContainerClass* container)
+{
+    for (typename ContainerClass::iterator iter=container->begin(); iter != container->end(); ++iter)
+    {
+        delete *iter;
+    }
+
+    container->clear();
+}
+
+// 删除关联容器中的元素，并清空关联容器
+template <class ContainerClass>
+void clear_associative_container(ContainerClass* container)
+{
+    for (typename ContainerClass::iterator iter=container->begin(); iter != container->end(); ++iter)
+    {
+        delete iter->second;
+    }
+
+    container->clear();
 }
 
 UTILS_NAMESPACE_END
