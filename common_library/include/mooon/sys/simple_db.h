@@ -36,11 +36,12 @@ try
     DBTable db_table;
 
     // 不指定DB名，以及不需要密码
-    db->set_host("127.0.0.1", 3600);
-    db->set_user("root", "");
-    db->set_charset("utf8");
-    db->enable_auto_reconnect();
-    db->set_timeout_seconds(600);
+    db_connection->set_host("127.0.0.1", 3600);
+    db_connection->set_user("root", "");
+    db_connection->set_charset("utf8");
+    db_connection->enable_auto_reconnect();
+    db_connection->set_timeout_seconds(600);
+    //db_connection->set_db_name("test");
     
     db_connection->open();
     db_connection->query(db_table, "select count(1) from test_table where id=%d", 2015);
