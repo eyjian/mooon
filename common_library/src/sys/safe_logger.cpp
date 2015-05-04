@@ -30,12 +30,20 @@ SYS_NAMESPACE_BEGIN
 // 线程级别的
 static __thread int sg_thread_log_fd = -1;
 
+static int get_thread_log_fd(int log_fd)
+{
+    if (-1 == sg_thread_log_fd)
+        sg_thread_log_fd = log_fd;
+
+    return sg_thread_log_fd;
+}
+
 static void set_thread_log_fd(int thread_log_fd)
 {
     sg_thread_log_fd = thread_log_fd;
 }
 
-static void close_thread_log_fd()
+void close_thread_log_fd()
 {
     if (sg_thread_log_fd != -1)
     {
@@ -270,17 +278,8 @@ void CSafeLogger::bin_log(const char* filename, int lineno, const char* module_n
 
 bool CSafeLogger::need_rotate() const
 {
-    int thread_log_fd = get_thread_log_fd();
+    int thread_log_fd = get_thread_log_fd(_log_fd);
     return CFileUtils::get_file_size(thread_log_fd) > static_cast<off_t>(_max_bytes);
-}
-
-int CSafeLogger::get_thread_log_fd() const
-{
-    if (-1 == sg_thread_log_fd)
-        if (_log_fd != -1)
-            sg_thread_log_fd = dup(_log_fd);
-
-    return sg_thread_log_fd;
 }
 
 void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno, const char* module_name, const char* format, va_list& args)
@@ -332,7 +331,7 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
     }
 
     // 写日志文件
-    int thread_log_fd = get_thread_log_fd();
+    int thread_log_fd = get_thread_log_fd(_log_fd);
     if (thread_log_fd != -1)
     {
         int bytes = write(thread_log_fd, log_line.get(), log_real_size);
@@ -344,9 +343,8 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
                 std::string lock_path = _log_dir + std::string("/.") + _log_filename + std::string(".lock");
                 FileLocker file_locker(lock_path.c_str(), true); // 确保这里一定加锁
 
-                // _fd可能已被其它进程滚动了，所以这里需要重新open一下
+                // _fd可能已被其它进程或线程滚动了，所以这里需要重新open一下
                 int log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
-
                 if (need_rotate())
                 {
                     close(log_fd);
@@ -354,7 +352,7 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
                 }
                 else // 其它进程完成了滚动
                 {
-                    close(log_fd);
+                    close(_log_fd);
                     _log_fd = log_fd;
                     set_thread_log_fd(log_fd);
                 }

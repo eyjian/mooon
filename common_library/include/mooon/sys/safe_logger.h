@@ -24,6 +24,10 @@
 #include <stdio.h>
 SYS_NAMESPACE_BEGIN
 
+// 如果有显示的线束或退出线程，
+// 则应当在线程结束“之前”调用close_thread_log_fd()，否则可能产生内存泄漏
+extern void close_thread_log_fd();
+
 /**
   * 多线程和多进程安全的日志器
   */
@@ -83,7 +87,6 @@ public:
 
 private:
     bool need_rotate() const;
-    int get_thread_log_fd() const;
     void do_log(log_level_t log_level, const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
     void rotate_log();
     void reset();

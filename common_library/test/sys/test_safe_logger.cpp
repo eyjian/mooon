@@ -27,7 +27,7 @@ MOOON_NAMESPACE_USE
 
 static void foo()
 {
-    for (int i=0; i<100; ++i)
+    for (int i=0; i<1000; ++i)
     {
         MYLOG_INFO("foo => %d", i);
         MYLOG_ERROR("foo => %d", i+1);
