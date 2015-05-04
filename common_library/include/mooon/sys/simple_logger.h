@@ -124,7 +124,7 @@ do { \
 enum
 {
     // 默认的文件模式
-    FILE_MODE_DEFAULT = (S_IRUSR|S_IWUSR | S_IRGRP | S_IROTH)
+    FILE_DEFAULT_PERM = (S_IRUSR|S_IWUSR | S_IRGRP | S_IROTH)
 };
 
 /***
@@ -266,7 +266,7 @@ inline CSimpleLogger::CSimpleLogger(
        _record_size(record_size)
 {
     _log_filepath = _log_dir + std::string("/") + _filename;
-    _fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_MODE_DEFAULT);
+    _fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
 
     if (_fd != -1)
     {
@@ -461,7 +461,7 @@ inline void CSimpleLogger::print(const char* file, int line, const char* level, 
                 
                 // _fd可能已被其它进程滚动了，所以这里需要重新open一下
                 std::string log_filepath = _log_dir + std::string("/") + _filename;
-                int fd = open(log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_MODE_DEFAULT);
+                int fd = open(log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
 
                 // 需要再次判断，原因是可能其它进程已处理过了
                 if (need_rotate(fd))
@@ -522,7 +522,7 @@ inline void CSimpleLogger::rotate_log()
 
     // 重新创建
     printf("create %s\n", old_path.c_str());
-    _fd = open(old_path.c_str(), O_WRONLY|O_CREAT|O_EXCL, FILE_MODE_DEFAULT);
+    _fd = open(old_path.c_str(), O_WRONLY|O_CREAT|O_EXCL, FILE_DEFAULT_PERM);
 }
 
 inline void CSimpleLogger::reset()

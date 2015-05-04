@@ -1,28 +1,26 @@
 include $(top_srcdir)/Make.rules
 AUTOMAKE_OPTIONS= foreign
 
-lib_LIBRARIES = libmooon.a
-
-libmooon_OBJECTS=../utils/*.o ../sys/*.o ../net/*.o
+mooon_OBJECTS=../utils/*.o ../sys/*.o ../net/*.o
 AM_LDFLAGS  += -fPIC -shared 
 AM_CXXFLAGS += -fPIC
 
-all: $(lib_LIBRARIES) libmooon.so
+all: libmooon.a libmooon.so
 
-libmooon.a:
-	$(AR) $(ARFLAGS) $@ $(libmooon_OBJECTS)
+libmooon.a: $(mooon_OBJECTS)
+	$(AR) $(ARFLAGS) $@ $^
 	ranlib $@
 
-libmooon.so:
-	 $(CXX) -o $@ $(libmooon_OBJECTS) $(AM_LDFLAGS) -pthread
+libmooon.so: $(mooon_OBJECTS)
+	 $(CXX) -o $@ $^ $(AM_LDFLAGS) -pthread
 
 clean:
-	rm -f $(lib_LIBRARIES) libmooon.so
+	rm -f libmooon.a libmooon.so
 
 install:
-	cp $(lib_LIBRARIES) $(prefix)/lib
+	cp libmooon.a $(prefix)/lib
 	cp libmooon.so $(prefix)/lib
 
 uninstall:
-	rm -f $(prefix)/lib/$(lib_LIBRARIES)
+	rm -f $(prefix)/lib/libmooon.a
 	rm -f $(prefix)/lib/libmooon.so

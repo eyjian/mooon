@@ -395,6 +395,7 @@ class CThreadEngine
 {
 public:
     CThreadEngine(const Functor& functor)
+        : _thread(0)
     {
         // bind()返回的是一个临时对象，
         // 故需要new一个，以便在thread_proc()过程中有效
@@ -419,6 +420,12 @@ public:
             pthread_join(_thread, NULL);
             _thread = 0;
         }
+    }
+
+    pthread_t thread_id() { return _thread; }
+    void cancel_thread()
+    {
+        pthread_cancel(_thread);
     }
 
 private:
@@ -605,6 +612,6 @@ int main()
     return 0;
 }
 
-SYS_NAMESPACE_END
 #endif // TEST_THREAD_ENGINE
+SYS_NAMESPACE_END
 #endif // MOOON_SYS_THREAD_ENGINE_H
