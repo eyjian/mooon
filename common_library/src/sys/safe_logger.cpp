@@ -30,19 +30,18 @@ SYS_NAMESPACE_BEGIN
 // 线程级别的
 static __thread int sg_thread_log_fd = -1;
 
-static int get_thread_log_fd(int log_fd)
+static int get_thread_log_fd(CLock& lock, int log_fd)
 {
     if (-1 == sg_thread_log_fd)
+    {
         if (log_fd != -1)
+        {
+            LockHelper<CLock> lock_helper(lock);
             sg_thread_log_fd = dup(log_fd);
+        }
+    }
 
     return sg_thread_log_fd;
-}
-
-static void set_thread_log_fd(int log_fd)
-{
-    if (log_fd != -1)
-        sg_thread_log_fd = dup(log_fd);
 }
 
 void close_thread_log_fd()
@@ -54,6 +53,14 @@ void close_thread_log_fd()
 
         sg_thread_log_fd = -1;
     }
+}
+
+static void set_thread_log_fd(int log_fd)
+{
+    close_thread_log_fd();
+
+    if (log_fd != -1)
+        sg_thread_log_fd = dup(log_fd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -280,6 +287,11 @@ void CSafeLogger::bin_log(const char* filename, int lineno, const char* module_n
     }
 }
 
+int CSafeLogger::get_log_fd() const
+{
+    return get_thread_log_fd(_lock, _log_fd);
+}
+
 bool CSafeLogger::need_rotate(int fd) const
 {
     return CFileUtils::get_file_size(fd) > static_cast<off_t>(_max_bytes);
@@ -334,7 +346,7 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
     }
 
     // 写日志文件
-    int thread_log_fd = get_thread_log_fd(_log_fd);
+    int thread_log_fd = get_log_fd();
     if (thread_log_fd != -1)
     {
         int bytes = write(thread_log_fd, log_line.get(), log_real_size);
@@ -367,8 +379,15 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
                                 close(log_fd);
                                 rotate_log();
                             }
-                            else // 其它进程完成了滚动
+                            else
                             {
+                                // 如果是线程执行了滚动，则_log_fd值为非-1，可直接使用
+                                // 如果是其它进程执行了滚动了，则应当使用log_fd替代_log_fd
+
+                                // 可以放在锁FileLocker之外，用来保护_log_fd
+                                // 由于每个线程并不直接使用_log_fd，而是对_log_fd做了dup，所以只要保护_log_fd即可
+                                LockHelper<CLock> lock_helper(_lock);
+
                                 close(_log_fd);
                                 _log_fd = log_fd;
                                 set_thread_log_fd(log_fd);

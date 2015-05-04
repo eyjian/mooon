@@ -47,8 +47,8 @@ int main(int argc, char* argv[])
     {
         pid_t pid;
         ::mooon::sys::g_logger = new sys::CSafeLogger(".", "test.log");
-        sys::g_logger->set_single_filesize(1024000);
-        sys::g_logger->set_backup_number(20);
+        sys::g_logger->set_single_filesize(20240000);
+        sys::g_logger->set_backup_number(10);
 
         MYLOG_INFO("hello");
         MYLOG_ERROR("world");
