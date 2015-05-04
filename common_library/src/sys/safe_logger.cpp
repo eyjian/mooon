@@ -33,21 +33,25 @@ static __thread int sg_thread_log_fd = -1;
 static int get_thread_log_fd(int log_fd)
 {
     if (-1 == sg_thread_log_fd)
-        sg_thread_log_fd = log_fd;
+        if (log_fd != -1)
+            sg_thread_log_fd = dup(log_fd);
 
     return sg_thread_log_fd;
 }
 
-static void set_thread_log_fd(int thread_log_fd)
+static void set_thread_log_fd(int log_fd)
 {
-    sg_thread_log_fd = thread_log_fd;
+    if (log_fd != -1)
+        sg_thread_log_fd = dup(log_fd);
 }
 
 void close_thread_log_fd()
 {
     if (sg_thread_log_fd != -1)
     {
-        close(sg_thread_log_fd);
+        if (-1 == close(sg_thread_log_fd))
+            fprintf(stderr, "[%d:%lu] SafeLogger close error: %m\n", getpid(), pthread_self());
+
         sg_thread_log_fd = -1;
     }
 }
@@ -276,10 +280,9 @@ void CSafeLogger::bin_log(const char* filename, int lineno, const char* module_n
     }
 }
 
-bool CSafeLogger::need_rotate() const
+bool CSafeLogger::need_rotate(int fd) const
 {
-    int thread_log_fd = get_thread_log_fd(_log_fd);
-    return CFileUtils::get_file_size(thread_log_fd) > static_cast<off_t>(_max_bytes);
+    return CFileUtils::get_file_size(fd) > static_cast<off_t>(_max_bytes);
 }
 
 void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno, const char* module_name, const char* format, va_list& args)
@@ -335,27 +338,52 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
     if (thread_log_fd != -1)
     {
         int bytes = write(thread_log_fd, log_line.get(), log_real_size);
-        if (bytes > 0)
+        if (-1 == bytes)
         {
-            // 判断是否需要滚动
-            if (need_rotate())
+            fprintf(stderr, "[%d:%lu] SafeLogger[%d] write error: %m\n", getpid(), pthread_self(), thread_log_fd);
+        }
+        else if (bytes > 0)
+        {
+            try
             {
-                std::string lock_path = _log_dir + std::string("/.") + _log_filename + std::string(".lock");
-                FileLocker file_locker(lock_path.c_str(), true); // 确保这里一定加锁
+                // 判断是否需要滚动
+                if (need_rotate(thread_log_fd))
+                {
+                    std::string lock_path = _log_dir + std::string("/.") + _log_filename + std::string(".lock");
+                    FileLocker file_locker(lock_path.c_str(), true); // 确保这里一定加锁
 
-                // _fd可能已被其它进程或线程滚动了，所以这里需要重新open一下
-                int log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
-                if (need_rotate())
-                {
-                    close(log_fd);
-                    rotate_log();
+                    // _fd可能已被其它进程或线程滚动了，所以这里需要重新open一下
+                    int log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
+                    if (-1 == log_fd)
+                    {
+                        fprintf(stderr, "[%d:%lu] SafeLogger open %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str());
+                    }
+                    else
+                    {
+                        try
+                        {
+                            if (need_rotate(log_fd))
+                            {
+                                close(log_fd);
+                                rotate_log();
+                            }
+                            else // 其它进程完成了滚动
+                            {
+                                close(_log_fd);
+                                _log_fd = log_fd;
+                                set_thread_log_fd(log_fd);
+                            }
+                        }
+                        catch (CSyscallException& syscall_ex)
+                        {
+                            fprintf(stderr, "[%d:%lu] SafeLogger[%d] rotate error: %s.\n", getpid(), pthread_self(), log_fd, syscall_ex.str().c_str());
+                        }
+                    }
                 }
-                else // 其它进程完成了滚动
-                {
-                    close(_log_fd);
-                    _log_fd = log_fd;
-                    set_thread_log_fd(log_fd);
-                }
+            }
+            catch (CSyscallException& syscall_ex)
+            {
+                fprintf(stderr, "[%d:%lu] SafeLogger[%d] rotate error: %s\n", getpid(), pthread_self(), thread_log_fd, syscall_ex.str().c_str());
             }
         }
     }
@@ -370,14 +398,20 @@ void CSafeLogger::rotate_log()
     reset();
 
     // 历史滚动
-    for (uint8_t i=_backup_number-1; i>0; --i)
+    for (uint8_t i=_backup_number-1; i>1; --i)
     {
         new_path = _log_dir + std::string("/") + _log_filename + std::string(".") + utils::CStringUtils::any2string(static_cast<int>(i));
         old_path = _log_dir + std::string("/") + _log_filename + std::string(".") + utils::CStringUtils::any2string(static_cast<int>(i-1));
 
         if (0 == access(old_path.c_str(), F_OK))
         {
-            rename(old_path.c_str(), new_path.c_str());
+            if (-1 == rename(old_path.c_str(), new_path.c_str()))
+                fprintf(stderr, "[%d:%lu] SafeLogger rename %s to %s error: %m.\n", getpid(), pthread_self(), old_path.c_str(), new_path.c_str());
+        }
+        else
+        {
+            if (errno != ENOENT)
+                fprintf(stderr, "[%d:%lu] SafeLogger access %s error: %m.\n", getpid(), pthread_self(), old_path.c_str());
         }
     }
 
@@ -387,16 +421,22 @@ void CSafeLogger::rotate_log()
         new_path = _log_dir + std::string("/") + _log_filename + std::string(".1");
         if (0 == access(_log_filepath.c_str(), F_OK))
         {
-            rename(_log_filepath.c_str(), new_path.c_str());
+            if (-1 == rename(_log_filepath.c_str(), new_path.c_str()))
+                fprintf(stderr, "[%d:%lu] SafeLogger rename %s to %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str(), new_path.c_str());
+        }
+        else
+        {
+            if (errno != ENOENT)
+                fprintf(stderr, "[%d:%lu] SafeLogger access %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str());
         }
     }
 
     // 重新创建
-    printf("create %s\n", _log_filepath.c_str());
+    printf("[%d:%lu] SafeLogger create %s\n", getpid(), pthread_self(), _log_filepath.c_str());
     _log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_EXCL, FILE_DEFAULT_PERM);
     if (-1 == _log_fd)
     {
-        ; // 能做什么？
+        fprintf(stderr, "[%d:%lu] SafeLogger create %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str());
     }
 }
 
@@ -406,7 +446,9 @@ void CSafeLogger::reset()
 
     if (_log_fd != -1)
     {
-        close(_log_fd);
+        if (-1 == close(_log_fd))
+            fprintf(stderr, "[%d:%lu] SafeLogger close %s error: %m.\n", getpid(), pthread_self(), _log_filepath.c_str());
+
         _log_fd = -1;
     }
 }
