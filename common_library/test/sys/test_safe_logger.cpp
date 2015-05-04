@@ -31,7 +31,8 @@ static void foo()
     {
         MYLOG_INFO("foo => %d", i);
         MYLOG_ERROR("foo => %d", i+1);
-        sys::CUtils::millisleep(200);
+
+        sys::CUtils::millisleep(10);
     }
 }
 
