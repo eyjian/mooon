@@ -14,17 +14,26 @@ AUTOMAKE_OPTIONS= foreign
 #
 
 # MySQL
+# libmysqlclient.a可能在$(MYSQL_PATH)/lib下，也可能在$(MYSQL_PATH)/lib/mysql下
 if MYSQL_INSTALLED_3RD
 MYSQL_PATH=/usr/local/thirdparty/mysql
+INCLUDES   += -I$(MYSQL_PATH)/include
+LDADD      += -L$(MYSQL_PATH)/lib -L$(MYSQL_PATH)/lib/mysql -lmysqlclient
 else
 if MYSQL_INSTALLED_ENV
 MYSQL_PATH=$${MYSQL_HOME}
+INCLUDES   += -I$(MYSQL_PATH)/include
+LDADD      += -L$(MYSQL_PATH)/lib -L$(MYSQL_PATH)/lib/mysql -lmysqlclient
 else
 if MYSQL_INSTALLED_HOME
 MYSQL_PATH=$${HOME}/mysql
+INCLUDES   += -I$(MYSQL_PATH)/include
+LDADD      += -L$(MYSQL_PATH)/lib -L$(MYSQL_PATH)/lib/mysql -lmysqlclient
 else
 if MYSQL_INSTALLED_USR
 MYSQL_PATH=/usr/local/mysql
+INCLUDES   += -I$(MYSQL_PATH)/include
+LDADD      += -L$(MYSQL_PATH)/lib -L$(MYSQL_PATH)/lib/mysql -lmysqlclient
 endif
 endif
 endif
@@ -33,26 +42,27 @@ endif
 # SQLite3
 if SQLITE3_INSTALLED_3RD
 SQLITE3_PATH=/usr/local/thirdparty/sqlite3
+INCLUDES   += -I$(SQLITE3_PATH)/include
+LDADD      +=   $(SQLITE3_PATH)/lib/libsqlite3.a
 else
 if SQLITE3_INSTALLED_ENV
 SQLITE3_PATH=$${SQLITE3_HOME}
+INCLUDES   += -I$(SQLITE3_PATH)/include
+LDADD      +=   $(SQLITE3_PATH)/lib/libsqlite3.a
 else
 if SQLITE3_INSTALLED_HOME
 SQLITE3_PATH=$${HOME}/sqlite3
+INCLUDES   += -I$(SQLITE3_PATH)/include
+LDADD      +=   $(SQLITE3_PATH)/lib/libsqlite3.a
 else
 if SQLITE3_INSTALLED_USR
 SQLITE3_PATH=/usr/local/sqlite3
-endif
-endif
-endif
-endif
-
-INCLUDES   += -I$(MYSQL_PATH)/include
-# libmysqlclient.a可能在$(MYSQL_PATH)/lib下，也可能在$(MYSQL_PATH)/lib/mysql下
-LDADD      += -L$(MYSQL_PATH)/lib -L$(MYSQL_PATH)/lib/mysql -lmysqlclient
-
 INCLUDES   += -I$(SQLITE3_PATH)/include
 LDADD      +=   $(SQLITE3_PATH)/lib/libsqlite3.a
+endif
+endif
+endif
+endif
 
 LDADD      += -L$(top_srcdir)/utils -lmooon_utils
 AM_LDFLAGS  += -fPIC -shared -pthread -lrt -ldl -lz
