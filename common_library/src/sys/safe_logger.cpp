@@ -30,20 +30,6 @@ SYS_NAMESPACE_BEGIN
 // 线程级别的
 static __thread int sg_thread_log_fd = -1;
 
-static int get_thread_log_fd(CLock& lock, int log_fd)
-{
-    if (-1 == sg_thread_log_fd)
-    {
-        if (log_fd != -1)
-        {
-            LockHelper<CLock> lock_helper(lock);
-            sg_thread_log_fd = dup(log_fd);
-        }
-    }
-
-    return sg_thread_log_fd;
-}
-
 void close_thread_log_fd()
 {
     if (sg_thread_log_fd != -1)
@@ -53,14 +39,6 @@ void close_thread_log_fd()
 
         sg_thread_log_fd = -1;
     }
-}
-
-static void set_thread_log_fd(int log_fd)
-{
-    close_thread_log_fd();
-
-    if (log_fd != -1)
-        sg_thread_log_fd = dup(log_fd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -85,7 +63,12 @@ CSafeLogger::CSafeLogger(const char* log_dir, const char* log_filename, uint16_t
     _log_filepath = _log_dir + std::string("/") + _log_filename;
     _log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
     if (-1 == _log_fd)
-        THROW_SYSCALL_EXCEPTION(NULL, errno, "open");
+    {
+        int errcode = errno;
+        fprintf(stderr, "[%d:%lu] SafeLogger open %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str());
+
+        THROW_SYSCALL_EXCEPTION(NULL, errcode, "open");
+    }
 }
 
 CSafeLogger::~CSafeLogger()
@@ -287,9 +270,18 @@ void CSafeLogger::bin_log(const char* filename, int lineno, const char* module_n
     }
 }
 
-int CSafeLogger::get_log_fd() const
+int CSafeLogger::get_thread_log_fd() const
 {
-    return get_thread_log_fd(_lock, _log_fd);
+    if (-1 == sg_thread_log_fd)
+    {
+        LockHelper<CLock> lock_helper(_lock);
+        if (_log_fd != -1)
+        {
+            sg_thread_log_fd = dup(_log_fd);
+        }
+    }
+
+    return sg_thread_log_fd;
 }
 
 bool CSafeLogger::need_rotate(int fd) const
@@ -346,7 +338,7 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
     }
 
     // 写日志文件
-    int thread_log_fd = get_log_fd();
+    int thread_log_fd = get_thread_log_fd();
     if (thread_log_fd != -1)
     {
         int bytes = write(thread_log_fd, log_line.get(), log_real_size);
@@ -390,7 +382,6 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
 
                                 close(_log_fd);
                                 _log_fd = log_fd;
-                                set_thread_log_fd(log_fd);
                             }
                         }
                         catch (CSyscallException& syscall_ex)

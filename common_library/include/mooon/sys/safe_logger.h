@@ -88,7 +88,7 @@ public:
     virtual void bin_log(const char* filename, int lineno, const char* module_name, const char* log, uint16_t size);
 
 private:
-    int get_log_fd() const;
+    int get_thread_log_fd() const;
     bool need_rotate(int fd) const;
     void do_log(log_level_t log_level, const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
     void rotate_log();

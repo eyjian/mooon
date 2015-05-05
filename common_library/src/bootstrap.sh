@@ -144,17 +144,16 @@ rec_subdir $basedir
 replace_autoconf_version()
 {
     autoconf_version=`autoconf --version|head -n1|cut -d' ' -f4`
-    sed 's/AUTOCONF_VERSION/'$autoconf_version'/' configure.ac.in > configure.ac
+    sed -i 's/AUTOCONF_VERSION/'$autoconf_version'/' configure.ac
 }
 
 # 处理Make.rules文件
 check_make_rules()
 {
     bit=`getconf LONG_BIT`
+
     if test $bit -eq 64; then
-        sed 's/^MY_CXXFLAGS/#MY_CXXFLAGS/' Make.rules.in > Make.rules
-    else
-        cp Make.rules.in Make.rules
+        sed -i 's/^MY_CXXFLAGS/#MY_CXXFLAGS/' Make.rules
     fi
 }
 
@@ -187,14 +186,17 @@ check_thirdparty()
         printf "\033[1;33m"
         printf "OK: FOUND $thirdparty_name at /usr/local/thirdparty/$dir_name"
         printf "\033[m\n"
+        return 0
     elif test -d $HOME/$dir_name; then
         printf "\033[1;33m"
         printf "OK: FOUND $thirdparty_name at $HOME/$dir_name"
         printf "\033[m\n"
+        return 0
     elif test -d /usr/local/$dir_name; then
         printf "\033[1;33m"
         printf "OK: FOUND $thirdparty_name at /usr/local/$dir_name"
         printf "\033[m\n"
+        return 0
     else
         printf "\033[1;33m"
         printf "WARNING: NOT FOUND $thirdparty_name at any following directories:\n"
@@ -202,6 +204,7 @@ check_thirdparty()
         printf "2) $HOME/thirdparty\n"
         printf "3) /usr/local\n"
         printf "\033[m\n"
+        return 1
     fi
 }
 
@@ -255,7 +258,19 @@ chmod +x configure
 
 # 检查依赖的第三方库
 check_thirdparty MySQL mysql
+if test $? -eq 0; then
+    sed -i "s/#FOUND_MYSQL/-DFOUND_MYSQL/g" Make.rules
+else
+    sed -i "s/#FOUND_MYSQL//g" Make.rules
+fi
+
 check_thirdparty SQLite3 sqlite3
+if test $? -eq 0; then
+    sed -i "s/#FOUND_SQLITE3/-DFOUND_SQLITE3/g" Make.rules
+else
+    sed -i "s/#FOUND_SQLITE3//g" Make.rules
+fi
+
 #################################################
 # 接下来就可以开始执行configure生成Makefile文件了
 #################################################
