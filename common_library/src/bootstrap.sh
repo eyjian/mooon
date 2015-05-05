@@ -208,14 +208,34 @@ check_thirdparty()
     fi
 }
 
-# 需要DOS格式转换的文件
-#d2x ltmain.sh # 用来生成libtool文件，而它本身则由libtoolize生成
-d2x configure.ac.in
-d2x Makefile.am
-d2x Make.rules.in
-
 check_make_rules
 replace_autoconf_version
+
+# 在一些较高版本，ltmain.sh等不再是在本目录下生成，而是指向了系统的同文件，如：
+# ltmain.sh -> /usr/share/libtool/ltmain.sh
+# missing -> /usr/share/automake-1.9/missing
+# config.guess -> /usr/share/libtool/config.guess
+# 所以再执行“chmod +x *.sh”可能会遇到权限不足问题
+#chmod +x *.sh
+chmod +x configure
+
+
+##########################################
+# 检查依赖的第三方库
+##########################################
+check_thirdparty MySQL mysql
+if test $? -eq 0; then
+    sed -i "s/#FOUND_MYSQL/-DFOUND_MYSQL/g" Make.rules
+else
+    sed -i "s/#FOUND_MYSQL//g" Make.rules
+fi
+
+check_thirdparty SQLite3 sqlite3
+if test $? -eq 0; then
+    sed -i "s/#FOUND_SQLITE3/-DFOUND_SQLITE3/g" Make.rules
+else
+    sed -i "s/#FOUND_SQLITE3//g" Make.rules
+fi
 
 
 ##########################################
@@ -246,29 +266,6 @@ automake -a
 if test $? -ne 0; then
     echo "automake -a ERROR"
     exit
-fi
-
-# 在一些较高版本，ltmain.sh等不再是在本目录下生成，而是指向了系统的同文件，如：
-# ltmain.sh -> /usr/share/libtool/ltmain.sh
-# missing -> /usr/share/automake-1.9/missing
-# config.guess -> /usr/share/libtool/config.guess
-# 所以再执行“chmod +x *.sh”可能会遇到权限不足问题
-#chmod +x *.sh
-chmod +x configure
-
-# 检查依赖的第三方库
-check_thirdparty MySQL mysql
-if test $? -eq 0; then
-    sed -i "s/#FOUND_MYSQL/-DFOUND_MYSQL/g" Make.rules
-else
-    sed -i "s/#FOUND_MYSQL//g" Make.rules
-fi
-
-check_thirdparty SQLite3 sqlite3
-if test $? -eq 0; then
-    sed -i "s/#FOUND_SQLITE3/-DFOUND_SQLITE3/g" Make.rules
-else
-    sed -i "s/#FOUND_SQLITE3//g" Make.rules
 fi
 
 #################################################
