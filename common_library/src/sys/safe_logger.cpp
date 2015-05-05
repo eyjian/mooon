@@ -272,10 +272,17 @@ void CSafeLogger::bin_log(const char* filename, int lineno, const char* module_n
 
 int CSafeLogger::get_thread_log_fd() const
 {
-    if (-1 == sg_thread_log_fd)
+    if (sg_thread_log_fd != _log_fd)
     {
+        if (sg_thread_log_fd != -1)
+            close(sg_thread_log_fd);
+
         LockHelper<CLock> lock_helper(_lock);
-        if (_log_fd != -1)
+        if (-1 == _log_fd)
+        {
+            sg_thread_log_fd = -1;
+        }
+        else
         {
             sg_thread_log_fd = dup(_log_fd);
         }
@@ -404,9 +411,6 @@ void CSafeLogger::rotate_log()
     std::string new_path;  // 滚动后的文件路径，包含目录和文件名
     std::string old_path;  // 滚动前的文件路径，包含目录和文件名
 
-    // 轮回，一切重新开始
-    reset();
-
     // 历史滚动
     for (uint8_t i=_backup_number-1; i>1; --i)
     {
@@ -443,24 +447,16 @@ void CSafeLogger::rotate_log()
 
     // 重新创建
     printf("[%d:%lu] SafeLogger create %s\n", getpid(), pthread_self(), _log_filepath.c_str());
-    _log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_EXCL, FILE_DEFAULT_PERM);
-    if (-1 == _log_fd)
+    int log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_EXCL, FILE_DEFAULT_PERM);
+    if (-1 == log_fd)
     {
         fprintf(stderr, "[%d:%lu] SafeLogger create %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str());
     }
-}
 
-void CSafeLogger::reset()
-{
-    close_thread_log_fd();
-
-    if (_log_fd != -1)
-    {
-        if (-1 == close(_log_fd))
-            fprintf(stderr, "[%d:%lu] SafeLogger close %s error: %m.\n", getpid(), pthread_self(), _log_filepath.c_str());
-
-        _log_fd = -1;
-    }
+    LockHelper<CLock> lock_helper(_lock);
+    if (-1 == close(_log_fd))
+        fprintf(stderr, "[%d:%lu] SafeLogger close %s error: %m.\n", getpid(), pthread_self(), _log_filepath.c_str());
+    _log_fd = log_fd;
 }
 
 SYS_NAMESPACE_END

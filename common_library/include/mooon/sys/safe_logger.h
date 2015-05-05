@@ -92,7 +92,6 @@ private:
     bool need_rotate(int fd) const;
     void do_log(log_level_t log_level, const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
     void rotate_log();
-    void reset();
 
 private:
     int _log_fd;
