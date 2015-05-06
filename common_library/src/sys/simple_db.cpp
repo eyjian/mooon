@@ -21,20 +21,20 @@
 #include "utils/string_formatter.h"
 #include "utils/string_utils.h"
 
-#ifdef FOUND_MYSQL
+#if HAVE_MYSQL==1
 //#include <my_global.h> // 有些版本的MySQL可能需要包含此头文件
 //#include <my_sys.h>    // 有些版本的MySQL可能需要包含此头文件
 #include <mysql/errmsg.h> // CR_SERVER_GONE_ERROR
 #include <mysql/mysql.h>
 #include <mysql/mysqld_error.h> // ER_QUERY_INTERRUPTED
-#endif // FOUND_MYSQL
+#endif // HAVE_MYSQL
 
 #include <stdarg.h>
 #include <strings.h>
 
-#ifdef FOUND_SQLITE3
+#if HAVE_SQLITE3==1
 #include <sqlite3/sqlite3.h>
-#endif // FOUND_SQLITE3
+#endif // HAVE_SQLITE3
 SYS_NAMESPACE_BEGIN
 
 /**
@@ -83,7 +83,7 @@ protected:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-#ifdef FOUND_MYSQL
+#if HAVE_MYSQL==1
 
 /**
  * MySQL版本的DB连接
@@ -111,9 +111,9 @@ private:
 private:
     MYSQL* _mysql_handler; // MySQL句柄
 };
-#endif // FOUND_MYSQL
+#endif // HAVE_MYSQL
 ////////////////////////////////////////////////////////////////////////////////
-#ifdef FOUND_SQLITE3
+#if HAVE_SQLITE3==1
 
 /**
  * SQLite3版本的DB连接
@@ -625,5 +625,5 @@ void CSQLite3Connection::_do_query(DBTable& db_table, const char* format, va_lis
     }
 }
 
-#endif // FOUND_SQLITE3
+#endif // HAVE_SQLITE3
 SYS_NAMESPACE_END

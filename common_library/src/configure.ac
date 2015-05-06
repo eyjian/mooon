@@ -87,12 +87,6 @@ AM_CONDITIONAL(MYSQL_INSTALLED_HOME, test $HOME -a -d $HOME/mysql)
 AM_CONDITIONAL(MYSQL_INSTALLED_USR, test -d /usr/local/mysql)
 AM_CONDITIONAL(MYSQL_INSTALLED_3RD, test -d /usr/local/thirdparty/mysql)
 
-# 检查是否安装了SQLite3
-AM_CONDITIONAL(SQLITE3_INSTALLED_ENV, test $SQLITE3_HOME -a -d $SQLITE3_HOME)
-AM_CONDITIONAL(SQLITE3_INSTALLED_HOME, test $HOME -a -d $HOME/sqlite3)
-AM_CONDITIONAL(SQLITE3_INSTALLED_USR, test -d /usr/local/sqlite3)
-AM_CONDITIONAL(SQLITE3_INSTALLED_3RD, test -d /usr/local/thirdparty/sqlite3)
-
 AC_CONFIG_FILES([
 		Makefile
 		utils/Makefile
@@ -101,6 +95,5 @@ AC_CONFIG_FILES([
 		common/Makefile
 		plugin/Makefile
 		plugin/plugin_tinyxml/Makefile
-		plugin/plugin_mysql/Makefile
 		])
 AC_OUTPUT

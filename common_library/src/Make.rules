@@ -1,8 +1,24 @@
 # -march=pentium4 for 32bit
 MY_CXXFLAGS=-march=pentium4
 
-# bootstrap.sh会对“#FOUND_MYSQL”和“#FOUND_SQLITE3”进行替换
-AM_CXXFLAGS = #FOUND_MYSQL #FOUND_SQLITE3 $(MY_CXXFLAGS) -D_GNU_SOURCE -rdynamic -Wall
+# bootstrap.sh会对下列的HAVE_、_INCLUDE和_LIB进行替换
+#HAVE_MYSQL
+#MYSQL_INCLUDE
+#MYSQL_LIB
+
+#HAVE_SQLITE3
+#SQLITE3_INCLUDE
+#SQLITE3_LIB
+
+#HAVE_CURL
+#CURL_INCLUDE
+#CURL_LIB
+
+AM_CXXFLAGS = $(HAVE_MYSQL)
+AM_CXXFLAGS += $(HAVE_SQLITE3)
+AM_CXXFLAGS += $(HAVE_CURL)
+
+AM_CXXFLAGS += $(MY_CXXFLAGS) -D_GNU_SOURCE -rdynamic -Wall
 AM_LDFLAGS = -rdynamic
 
 INCLUDES=-I$(top_srcdir)/../include -I$(top_srcdir)/../include/mooon

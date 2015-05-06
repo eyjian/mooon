@@ -177,64 +177,81 @@ d2x()
     done
 }
 
+thirdparty_path=
 check_thirdparty()
 {
     local thirdparty_name=$1
     local dir_name=$2
 
+    echo "Checking $thirdparty_name ..."
     if test -d /usr/local/thirdparty/$dir_name; then
+        thirdparty_path=/usr/local/thirdparty/$dir_name    
         printf "\033[1;33m"
-        printf "OK: FOUND $thirdparty_name at /usr/local/thirdparty/$dir_name"
+        printf "OK: found $thirdparty_name at /usr/local/thirdparty/$dir_name"
         printf "\033[m\n"
-        return 0
+        return 1
     elif test -d $HOME/$dir_name; then
+        thirdparty_path=$HOME/$dir_name
         printf "\033[1;33m"
-        printf "OK: FOUND $thirdparty_name at $HOME/$dir_name"
+        printf "OK: found $thirdparty_name at $HOME/$dir_name"
         printf "\033[m\n"
-        return 0
+        return 2
     elif test -d /usr/local/$dir_name; then
+        thirdparty_path=/usr/local/$dir_name
         printf "\033[1;33m"
-        printf "OK: FOUND $thirdparty_name at /usr/local/$dir_name"
+        printf "OK: found $thirdparty_name at /usr/local/$dir_name"
         printf "\033[m\n"
-        return 0
+        return 3
     else
-        printf "\033[1;33m"
-        printf "WARNING: NOT FOUND $thirdparty_name at any following directories:\n"
+        thirdparty_path=
+        printf "\033[0;32;32m"
+        printf "WARNING: not found $thirdparty_name at any following directories:\n"
         printf "1) /usr/local/thirdparty\n"
         printf "2) $HOME/thirdparty\n"
         printf "3) /usr/local\n"
         printf "\033[m\n"
-        return 1
+        return 0
     fi
 }
 
 check_make_rules
 replace_autoconf_version
 
-# 在一些较高版本，ltmain.sh等不再是在本目录下生成，而是指向了系统的同文件，如：
-# ltmain.sh -> /usr/share/libtool/ltmain.sh
-# missing -> /usr/share/automake-1.9/missing
-# config.guess -> /usr/share/libtool/config.guess
-# 所以再执行“chmod +x *.sh”可能会遇到权限不足问题
-#chmod +x *.sh
-chmod +x configure
-
 
 ##########################################
 # 检查依赖的第三方库
 ##########################################
 check_thirdparty MySQL mysql
-if test $? -eq 0; then
-    sed -i "s/#FOUND_MYSQL/-DFOUND_MYSQL/g" Make.rules
+if test $? -ne 0; then
+    sed -i "s|#HAVE_MYSQL|HAVE_MYSQL=-DHAVE_MYSQL=1|g" Make.rules
+    sed -i "s|#MYSQL_INCLUDE|MYSQL_INCLUDE=-I$thirdparty_path\/include|g" Make.rules
+    sed -i "s|#MYSQL_LIB|MYSQL_LIB=$thirdparty_path\/lib\/libmysqlclient_r.a|g" Make.rules
 else
-    sed -i "s/#FOUND_MYSQL//g" Make.rules
+    sed -i "s|#HAVE_MYSQL|HAVE_MYSQL=-DHAVE_MYSQL=0|g" Make.rules
+    sed -i "s|#MYSQL_INCLUDE|MYSQL_INCLUDE=|g" Make.rules
+    sed -i "s|#MYSQL_LIB|MYSQL_LIB=|g" Make.rules
 fi
 
 check_thirdparty SQLite3 sqlite3
-if test $? -eq 0; then
-    sed -i "s/#FOUND_SQLITE3/-DFOUND_SQLITE3/g" Make.rules
+if test $? -ne 0; then
+    sed -i "s|#HAVE_SQLITE3|HAVE_SQLITE3=-DHAVE_SQLITE3=1|g" Make.rules
+    sed -i "s|#SQLITE3_INCLUDE|SQLITE3_INCLUDE=-I$thirdparty_path\/include|g" Make.rules
+    sed -i "s|#SQLITE3_LIB|SQLITE3_LIB=$thirdparty_path\/lib\/libsqlite3.a|g" Make.rules
 else
-    sed -i "s/#FOUND_SQLITE3//g" Make.rules
+    sed -i "s|#HAVE_SQLITE3|HAVE_SQLITE3=-DHAVE_SQLITE3=0|g" Make.rules
+    sed -i "s|#SQLITE3_INCLUDE|SQLITE3_INCLUDE=|g" Make.rules
+    sed -i "s|#SQLITE3_LIB|SQLITE3_LIB=|g" Make.rules
+fi
+
+check_thirdparty curl curl
+if test $? -ne 0; then
+    sed -i "s|#HAVE_CURL|HAVE_CURL=-DHAVE_CURL=1|g" Make.rules
+    sed -i "s|#CURL_INCLUDE|CURL_INCLUDE=-I$thirdparty_path\/include|g" Make.rules
+    sed -i "s|#CURL_LIB|CURL_LIB=$thirdparty_path\/lib\/libcurl.a|g" Make.rules
+else
+    sed -i "s|#HAVE_CURL|HAVE_CURL=-DHAVE_CURL=0|g" Make.rules
+    sed -i "s|#CURL_INCLUDE|CURL_INCLUDE=|g" Make.rules
+    sed -i "s|#CURL_LIB|CURL_LIB=|g" Make.rules
 fi
 
 
@@ -267,6 +284,7 @@ if test $? -ne 0; then
     echo "automake -a ERROR"
     exit
 fi
+
 
 #################################################
 # 接下来就可以开始执行configure生成Makefile文件了
