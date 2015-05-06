@@ -9,6 +9,10 @@ SYS_NAMESPACE_BEGIN
 class CCurlWrapper
 {
 public:
+    static void global_init();
+    static void global_cleanup();
+
+public:
     CCurlWrapper(int timeout_seconds) throw (utils::CException);
     ~CCurlWrapper() throw ();
 

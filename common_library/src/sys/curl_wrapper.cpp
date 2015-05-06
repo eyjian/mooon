@@ -6,6 +6,16 @@
 
 SYS_NAMESPACE_BEGIN
 
+void CCurlWrapper::global_init()
+{
+    curl_global_init(CURL_GLOBAL_ALL);
+}
+
+void CCurlWrapper::global_cleanup()
+{
+    curl_global_cleanup();
+}
+
 static size_t on_write(void* buffer, size_t size, size_t nmemb, void* stream)
 {
     std::string* result = reinterpret_cast<std::string*>(stream);
