@@ -55,6 +55,9 @@ void CCurlWrapper::reset() throw (utils::CException)
     CURLcode errcode;
     CURL* curl = (CURL*)_curl;
     
+    // 重置
+    curl_easy_reset(curl);
+
     errcode = curl_easy_setopt(curl, CURLOPT_TIMEOUT, _timeout_seconds);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
@@ -66,8 +69,6 @@ void CCurlWrapper::reset() throw (utils::CException)
     errcode = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, on_write);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
-
-    curl_easy_reset(curl);
 }
 
 void CCurlWrapper::get(std::string* result, const std::string& url) throw (utils::CException)
