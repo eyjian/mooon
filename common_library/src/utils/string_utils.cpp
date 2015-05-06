@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Author: jian yi, eyjian@qq.com
+ * Author: jian yi, eyjian@qq.com or eyjian@gmail.com
  */
-//#include <alloca.h>
-#include <stdarg.h>
-#include <limits>
-#include "utils/token_list.h"
 #include "utils/string_utils.h"
+#include "utils/tokener.h"
+//#include <alloca.h>
+#include <limits>
+#include <stdarg.h>
 UTILS_NAMESPACE_BEGIN
 
 /***
@@ -533,18 +533,19 @@ int CStringUtils::fix_vsnprintf(char *str, size_t size, const char *format, va_l
 std::string CStringUtils::path2filename(const std::string& path, const std::string& join_string)
 {
     std::string filename;
-    CTokenList::TTokenList token_list;
-    CTokenList::parse(token_list, path, "/");
+    std::list<std::string> tokens;
+    CTokener::split(&tokens, path, "/");
 
-    if (!token_list.empty())
+    if (!tokens.empty())
     {
-        filename = token_list.front();
-        token_list.pop_front();
+        filename = tokens.front();
+        tokens.pop_front();
     }
-    while (!token_list.empty())
+
+    while (!tokens.empty())
     {
-        filename += join_string + token_list.front();
-        token_list.pop_front();
+        filename += join_string + tokens.front();
+        tokens.pop_front();
     }
 
     return filename;

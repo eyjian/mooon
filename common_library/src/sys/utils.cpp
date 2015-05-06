@@ -14,20 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Author: jian yi, eyjian@qq.com
+ * Author: jian yi, eyjian@qq.com or eyjian@gmail.com
  */
-#include <ftw.h> // ftw
-#include <time.h>
-#include <dirent.h>
-#include <execinfo.h> // backtrace和backtrace_symbols函数
-#include <sys/time.h>
-#include <features.h> // feature_test_macros
-#include <sys/prctl.h> // prctl
-#include <sys/resource.h>
-#include <utils/token_list.h>
-#include <utils/string_utils.h>
 #include "sys/utils.h"
 #include "sys/close_helper.h"
+#include "utils/string_utils.h"
+#include <dirent.h>
+#include <execinfo.h> // backtrace和backtrace_symbols函数
+#include <features.h> // feature_test_macros
+#include <ftw.h> // ftw
+#include <sys/time.h>
+#include <sys/prctl.h> // prctl
+#include <sys/resource.h>
+#include <time.h>
 
 #ifndef PR_SET_NAME
 #define PR_SET_NAME 15

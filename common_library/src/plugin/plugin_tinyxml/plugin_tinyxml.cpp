@@ -16,13 +16,13 @@
  *
  * Author: JianYi, eyjian@qq.com
  */
+#include "plugin/plugin_tinyxml/plugin_tinyxml.h"
+#include "tinyxml.h"
+#include "utils/string_utils.h"
+#include "utils/tokener.h"
 #include <regex.h>
 #include <strings.h>
 #include <sys/types.h>
-#include "tinyxml.h"
-#include "utils/token_list.h"
-#include "utils/string_utils.h"
-#include "plugin/plugin_tinyxml/plugin_tinyxml.h"
 LIBPLUGIN_NAMESPACE_BEGIN
 
 class CConfigReader;
@@ -132,17 +132,17 @@ CConfigReader::CConfigReader(TiXmlElement* root)
 
 TiXmlElement* CConfigReader::select_element(const std::string& path)
 {
-    utils::CTokenList::TTokenList token_list;
-    utils::CTokenList::parse(token_list, path, "/");
+    std::list<std::string> tokens_list;
+    utils::CTokener::split(&tokens_list, path, "/");
 	
     // 用以支持：get_string_value("/", "name", value);
-    if (token_list.empty()) return _root;
+    if (tokens_list.empty()) return _root;
 	
     TiXmlElement* element = _root;	
-    while (!token_list.empty())
+    while (!tokens_list.empty())
     {
-        std::string token = token_list.front();
-        token_list.pop_front();
+        std::string token = tokens_list.front();
+        tokens_list.pop_front();
 
         while (true)
         {
@@ -153,7 +153,7 @@ TiXmlElement* CConfigReader::select_element(const std::string& path)
 
             if (0 == strcasecmp(token.c_str(), element_name))
             {
-                if (token_list.empty()) return element;
+                if (tokens_list.empty()) return element;
 				
                 element = element->FirstChildElement();
                 break;
@@ -197,15 +197,15 @@ bool CConfigReader::select_elements(const std::string& path, TTiXmlElementArray&
     TiXmlElement* element = NULL;
     TTiXmlElementArray child_element_array;
     TTiXmlElementArray parent_element_array;
-    utils::CTokenList::TTokenList token_list;
+    std::list<std::string> tokens_list;
 
-    utils::CTokenList::parse(token_list, path, "/");
+    utils::CTokener::split(&tokens_list, path, "/");
     parent_element_array.push_back(_root);
 
-    while (!token_list.empty())
+    while (!tokens_list.empty())
     {
-        token = token_list.front();
-        token_list.pop_front();
+        token = tokens_list.front();
+        tokens_list.pop_front();
         
         // returns zero for a successful compilation or an error code for failure
         int errcode = regcomp(&reg, token.c_str(), REG_EXTENDED);
@@ -223,7 +223,7 @@ bool CConfigReader::select_elements(const std::string& path, TTiXmlElementArray&
             // returns zero for a successful match or REG_NOMATCH for failure
             if (0 == regexec(&reg, element_name, 0, NULL, 0))
             {
-                if (token_list.empty())
+                if (tokens_list.empty())
                 {     
                     element_array.push_back(parent_element_array[i]);
                 }
@@ -239,7 +239,7 @@ bool CConfigReader::select_elements(const std::string& path, TTiXmlElementArray&
             }        
         }
 
-        if (token_list.empty()) break;
+        if (tokens_list.empty()) break;
 
         parent_element_array.clear();
         for (i=0; i<child_element_array.size(); ++i)

@@ -6,11 +6,6 @@
 
 SYS_NAMESPACE_BEGIN
 
-static CURL* get_curl(void* curl)
-{
-    return static_cast<CURL*>(curl);
-}
-
 static size_t on_write(void* buffer, size_t size, size_t nmemb, void* stream)
 {
     std::string* result = reinterpret_cast<std::string*>(stream);
@@ -21,57 +16,64 @@ static size_t on_write(void* buffer, size_t size, size_t nmemb, void* stream)
 CCurlWrapper::CCurlWrapper(int timeout_seconds) throw (utils::CException)
     : _timeout_seconds(timeout_seconds)
 {
-    _curl = curl_easy_init();
-    if (NULL == _curl)
+    CURL* curl = curl_easy_init();
+    if (NULL == curl)
         THROW_EXCEPTION("curl_easy_init failed", -1);
 
     try
     {
-        reset();
+        _curl = (void*)curl; // 须放在reset()之前，因为reset()有使用_curl
+        reset(); 
     }
     catch (...)
     {
-        curl_easy_cleanup(get_curl(_curl));
+        curl_easy_cleanup(curl);
+        _curl = NULL;
         throw;
     }
 }
 
 CCurlWrapper::~CCurlWrapper() throw ()
 {
-    curl_easy_cleanup(get_curl(_curl));
+    CURL* curl = (CURL*)_curl;
+    curl_easy_cleanup(curl);
     _curl = NULL;
 }
 
 void CCurlWrapper::reset() throw (utils::CException)
 {
     CURLcode errcode;
-    errcode = curl_easy_setopt(get_curl(_curl), CURLOPT_TIMEOUT, _timeout_seconds);
+    CURL* curl = (CURL*)_curl;
+    
+    errcode = curl_easy_setopt(curl, CURLOPT_TIMEOUT, _timeout_seconds);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
-    errcode = curl_easy_setopt(get_curl(_curl), CURLOPT_READFUNCTION, NULL);
+    errcode = curl_easy_setopt(curl, CURLOPT_READFUNCTION, NULL);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
-    errcode = curl_easy_setopt(get_curl(_curl), CURLOPT_WRITEFUNCTION, on_write);
+    errcode = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, on_write);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
-    curl_easy_reset(get_curl(_curl));
+    curl_easy_reset(curl);
 }
 
 void CCurlWrapper::get(std::string* result, const std::string& url) throw (utils::CException)
 {
     CURLcode errcode;
-    errcode = curl_easy_setopt(get_curl(_curl), CURLOPT_URL, url.c_str());
+    CURL* curl = (CURL*)_curl;
+    
+    errcode = curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
-    errcode = curl_easy_setopt(get_curl(_curl), CURLOPT_WRITEDATA, result);
+    errcode = curl_easy_setopt(curl, CURLOPT_WRITEDATA, result);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
-    errcode = curl_easy_perform(get_curl(_curl));
+    errcode = curl_easy_perform(curl);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 }
