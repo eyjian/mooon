@@ -59,6 +59,11 @@ private:
     virtual void query(DBRow& db_row, const char* format, ...) throw (CDBException) __attribute__((format(printf, 3, 4)));
     virtual std::string query(const char* format, ...) throw (CDBException) __attribute__((format(printf, 2, 3)));
 
+    virtual void ping() throw (CDBException);
+    virtual void commit() throw (CDBException);
+    virtual void rollback() throw (CDBException);
+    virtual void enable_autocommit(bool enabled) throw (CDBException);
+
 private:
     virtual void _do_query(DBTable& db_table, const char* format, va_list& args, const char* sql, int bytes_printed) throw (CDBException) = 0;
 
@@ -101,6 +106,11 @@ private:
 
     virtual int update(const char* format, ...) throw (CDBException) __attribute__((format(printf, 2, 3)));
     virtual std::string str() throw ();
+
+    virtual void ping() throw (CDBException);
+    virtual void commit() throw (CDBException);
+    virtual void rollback() throw (CDBException);
+    virtual void enable_autocommit(bool enabled) throw (CDBException);
 
 private:
     virtual void _do_query(DBTable& db_table, const char* format, va_list& args, const char* sql, int bytes_printed) throw (CDBException);
@@ -315,6 +325,26 @@ std::string CDBConnectionBase::query(const char* format, ...) throw (CDBExceptio
     return result;
 }
 
+void CDBConnectionBase::ping() throw (CDBException)
+{
+    THROW_DB_EXCEPTION(NULL, "not supported", DB_NOT_SUPPORTED);
+}
+
+void CDBConnectionBase::commit() throw (CDBException)
+{
+    THROW_DB_EXCEPTION(NULL, "not supported", DB_NOT_SUPPORTED);
+}
+
+void CDBConnectionBase::rollback() throw (CDBException)
+{
+    THROW_DB_EXCEPTION(NULL, "not supported", DB_NOT_SUPPORTED);
+}
+
+void CDBConnectionBase::enable_autocommit(bool enabled) throw (CDBException)
+{
+    THROW_DB_EXCEPTION(NULL, "not supported", DB_NOT_SUPPORTED);
+}
+
 void CDBConnectionBase::do_query(DBTable& db_table, const char* format, va_list& args) throw (CDBException)
 {
     utils::ScopedArray<char> sql(new char[_sql_max + 1]);
@@ -395,6 +425,31 @@ int CMySQLConnection::update(const char* format, ...) throw (CDBException)
 std::string CMySQLConnection::str() throw ()
 {
     return _id;
+}
+
+void CMySQLConnection::ping() throw (CDBException)
+{
+    if (mysql_ping(_mysql_handler) != 0)
+        THROW_DB_EXCEPTION(NULL, mysql_error(_mysql_handler), mysql_errno(_mysql_handler));
+}
+
+void CMySQLConnection::commit() throw (CDBException)
+{
+    if (mysql_commit(_mysql_handler) != 0)
+        THROW_DB_EXCEPTION(NULL, mysql_error(_mysql_handler), mysql_errno(_mysql_handler));
+}
+
+void CMySQLConnection::rollback() throw (CDBException)
+{
+    if (mysql_rollback(_mysql_handler) != 0)
+        THROW_DB_EXCEPTION(NULL, mysql_error(_mysql_handler), mysql_errno(_mysql_handler));
+}
+
+void CMySQLConnection::enable_autocommit(bool enabled) throw (CDBException)
+{
+    my_bool auto_mode = enabled? 1: 0;
+    if (mysql_autocommit(_mysql_handler, auto_mode) != 0)
+        THROW_DB_EXCEPTION(NULL, mysql_error(_mysql_handler), mysql_errno(_mysql_handler));
 }
 
 void CMySQLConnection::_do_query(DBTable& db_table, const char* format, va_list& args, const char* sql, int bytes_printed) throw (CDBException)

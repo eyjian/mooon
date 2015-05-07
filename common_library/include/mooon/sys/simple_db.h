@@ -175,6 +175,11 @@ public:
      * 取得可读的字符串信息
      */
     virtual std::string str() throw () = 0;
+
+    virtual void ping() throw (CDBException) = 0;
+    virtual void commit() throw (CDBException) = 0;
+    virtual void rollback() throw (CDBException) = 0;
+    virtual void enable_autocommit(bool enabled) throw (CDBException) = 0;
 };
 
 SYS_NAMESPACE_END
