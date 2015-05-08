@@ -151,7 +151,7 @@ private:
 private:
     sqlite3* _sqlite;
 };
-#endif // FOUND_SQLITE3
+#endif // HAVE_SQLITE3
 
 ////////////////////////////////////////////////////////////////////////////////
 DBConnection* DBConnection::create_connection(const std::string& db_type_name, size_t sql_max)
@@ -161,15 +161,15 @@ DBConnection* DBConnection::create_connection(const std::string& db_type_name, s
     // MySQL，不区分大小写
     if (0 == strcasecmp(db_type_name.c_str(), "mysql"))
     {
-#ifdef FOUND_MYSQL
+#if HAVE_MYSQL==1
         db_connection = new CMySQLConnection(sql_max);
-#endif // FOUND_MYSQL
+#endif // HAVE_MYSQL
     }
     else if (0 == strcasecmp(db_type_name.c_str(), "sqlite3"))
     {
-#ifdef FOUND_SQLITE3
+#if HAVE_SQLITE3==1
         db_connection = new CSQLite3Connection(sql_max);
-#endif // FOUND_SQLITE3
+#endif // HAVE_SQLITE3
     }
 
     return db_connection;
@@ -182,7 +182,7 @@ void DBConnection::destroy_connection(DBConnection* db_connection)
 
 bool DBConnection::is_disconnected_exception(CDBException& db_error)
 {
-#ifdef FOUND_MYSQL
+#if HAVE_MYSQL==1
     int errcode = db_error.errcode();
 
     // ER_QUERY_INTERRUPTED：比如mysqld进程挂了
@@ -191,7 +191,7 @@ bool DBConnection::is_disconnected_exception(CDBException& db_error)
            (CR_SERVER_GONE_ERROR == errcode);   // MySQL server has gone away
 #else
     return false;
-#endif // FOUND_MYSQL
+#endif // HAVE_MYSQL
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -361,7 +361,7 @@ void CDBConnectionBase::do_query(DBTable& db_table, const char* format, va_list&
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-#ifdef FOUND_MYSQL
+#if HAVE_MYSQL==1
 
 CMySQLConnection::CMySQLConnection(size_t sql_max)
     : CDBConnectionBase(sql_max), _mysql_handler(NULL)
@@ -542,10 +542,10 @@ void CMySQLConnection::do_open() throw (CDBException)
     }
 }
 
-#endif // FOUND_MYSQL
+#endif // HAVE_MYSQL
 
 ////////////////////////////////////////////////////////////////////////////////
-#ifdef FOUND_SQLITE3
+#if HAVE_SQLITE3==1
 
 CSQLite3Connection::CSQLite3Connection(size_t sql_max)
     : CDBConnectionBase(sql_max), _sqlite(NULL)
