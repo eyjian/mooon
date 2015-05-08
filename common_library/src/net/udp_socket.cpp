@@ -57,7 +57,7 @@ int CUdpSocket::send_to(const void* buffer, size_t buffer_size, uint32_t to_ip, 
 
 int CUdpSocket::send_to(const void* buffer, size_t buffer_size, const char* to_ip, uint16_t to_port) throw (sys::CSyscallException)
 {
-    return send_to(buffer, buffer_size, inet_addr(to_ip), to_port);
+    return send_to(buffer, buffer_size, ntohl(inet_addr(to_ip)), to_port);
 }
 
 int CUdpSocket::send_to(const void* buffer, size_t buffer_size, const struct sockaddr_in& to_addr) throw (sys::CSyscallException)
