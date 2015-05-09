@@ -45,7 +45,7 @@
  *ArgsParser::g_error_message 解析的错误信息
  * 示例：
  *
- * INTEGER_ARG_DEFINE(true, uint16_t, port, 8080, 1000, 6554, listen port)
+ * INTEGER_ARG_DEFINE(true, uint16_t, port, 8080, 1000, 65535, listen port)
  * STRING_ARG_DEFINE(true, ip, 127.0.0.1, listen IP)
  *
  * int main(int argc, char* argv[])
@@ -91,7 +91,8 @@
 #define INTEGER_ARG_DEFINE(optional, integer_type, param_name, default_value, min_value, max_value, help_string) \
     namespace ArgsParser /** 保证不污染全局空间 */ \
     { \
-        utils::CArgInfo<integer_type> *param_name= new utils::CIntArgInfo<integer_type>(optional,#param_name, default_value,min_value,max_value,#help_string);\
+        mooon::utils::CArgInfo<integer_type> *param_name = \
+            new mooon::utils::CIntArgInfo<integer_type>(optional,#param_name, default_value,min_value,max_value,#help_string);\
     }
 
 /***
@@ -103,21 +104,22 @@
 #define STRING_ARG_DEFINE(optional, param_name, default_value, help_string)\
     namespace ArgsParser /** 保证不污染全局空间 */ \
     { \
-		utils::CArgInfo<std::string> *param_name= new utils::CStringArgInfo<std::string>(optional,#param_name,#default_value,#help_string);\
+		mooon::utils::CArgInfo<std::string> *param_name = \
+            new mooon::utils::CStringArgInfo<std::string>(optional,#param_name,#default_value,#help_string);\
     }
 
 // 整数类型参数声明
 #define INTEGER_ARG_DECLARE(integer_type, param_name) \
     namespace ArgsParser /** 保证不污染全局空间 */ \
     { \
-        extern utils::CArgInfo<integer_type> *param_name; \
+        extern mooon::utils::CArgInfo<integer_type> *param_name; \
     }
 
 // 整数类型参数声明
 #define STRING_ARG_DECLARE(param_name) \
     namespace ArgsParser /** 保证不污染全局空间 */ \
     { \
-        extern utils::CArgInfo<std::string> *param_name; \
+        extern mooon::utils::CArgInfo<std::string> *param_name; \
     }
 
 //////////////////////////////////////////////////////////////////////////
