@@ -100,6 +100,9 @@ public:
       */
     static bool datetime_struct_from_string(const char* str, struct tm* datetime_struct);
     static bool datetime_struct_from_string(const char* str, time_t* datetime);
+
+    // 返回“YYYY-MM-DD HH:MM:SS”格式的日期时间
+    static std::string to_string(time_t datetime);
 };
 
 SYS_NAMESPACE_END

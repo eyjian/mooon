@@ -33,6 +33,7 @@ CThread::CThread() throw (utils::CException, CSyscallException)
     :_lock(true)
     ,_stop(false)
     ,_current_state(state_sleeping)
+    ,_thread(0)
     ,_stack_size(0)
 {
     int errcode = pthread_attr_init(&_attr);
@@ -96,9 +97,12 @@ void CThread::join() throw (CSyscallException)
     // 线程自己不能调用join
     if (CThread::get_current_thread_id() != this->get_thread_id())
     {    
-        int errcode = pthread_join(_thread, NULL);
-        if (errcode != 0)
-            THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_join");
+        if (_thread > 0)
+        {
+            int errcode = pthread_join(_thread, NULL);
+            if (errcode != 0)
+                THROW_SYSCALL_EXCEPTION(NULL, errcode, "pthread_join");
+        }
     }
 }
 

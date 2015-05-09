@@ -323,4 +323,18 @@ bool CDatetimeUtils::datetime_struct_from_string(const char* str, time_t* dateti
     return true;
 }
 
+std::string CDatetimeUtils::to_string(time_t datetime)
+{
+    struct tm result;
+    localtime_r(&datetime, &result);
+
+    char datetime_buffer[sizeof("YYYY-MM-DD HH:SS:MM")];
+    snprintf(datetime_buffer, sizeof(datetime_buffer)
+        ,"%04d-%02d-%02d %02d:%02d:%02d"
+        ,result.tm_year+1900, result.tm_mon+1, result.tm_mday
+        ,result.tm_hour, result.tm_min, result.tm_sec);
+
+    return datetime_buffer;
+}
+
 SYS_NAMESPACE_END
