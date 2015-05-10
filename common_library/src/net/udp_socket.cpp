@@ -49,7 +49,7 @@ int CUdpSocket::send_to(const void* buffer, size_t buffer_size, uint32_t to_ip, 
 
     to_addr.sin_family = AF_INET;
     to_addr.sin_port = htons(to_port);
-    to_addr.sin_addr.s_addr = htonl(to_ip);
+    to_addr.sin_addr.s_addr = to_ip;
     memset(to_addr.sin_zero, 0, sizeof(to_addr.sin_zero));
 
     return send_to(buffer, buffer_size, to_addr);
@@ -57,7 +57,7 @@ int CUdpSocket::send_to(const void* buffer, size_t buffer_size, uint32_t to_ip, 
 
 int CUdpSocket::send_to(const void* buffer, size_t buffer_size, const char* to_ip, uint16_t to_port) throw (sys::CSyscallException)
 {
-    return send_to(buffer, buffer_size, ntohl(inet_addr(to_ip)), to_port);
+    return send_to(buffer, buffer_size, inet_addr(to_ip), to_port);
 }
 
 int CUdpSocket::send_to(const void* buffer, size_t buffer_size, const struct sockaddr_in& to_addr) throw (sys::CSyscallException)
@@ -74,7 +74,7 @@ int CUdpSocket::receive_from(void* buffer, size_t buffer_size, uint32_t* from_ip
     struct sockaddr_in from_addr;
 
     int bytes = receive_from(buffer, buffer_size, &from_addr);
-    *from_ip = ntohl(from_addr.sin_addr.s_addr);
+    *from_ip = from_addr.sin_addr.s_addr;
     *from_port = ntohs(from_addr.sin_port);
 
     return bytes;
