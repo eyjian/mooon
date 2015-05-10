@@ -30,13 +30,13 @@ public:
     CUdpSocket();
     void listen(uint16_t port) throw (sys::CSyscallException);
 
-    // to_ip 目标IP，要求为主机字节序
+    // to_ip 目标IP，要求为网络字节序
     // to_port 目标端口，同样要求为主机字节序
     int send_to(const void* buffer, size_t buffer_size, uint32_t to_ip, uint16_t to_port) throw (sys::CSyscallException);
     int send_to(const void* buffer, size_t buffer_size, const char* to_ip, uint16_t to_port) throw (sys::CSyscallException);
     int send_to(const void* buffer, size_t buffer_size, const struct sockaddr_in& to_addr) throw (sys::CSyscallException);
 
-    // from_ip 返回的源IP，为主机字节序
+    // from_ip 返回的源IP，为网络字节序
     // from_port 返回的源端口，为主机字节序
     int receive_from(void* buffer, size_t buffer_size, uint32_t* from_ip, uint16_t* from_port) throw (sys::CSyscallException);
     int receive_from(void* buffer, size_t buffer_size, struct sockaddr_in* from_addr) throw (sys::CSyscallException);
