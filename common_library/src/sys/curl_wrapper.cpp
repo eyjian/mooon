@@ -71,7 +71,7 @@ void CCurlWrapper::reset() throw (utils::CException)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 }
 
-void CCurlWrapper::get(std::string* result, const std::string& url) throw (utils::CException)
+void CCurlWrapper::get(std::string* result, const std::string& url, bool enable_insecure) throw (utils::CException)
 {
     CURLcode errcode;
     CURL* curl = (CURL*)_curl;
@@ -81,6 +81,17 @@ void CCurlWrapper::get(std::string* result, const std::string& url) throw (utils
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
     errcode = curl_easy_setopt(curl, CURLOPT_WRITEDATA, result);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    // 相当于curl命令的“-k”或“--insecure”参数
+    int ssl_verifypeer = enable_insecure? 0: 1;
+    int ssl_verifyhost = enable_insecure? 0: 1;
+    errcode = curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYPEER, ssl_verifypeer);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    errcode = curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYHOST, ssl_verifyhost);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
