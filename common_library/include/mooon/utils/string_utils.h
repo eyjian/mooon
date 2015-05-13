@@ -192,6 +192,19 @@ public:
         s << any;
         return s.str();
     }
+    
+    // 判断一个字符串是否为纯字母型字符串，而不包含数字、下划线等非字母
+    static bool is_english_alphabet(const char* str)
+    {
+        const char* p = str;
+        while (*p != '\0')
+        {
+            if (!((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z')))
+                return false;
+        }
+
+        return true;
+    }
 
     /** 将STL容器转换成字符串 */
     template <class ContainerClass>
