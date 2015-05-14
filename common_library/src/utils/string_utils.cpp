@@ -631,6 +631,8 @@ bool CStringUtils::is_numeric_string(const char* str)
     {
         if (!(*p >= '0' && *p <= '9'))
             return false;
+
+        ++p;
     }
 
     return true;
@@ -644,6 +646,8 @@ bool CStringUtils::is_alphabetic_string(const char* str)
     {
         if (!((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z')))
             return false;
+
+        ++p;
     }
 
     return true;
@@ -656,11 +660,20 @@ bool CStringUtils::is_variable_string(const char* str)
     while (*p != '\0')
     {
         if (*p >= '0' && *p <= '9')
+        {
+            ++p;
             continue;
+        }
         if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z'))
+        {
+            ++p;
             continue;
+        }
         if (('_' == *p) || ('-' == *p))
+        {
+            ++p;
             continue;
+        }
 
         return false;
     }
