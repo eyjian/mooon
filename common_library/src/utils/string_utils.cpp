@@ -623,4 +623,49 @@ std::string CStringUtils::format_string(const char* format, ...)
     return buffer;
 }
 
+bool CStringUtils::is_numeric_string(const char* str)
+{
+    const char* p = str;
+
+    while (*p != '\0')
+    {
+        if (!(*p >= '0' && *p <= '9'))
+            return false;
+    }
+
+    return true;
+}
+
+bool CStringUtils::is_alphabetic_string(const char* str)
+{
+    const char* p = str;
+
+    while (*p != '\0')
+    {
+        if (!((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z')))
+            return false;
+    }
+
+    return true;
+}
+
+bool CStringUtils::is_variable_string(const char* str)
+{
+    const char* p = str;
+
+    while (*p != '\0')
+    {
+        if (*p >= '0' && *p <= '9')
+            continue;
+        if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z'))
+            continue;
+        if (('_' == *p) || ('-' == *p))
+            continue;
+
+        return false;
+    }
+
+    return true;
+}
+
 UTILS_NAMESPACE_END

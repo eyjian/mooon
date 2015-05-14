@@ -192,19 +192,6 @@ public:
         s << any;
         return s.str();
     }
-    
-    // 判断一个字符串是否为纯字母型字符串，而不包含数字、下划线等非字母
-    static bool is_english_alphabet(const char* str)
-    {
-        const char* p = str;
-        while (*p != '\0')
-        {
-            if (!((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z')))
-                return false;
-        }
-
-        return true;
-    }
 
     /** 将STL容器转换成字符串 */
     template <class ContainerClass>
@@ -267,6 +254,15 @@ public:
       * @return 返回生成的字符串
       */
     static std::string format_string(const char* format, ...) __attribute__((format(printf, 1, 2)));
+
+    // 判断一个字符串是否为纯数字型字符串
+    static bool is_numeric_string(const char* str);
+
+    // 判断一个字符串是否为纯字母型字符串，而不包含数字、下划线等非字母
+    static bool is_alphabetic_string(const char* str);
+
+    // 判断一个字符串是否为变量型字符串，即：可包含字母、数字、下划线和横线
+    static bool is_variable_string(const char* str);
 };
 
 UTILS_NAMESPACE_END
