@@ -261,6 +261,7 @@ public:
 };
 
 //#include <mooon/utils/tokener.h>
+/*
 extern "C" int main()
 {
     std::string str1 = "tom@192.168.0.1:2015#password";
@@ -317,6 +318,7 @@ extern "C" int main()
 
     return 0;
 }
+*/
 
 UTILS_NAMESPACE_END
 #endif // MOOON_UTILS_TOKENER_H
