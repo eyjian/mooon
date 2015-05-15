@@ -163,7 +163,7 @@ int main()
 // ip1:port1#password1,ip2:port2#password2...
 // 或：
 // username1@ip1:port1#password1,username2@ip2:port2#password2...
-class CLoginCTokener
+class CLoginTokener
 {
 public:
     struct LoginInfo
@@ -272,49 +272,49 @@ extern "C" int main()
     std::string str6 = "192.168.0.6:2016#";
     std::string str7 = "192.168.0.6:2016#pwd,192.168.0.6:2016#,192.168.0.6:2016#password";
 
-    std::vector<struct mooon::utils::CLoginCTokener::LoginInfo> login_infos;
+    std::vector<struct mooon::utils::CLoginTokener::LoginInfo> login_infos;
 
     // str1
     login_infos.clear();
-    mooon::utils::CLoginCTokener::parse(&login_infos, str1, ",");
+    mooon::utils::CLoginTokener::parse(&login_infos, str1, ",");
     printf("%s", str1.c_str());
-    mooon::utils::CLoginCTokener::print(login_infos);
+    mooon::utils::CLoginTokener::print(login_infos);
 
     // str2
     login_infos.clear();
-    mooon::utils::CLoginCTokener::parse(&login_infos, str2, ",");
+    mooon::utils::CLoginTokener::parse(&login_infos, str2, ",");
     printf("%s", str2.c_str());
-    mooon::utils::CLoginCTokener::print(login_infos);
+    mooon::utils::CLoginTokener::print(login_infos);
 
     // str3
     login_infos.clear();
-    mooon::utils::CLoginCTokener::parse(&login_infos, str3, ",");
+    mooon::utils::CLoginTokener::parse(&login_infos, str3, ",");
     printf("%s", str3.c_str());
-    mooon::utils::CLoginCTokener::print(login_infos);
+    mooon::utils::CLoginTokener::print(login_infos);
 
     // str4
     login_infos.clear();
-    mooon::utils::CLoginCTokener::parse(&login_infos, str4, ",");
+    mooon::utils::CLoginTokener::parse(&login_infos, str4, ",");
     printf("%s", str4.c_str());
-    mooon::utils::CLoginCTokener::print(login_infos);
+    mooon::utils::CLoginTokener::print(login_infos);
 
     // str5
     login_infos.clear();
-    mooon::utils::CLoginCTokener::parse(&login_infos, str5, ",");
+    mooon::utils::CLoginTokener::parse(&login_infos, str5, ",");
     printf("%s", str5.c_str());
-    mooon::utils::CLoginCTokener::print(login_infos);
+    mooon::utils::CLoginTokener::print(login_infos);
 
     // str6
     login_infos.clear();
-    mooon::utils::CLoginCTokener::parse(&login_infos, str6, ",");
+    mooon::utils::CLoginTokener::parse(&login_infos, str6, ",");
     printf("%s", str6.c_str());
-    mooon::utils::CLoginCTokener::print(login_infos);
+    mooon::utils::CLoginTokener::print(login_infos);
 
     // str7
     login_infos.clear();
-    mooon::utils::CLoginCTokener::parse(&login_infos, str7, ",");
+    mooon::utils::CLoginTokener::parse(&login_infos, str7, ",");
     printf("%s", str7.c_str());
-    mooon::utils::CLoginCTokener::print(login_infos);
+    mooon::utils::CLoginTokener::print(login_infos);
 
     return 0;
 }
