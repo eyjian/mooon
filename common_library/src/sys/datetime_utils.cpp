@@ -329,12 +329,43 @@ std::string CDatetimeUtils::to_string(time_t datetime)
     localtime_r(&datetime, &result);
 
     char datetime_buffer[sizeof("YYYY-MM-DD HH:SS:MM")];
-    snprintf(datetime_buffer, sizeof(datetime_buffer)
+    (void)snprintf(datetime_buffer, sizeof(datetime_buffer)
         ,"%04d-%02d-%02d %02d:%02d:%02d"
         ,result.tm_year+1900, result.tm_mon+1, result.tm_mday
         ,result.tm_hour, result.tm_min, result.tm_sec);
 
     return datetime_buffer;
+}
+
+std::string CDatetimeUtils::to_datetime(time_t datetime)
+{
+    return CDatetimeUtils::to_string(datetime);
+}
+
+std::string CDatetimeUtils::to_date(time_t datetime)
+{
+    struct tm result;
+    localtime_r(&datetime, &result);
+
+    char date_buffer[sizeof("YYYY-MM-DD")];
+    (void)snprintf(date_buffer, sizeof(date_buffer)
+        ,"%04d-%02d-%02d"
+        ,result.tm_year+1900, result.tm_mon+1, result.tm_mday);
+
+    return date_buffer;
+}
+
+std::string CDatetimeUtils::to_time(time_t datetime)
+{
+    struct tm result;
+    localtime_r(&datetime, &result);
+
+    char time_buffer[sizeof("HH:SS:MM")];
+    (void)snprintf(time_buffer, sizeof(time_buffer)
+        ,"%02d:%02d:%02d"
+        ,result.tm_hour, result.tm_min, result.tm_sec);
+
+    return time_buffer;
 }
 
 SYS_NAMESPACE_END
