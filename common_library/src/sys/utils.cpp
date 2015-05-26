@@ -362,12 +362,16 @@ std::string CUtils::remove_suffix(const std::string& filename)
 
 std::string CUtils::get_filename(const std::string& filepath)
 {
-    return basename(filepath.c_str()); // #include <libgen.h>
+    // basename的参数即是输入，也是输出参数，所以需要tmp_filepath
+    std::string tmp_filepath(filepath);
+    return basename(const_cast<char*>(tmp_filepath.c_str())); // #include <libgen.h>
 }
 
 std::string CUtils::get_dirpath(const std::string& filepath)
 {
-    return dirname(filepath.c_str()); // #include <libgen.h>
+    // basename的参数即是输入，也是输出参数，所以需要tmp_filepath
+    std::string tmp_filepath(filepath);
+    return dirname(const_cast<char*>(tmp_filepath.c_str())); // #include <libgen.h>
 }
 
 void CUtils::set_process_name(const std::string& new_name)

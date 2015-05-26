@@ -137,8 +137,7 @@ public:
     static const char* get_program_short_name();
 
     /** 删除文件名的后缀部分，如abc.exe变成abc，注意不会处理路径部分 */
-    static std::string CUtils::remove_suffix(const std::string& filename);
-
+    static std::string remove_suffix(const std::string& filename);
 
     /**
      * 取路径的文件名部分，结果包含后缀部分，效果如下：
