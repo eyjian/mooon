@@ -23,6 +23,7 @@
 #include <execinfo.h> // backtrace和backtrace_symbols函数
 #include <features.h> // feature_test_macros
 #include <ftw.h> // ftw
+#include <libgen.h> // dirname&basename
 #include <sys/time.h>
 #include <sys/prctl.h> // prctl
 #include <sys/resource.h>
@@ -344,6 +345,29 @@ const char* CUtils::get_program_short_name()
     //#define _GNU_SOURCE
     //#include <errno.h>
     return program_invocation_short_name;
+}
+
+std::string CUtils::remove_suffix(const std::string& filename)
+{
+    std::string::size_type pos = filename.find('.');
+    if (pos == std::string::npos)
+    {
+        return filename;
+    }
+    else
+    {
+        return filename.substr(0, pos);
+    }
+}
+
+std::string CUtils::get_filename(const std::string& filepath)
+{
+    return basename(filepath.c_str()); // #include <libgen.h>
+}
+
+std::string CUtils::get_dirpath(const std::string& filepath)
+{
+    return dirname(filepath.c_str()); // #include <libgen.h>
 }
 
 void CUtils::set_process_name(const std::string& new_name)

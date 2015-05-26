@@ -134,7 +134,27 @@ public:
     static const char* get_program_name();
 
     /** 得到当前进程的短名字，即纯文件名 */
-    static const char* get_program_short_name();        
+    static const char* get_program_short_name();
+
+    /** 删除文件名的后缀部分，如abc.exe变成abc，注意不会处理路径部分 */
+    static std::string CUtils::remove_suffix(const std::string& filename);
+
+
+    /**
+     * 取路径的文件名部分，结果包含后缀部分，效果如下：
+     *
+     * path           dirpath        basename
+     * "/usr/lib"     "/usr"         "lib"
+     * "/usr/"        "/"            "usr"
+     * "usr"          "."            "usr"
+     * "/"            "/"            "/"
+     * "."            "."            "."
+     * ".."           "."            ".."
+     */
+    static std::string get_filename(const std::string& filepath);
+
+    /** 取路径的目录部分，不包含文件名部分，并保证不以反斜杠结尾 */
+    static std::string get_dirpath(const std::string& filepath);
 
     /***
       * 设置进程名
