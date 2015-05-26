@@ -130,11 +130,11 @@ public:
       */
     static void enable_core_dump(bool enabled=true, int core_file_size=-1);
 
-    /** 得到当前进程名，包括路径部分 */
-    static const char* get_program_name();
+    /** 得到当前进程程序的名称，结果和main函数的argv[0]相同，如“./abc.exe”为“./abc.exe” */
+    static std::string get_program_long_name();
 
-    /** 得到当前进程的短名字，即纯文件名 */
-    static const char* get_program_short_name();
+    /** 得到当前进程的的名称，不包含目录部分，如“./abc.exe”值为“abc.exe” */
+    static std::string get_program_short_name();
 
     /** 删除文件名的后缀部分，如abc.exe变成abc，注意不会处理路径部分 */
     static std::string remove_suffix(const std::string& filename);

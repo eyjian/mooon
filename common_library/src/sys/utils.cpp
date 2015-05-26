@@ -333,14 +333,14 @@ void CUtils::enable_core_dump(bool enabled, int core_file_size)
         THROW_SYSCALL_EXCEPTION(NULL, errno, "prctl");
 }
 
-const char* CUtils::get_program_name()
+std::string CUtils::get_program_long_name()
 {
     //#define _GNU_SOURCE
     //#include <errno.h>
     return program_invocation_name;
 }
 
-const char* CUtils::get_program_short_name()
+std::string CUtils::get_program_short_name()
 {
     //#define _GNU_SOURCE
     //#include <errno.h>
