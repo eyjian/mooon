@@ -17,6 +17,7 @@
  * Author: jian yi, eyjian@qq.com or eyjian@gmail.com
  */
 #include "utils/string_utils.h"
+#include "utils/scoped_ptr.h"
 #include "utils/tokener.h"
 //#include <alloca.h>
 #include <limits>
@@ -590,37 +591,33 @@ std::string CStringUtils::extract_filename(const std::string& filepath)
 // 1) 当str为"abc"时，它的返回值的大小是3，"abc"的字符个数刚好是3；
 // 2) 当str为"1234567890"时，它的返回值大小是10，"1234567890"的字符个数刚好是10；
 // 3) 当str为"1234567890X"时，它的返回值大小是11，"1234567890X"的字符个数刚好是11。
-// 最多支持10240个ANSI字符，超过的会被截断，但调用者可能不清楚是否发生了截断@_@
 std::string CStringUtils::format_string(const char* format, ...)
 {
     va_list ap;
-    va_start(ap, format);
-
-    // size不包含结尾符，所以在分配内存时需要加一
     size_t size = 1024;
-    char* buffer = new char[size + 1];
+    ScopedArray<char> buffer(new char[size]);
 
-    // vsnprintf中的第二参数大小是要求包含结尾符的
-    int expected = vsnprintf(buffer, size + 1, format, ap);
-    if (expected >= ((int)size+1))
+    while (true)
     {
-        // 防止太长，撑死内存
-        if (expected > 10240)
-            expected = 10240;
-
-        // expected的大小不包含结尾符，所以在分配内存时需要加一
-        delete []buffer;
-        buffer = new char[expected + 1];
-
-        va_end(ap);
         va_start(ap, format);
 
-        vsnprintf(buffer, static_cast<size_t>(expected + 1), format, ap);
+        // vsnprintf中的第二参数大小是要求包含结尾符的
+        int expected = vsnprintf(buffer.get(), size, format, ap);
+
+        va_end(ap);
+        if (expected > -1 && expected < (int)size)
+            break;
+
+        /* Else try again with more space. */
+        if (expected > -1)    /* glibc 2.1 */
+            size = (size_t)expected + 1; /* precisely what is needed */
+        else           /* glibc 2.0 */
+            size *= 2;  /* twice the old size */
+
+        buffer.reset(new char[size]);
     }
 
-    va_end(ap);
-    DeleteHelper<char> dh(buffer, true);
-    return buffer;
+    return buffer.get();
 }
 
 bool CStringUtils::is_numeric_string(const char* str)
@@ -679,6 +676,53 @@ bool CStringUtils::is_variable_string(const char* str)
     }
 
     return true;
+}
+
+std::string CStringUtils::remove_suffix(const std::string& filename)
+{
+    std::string::size_type pos = filename.find('.');
+    if (pos == std::string::npos)
+    {
+        return filename;
+    }
+    else
+    {
+        return filename.substr(0, pos);
+    }
+}
+
+std::string CStringUtils::replace_suffix(const std::string& filepath, const std::string& new_suffix)
+{
+    std::string::size_type pos = filepath.find('.');
+    if (pos == std::string::npos)
+    {
+        if (new_suffix.empty() || new_suffix == ".")
+        {
+            return filepath;
+        }
+        else
+        {
+            if ('.' == new_suffix[0])
+                return filepath + new_suffix;
+            else
+                return filepath + std::string(".") + new_suffix;
+        }
+    }
+    else
+    {
+        if (new_suffix.empty() || new_suffix == ".")
+        {
+            // 相当于删除了后缀
+            return filepath.substr(0, pos);
+        }
+        else
+        {
+            if ('.' == new_suffix[0])
+                return filepath.substr(0, pos) + new_suffix;
+            else
+                return filepath.substr(0, pos) + std::string(".") + new_suffix;
+        }
+    }
 }
 
 UTILS_NAMESPACE_END

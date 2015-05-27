@@ -60,10 +60,9 @@ public:
      * 工厂方法 - 创建一个DB连接
      * @db_type_name DB类型名，如：mysql、oracle、postgreSQL，不区别大小写
      *               当前只支持MySQL，也就是参数值只能输入mysql（不区别大小写）
-     * @sql_max 支持的最大SQL语句长度，单位为字节数，不含结尾符
      * 如果是支持的DB类型，则返回非NULL，否则返回NULL
      */
-    static DBConnection* create_connection(const std::string& db_type_name, size_t sql_max);
+    static DBConnection* create_connection(const std::string& db_type_name);
 
     /***
      * 销毁一个由create_connection()创建的DB连接

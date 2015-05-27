@@ -250,8 +250,8 @@ public:
 
     /***
       * 通过格式化生成一个字符串
-      * 请注意字符串的长度不能超过10240字节，否则会被截断
       * @return 返回生成的字符串
+      * 注意，如果过长，会导致占用过多的内存，甚至程序崩溃
       */
     static std::string format_string(const char* format, ...) __attribute__((format(printf, 1, 2)));
 
@@ -263,6 +263,21 @@ public:
 
     // 判断一个字符串是否为变量型字符串，即：可包含字母、数字、下划线和横线
     static bool is_variable_string(const char* str);
+    
+    // 删除文件名的后缀部分，如abc.exe变成abc，注意不会处理路径部分
+    static std::string remove_suffix(const std::string& filename);
+    
+    // 替换或删除后缀，效果如下：
+    // filepath new_suffix 返回值
+    // abc      log        abc.log
+    // abc      .log       abc.log
+    // abc      .          abc
+    // abc                 abc
+    // abc.exe  log        abc.log
+    // abc.exe  .log       abc.log
+    // abc.exe  .          abc
+    // abc.exe             abc
+    static std::string replace_suffix(const std::string& filepath, const std::string& new_suffix);
 };
 
 UTILS_NAMESPACE_END

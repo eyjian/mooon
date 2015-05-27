@@ -43,7 +43,7 @@ SYS_NAMESPACE_BEGIN
 class CDBConnectionBase: public DBConnection
 {
 public:
-    CDBConnectionBase(size_t sql_max);
+    CDBConnectionBase(size_t sql_size);
     
 private:
     virtual void set_host(const std::string& db_ip, uint16_t db_port);
@@ -65,13 +65,10 @@ private:
     virtual void enable_autocommit(bool enabled) throw (CDBException);
 
 private:
-    virtual void _do_query(DBTable& db_table, const char* format, va_list& args, const char* sql, int bytes_printed) throw (CDBException) = 0;
-
-private:
-    void do_query(DBTable& db_table, const char* format, va_list& args) throw (CDBException);
+    virtual void do_query(DBTable& db_table, const char* sql, int sql_length) throw (CDBException) = 0;
 
 protected:
-    const size_t _sql_max; // 支持的最大SQL语句长度，单位为字节数，不含结尾符
+    const size_t _sql_size; // 支持的最大SQL语句长度，单位为字节数，不含结尾符
     bool _is_established;  // 是否已经和数据库建立的连接
     std::string _id;       // 身份标识，用来识别
 
@@ -113,7 +110,7 @@ private:
     virtual void enable_autocommit(bool enabled) throw (CDBException);
 
 private:
-    virtual void _do_query(DBTable& db_table, const char* format, va_list& args, const char* sql, int bytes_printed) throw (CDBException);
+    virtual void do_query(DBTable& db_table, const char* sql, int sql_length) throw (CDBException);
 
 private:
     void do_open() throw (CDBException);
@@ -143,7 +140,7 @@ private:
     virtual std::string str() throw ();
 
 private:
-    virtual void _do_query(DBTable& db_table, const char* format, va_list& args, const char* sql, int bytes_printed) throw (CDBException);
+    virtual void do_query(DBTable& db_table, const char* sql, int sql_length) throw (CDBException);
 
 private:
     void do_open() throw (CDBException);
@@ -154,8 +151,9 @@ private:
 #endif // HAVE_SQLITE3
 
 ////////////////////////////////////////////////////////////////////////////////
-DBConnection* DBConnection::create_connection(const std::string& db_type_name, size_t sql_max)
+DBConnection* DBConnection::create_connection(const std::string& db_type_name)
 {
+    size_t sql_max = 1024;
     DBConnection* db_connection = NULL;
 
     // MySQL，不区分大小写
@@ -195,8 +193,8 @@ bool DBConnection::is_disconnected_exception(CDBException& db_error)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-CDBConnectionBase::CDBConnectionBase(size_t sql_max)
-    : _sql_max(sql_max), _is_established(false),
+CDBConnectionBase::CDBConnectionBase(size_t sql_size)
+    : _sql_size(sql_size), _is_established(false),
       _db_port(3306), _auto_reconnect(false), _timeout_seconds(10), _null_value("$NULL$")
 {
 }
@@ -240,86 +238,118 @@ void CDBConnectionBase::set_null_value(const std::string& null_value)
     
 void CDBConnectionBase::query(DBTable& db_table, const char* format, ...) throw (CDBException)
 {
-    va_list args;
-    va_start(args, format);
+    int excepted = 0;
+    size_t sql_size = _sql_size;
+    utils::ScopedArray<char> sql(new char[sql_size]);
+    va_list ap;
 
-    try
+    while (true)
     {
-        do_query(db_table, format, args);
-        va_end(args);
+        va_start(ap, format);
+        int excepted = vsnprintf(sql.get(), sql_size, format, ap);
+        va_end(ap);
+
+        /* If that worked, return the string. */
+        if (excepted > -1 && excepted < (int)sql_size)
+            break;
+
+        /* Else try again with more space. */
+        if (excepted > -1)    /* glibc 2.1 */
+            sql_size = (size_t)excepted + 1; /* precisely what is needed */
+        else           /* glibc 2.0 */
+            sql_size *= 2;  /* twice the old size */
+
+        sql.reset(new char[sql_size]);
     }
-    catch (...)
-    {
-        va_end(args);
-        throw;
-    }
+
+    do_query(db_table, sql.get(), excepted);
 }
 
 void CDBConnectionBase::query(DBRow& db_row, const char* format, ...) throw (CDBException)
 {
     DBTable db_table;
-    va_list args;
-    va_start(args, format);
+    int excepted = 0;
+    size_t sql_size = _sql_size;
+    utils::ScopedArray<char> sql(new char[sql_size]);
+    va_list ap;
 
-    try
+    while (true)
     {
-        do_query(db_table, format, args);
+        va_start(ap, format);
+        int excepted = vsnprintf(sql.get(), sql_size, format, ap);
+        va_end(ap);
 
-        if (1 == db_table.size())
-        {
-            db_row = db_table.front();
-        }
-        else if (db_table.size() > 1)
-        {
-            throw CDBException(NULL, utils::StringFormatter("too many rows: %d", (int)db_table.size()).c_str(),
-                    DB_ERROR_TOO_MANY_ROWS, __FILE__, __LINE__);
-        }
+        /* If that worked, return the string. */
+        if (excepted > -1 && excepted < (int)sql_size)
+            break;
 
-        va_end(args);
+        /* Else try again with more space. */
+        if (excepted > -1)    /* glibc 2.1 */
+            sql_size = (size_t)excepted + 1; /* precisely what is needed */
+        else           /* glibc 2.0 */
+            sql_size *= 2;  /* twice the old size */
+
+        sql.reset(new char[sql_size]);
     }
-    catch (...)
+
+    do_query(db_table, sql.get(), excepted);
+    if (1 == db_table.size())
     {
-        va_end(args);
-        throw;
+        db_row = db_table.front();
+    }
+    else if (db_table.size() > 1)
+    {
+        throw CDBException(NULL, utils::StringFormatter("too many rows: %d", (int)db_table.size()).c_str(),
+                DB_ERROR_TOO_MANY_ROWS, __FILE__, __LINE__);
     }
 }
 
 std::string CDBConnectionBase::query(const char* format, ...) throw (CDBException)
 {
     DBTable db_table;
+    size_t sql_size = _sql_size;
     std::string result;
-    va_list args;
-    va_start(args, format);
+    utils::ScopedArray<char> sql(new char[sql_size]);
+    va_list ap;
 
-    try
+    int excepted = 0;
+    while (true)
     {
-        do_query(db_table, format, args);
+        va_start(ap, format);
+        int excepted = vsnprintf(sql.get(), sql_size, format, ap);
+        va_end(ap);
 
-        if (db_table.size() > 1)
-        {
-            throw CDBException(NULL, utils::StringFormatter("too many rows: %d", (int)db_table.size()).c_str(),
-                    DB_ERROR_TOO_MANY_ROWS, __FILE__, __LINE__);
-        }
-        else if (1 == db_table.size())
-        {
-            const DBRow& db_row = db_table.front();
-            if (1 == db_row.size())
-            {
-                result = db_row.front();
-            }
-            else if (db_row.size() > 1)
-            {
-                throw CDBException(NULL, utils::StringFormatter("too many cols: %d", (int)db_row.size()).c_str(),
-                        DB_ERROR_TOO_MANY_COLS, __FILE__, __LINE__);
-            }
-        }
+        /* If that worked, return the string. */
+        if (excepted > -1 && excepted < (int)sql_size)
+            break;
 
-        va_end(args);
+        /* Else try again with more space. */
+        if (excepted > -1)    /* glibc 2.1 */
+            sql_size = (size_t)excepted + 1; /* precisely what is needed */
+        else           /* glibc 2.0 */
+            sql_size *= 2;  /* twice the old size */
+
+        sql.reset(new char[sql_size]);
     }
-    catch (...)
+
+    do_query(db_table, sql.get(), excepted);
+    if (db_table.size() > 1)
     {
-        va_end(args);
-        throw;
+        throw CDBException(NULL, utils::StringFormatter("too many rows: %d", (int)db_table.size()).c_str(),
+                DB_ERROR_TOO_MANY_ROWS, __FILE__, __LINE__);
+    }
+    else if (1 == db_table.size())
+    {
+        const DBRow& db_row = db_table.front();
+        if (1 == db_row.size())
+        {
+            result = db_row.front();
+        }
+        else if (db_row.size() > 1)
+        {
+            throw CDBException(NULL, utils::StringFormatter("too many cols: %d", (int)db_row.size()).c_str(),
+                    DB_ERROR_TOO_MANY_COLS, __FILE__, __LINE__);
+        }
     }
 
     return result;
@@ -343,21 +373,6 @@ void CDBConnectionBase::rollback() throw (CDBException)
 void CDBConnectionBase::enable_autocommit(bool enabled) throw (CDBException)
 {
     THROW_DB_EXCEPTION(NULL, "not supported", DB_NOT_SUPPORTED);
-}
-
-void CDBConnectionBase::do_query(DBTable& db_table, const char* format, va_list& args) throw (CDBException)
-{
-    utils::ScopedArray<char> sql(new char[_sql_max + 1]);
-
-    // 拼成SQL语句
-    int bytes_printed = vsnprintf(sql.get(), _sql_max + 1, format, args);
-    if (bytes_printed >= ((int)_sql_max + 1))
-    {
-        throw CDBException(NULL, utils::StringFormatter("sql[%s] too long: %d over %d", sql.get(), bytes_printed, (int)_sql_max).c_str(),
-                -1, __FILE__, __LINE__);
-    }
-
-    _do_query(db_table, format, args, sql.get(), bytes_printed);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -398,22 +413,32 @@ void CMySQLConnection::reopen() throw (CDBException)
 
 int CMySQLConnection::update(const char* format, ...) throw (CDBException)
 {
-    va_list args;
-    va_start(args, format);
-    utils::ScopedArray<char> sql(new char[_sql_max + 1]);
+    int excepted = 0;
+    size_t sql_size = _sql_size;
+    utils::ScopedArray<char> sql(new char[sql_size]);
+    va_list ap;
 
-    // 拼成SQL语句
-    int bytes_printed = vsnprintf(sql.get(), _sql_max + 1, format, args);
-    va_end(args);
-
-    if (bytes_printed >= ((int)_sql_max + 1))
+    while (true)
     {
-        throw CDBException(NULL, utils::StringFormatter("sql[%s] too long: %d over %d", sql.get(), bytes_printed, (int)_sql_max).c_str(),
-                -1, __FILE__, __LINE__);
+        va_start(ap, format);
+        int excepted = vsnprintf(sql.get(), sql_size, format, ap);
+        va_end(ap);
+
+        /* If that worked, return the string. */
+        if (excepted > -1 && excepted < (int)sql_size)
+            break;
+
+        /* Else try again with more space. */
+        if (excepted > -1)    /* glibc 2.1 */
+            sql_size = (size_t)excepted + 1; /* precisely what is needed */
+        else           /* glibc 2.0 */
+            sql_size *= 2;  /* twice the old size */
+
+        sql.reset(new char[sql_size]);
     }
 
     // 如果查询成功，返回0。如果出现错误，返回非0值
-    if (mysql_real_query(_mysql_handler, sql.get(), (unsigned long)bytes_printed) != 0)
+    if (mysql_real_query(_mysql_handler, sql.get(), (unsigned long)excepted) != 0)
     {
         throw CDBException(NULL, utils::StringFormatter("sql[%s] error: %s", sql.get(), mysql_error(_mysql_handler)).c_str(),
                 mysql_errno(_mysql_handler), __FILE__, __LINE__);
@@ -452,10 +477,10 @@ void CMySQLConnection::enable_autocommit(bool enabled) throw (CDBException)
         THROW_DB_EXCEPTION(NULL, mysql_error(_mysql_handler), mysql_errno(_mysql_handler));
 }
 
-void CMySQLConnection::_do_query(DBTable& db_table, const char* format, va_list& args, const char* sql, int bytes_printed) throw (CDBException)
+void CMySQLConnection::do_query(DBTable& db_table, const char* sql, int sql_length) throw (CDBException)
 {
     // 如果查询成功，返回0。如果出现错误，返回非0值
-    if (mysql_real_query(_mysql_handler, sql, (unsigned long)bytes_printed) != 0)
+    if (mysql_real_query(_mysql_handler, sql, (unsigned long)sql_length) != 0)
     {
         throw CDBException(NULL, utils::StringFormatter("sql[%s] error: %s", sql, mysql_error(_mysql_handler)).c_str(),
                 mysql_errno(_mysql_handler), __FILE__, __LINE__);
@@ -598,22 +623,31 @@ void CSQLite3Connection::reopen() throw (CDBException)
 
 int CSQLite3Connection::update(const char* format, ...) throw (CDBException)
 {
-    va_list args;
-    va_start(args, format);
-    utils::ScopedArray<char> sql(new char[_sql_max + 1]);
-
-    // 拼成SQL语句
-    int bytes_printed = vsnprintf(sql.get(), _sql_max + 1, format, args);
-    va_end(args);
-
-    if (bytes_printed >= ((int)_sql_max + 1))
-    {
-        throw CDBException(NULL, utils::StringFormatter("sql[%s] too long: %d over %d", sql.get(), bytes_printed, (int)_sql_max).c_str(),
-                -1, __FILE__, __LINE__);
-    }
-    
-    int ret = SQLITE_OK;
     char *errmsg = NULL;
+    int excepted = 0; // sql_length
+    int ret = SQLITE_OK;
+    size_t sql_size = _sql_size;
+    utils::ScopedArray<char> sql(new char[sql_size]);
+    va_list ap;
+
+    while (true)
+    {
+        va_start(ap, format);
+        int excepted = vsnprintf(sql.get(), sql_size, format, ap);
+        va_end(ap);
+
+        /* If that worked, return the string. */
+        if (excepted > -1 && excepted < (int)sql_size)
+            break;
+
+        /* Else try again with more space. */
+        if (excepted > -1)    /* glibc 2.1 */
+            sql_size = (size_t)excepted + 1; /* precisely what is needed */
+        else           /* glibc 2.0 */
+            sql_size *= 2;  /* twice the old size */
+
+        sql.reset(new char[sql_size]);
+    }
 
     ret = sqlite3_exec(_sqlite, sql.get(), 0, 0, &errmsg);
     if (ret != SQLITE_OK)
@@ -633,12 +667,12 @@ std::string CSQLite3Connection::str() throw ()
     return _id;
 }
 
-void CSQLite3Connection::_do_query(DBTable& db_table, const char* format, va_list& args, const char* sql, int bytes_printed) throw (CDBException)
+void CSQLite3Connection::do_query(DBTable& db_table, const char* sql, int sql_length) throw (CDBException)
 {
-    int num_rows = 0;
-    int num_cols = 0;
     char *errmsg = NULL;
     char **table = NULL;
+    int num_rows = 0;
+    int num_cols = 0;
 
     int ret = sqlite3_get_table(
             _sqlite

@@ -347,19 +347,6 @@ std::string CUtils::get_program_short_name()
     return program_invocation_short_name;
 }
 
-std::string CUtils::remove_suffix(const std::string& filename)
-{
-    std::string::size_type pos = filename.find('.');
-    if (pos == std::string::npos)
-    {
-        return filename;
-    }
-    else
-    {
-        return filename.substr(0, pos);
-    }
-}
-
 std::string CUtils::get_filename(const std::string& filepath)
 {
     // basename的参数即是输入，也是输出参数，所以需要tmp_filepath

@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_UTILS_STRING_FORMATTER_H
 #define MOOON_UTILS_STRING_FORMATTER_H
-#include "mooon/utils/config.h"
+#include "mooon/utils/scoped_ptr.h"
 UTILS_NAMESPACE_BEGIN
 
 /***
@@ -72,68 +72,45 @@ class StringFormatter
 public:
     // 使用简单，固化buffer_size
     explicit StringFormatter(const char* format, ...) throw (std::bad_alloc) __attribute__((format(printf, 2, 3)))
-        : _buffer_size(1024)
     {
+        size_t size = 1024;
         va_list ap;
-        va_start(ap, format);
 
-        init(format, ap);
-        va_end(ap);
+        _buffer.reset(new char[size]);
+        while (true)
+        {
+            va_start(ap, format);
+            int excepted = vsnprintf(_buffer.get(), size, format, ap);
+            va_end(ap);
+
+            /* If that worked, return the string. */
+            if (excepted > -1 && excepted < (int)size)
+                break;
+
+            /* Else try again with more space. */
+            if (excepted > -1)    /* glibc 2.1 */
+                size = (size_t)excepted + 1; /* precisely what is needed */
+            else           /* glibc 2.0 */
+                size *= 2;  /* twice the old size */
+
+            _buffer.reset(new char[size]);
+        }
     }
 
-    // 增加灵活性，buffer_size由参数传入
-    explicit StringFormatter(size_t buffer_size, const char* format, ...) throw (std::bad_alloc) __attribute__((format(printf, 3, 4)))
-        : _buffer_size(buffer_size)
-    {
-        va_list ap;
-        va_start(ap, format);
-
-        init(format, ap);
-        va_end(ap);
-    }
-
-    StringFormatter(const StringFormatter& other)
-        : _buffer(other.str()), _buffer_size(other.buffer_size())
-    {        
-    }
-
-    size_t buffer_size() const throw ()
-    {
-        return _buffer_size;
-    }
-
-    // 仿std::string::c_str()命名
     const char* c_str() const throw ()
     {
-        return _buffer.c_str();
-    }
-
-    // 仿std::stringstream::str()命名
-    const std::string& str() const throw ()
-    {
-        return _buffer;
+        return _buffer.get();
     }
 
 private:
-    void init(const char* format, va_list& ap) throw (std::bad_alloc)
-    {        
-        char* buffer = new char[_buffer_size];
-        vsnprintf(buffer, _buffer_size, format, ap);
-
-        // 保存结果
-        DeleteHelper<char> dh(buffer, true);
-        _buffer = buffer;
-    }
-
-private:
-    StringFormatter();    
+    StringFormatter();
+    StringFormatter(const StringFormatter&);
     StringFormatter& operator =(const StringFormatter&);
     bool operator ==(const StringFormatter&) const;
     bool operator !=(const StringFormatter&) const;
 
 private:
-    std::string _buffer;
-    size_t _buffer_size;
+    ScopedArray<char> _buffer;
 };
 
 UTILS_NAMESPACE_END

@@ -136,9 +136,6 @@ public:
     /** 得到当前进程的的名称，不包含目录部分，如“./abc.exe”值为“abc.exe” */
     static std::string get_program_short_name();
 
-    /** 删除文件名的后缀部分，如abc.exe变成abc，注意不会处理路径部分 */
-    static std::string remove_suffix(const std::string& filename);
-
     /**
      * 取路径的文件名部分，结果包含后缀部分，效果如下：
      *
