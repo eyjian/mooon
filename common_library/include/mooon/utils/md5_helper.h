@@ -27,26 +27,74 @@ class CMd5Helper
 {
 public:
     static std::string md5(const char* format, ...) __attribute__((format(printf, 1, 2)));
+    static std::string lowercase_md5(const char* format, ...) __attribute__((format(printf, 1, 2)));
+    static std::string uppercase_md5(const char* format, ...) __attribute__((format(printf, 1, 2)));
+
+public:
+    struct Value
+	{
+    	uint64_t low_8bytes;
+    	uint64_t high_8bytes;
+
+    	Value()
+    		: low_8bytes(0), high_8bytes(0)
+    	{
+    	}
+
+    	Value(const Value& other)
+    	{
+    		this->low_8bytes = other.low_8bytes;
+    		this->high_8bytes = other.high_8bytes;
+    	}
+
+    	Value& operator =(const Value& other)
+    	{
+    		this->low_8bytes = other.low_8bytes;
+    		this->high_8bytes = other.high_8bytes;
+
+    		return *this;
+    	}
+
+    	bool operator ==(const Value& other)
+		{
+    		return (this->low_8bytes == other.low_8bytes) && (this->high_8bytes == other.high_8bytes);
+		}
+
+    	bool operator !=(const Value& other)
+		{
+			return (this->low_8bytes != other.low_8bytes) || (this->high_8bytes != other.high_8bytes);
+		}
+
+	private:
+    	bool operator <(const Value&);
+    	bool operator >(const Value&);
+    	bool operator <=(const Value&);
+    	bool operator >=(const Value&);
+	};
 
 public:
     CMd5Helper();
     ~CMd5Helper();
+
+    void update(const char* str, size_t size);
     void update(const std::string& str);
 
 public:
-    std::string to_string() const;
-    void to_string(char str[16]) const;
+    void to_string(char str[33], bool uppercase=true) const;
+    std::string to_string(bool uppercase=true) const;
     void to_bytes(unsigned char str[16]) const;
-    void to_int(uint64_t* low, uint64_t* high) const;
+    void to_int(uint64_t* low_8bytes, uint64_t* high_8bytes) const;
+
+    struct Value value() const;
 
     // 取低8字节
-    uint64_t low() const;
+    uint64_t low_8bytes() const;
 
     // 取高8字节
-    uint64_t high() const;
+    uint64_t high_8bytes() const;
 
     // 取中间8字节
-    uint64_t middle() const;
+    uint64_t middle_8bytes() const;
 
 private:
     void* _md5_context;

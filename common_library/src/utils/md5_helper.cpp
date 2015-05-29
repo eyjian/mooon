@@ -34,7 +34,7 @@ std::string CMd5Helper::md5(const char* format, ...)
         int expected = vsnprintf(buffer.get(), size, format, ap);
         va_end(ap);
 
-        if (expected > -1 && expected < size)
+        if (expected > -1 && expected < (int)size)
             break;
 
         if (expected > -1)    /* glibc 2.1 */
@@ -45,13 +45,67 @@ std::string CMd5Helper::md5(const char* format, ...)
         buffer.reset(new char[size]);
     }
 
-    struct MD5Context md5_context;
-    MD5Init(&md5_context);
-    MD5Update(&md5_context, (unsigned char*)buffer.get(), (unsigned int)expected);
+    CMd5Helper md5_helper;
+    md5_helper.update(buffer.get(), expected);
+    return md5_helper.to_string();
+}
 
-    unsigned char digest[16];
-    MD5Final(digest, &md5_context);
-    return std::string((char*)digest, sizeof(digest));
+std::string CMd5Helper::lowercase_md5(const char* format, ...)
+{
+    va_list ap;
+    size_t size = 1024;
+    ScopedArray<char> buffer(new char[size]);
+
+    int expected = 0;
+    while (true)
+    {
+        va_start(ap, format);
+        int expected = vsnprintf(buffer.get(), size, format, ap);
+        va_end(ap);
+
+        if (expected > -1 && expected < (int)size)
+            break;
+
+        if (expected > -1)    /* glibc 2.1 */
+            size = expected + 1; /* precisely what is needed */
+        else           /* glibc 2.0 */
+            size *= 2;  /* twice the old size */
+
+        buffer.reset(new char[size]);
+    }
+
+    CMd5Helper md5_helper;
+    md5_helper.update(buffer.get(), expected);
+    return md5_helper.to_string(false);
+}
+
+std::string CMd5Helper::uppercase_md5(const char* format, ...)
+{
+    va_list ap;
+    size_t size = 1024;
+    ScopedArray<char> buffer(new char[size]);
+
+    int expected = 0;
+    while (true)
+    {
+        va_start(ap, format);
+        int expected = vsnprintf(buffer.get(), size, format, ap);
+        va_end(ap);
+
+        if (expected > -1 && expected < (int)size)
+            break;
+
+        if (expected > -1)    /* glibc 2.1 */
+            size = expected + 1; /* precisely what is needed */
+        else           /* glibc 2.0 */
+            size *= 2;  /* twice the old size */
+
+        buffer.reset(new char[size]);
+    }
+
+    CMd5Helper md5_helper;
+    md5_helper.update(buffer.get(), expected);
+    return md5_helper.to_string(true);
 }
 
 CMd5Helper::CMd5Helper()
@@ -65,22 +119,38 @@ CMd5Helper::~CMd5Helper()
     delete (struct MD5Context*)_md5_context;
 }
 
-void CMd5Helper::update(const std::string& str)
+void CMd5Helper::update(const char* str, size_t size)
 {
-    MD5Update((struct MD5Context*)_md5_context, (unsigned char const *)str.data(), (unsigned int)str.size());
+    MD5Update((struct MD5Context*)_md5_context, (unsigned char const *)str, size);
 }
 
-std::string CMd5Helper::to_string() const
+void CMd5Helper::update(const std::string& str)
+{
+	update(str.c_str(), str.size());
+}
+
+void CMd5Helper::to_string(char str[33], bool uppercase) const
 {
     unsigned char digest[16];
     MD5Final(digest, (struct MD5Context*)_md5_context);
 
-    return std::string((char*)digest, sizeof(digest));
+    // 注意snprintf()的参数别搞错了
+    for (int i=0; i<16; ++i)
+    {
+    	if (uppercase)
+    		(void)snprintf(str + i*2, 3, "%02X", digest[i]);
+    	else
+    		(void)snprintf(str + i*2, 3, "%02x", digest[i]);
+    }
+
+    str[32] = '\0';
 }
 
-void CMd5Helper::to_string(char str[16]) const
+std::string CMd5Helper::to_string(bool uppercase) const
 {
-    MD5Final((unsigned char*)str, (struct MD5Context*)_md5_context);
+	char str[33];
+	to_string(str, uppercase);
+    return str;
 }
 
 void CMd5Helper::to_bytes(unsigned char str[16]) const
@@ -88,16 +158,23 @@ void CMd5Helper::to_bytes(unsigned char str[16]) const
     MD5Final(str, (struct MD5Context*)_md5_context);
 }
 
-void CMd5Helper::to_int(uint64_t* low, uint64_t* high) const
+void CMd5Helper::to_int(uint64_t* low_8bytes, uint64_t* high_8bytes) const
 {
     unsigned char digest[16];
     MD5Final(digest, (struct MD5Context*)_md5_context);
 
-    *low = *(uint64_t*)digest;
-    *high =  *(uint64_t*)(digest+sizeof(uint64_t));
+    *low_8bytes = *(uint64_t*)digest;
+    *high_8bytes =  *(uint64_t*)(digest+sizeof(uint64_t));
 }
 
-uint64_t CMd5Helper::low() const
+struct CMd5Helper::Value CMd5Helper::value() const
+{
+	Value value;
+	to_int(&value.low_8bytes, &value.high_8bytes);
+	return value;
+}
+
+uint64_t CMd5Helper::low_8bytes() const
 {
     unsigned char digest[16];
     MD5Final(digest, (struct MD5Context*)_md5_context);
@@ -105,7 +182,7 @@ uint64_t CMd5Helper::low() const
     return *(uint64_t*)digest;
 }
 
-uint64_t CMd5Helper::high() const
+uint64_t CMd5Helper::high_8bytes() const
 {
     unsigned char digest[16];
     MD5Final(digest, (struct MD5Context*)_md5_context);
@@ -113,7 +190,7 @@ uint64_t CMd5Helper::high() const
     return *(uint64_t*)(digest + sizeof(uint64_t));
 }
 
-uint64_t CMd5Helper::middle() const
+uint64_t CMd5Helper::middle_8bytes() const
 {
     unsigned char digest[16];
     MD5Final(digest, (struct MD5Context*)_md5_context);
