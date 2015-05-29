@@ -246,7 +246,7 @@ void CDBConnectionBase::query(DBTable& db_table, const char* format, ...) throw 
     while (true)
     {
         va_start(ap, format);
-        int excepted = vsnprintf(sql.get(), sql_size, format, ap);
+        excepted = vsnprintf(sql.get(), sql_size, format, ap);
         va_end(ap);
 
         /* If that worked, return the string. */
@@ -276,7 +276,7 @@ void CDBConnectionBase::query(DBRow& db_row, const char* format, ...) throw (CDB
     while (true)
     {
         va_start(ap, format);
-        int excepted = vsnprintf(sql.get(), sql_size, format, ap);
+        excepted = vsnprintf(sql.get(), sql_size, format, ap);
         va_end(ap);
 
         /* If that worked, return the string. */
@@ -307,16 +307,16 @@ void CDBConnectionBase::query(DBRow& db_row, const char* format, ...) throw (CDB
 std::string CDBConnectionBase::query(const char* format, ...) throw (CDBException)
 {
     DBTable db_table;
+    int excepted = 0;
     size_t sql_size = _sql_size;
     std::string result;
     utils::ScopedArray<char> sql(new char[sql_size]);
     va_list ap;
 
-    int excepted = 0;
     while (true)
     {
         va_start(ap, format);
-        int excepted = vsnprintf(sql.get(), sql_size, format, ap);
+        excepted = vsnprintf(sql.get(), sql_size, format, ap);
         va_end(ap);
 
         /* If that worked, return the string. */
@@ -421,7 +421,7 @@ int CMySQLConnection::update(const char* format, ...) throw (CDBException)
     while (true)
     {
         va_start(ap, format);
-        int excepted = vsnprintf(sql.get(), sql_size, format, ap);
+        excepted = vsnprintf(sql.get(), sql_size, format, ap);
         va_end(ap);
 
         /* If that worked, return the string. */
@@ -633,7 +633,7 @@ int CSQLite3Connection::update(const char* format, ...) throw (CDBException)
     while (true)
     {
         va_start(ap, format);
-        int excepted = vsnprintf(sql.get(), sql_size, format, ap);
+        excepted = vsnprintf(sql.get(), sql_size, format, ap);
         va_end(ap);
 
         /* If that worked, return the string. */

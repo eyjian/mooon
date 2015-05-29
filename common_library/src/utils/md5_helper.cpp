@@ -23,15 +23,15 @@ UTILS_NAMESPACE_BEGIN
 
 std::string CMd5Helper::md5(const char* format, ...)
 {
-    va_list ap;
+	int expected = 0;
     size_t size = 1024;
     ScopedArray<char> buffer(new char[size]);
+    va_list ap;
 
-    int expected = 0;
     while (true)
     {
         va_start(ap, format);
-        int expected = vsnprintf(buffer.get(), size, format, ap);
+        expected = vsnprintf(buffer.get(), size, format, ap);
         va_end(ap);
 
         if (expected > -1 && expected < (int)size)
@@ -52,15 +52,15 @@ std::string CMd5Helper::md5(const char* format, ...)
 
 std::string CMd5Helper::lowercase_md5(const char* format, ...)
 {
-    va_list ap;
+	int expected = 0;
     size_t size = 1024;
     ScopedArray<char> buffer(new char[size]);
+    va_list ap;
 
-    int expected = 0;
     while (true)
     {
         va_start(ap, format);
-        int expected = vsnprintf(buffer.get(), size, format, ap);
+        expected = vsnprintf(buffer.get(), size, format, ap);
         va_end(ap);
 
         if (expected > -1 && expected < (int)size)
@@ -81,15 +81,15 @@ std::string CMd5Helper::lowercase_md5(const char* format, ...)
 
 std::string CMd5Helper::uppercase_md5(const char* format, ...)
 {
-    va_list ap;
+	int expected = 0;
     size_t size = 1024;
     ScopedArray<char> buffer(new char[size]);
+    va_list ap;
 
-    int expected = 0;
     while (true)
     {
         va_start(ap, format);
-        int expected = vsnprintf(buffer.get(), size, format, ap);
+        expected = vsnprintf(buffer.get(), size, format, ap);
         va_end(ap);
 
         if (expected > -1 && expected < (int)size)
@@ -134,7 +134,7 @@ void CMd5Helper::to_string(char str[33], bool uppercase) const
     unsigned char digest[16];
     MD5Final(digest, (struct MD5Context*)_md5_context);
 
-    // ×¢Òâsnprintf()µÄ²ÎÊý±ð¸ã´íÁË
+    // ×¢ï¿½ï¿½snprintf()ï¿½Ä²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     for (int i=0; i<16; ++i)
     {
     	if (uppercase)
