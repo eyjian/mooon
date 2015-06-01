@@ -52,6 +52,21 @@ extern log_level_t get_log_level(const char* level_name);
 /** 通过日志级别得到日志级别名，如果传入错误的日志级别，则返回NULL */
 extern const char* get_log_level_name(log_level_t log_level);
 
+// 根据程序文件得到日志文件名，结果不包含目录
+// 1) 假设程序文件名为mooon，则返回结果为mooon.log
+// 2) 假设程序文件名为mooon.exe，则返回结果为mooon.log
+extern std::string get_log_filename();
+
+// 根据程序文件得到日志文件的目录路径，不包含日志文件名
+extern std::string get_log_dirpath(bool enable_program_path=true);
+
+// 根据程序文件得到日志文件路径，返回结果包含目录和文件名
+// 假设程序文件所在路径为：/data/mooon/bin/test，
+// 同时存在目录/data/mooon/log，则日志自动放在该目录下，
+// 否则当enable_program_path为true时，日志放在/data/mooon/bin目录下。
+// 如果不存在目录/data/mooon/log，且enable_program_path为false，则函数返回空字符串
+extern std::string get_log_filepath(bool enable_program_path=true);
+
 /**
   * 日志器接口，提供常见的写日志功能
   */

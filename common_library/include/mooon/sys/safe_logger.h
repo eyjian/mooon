@@ -25,10 +25,21 @@
 #include <stdio.h>
 SYS_NAMESPACE_BEGIN
 
+class CSafeLogger;
+
 // 如果有显示的线束或退出线程，
 // 则应当在线程结束“之前”调用close_thread_log_fd()，否则可能产生内存泄漏
 // 注意须在被结束的线程内调用才有效！
 extern void close_thread_log_fd();
+
+// 根据程序文件创建CSafeLogger
+extern CSafeLogger* create_safe_logger(bool enable_program_path=true, uint16_t log_line_size=4096);
+
+// 根据程序文件创建CSafeLogger
+// 适用于CGI记录日志，原因是CGI不能使用程序文件名，
+// 1) 假设CGI的cpp文件名为mooon.cpp，则日志文件名为mooon.log
+// 2) 假设CGI的cpp文件名为mooon.cc，则日志文件名为mooon.log
+extern CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std::string& cpp_filename, uint16_t log_line_size=4096);
 
 /**
   * 多线程和多进程安全的日志器

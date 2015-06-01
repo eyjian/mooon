@@ -16,13 +16,14 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
+#include "sys/logger.h"
+#include "sys/datetime_utils.h"
+#include "sys/dir_utils.h"
+#include "sys/utils.h"
+#include "utils/string_utils.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <utils/string_utils.h>
-#include <sys/utils.h>
-#include <sys/logger.h>
-#include <sys/datetime_utils.h>
 
 #if HAVE_UIO_H==1 // 需要使用sys_config.h中定义的HAVE_UIO_H宏
 #include <sys/uio.h>
@@ -57,6 +58,43 @@ const char* get_log_level_name(log_level_t log_level)
 {
     if ((log_level < LOG_LEVEL_DETAIL) || (log_level > LOG_LEVEL_TRACE)) return NULL;
     return log_level_name_array[log_level];
+}
+
+std::string get_log_filename()
+{
+    std::string program_short_name = CUtils::get_program_short_name();
+    return utils::CStringUtils::replace_suffix(program_short_name, ".log");
+}
+
+std::string get_log_dirpath(bool enable_program_path)
+{
+    std::string log_dirpath;
+    std::string program_path = CUtils::get_program_path();
+
+    try
+    {
+        log_dirpath = program_path + std::string("/../log");
+        if (!CDirUtils::exist(log_dirpath))
+        {
+            if (enable_program_path)
+                log_dirpath = program_path;
+        }
+    }
+    catch (CSyscallException& syscall_ex)
+    {
+        if (enable_program_path)
+            log_dirpath = program_path;
+
+        fprintf(stderr, "get_log_filepath failed: %s\n", syscall_ex.str().c_str());
+    }
+
+    return log_dirpath;
+}
+
+std::string get_log_filepath(bool enable_program_path)
+{
+    std::string log_dirpath = get_log_dirpath(enable_program_path);
+    return log_dirpath + std::string("/") + get_log_filename();
 }
 
 //////////////////////////////////////////////////////////////////////////

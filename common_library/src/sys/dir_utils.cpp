@@ -17,6 +17,9 @@
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
 #include "sys/dir_utils.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 SYS_NAMESPACE_BEGIN
 
 void CDirUtils::list(const std::string& dirpath
@@ -81,6 +84,23 @@ void CDirUtils::remove(const std::string& dirpath) throw (CSyscallException)
 {
     if (-1 == rmdir(dirpath.c_str()))
         THROW_SYSCALL_EXCEPTION(NULL, errno, "rmdir");
+}
+
+bool CDirUtils::exist(const std::string& dirpath) throw (CSyscallException)
+{
+    struct stat buf;
+
+    if (-1 == stat(dirpath.c_str(), &buf))
+    {
+        if (ENOENT == errno) // A component of the path path does not exist, or the path is an empty string.
+            return false;
+        if (ENOTDIR == errno) // A component of the path is not a directory.
+            return false;
+
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "stat");
+    }
+
+    return S_ISDIR(buf.st_mode);
 }
 
 SYS_NAMESPACE_END

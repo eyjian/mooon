@@ -34,6 +34,9 @@ public:
       * @exception 如果发生错误，则抛出sys::CSyscallException异常
       */
     static void remove(const std::string& dirpath) throw (CSyscallException);
+
+    // 判断是否存在指定的目录
+    static bool exist(const std::string& dirpath) throw (CSyscallException);
 };
 
 SYS_NAMESPACE_END
