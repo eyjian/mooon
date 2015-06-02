@@ -39,6 +39,8 @@ extern CSafeLogger* create_safe_logger(bool enable_program_path=true, uint16_t l
 // 适用于CGI记录日志，原因是CGI不能使用程序文件名，
 // 1) 假设CGI的cpp文件名为mooon.cpp，则日志文件名为mooon.log
 // 2) 假设CGI的cpp文件名为mooon.cc，则日志文件名为mooon.log
+// 使用示例：
+// mooon::sys::g_logger = create_safe_logger(logdir, __FILE__);
 extern CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std::string& cpp_filename, uint16_t log_line_size=4096);
 
 /**
