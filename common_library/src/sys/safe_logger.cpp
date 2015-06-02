@@ -51,7 +51,7 @@ CSafeLogger* create_safe_logger(bool enable_program_path, uint16_t log_line_size
 
 CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std::string& cpp_filename, uint16_t log_line_size)
 {
-    std::string log_filename = utils::CStringUtils::replace_suffix(log_filename, ".log");
+    std::string log_filename = utils::CStringUtils::replace_suffix(cpp_filename, ".log");
     return new CSafeLogger(log_dirpath.c_str(), log_filename.c_str(), log_line_size);
 }
 
