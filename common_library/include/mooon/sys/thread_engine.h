@@ -28,6 +28,7 @@
 #include "mooon/sys/config.h" // 如果需要脱离mooon运行，请注释掉这行
 #endif // TEST_THREAD_ENGINE
 
+#include <stdint.h> // pthread_t在32位上是4字节，在64位上是8字节
 #include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -393,6 +394,12 @@ static void* thread_proc(void* parameter)
 
 class CThreadEngine
 {
+public:
+    static uint64_t get_current_thread_id()
+    {
+        return static_cast<uint64_t>(pthread_self());
+    }
+
 public:
     CThreadEngine(const Functor& functor)
         : _thread(0)
