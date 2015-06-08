@@ -37,10 +37,7 @@ public:
 
     bool push_message(int m, int index)
     {
-        bool ret = _queue.push_back(m);
-        if (!ret)
-            printf("push %d to queue[%u] FAILURE by thread[%d]\n", m, _queue.size(), index);
-        return ret;
+        return _queue.push_back(m);
     }
 
     void run(int index)
@@ -63,6 +60,8 @@ public:
                 {
                     if (push_message(m, index))
                         ++total;
+                    else
+                        printf("[SELF] push %d to queue[%u] FAILURE by thread[%d]\n", m, _queue.size(), index);
                 }
             }
         }
@@ -88,7 +87,8 @@ int main(int argc, char* argv[])
         engine[i] = new sys::CThreadEngine(sys::bind(&CMyThread::run, my_thread[i], i));
 
         for (int j=0; j<g_times; ++j)
-            (void)my_thread[i]->push_message(j, i);
+            if (!my_thread[i]->push_message(j, i))
+                printf("[MAIN] push %d to thread[%d] FAILURE\n", j, i);
     }
 
     for (i=0; i<num_threads; ++i)
