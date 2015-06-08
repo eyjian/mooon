@@ -85,8 +85,11 @@ int main(int argc, char* argv[])
     {
         my_thread[i] = new CMyThread;
         engine[i] = new sys::CThreadEngine(sys::bind(&CMyThread::run, my_thread[i], i));
+    }
 
-        for (int j=0; j<g_times; ++j)
+    for (int j=0; j<g_times; ++j)
+    {
+        for (i=0; i<num_threads; ++i)
             if (!my_thread[i]->push_message(j, i))
                 printf("[MAIN] push %d to thread[%d] FAILURE\n", j, i);
     }
