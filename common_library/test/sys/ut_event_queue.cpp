@@ -39,7 +39,7 @@ public:
     {
         bool ret = _queue.push_back(m);
         if (!ret)
-            printf("push %d FAILURE by thread[%d]\n", m, index);
+            printf("push %d to queue[%u] FAILURE by thread[%d]\n", m, _queue.size(), index);
         return ret;
     }
 
