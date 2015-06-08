@@ -165,7 +165,7 @@ public:
         }
 
         elem = _raw_queue.pop_front();
-        if (_push_waiter_number > 0) _event.signal();
+        if (_push_waiter_number > 0) _event.broadcast();
         return true;
     }
 
@@ -196,7 +196,7 @@ public:
         }
 
         _raw_queue.push_back(elem);
-        if (_pop_waiter_number > 0) _event.signal();
+        if (_pop_waiter_number > 0) _event.broadcast();
         return true;
     }
 
