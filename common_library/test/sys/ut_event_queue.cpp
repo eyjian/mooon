@@ -16,6 +16,7 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
+#include <list>
 #include <mooon/sys/datetime_utils.h>
 #include <mooon/sys/event_queue.h>
 #include <mooon/sys/thread_engine.h>
@@ -30,7 +31,7 @@ class CMyThread
 {
 public:
     CMyThread()
-        : _queue(100000, 1000, 5000)
+        : _queue(10000, 1000, 5000)
     {
     }
 
@@ -71,6 +72,7 @@ public:
 
 private:
     sys::CEventQueue<utils::CArrayQueue<int> > _queue;
+    //sys::CEventQueue<sys::CEventQueueAdapterForList<int> > _queue;
 };
 
 int main(int argc, char* argv[])

@@ -21,18 +21,76 @@
 #include "mooon/sys/event.h"
 SYS_NAMESPACE_BEGIN
 
+// 让std::list可直接应用在CEventQueue
+template <typename DataType>
+class CEventQueueAdapterForList
+{
+public:
+    typedef DataType _DataType;
+
+public:
+    CEventQueueAdapterForList(uint32_t queue_max)
+        : _queue_max(queue_max)
+    {
+    }
+
+    bool is_full() const
+    {
+        return _list.size() >= _queue_max;
+    }
+
+    bool is_empty() const
+    {
+        return _list.empty();
+    }
+
+    DataType front() const
+    {
+        return _list.front();
+    }
+
+    DataType pop_front()
+    {
+        DataType elem = front();
+        _list.pop_front();
+        return elem;
+    }
+
+    void push_back(DataType elem)
+    {
+        _list.push_back(elem);
+    }
+
+    uint32_t size() const
+    {
+        return _list.size();
+    }
+
+    uint32_t capacity() const
+    {
+        return _queue_max;
+    }
+
+private:
+    typename std::list<DataType> _list;
+    uint32_t _queue_max;
+};
+
 /** 事件队列，总是线程安全
   * 特性1: 如果队列为空，则可等待队列有数据时
   * 特性2: 如果队列已满，则可等待队列为非满时
   * RawQueueClass为原始队列类名，如utils::CArrayQueue
   *
-  * 使用示例：
+  * 使用示例1：
   * mooon::sys::CEventQueue<mooon::utils::CArrayQueue<int> > _queue;
   * bool ret = _queue.push_back(m);
   * if (!ret)
   * {
   *     printf("push %d FAILURE by thread[%d]\n", m, index);
   * }
+  *
+  * 使用示例2：
+  * mooon::sys::CEventQueue<mooon::sys::CEventQueueAdapterForList<int> > _queue;
   */
 template <class RawQueueClass>
 class CEventQueue
