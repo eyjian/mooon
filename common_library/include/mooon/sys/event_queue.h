@@ -25,6 +25,14 @@ SYS_NAMESPACE_BEGIN
   * 特性1: 如果队列为空，则可等待队列有数据时
   * 特性2: 如果队列已满，则可等待队列为非满时
   * RawQueueClass为原始队列类名，如utils::CArrayQueue
+  *
+  * 使用示例：
+  * mooon::sys::CEventQueue<mooon::utils::CArrayQueue<int> > _queue;
+  * bool ret = _queue.push_back(m);
+  * if (!ret)
+  * {
+  *     printf("push %d FAILURE by thread[%d]\n", m, index);
+  * }
   */
 template <class RawQueueClass>
 class CEventQueue
