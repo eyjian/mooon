@@ -97,6 +97,17 @@ std::string get_log_filepath(bool enable_program_path)
     return log_dirpath + std::string("/") + get_log_filename();
 }
 
+void set_log_level_by_env(ILogger* logger)
+{
+    const char* c_log_level = getenv("MOOON_LOG_LEVEL");
+
+    if (c_log_level != NULL)
+    {
+        log_level_t log_level = get_log_level(c_log_level);
+        logger->set_log_level(log_level);
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////
 // CLogProber
 CLogProber::CLogProber()

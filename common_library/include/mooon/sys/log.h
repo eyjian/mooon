@@ -23,6 +23,8 @@
 #include <stdio.h>
 SYS_NAMESPACE_BEGIN
 
+class ILogger;
+
 /** 不要修改下面的常量值，而应当通过对应的方法去修改
   * 这些常量值主要是方便多模块共享，故放在这个公有头文件当中
   */
@@ -49,7 +51,10 @@ typedef enum
 
 /** 通过日志级别名得到日志级别 */
 extern log_level_t get_log_level(const char* level_name);
-/** 通过日志级别得到日志级别名，如果传入错误的日志级别，则返回NULL */
+
+// 通过日志级别得到日志级别名，如果传入错误的日志级别，则返回NULL
+// 有效的日志名为（全大写）：
+// DETAIL, DEBUG, INFO, WARN, ERROR, FATAL, STATE, TRACE
 extern const char* get_log_level_name(log_level_t log_level);
 
 // 根据程序文件得到日志文件名，结果不包含目录
@@ -66,6 +71,13 @@ extern std::string get_log_dirpath(bool enable_program_path=true);
 // 否则当enable_program_path为true时，日志放在/data/mooon/bin目录下。
 // 如果不存在目录/data/mooon/log，且enable_program_path为false，则函数返回空字符串
 extern std::string get_log_filepath(bool enable_program_path=true);
+
+// 根据环境变量名MOOON_LOG_LEVEL来设置日志级别
+// 如果没有设置环境变量MOOON_LOG_LEVEL，则set_log_level_by_env()什么也不做
+// 日志文件名只能为下列值：
+// DETAIL, DEBUG, INFO, WARN, ERROR, FATAL, STATE, TRACE
+// 如果非这些值，则默认为INFO
+extern void set_log_level_by_env(ILogger* logger);
 
 /**
   * 日志器接口，提供常见的写日志功能
