@@ -41,15 +41,18 @@ void close_thread_log_fd()
     }
 }
 
-CSafeLogger* create_safe_logger(bool enable_program_path, uint16_t log_line_size)
+CSafeLogger* create_safe_logger(bool enable_program_path, uint16_t log_line_size) throw (CSyscallException)
 {
     std::string log_dirpath = get_log_dirpath(enable_program_path);
     std::string log_filename = get_log_filename();
 
+    if (log_dirpath.empty())
+        return NULL;
+
     return new CSafeLogger(log_dirpath.c_str(), log_filename.c_str(), log_line_size);
 }
 
-CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std::string& cpp_filename, uint16_t log_line_size)
+CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std::string& cpp_filename, uint16_t log_line_size) throw (CSyscallException)
 {
     std::string log_filename = utils::CStringUtils::replace_suffix(cpp_filename, ".log");
     return new CSafeLogger(log_dirpath.c_str(), log_filename.c_str(), log_line_size);

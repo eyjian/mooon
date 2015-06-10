@@ -33,15 +33,27 @@ class CSafeLogger;
 extern void close_thread_log_fd();
 
 // 根据程序文件创建CSafeLogger
-extern CSafeLogger* create_safe_logger(bool enable_program_path=true, uint16_t log_line_size=4096);
+//
+// 假设目录结构为：
+// home
+// |-- bin
+// |-- log
+//
+// 可执行程序文件放在bin子目录，则日志文件将自动放在log子目录下，
+// 如果enable_program_path为true，则log子目录不存在时，日志文件将放在和可执行程序文件同一目录下。
+//
+// 若因目录和文件名，或者创建、打开文件权限等问题，则会抛出CSyscallException异常
+extern CSafeLogger* create_safe_logger(bool enable_program_path=true, uint16_t log_line_size=4096) throw (CSyscallException);
 
 // 根据程序文件创建CSafeLogger
+// 若因目录和文件名，或者创建、打开文件权限等问题，则会抛出CSyscallException异常
+//
 // 适用于CGI记录日志，原因是CGI不能使用程序文件名，
 // 1) 假设CGI的cpp文件名为mooon.cpp，则日志文件名为mooon.log
 // 2) 假设CGI的cpp文件名为mooon.cc，则日志文件名为mooon.log
 // 使用示例：
 // mooon::sys::g_logger = create_safe_logger(logdir, __FILE__);
-extern CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std::string& cpp_filename, uint16_t log_line_size=4096);
+extern CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std::string& cpp_filename, uint16_t log_line_size=4096) throw (CSyscallException);
 
 /**
   * 多线程和多进程安全的日志器
