@@ -56,10 +56,15 @@ public:
 
             if (!_queue.pop_front(m))
             {
-                printf("thread[%d] pop timeout\n", index);
-
-                if (_stop)
+                if (!_stop)
+                {
+                    printf("thread[%d] pop timeout, but not exit\n", index);
+                }
+                else
+                {
+                    printf("thread[%d] pop timeout, and exit\n", index);
                     break;
+                }
             }
             else
             {
