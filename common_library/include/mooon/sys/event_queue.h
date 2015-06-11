@@ -91,6 +91,13 @@ private:
   *
   * 使用示例2：
   * mooon::sys::CEventQueue<mooon::sys::CEventQueueAdapterForList<int> > _queue;
+  *
+  * 特别注意：
+  * 如果一个线程即消费队列，又会往队列添加数据，有可能造成死锁或无法push成功，
+  * 原因是线程在push时，队列可能已满，由于它自己才是消费者，导致队列无法解除满状态。
+  * 对于这个的解决办法是：
+  * 1.保持队列足够大到可以避免这个问题发生
+  * 2.或增加线程私有队列，对于线程自己需要push的，放到它的私有队列中。
   */
 template <class RawQueueClass>
 class CEventQueue
