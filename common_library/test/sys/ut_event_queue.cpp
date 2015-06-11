@@ -31,13 +31,18 @@ class CMyThread
 {
 public:
     CMyThread()
-        : _queue(10000, 1000, 5000)
+        : _stop(false), _queue(10000, 1000, 2000)
     {
     }
 
     bool push_message(int m, int index)
     {
         return _queue.push_back(m);
+    }
+
+    void stop()
+    {
+        _stop = true;
     }
 
     void run(int index)
@@ -48,9 +53,13 @@ public:
         while (true)
         {
             int m = -1;
+
             if (!_queue.pop_front(m))
             {
-                break;
+                printf("thread[%d] pop timeout\n", index);
+
+                if (_stop)
+                    break;
             }
             else
             {
@@ -70,6 +79,7 @@ public:
     }
 
 private:
+    volatile bool _stop;
     sys::CEventQueue<utils::CArrayQueue<int> > _queue;
     //sys::CEventQueue<sys::CEventQueueAdapterForList<int> > _queue;
 };
@@ -96,6 +106,7 @@ int main(int argc, char* argv[])
 
     for (i=0; i<num_threads; ++i)
     {
+        my_thread[i]->stop();
         engine[i]->join();
         delete my_thread[i];
         delete engine[i];
