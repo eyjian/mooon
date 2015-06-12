@@ -16,7 +16,14 @@ void CCurlWrapper::global_cleanup()
     curl_global_cleanup();
 }
 
-static size_t on_write(void* buffer, size_t size, size_t nmemb, void* stream)
+static size_t on_write_response_body(void* buffer, size_t size, size_t nmemb, void* stream)
+{
+    std::string* result = reinterpret_cast<std::string*>(stream);
+    result->append(reinterpret_cast<char*>(buffer), size*nmemb);
+    return size * nmemb;
+}
+
+static size_t on_write_response_header(void* buffer, size_t size, size_t nmemb, void* stream)
 {
     std::string* result = reinterpret_cast<std::string*>(stream);
     result->append(reinterpret_cast<char*>(buffer), size*nmemb);
@@ -66,12 +73,17 @@ void CCurlWrapper::reset() throw (utils::CException)
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
-    errcode = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, on_write);
+    errcode = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, on_write_response_body);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 }
 
-void CCurlWrapper::get(std::string* result, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
+void CCurlWrapper::get(std::string* response_body, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
+{
+    get(NULL, response_body, url, enable_insecure, cookie);
+}
+
+void CCurlWrapper::get(std::string* response_header, std::string* response_body, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
 {
     CURLcode errcode;
     CURL* curl = (CURL*)_curl;
@@ -80,9 +92,33 @@ void CCurlWrapper::get(std::string* result, const std::string& url, bool enable_
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
-    errcode = curl_easy_setopt(curl, CURLOPT_WRITEDATA, result);
-    if (errcode != CURLE_OK)
-        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+    // CURLOPT_HEADERFUNCTION
+    if (response_header != NULL)
+    {
+        errcode = curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, response_header);
+        if (errcode != CURLE_OK)
+            THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+    }
+    else
+    {
+        errcode = curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, NULL);
+        if (errcode != CURLE_OK)
+            THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+    }
+
+    // CURLOPT_WRITEDATA
+    if (response_body != NULL)
+    {
+        errcode = curl_easy_setopt(curl, CURLOPT_WRITEDATA, response_body);
+        if (errcode != CURLE_OK)
+            THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+    }
+    else
+    {
+        errcode = curl_easy_setopt(curl, CURLOPT_WRITEDATA, NULL);
+        if (errcode != CURLE_OK)
+            THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+    }
 
     // 相当于curl命令的“-k”或“--insecure”参数
     int ssl_verifypeer = enable_insecure? 0: 1;

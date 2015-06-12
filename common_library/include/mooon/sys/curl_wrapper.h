@@ -18,8 +18,13 @@ public:
 
     void reset() throw (utils::CException);
 
+    // response_body 输出参数，可以为NULL，表示不关心响应的HTTP包体
     // enable_insecure为true时，相当于curl命令的“-k”或“--insecure”参数
-    void get(std::string* result, const std::string& url, bool enable_insecure=false, const char* cookie=NULL) throw (utils::CException);
+    void get(std::string* response_body, const std::string& url, bool enable_insecure=false, const char* cookie=NULL) throw (utils::CException);
+
+    // response_header 输出参数，可以为NULL，表示不关心响应的HTTP头
+    // response_body 输出参数，可以为NULL，表示不关心响应的HTTP包体
+    void get(std::string* response_header, std::string* response_body, const std::string& url, bool enable_insecure=false, const char* cookie=NULL) throw (utils::CException);
 
 private:
     void* _curl;
