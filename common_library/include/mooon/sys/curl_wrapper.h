@@ -19,7 +19,7 @@ public:
     void reset() throw (utils::CException);
 
     // enable_insecure为true时，相当于curl命令的“-k”或“--insecure”参数
-    void get(std::string* result, const std::string& url, bool enable_insecure=false) throw (utils::CException);
+    void get(std::string* result, const std::string& url, bool enable_insecure=false, const char* cookie=NULL) throw (utils::CException);
 
 private:
     void* _curl;

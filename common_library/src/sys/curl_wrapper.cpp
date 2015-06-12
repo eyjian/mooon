@@ -71,11 +71,11 @@ void CCurlWrapper::reset() throw (utils::CException)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 }
 
-void CCurlWrapper::get(std::string* result, const std::string& url, bool enable_insecure) throw (utils::CException)
+void CCurlWrapper::get(std::string* result, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
 {
     CURLcode errcode;
     CURL* curl = (CURL*)_curl;
-    
+
     errcode = curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
@@ -94,6 +94,14 @@ void CCurlWrapper::get(std::string* result, const std::string& url, bool enable_
     //errcode = curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYHOST, ssl_verifyhost);
     //if (errcode != CURLE_OK)
     //    THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    // 设置cookie
+    if (cookie != NULL)
+    {
+        errcode = curl_easy_setopt(curl, CURLOPT_COOKIE, cookie);
+        if (errcode != CURLE_OK)
+            THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+    }
 
     errcode = curl_easy_perform(curl);
     if (errcode != CURLE_OK)
