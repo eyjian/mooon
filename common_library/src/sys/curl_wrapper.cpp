@@ -73,6 +73,10 @@ void CCurlWrapper::reset() throw (utils::CException)
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
+    errcode = curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, on_write_response_header);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
     errcode = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, on_write_response_body);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
@@ -95,13 +99,13 @@ void CCurlWrapper::get(std::string* response_header, std::string* response_body,
     // CURLOPT_HEADERFUNCTION
     if (response_header != NULL)
     {
-        errcode = curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, response_header);
+        errcode = curl_easy_setopt(curl, CURLOPT_HEADERDATA, response_header);
         if (errcode != CURLE_OK)
             THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
     }
     else
     {
-        errcode = curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, NULL);
+        errcode = curl_easy_setopt(curl, CURLOPT_HEADERDATA, NULL);
         if (errcode != CURLE_OK)
             THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
     }
