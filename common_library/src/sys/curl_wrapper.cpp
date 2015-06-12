@@ -148,6 +148,16 @@ void CCurlWrapper::get(std::string* response_header, std::string* response_body,
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 }
 
+int CCurlWrapper::get_response_code() const throw (utils::CException)
+{
+    long response_code = 0;
+    CURLcode errcode = curl_easy_getinfo(_curl, CURLINFO_RESPONSE_CODE, &response_code);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    return static_cast<int>(response_code);
+}
+
 #if 0
 extern "C" int main(int argc, char* argv[])
 {
@@ -160,13 +170,13 @@ extern "C" int main(int argc, char* argv[])
     try
     {
         CCurlWrapper curl_wrapper(2);
-        std::string result;
-        curl_wrapper.get(&result, argv[1]);
-        printf("result =>\n%s\n", result.c_str());
+        std::string response_body;
+        curl_wrapper.get(NULL, &response_body, argv[1]);
+        printf("result =>\n%s\n", response_body.c_str());
 
-        result.clear();
-        curl_wrapper.get(&result, argv[1]);
-        printf("result =>\n%s\n", result.c_str());
+        response_body.clear();
+        curl_wrapper.get(&response_body, argv[1]);
+        printf("result =>\n%s\n", response_body.c_str());
     }
     catch (utils::CException& ex)
     {

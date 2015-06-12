@@ -26,6 +26,10 @@ public:
     // response_body 输出参数，可以为NULL，表示不关心响应的HTTP包体
     void get(std::string* response_header, std::string* response_body, const std::string& url, bool enable_insecure=false, const char* cookie=NULL) throw (utils::CException);
 
+public:
+    // 取得响应的状态码，如：200、403、500等
+    int get_response_code() const throw (utils::CException);
+
 private:
     void* _curl;
     int _timeout_seconds;
