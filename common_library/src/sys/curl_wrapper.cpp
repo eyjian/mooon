@@ -82,7 +82,7 @@ void CCurlWrapper::reset() throw (utils::CException)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 }
 
-void CCurlWrapper::get(std::string* response_header, std::string* response_body, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
+void CCurlWrapper::get(std::string& response_header, std::string& response_body, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
 {
     CURLcode errcode;
     CURL* curl = (CURL*)_curl;
@@ -92,32 +92,14 @@ void CCurlWrapper::get(std::string* response_header, std::string* response_body,
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
     // CURLOPT_HEADERFUNCTION
-    if (response_header != NULL)
-    {
-        errcode = curl_easy_setopt(curl, CURLOPT_HEADERDATA, response_header);
-        if (errcode != CURLE_OK)
-            THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
-    }
-    else
-    {
-        errcode = curl_easy_setopt(curl, CURLOPT_HEADERDATA, NULL);
-        if (errcode != CURLE_OK)
-            THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
-    }
+    errcode = curl_easy_setopt(curl, CURLOPT_HEADERDATA, &response_header);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
     // CURLOPT_WRITEDATA
-    if (response_body != NULL)
-    {
-        errcode = curl_easy_setopt(curl, CURLOPT_WRITEDATA, response_body);
-        if (errcode != CURLE_OK)
-            THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
-    }
-    else
-    {
-        errcode = curl_easy_setopt(curl, CURLOPT_WRITEDATA, NULL);
-        if (errcode != CURLE_OK)
-            THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
-    }
+    errcode = curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
     // 相当于curl命令的“-k”或“--insecure”参数
     int ssl_verifypeer = enable_insecure? 0: 1;
