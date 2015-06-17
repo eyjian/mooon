@@ -82,7 +82,7 @@ void CCurlWrapper::reset() throw (utils::CException)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 }
 
-void CCurlWrapper::get(std::string& response_header, std::string& response_body, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
+void CCurlWrapper::http_get(std::string& response_header, std::string& response_body, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
 {
     CURLcode errcode;
     CURL* curl = (CURL*)_curl;

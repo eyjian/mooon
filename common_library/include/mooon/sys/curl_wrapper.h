@@ -18,9 +18,10 @@ public:
 
     void reset() throw (utils::CException);
 
+    // HTTP GET请求
     // response_header 输出参数，存放响应的HTTP头
     // response_body 输出参数，存放响应的HTTP包体
-    void get(std::string& response_header, std::string& response_body, const std::string& url, bool enable_insecure=false, const char* cookie=NULL) throw (utils::CException);
+    void http_get(std::string& response_header, std::string& response_body, const std::string& url, bool enable_insecure=false, const char* cookie=NULL) throw (utils::CException);
 
 public:
     // 取得响应的状态码，如：200、403、500等
