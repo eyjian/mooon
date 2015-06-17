@@ -6,6 +6,7 @@
 #include <sys/time.h>
 SYS_NAMESPACE_BEGIN
 
+// 计时器
 class CStopWatch
 {
 public:
@@ -16,17 +17,18 @@ public:
         _stop_time.tv_usec = 0;
     }
 
+    // 重新开始计时
     void restart()
     {
         (void)gettimeofday(&_start_time, NULL);
     }
 
-    // 返回纳秒级的时间
-    // restart 调用之后是否重计时
-    unsigned int get_elapsed_time(bool restart)
+    // 返回微秒级的耗时
+    // restart 调用之后是否重新开始计时
+    unsigned int get_elapsed_microseconds(bool restart)
     {
         (void)gettimeofday(&_stop_time, NULL);
-        unsigned int elapsed_time = static_cast<unsigned int>((_stop_time.tv_sec - _start_time.tv_sec) * 1000000 + (_stop_time.tv_usec - _start_time.tv_usec));
+        unsigned int elapsed_microseconds = static_cast<unsigned int>((_stop_time.tv_sec - _start_time.tv_sec) * 1000000 + (_stop_time.tv_usec - _start_time.tv_usec));
 
         // 重计时
         if (restart)
@@ -35,7 +37,7 @@ public:
             _start_time.tv_usec = _stop_time.tv_usec;
         }
 
-        return elapsed_time;
+        return elapsed_microseconds;
     }
 
 private:
