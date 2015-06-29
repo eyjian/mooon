@@ -18,9 +18,9 @@
  */
 #ifndef MOOON_AGENT_QUEUE_H
 #define MOOON_AGENT_QUEUE_H
-#include <net/epollable_queue.h>
-#include <util/array_queue.h>
-#include <agent/message.h>
+#include <mooon/agent/message.h>
+#include <mooon/net/epollable_queue.h>
+#include <mooon/utils/array_queue.h>
 AGENT_NAMESPACE_BEGIN
 
 class CAgentThread;

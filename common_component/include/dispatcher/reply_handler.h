@@ -18,9 +18,9 @@
  */
 #ifndef MOOON_DISPATCHER_REPLY_HANDLER_H
 #define MOOON_DISPATCHER_REPLY_HANDLER_H
-#include <net/ip_node.h>
-#include <net/ip_address.h>
-#include <dispatcher/config.h>
+#include <mooon/dispatcher/config.h>
+#include <mooon/net/ip_address.h>
+#include <mooon/net/ip_node.h>
 DISPATCHER_NAMESPACE_BEGIN
 
 /***

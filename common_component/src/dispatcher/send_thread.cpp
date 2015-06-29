@@ -17,8 +17,8 @@
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
 #include <sstream>
-#include <net/util.h>
-#include <sys/util.h>
+#include <mooon/net/utils.h>
+#include <mooon/sys/utils.h>
 #include "send_thread.h"
 #include "dispatcher_context.h"
 #include "unmanaged_sender_table.h"
@@ -61,7 +61,7 @@ void CSendThread::run()
     int events_count = _epoller.timed_wait(2000);
     if (0 == events_count)
     {
-        // 超时处理        
+        // 超时处理
     }
     else
     {
@@ -295,7 +295,7 @@ void CSendThread::sender_connect(CSender* sender)
     }
     catch (sys::CSyscallException& ex)
     {
-        // 连接未成功，再插入到队列尾部，由于有循环count次限制，所以放在尾部可以保证本轮不会再被处理        
+        // 连接未成功，再插入到队列尾部，由于有循环count次限制，所以放在尾部可以保证本轮不会再被处理
         sender_reconnect(sender);
         DISPATCHER_LOG_DEBUG("%s connected failed.\n", sender->to_string().c_str());                    
     }

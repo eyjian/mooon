@@ -17,8 +17,8 @@
  * Author: jian yi, eyjian@qq.com
  */
 #include <sstream>
-#include <net/util.h>
-#include <sys/util.h>
+#include <mooon/net/utils.h>
+#include <mooon/sys/utils.h>
 #include "context.h"
 #include "work_thread.h"
 SERVER_NAMESPACE_BEGIN
@@ -113,7 +113,7 @@ bool CWorkThread::before_run()
 #if ENABLE_SET_SERVER_THREAD_NAME==1
     std::stringstream thread_name;
     thread_name << "svr-thread[" << get_index() << "]";
-    sys::CUtil::set_process_name(thread_name.str().c_str());
+    sys::CUtils::set_process_name(thread_name.str().c_str());
 #endif // ENABLE_SET_SERVER_THREAD_NAME
 
     if (NULL == _follower) return true;
@@ -135,7 +135,7 @@ bool CWorkThread::before_start()
         IFactory* factory = _context->get_factory();
 
         _follower = factory->create_thread_follower(get_index());
-        _takeover_waiter_queue = new util::CArrayQueue<PendingInfo*>(config->get_takeover_queue_size());
+        _takeover_waiter_queue = new utils::CArrayQueue<PendingInfo*>(config->get_takeover_queue_size());
         _timeout_manager.set_timeout_seconds(config->get_connection_timeout_seconds());       
         
         _epoller.create(config->get_epoll_size());        

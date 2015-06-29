@@ -17,9 +17,9 @@
  * Author: JianYi, eyjian@qq.com
  */
 #include <sstream>
-#include <net/util.h>
-#include <sys/thread.h>
-#include <util/string_util.h>
+#include <mooon/net/utils.h>
+#include <mooon/sys/thread.h>
+#include <mooon/utils/string_utils.h>
 #include "waiter.h"
 #include "work_thread.h"
 SERVER_NAMESPACE_BEGIN
@@ -85,7 +85,7 @@ net::epoll_event_t CWaiter::handle_epoll_event(void* input_ptr, uint32_t events,
         }
         else
         {
-            std::string info = std::string("events - ") + util::CStringUtil::int_tostring(events);
+            std::string info = std::string("events - ") + utils::CStringUtils::int_tostring(events);
             retval = do_handle_epoll_error((void*)info.c_str(), ouput_ptr);
         }
     }
@@ -196,7 +196,7 @@ net::epoll_event_t CWaiter::do_handle_epoll_send(void* input_ptr, void* ouput_pt
     indicator.epoll_events = EPOLLIN;
 
     _is_sending = false; // 结束发送状态，再次进入接收状态
-    util::handle_result_t handle_result; 
+    utils::handle_result_t handle_result;
 
     handle_result = _packet_handler->on_response_completed(indicator);
     if (indicator.reset)
@@ -206,14 +206,14 @@ net::epoll_event_t CWaiter::do_handle_epoll_send(void* input_ptr, void* ouput_pt
     }
 
     HandOverParam* handover_param = static_cast<HandOverParam*>(ouput_ptr);
-    if (util::handle_release == handle_result)
+    if (utils::handle_release == handle_result)
     {
         SERVER_LOG_DEBUG("%s will be released.\n", str().c_str());
         handover_param->thread_index = indicator.thread_index;
         handover_param->epoll_events = indicator.epoll_events;
         return net::epoll_release;
     }
-    if (util::handle_continue == handle_result)
+    if (utils::handle_continue == handle_result)
     {
         // 这里，忽略handover_param->thread_index
         handover_param->epoll_events = indicator.epoll_events;
@@ -288,12 +288,12 @@ net::epoll_event_t CWaiter::do_handle_epoll_read(void* input_ptr, void* ouput_pt
     indicator.thread_index = get_thread_index();
     indicator.epoll_events = EPOLLOUT;
 
-    util::handle_result_t handle_result = _packet_handler->on_handle_request((size_t)retval, indicator);
+    utils::handle_result_t handle_result = _packet_handler->on_handle_request((size_t)retval, indicator);
     if (indicator.reset)
     {
         reset();
     }
-    if (util::handle_release == handle_result)
+    if (utils::handle_release == handle_result)
     {
         // 释放对Waiter的控制权
         HandOverParam* handover_param = static_cast<HandOverParam*>(ouput_ptr);
@@ -301,7 +301,7 @@ net::epoll_event_t CWaiter::do_handle_epoll_read(void* input_ptr, void* ouput_pt
         handover_param->epoll_events = indicator.epoll_events;
         return net::epoll_release;
     }
-    else if (util::handle_finish == handle_result)
+    else if (utils::handle_finish == handle_result)
     {
         // 将do_handle_epoll_send改成epoll_read_write，结构相对统一，但性能稍有下降
         //return do_handle_epoll_send(ptr);

@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_OBSERVER_DATA_REPORTER_H
 #define MOOON_OBSERVER_DATA_REPORTER_H
-#include <observer/config.h>
+#include <mooon/observer/config.h>
 OBSERVER_NAMESPACE_BEGIN
 
 /***

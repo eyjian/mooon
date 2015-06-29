@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_DISPATCHER_DEFAULT_REPLY_HANDLER_H
 #define MOOON_DISPATCHER_DEFAULT_REPLY_HANDLER_H
-#include "dispatcher/dispatcher.h"
+#include "mooon/dispatcher/dispatcher.h"
 DISPATCHER_NAMESPACE_BEGIN
 
 class CDefaultReplyHandler: public IReplyHandler
@@ -42,7 +42,7 @@ private:
     virtual void sender_connect_failure();    
     
     /** 处理应答消息 */
-    virtual util::handle_result_t handle_reply(size_t data_size);
+    virtual utils::handle_result_t handle_reply(size_t data_size);
 
 private:
     ISender* _sender;

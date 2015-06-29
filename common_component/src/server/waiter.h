@@ -18,10 +18,10 @@
  */
 #ifndef MOOON_SERVER_WAITER_H
 #define MOOON_SERVER_WAITER_H
-#include <sys/log.h>
-#include <util/listable.h>
-#include <net/tcp_waiter.h>
-#include <util/timeoutable.h>
+#include <mooon/sys/log.h>
+#include <mooon/utils/listable.h>
+#include <mooon/net/tcp_waiter.h>
+#include <mooon/utils/timeoutable.h>
 #include "log.h"
 #include "server/connection.h"
 #include "server/packet_handler.h"

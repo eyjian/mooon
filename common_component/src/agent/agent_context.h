@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_AGENT_CONTEXT_H
 #define MOOON_AGENT_CONTEXT_H
-#include <agent/agent.h>
+#include <mooon/agent/agent.h>
 #include "agent_thread.h"
 AGENT_NAMESPACE_BEGIN
 

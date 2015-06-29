@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_SERVER_H
 #define MOOON_SERVER_H
-#include <server/factory.h>
+#include <mooon/server/factory.h>
 SERVER_NAMESPACE_BEGIN
 
 typedef void* server_t;

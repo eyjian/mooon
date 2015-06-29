@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_OBSERVER_THREAD_H
 #define MOOON_OBSERVER_THREAD_H
-#include <sys/thread.h>
+#include <mooon/sys/thread.h>
 #include "observer_log.h"
 OBSERVER_NAMESPACE_BEGIN
 

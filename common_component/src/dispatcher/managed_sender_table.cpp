@@ -16,10 +16,10 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include <net/util.h>
-#include <sys/close_helper.h>
-#include <util/string_util.h>
-#include <util/integer_util.h>
+#include <mooon/net/utils.h>
+#include <mooon/sys/close_helper.h>
+#include <mooon/utils/string_utils.h>
+#include <mooon/utils/integer_utils.h>
 #include "dispatcher_context.h"
 #include "managed_sender_table.h"
 #include "default_reply_handler.h"
@@ -139,7 +139,7 @@ ISender* CManagedSenderTable::get_sender(uint16_t key)
 
 void CManagedSenderTable::clear_sender()
 {
-    // 下面这个循环最大可能为65535次，但只有更新发送表时才发生，所以对性能影响可以忽略    
+    // 下面这个循环最大可能为65535次，但只有更新发送表时才发生，所以对性能影响可以忽略
     for (uint16_t key=0; key<_table_size; ++key)
     {
         sys::LockHelper<sys::CLock> lock(_lock_array[key]);

@@ -18,10 +18,10 @@
  */
 #ifndef MOOON_AGENT_PROCESSOR_MANAGER_H
 #define MOOON_AGENT_PROCESSOR_MANAGER_H
-#include <agent/command_processor.h>
-#include <agent/message.h>
 #include <map>
-#include <sys/lock.h>
+#include <mooon/agent/command_processor.h>
+#include <mooon/agent/message.h>
+#include <mooon/sys/lock.h>
 AGENT_NAMESPACE_BEGIN
     
 class CProcessorManager

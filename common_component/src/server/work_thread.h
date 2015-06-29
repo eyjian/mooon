@@ -18,9 +18,9 @@
  */
 #ifndef MOOON_SERVER_THREAD_H
 #define MOOON_SERVER_THREAD_H
-#include <net/epoller.h>
-#include <sys/pool_thread.h>
-#include <util/timeout_manager.h>
+#include <mooon/net/epoller.h>
+#include <mooon/sys/pool_thread.h>
+#include <mooon/utils/timeout_manager.h>
 #include "log.h"
 #include "listener.h"
 #include "waiter_pool.h"
@@ -41,7 +41,7 @@ struct HandOverParam
 
 class CContext;
 class CWorkThread: public sys::CPoolThread
-                 , public util::ITimeoutHandler<CWaiter>
+                 , public utils::ITimeoutHandler<CWaiter>
 {
 public:
     CWorkThread();
@@ -77,7 +77,7 @@ private:
     time_t _current_time;
     net::CEpoller _epoller;
     CWaiterPool* _waiter_pool;       
-    util::CTimeoutManager<CWaiter> _timeout_manager;    
+    utils::CTimeoutManager<CWaiter> _timeout_manager;
     CContext* _context;
     IThreadFollower* _follower;
     
@@ -93,7 +93,7 @@ private:
         }
     };
     sys::CLock _pending_lock;
-    util::CArrayQueue<PendingInfo*>* _takeover_waiter_queue;
+    utils::CArrayQueue<PendingInfo*>* _takeover_waiter_queue;
     
 private:
     typedef void (CWorkThread::*epoll_event_proc_t)(net::CEpollable* epollable, void* param);

@@ -18,9 +18,9 @@
  */
 #ifndef MOOON_SERVER_PACKET_HANDLER_H
 #define MOOON_SERVER_PACKET_HANDLER_H
+#include <mooon/server/config.h>
+#include <mooon/sys/epoll.h>
 #include <sstream>
-#include <sys/epoll.h>
-#include <server/config.h>
 SERVER_NAMESPACE_BEGIN
 
 /***

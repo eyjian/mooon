@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_AGENT_H
 #define MOOON_AGENT_H
-#include <agent/command_processor.h>
+#include <mooon/agent/command_processor.h>
 AGENT_NAMESPACE_BEGIN
 
 /***

@@ -18,11 +18,11 @@
  */
 #ifndef MOOON_SERVER_BUILTIN_PACKET_HANDLER_H
 #define MOOON_SERVER_BUILTIN_PACKET_HANDLER_H
-#include <server/connection.h>
-#include <server/message_observer.h>
-#include <server/packet_handler.h>
-#include <net/inttypes.h>
-#include <net/recv_machine.h>
+#include <mooon/server/connection.h>
+#include <mooon/server/message_observer.h>
+#include <mooon/server/packet_handler.h>
+#include <mooon/net/inttypes.h>
+#include <mooon/net/recv_machine.h>
 SERVER_NAMESPACE_BEGIN
 
 /***
@@ -44,10 +44,10 @@ public:
 
 private:
     virtual void reset();
-    virtual util::handle_result_t on_handle_request(size_t data_size, Indicator& indicator);
+    virtual utils::handle_result_t on_handle_request(size_t data_size, Indicator& indicator);
     virtual void on_connection_closed();
     virtual bool on_connection_timeout();
-    virtual util::handle_result_t on_response_completed(Indicator& indicator);
+    virtual utils::handle_result_t on_response_completed(Indicator& indicator);
 
 private:
     IConnection* _connection;

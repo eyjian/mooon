@@ -17,7 +17,7 @@
  * Author: jian yi, eyjian@qq.com
  */
 #include <signal.h>
-#include <sys/util.h>
+#include <mooon/sys/utils.h>
 #include "context.h"
 SERVER_NAMESPACE_BEGIN
 

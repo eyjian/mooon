@@ -16,8 +16,8 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#include <net/util.h>
-#include <sys/thread.h>
+#include <mooon/net/utils.h>
+#include <mooon/sys/thread.h>
 #include "listener.h"
 #include "work_thread.h"
 SERVER_NAMESPACE_BEGIN

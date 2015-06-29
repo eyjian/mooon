@@ -18,9 +18,9 @@
  */
 #ifndef MOOON_SERVER_CONNECTION_H
 #define MOOON_SERVER_CONNECTION_H
-#include <sys/log.h>
-#include <net/ip_address.h>
-#include <server/config.h>
+#include <mooon/net/ip_address.h>
+#include <mooon/sys/log.h>
+#include <mooon/server/config.h>
 SERVER_NAMESPACE_BEGIN
 
 /***

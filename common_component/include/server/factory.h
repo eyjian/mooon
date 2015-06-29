@@ -18,11 +18,11 @@
  */
 #ifndef MOOON_SERVER_FACTORY_H
 #define MOOON_SERVER_FACTORY_H
-#include <server/config.h>
-#include <server/connection.h>
-#include <server/message_observer.h>
-#include <server/packet_handler.h>
-#include <server/thread_follower.h>
+#include <mooon/server/config.h>
+#include <mooon/server/connection.h>
+#include <mooon/server/message_observer.h>
+#include <mooon/server/packet_handler.h>
+#include <mooon/server/thread_follower.h>
 SERVER_NAMESPACE_BEGIN
 
 /***

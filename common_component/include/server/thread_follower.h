@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_SERVER_THREAD_FOLLOWER_H
 #define MOOON_SERVER_THREAD_FOLLOWER_H
-#include <server/config.h>
+#include <mooon/server/config.h>
 SERVER_NAMESPACE_BEGIN
 
 /***
@@ -41,7 +41,7 @@ public:
     virtual void after_run() {}
 
     /***
-      * 每次进入epoll之前被调用      
+      * 每次进入epoll之前被调用
       */
     virtual void before_epoll() {}
 

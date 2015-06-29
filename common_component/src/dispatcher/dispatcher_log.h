@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_DISPATCHER_LOG_H
 #define MOOON_DISPATCHER_LOG_H
-#include "dispatcher/dispatcher.h"
+#include "mooon/dispatcher/dispatcher.h"
 DISPATCHER_NAMESPACE_BEGIN
     
 #define DISPATCHER_MODULE_NAME "DISPATCHER"

@@ -18,8 +18,8 @@
  */
 #ifndef MOOON_DISPATCHER_CONFIG_H
 #define MOOON_DISPATCHER_CONFIG_H
- #include <unistd.h>
-#include <sys/log.h>
+#include <mooon/sys/log.h>
+#include <unistd.h>
 
 /**
   * 编译功能控制宏

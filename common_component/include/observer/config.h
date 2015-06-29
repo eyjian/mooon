@@ -20,12 +20,12 @@
 #define MOOON_OBSERVER_CONFIG_H
 
 /***
-  * ±àÒëºê¿ª¹Ø
+  * ç¼–è¯‘å®å¼€å…³
   */
-#define ENABLE_SET_OBSERVER_THREAD_NAME 1 /** ÊÇ·ñÔÊĞíÉèÖÃobserverÏß³ÌÃû */
+#define ENABLE_SET_OBSERVER_THREAD_NAME 1 /** æ˜¯å¦å…è®¸è®¾ç½®observerçº¿ç¨‹å */
 
 /***
-  * observerÄ£¿éÃû³Æ¿Õ¼äÃû³Æ¶¨Òå
+  * observeræ¨¡å—åç§°ç©ºé—´åç§°å®šä¹‰
   */
 #define OBSERVER_NAMESPACE_BEGIN namespace mooon { namespace observer {
 #define OBSERVER_NAMESPACE_END                   }}

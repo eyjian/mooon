@@ -18,8 +18,8 @@
  */
 #ifndef MOOON_DISPATCHER_SEND_QUEUE_H
 #define MOOON_DISPATCHER_SEND_QUEUE_H
-#include <util/array_queue.h>
-#include <net/epollable_queue.h>
+#include <mooon/utils/array_queue.h>
+#include <mooon/net/epollable_queue.h>
 #include "dispatcher_log.h"
 #include "dispatcher/dispatcher.h"
 DISPATCHER_NAMESPACE_BEGIN

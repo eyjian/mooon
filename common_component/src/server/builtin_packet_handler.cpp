@@ -112,19 +112,19 @@ void CBuiltinPacketHandler::reset()
     _response_context.response_offset = 0;
 }
 
-util::handle_result_t CBuiltinPacketHandler::on_handle_request(size_t data_size, Indicator& indicator)
+utils::handle_result_t CBuiltinPacketHandler::on_handle_request(size_t data_size, Indicator& indicator)
 {
     SERVER_LOG_TRACE("enter %s.\n", __FUNCTION__);
 
     // 注意：work会调用CBuiltinPacketHandler::on_message和CBuiltinPacketHandler::on_header
-    util::handle_result_t handle_result = _recv_machine.work(_request_context.request_buffer
+    utils::handle_result_t handle_result = _recv_machine.work(_request_context.request_buffer
                                                             +_request_context.request_offset
                                                             , data_size);
 
-    // 成功无响应，则返回util::handle_continue
-    return ((util::handle_finish == handle_result)
+    // 成功无响应，则返回utils::handle_continue
+    return ((utils::handle_finish == handle_result)
          && (NULL == _response_context.response_buffer || 0 == _response_context.response_size))
-         ? handle_result = util::handle_continue
+         ? handle_result = utils::handle_continue
          : handle_result;
 }
 
@@ -138,16 +138,16 @@ bool CBuiltinPacketHandler::on_connection_timeout()
     return _message_observer->on_connection_timeout();
 }
 
-util::handle_result_t CBuiltinPacketHandler::on_response_completed(Indicator& indicator)
+utils::handle_result_t CBuiltinPacketHandler::on_response_completed(Indicator& indicator)
 {
-    util::handle_result_t handle_result = _message_observer->on_response_completed();
+    utils::handle_result_t handle_result = _message_observer->on_response_completed();
 
-    if (util::handle_continue == handle_result)
-        return util::handle_continue;
-    if (util::handle_error == handle_result)
-        return util::handle_error;
+    if (utils::handle_continue == handle_result)
+        return utils::handle_continue;
+    if (utils::handle_error == handle_result)
+        return utils::handle_error;
 
-    return util::handle_close;
+    return utils::handle_close;
 }
 
 SERVER_NAMESPACE_END

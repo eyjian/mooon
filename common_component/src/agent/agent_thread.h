@@ -19,10 +19,10 @@
 #ifndef MOOON_AGENT_THREAD_H
 #define MOOON_AGENT_THREAD_H
 #include <list>
-#include <net/epoller.h>
-#include <sys/lock.h>
-#include <sys/thread.h>
-#include <agent/agent.h>
+#include <mooon/net/epoller.h>
+#include <mooon/sys/lock.h>
+#include <mooon/sys/thread.h>
+#include <mooon/agent/agent.h>
 #include "agent_connector.h"
 #include "center_host.h"
 #include "processor_manager.h"

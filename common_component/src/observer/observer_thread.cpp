@@ -16,7 +16,7 @@
  *
  * Author: JianYi, eyjian@qq.com or eyjian@gmail.com
  */
-#include <sys/util.h>
+#include <mooon/sys/utils.h>
 #include "observer_thread.h"
 #include "observer_context.h"
 OBSERVER_NAMESPACE_BEGIN

@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_AGENT_LOG_H
 #define MOOON_AGENT_LOG_H
-#include <agent/agent.h>
+#include <mooon/agent/agent.h>
 
 #define AGENT_MODULE_NAME "AGENT"
 

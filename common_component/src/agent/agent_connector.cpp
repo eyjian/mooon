@@ -17,7 +17,7 @@
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
 #include "agent_connector.h"
-#include <net/util.h>
+#include <mooon/net/utils.h>
 #include "agent_log.h"
 #include "agent_thread.h"
 AGENT_NAMESPACE_BEGIN

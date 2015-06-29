@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_AGENT_CENTER_HOST_H
 #define MOOON_AGENT_CENTER_HOST_H
-#include <agent/config.h>
+#include <mooon/agent/config.h>
 AGENT_NAMESPACE_BEGIN
 
 class CCenterHost

@@ -65,9 +65,9 @@ void CDefaultReplyHandler::sender_connect_failure()
     // do nothing
 }
 
-util::handle_result_t CDefaultReplyHandler::handle_reply(size_t data_size)
+utils::handle_result_t CDefaultReplyHandler::handle_reply(size_t data_size)
 {
-    return util::handle_continue;
+    return utils::handle_continue;
 }
 
 DISPATCHER_NAMESPACE_END

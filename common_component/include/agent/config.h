@@ -18,15 +18,15 @@
  */
 #ifndef MOOON_AGENT_CONFIG_H
 #define MOOON_AGENT_CONFIG_H
-#include <sys/log.h>
+#include <mooon/sys/log.h>
 
 /***
-  * ±àÒë¿ª¹Øºê
+  * ç¼–è¯‘å¼€å…³å®
   */
-#define ENABLE_SET_AGENT_THREAD_NAME 1 /** ÊÇ·ñÔÊĞíÉèÖÃagentÏß³ÌÃû */
+#define ENABLE_SET_AGENT_THREAD_NAME 1 /** æ˜¯å¦å…è®¸è®¾ç½®agentçº¿ç¨‹å */
 
 /***
-  * agentÄ£¿éÃû³Æ¿Õ¼äÃû³Æ¶¨Òå
+  * agentæ¨¡å—åç§°ç©ºé—´åç§°å®šä¹‰
   */
 #define AGENT_NAMESPACE_BEGIN namespace mooon { namespace agent {
 #define AGENT_NAMESPACE_END                   }}

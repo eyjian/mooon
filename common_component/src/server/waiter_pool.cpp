@@ -16,8 +16,8 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#include <sys/log.h>
-#include <net/util.h>
+#include <mooon/sys/log.h>
+#include <mooon/net/utils.h>
 #include "waiter_pool.h"
 #include "work_thread.h"
 #include "builtin_packet_handler.h"
@@ -43,7 +43,7 @@ CWaiterPool::CWaiterPool(CWorkThread* thread, IFactory* factory, uint32_t waiter
     ,_factory(factory)
 {
     _waiter_array = new CWaiter[waiter_count];
-    _waiter_queue = new util::CArrayQueue<CWaiter*>(waiter_count);
+    _waiter_queue = new utils::CArrayQueue<CWaiter*>(waiter_count);
 
     try
     {

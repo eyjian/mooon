@@ -18,7 +18,7 @@
  */
 #include "agent_context.h"
 #include <stdarg.h>
-#include <util/string_util.h>
+#include <mooon/utils/string_utils.h>
 AGENT_NAMESPACE_BEGIN
 
 sys::ILogger* logger = NULL;

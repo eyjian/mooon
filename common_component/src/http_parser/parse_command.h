@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_HTTP_PARSER_PARSE_COMMAND_H
 #define MOOON_HTTP_PARSER_PARSE_COMMAND_H
-#include "http_parser/http_parser.h"
+#include "mooon/http_parser/http_parser.h"
 HTTP_PARSER_NAMESPACE_BEGIN
 
 typedef bool (IHttpEvent::*on_xxx)(const char* begin, const char* end);
@@ -35,7 +35,7 @@ public:
 
 public: // override
 	virtual void reset();
-    virtual util::handle_result_t execute(const char* buffer, int& offset) = 0;
+    virtual utils::handle_result_t execute(const char* buffer, int& offset) = 0;
         
 protected:
     IHttpEvent* get_http_event() const { return _http_event; }
@@ -53,7 +53,7 @@ public:
 	virtual void reset();
 	
 protected:
-    util::handle_result_t do_execute(const char* buffer, int& offset, char endchar, bool (IHttpEvent::*on_xxx)(const char*, const char*));
+    utils::handle_result_t do_execute(const char* buffer, int& offset, char endchar, bool (IHttpEvent::*on_xxx)(const char*, const char*));
 
 private:
     const char* _begin;
@@ -63,13 +63,13 @@ private:
 class CMethodCommand: public CNonNameValuePairCommand
 {
 private:
-    virtual util::handle_result_t execute(const char* buffer, int& offset);
+    virtual utils::handle_result_t execute(const char* buffer, int& offset);
 };
 
 class CURLCommand: public CNonNameValuePairCommand
 {
 private:
-    virtual util::handle_result_t execute(const char* buffer, int& offset);
+    virtual utils::handle_result_t execute(const char* buffer, int& offset);
 };
 
 class CVersionCommand: public CNonNameValuePairCommand
@@ -86,7 +86,7 @@ public:
     }
     
 private:
-    virtual util::handle_result_t execute(const char* buffer, int& offset);
+    virtual utils::handle_result_t execute(const char* buffer, int& offset);
 
 private:
     char _end_char; // 分隔字符
@@ -96,14 +96,14 @@ private:
 class CCodeCommand: public CNonNameValuePairCommand
 {
 private:
-    virtual util::handle_result_t execute(const char* buffer, int& offset);
+    virtual utils::handle_result_t execute(const char* buffer, int& offset);
 };
 
 // 响应代码的描述，如OK和Forbidden等
 class CDescribeCommand: public CNonNameValuePairCommand
 {
 private:
-    virtual util::handle_result_t execute(const char* buffer, int& offset);
+    virtual utils::handle_result_t execute(const char* buffer, int& offset);
 };
 
 // 名值对类，如：Connection: KeepAlive
@@ -114,7 +114,7 @@ public:
 	virtual void reset();
 
 private:
-    virtual util::handle_result_t execute(const char* buffer, int& offset);
+    virtual utils::handle_result_t execute(const char* buffer, int& offset);
     
 private:
     bool _ignore_colon; // 是否忽略冒号，名值对以冒号分隔，但只认第一个冒号，后续的都忽略
@@ -127,7 +127,7 @@ private:
 class CHeadEndCommand: public CParseCommand
 {
 private:
-    virtual util::handle_result_t execute(const char* buffer, int& offset);
+    virtual utils::handle_result_t execute(const char* buffer, int& offset);
 };
 
 HTTP_PARSER_NAMESPACE_END

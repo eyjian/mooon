@@ -18,8 +18,8 @@
  */
 #ifndef MOOON_AGENT_MESSAGE_H
 #define MOOON_AGENT_MESSAGE_H
-#include <agent/message_command.h>
-#include <net/inttypes.h>
+#include <mooon/agent/message_command.h>
+#include <mooon/net/inttypes.h>
 AGENT_NAMESPACE_BEGIN
 #pragma pack(4) // 网络消息按4字节对齐
 

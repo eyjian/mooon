@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_SERVER_LOG_H
 #define MOOON_SERVER_LOG_H
-#include "server/server.h"
+#include "mooon/server/server.h"
 SERVER_NAMESPACE_BEGIN
     
 #define SERVER_MODULE_NAME "SERVER"

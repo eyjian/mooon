@@ -16,7 +16,7 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include "dispatcher/message.h"
+#include "mooon/dispatcher/message.h"
 #include "dispatcher_log.h"
 DISPATCHER_NAMESPACE_BEGIN
 

@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_DISPATCHER_MESSAGE_H
 #define MOOON_DISPATCHER_MESSAGE_H
-#include <dispatcher/config.h>
+#include <mooon/dispatcher/config.h>
 DISPATCHER_NAMESPACE_BEGIN
 
 /***

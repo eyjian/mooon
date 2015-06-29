@@ -19,9 +19,9 @@
 #ifndef MOOON_DISPATCHER_SENDER_H
 #define MOOON_DISPATCHER_SENDER_H
 #include <sys/uio.h>
-#include <net/tcp_client.h>
-#include <util/listable.h>
-#include <util/timeoutable.h>
+#include <mooon/net/tcp_client.h>
+#include <mooon/utils/listable.h>
+#include <mooon/utils/timeoutable.h>
 #include "send_queue.h"
 DISPATCHER_NAMESPACE_BEGIN
 
@@ -75,7 +75,7 @@ private:
     bool get_current_message();    
     void free_current_message();
     void reset_current_message(bool finish);
-    util::handle_result_t do_handle_reply();    
+    utils::handle_result_t do_handle_reply();
     net::epoll_event_t do_send_message(void* input_ptr, uint32_t events, void* output_ptr);
     template <typename ConcreteMessage>
     bool do_push_message(ConcreteMessage* concrete_message, uint32_t milliseconds);

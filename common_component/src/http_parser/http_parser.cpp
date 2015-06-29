@@ -30,7 +30,7 @@ private:
     virtual int get_head_length() const;
     virtual IHttpEvent* get_http_event() const;
     virtual void set_http_event(IHttpEvent* event);
-    virtual util::handle_result_t parse(const char* buf);
+    virtual utils::handle_result_t parse(const char* buf);
 
 private:    
     bool _is_request;
@@ -124,23 +124,23 @@ void CHttpParser::set_http_event(IHttpEvent* event)
     _head_end_command.set_event(event);
 }
 
-util::handle_result_t CHttpParser::parse(const char* buffer)
+utils::handle_result_t CHttpParser::parse(const char* buffer)
 {
     const char* tmp = buffer;
 
     for (;;)
     {
         int offset = 0;
-        util::handle_result_t handle_result = _current_command->execute(tmp, offset);
-        if (util::handle_error == handle_result)
+        utils::handle_result_t handle_result = _current_command->execute(tmp, offset);
+        if (utils::handle_error == handle_result)
 		{
-			return util::handle_error;
+			return utils::handle_error;
 		}
 
         tmp += offset;
         _head_length += offset;
         
-        if (util::handle_continue == handle_result) 
+        if (utils::handle_continue == handle_result)
         {
             break;
         }
@@ -150,12 +150,12 @@ util::handle_result_t CHttpParser::parse(const char* buffer)
             if (NULL == _current_command)
 			{
                 _head_finished = true;
-				return util::handle_finish;
+				return utils::handle_finish;
 			}
         }        
     }
 
-    return util::handle_continue;
+    return utils::handle_continue;
 }
 
 //////////////////////////////////////////////////////////////////////////

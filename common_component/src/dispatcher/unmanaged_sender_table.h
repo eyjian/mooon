@@ -18,8 +18,8 @@
  */
 #ifndef MOOON_DISPATCHER_UNMANAGED_SENDER_TABLE_H
 #define MOOON_DISPATCHER_UNMANAGED_SENDER_TABLE_H
-#include <net/ip_node.h>
-#include <util/hash_map.h>
+#include <mooon/net/ip_node.h>
+#include <mooon/utils/hash_map.h>
 #include "sender_table.h"
 #include "unmanaged_sender.h"
 DISPATCHER_NAMESPACE_BEGIN

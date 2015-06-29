@@ -16,8 +16,8 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include <sys/close_helper.h>
-#include <util/string_util.h>
+#include <mooon/sys/close_helper.h>
+#include <mooon/utils/string_utils.h>
 #include "dispatcher_context.h"
 #include "default_reply_handler.h"
 #include "unmanaged_sender_table.h"
@@ -96,8 +96,8 @@ void CUnmanagedSenderTable::release_sender(ISender* sender)
 
     if (sender_->is_in_table() && sender_->dec_refcount())
     {        
-        // 因为走到这里，说明Sender已经被deleted
-        // ，所以没必要再sender_->set_in_table(false);
+        // 鍥犱负璧板埌杩欓噷锛岃鏄嶴ender宸茬粡琚玠eleted
+        // 锛屾墍浠ユ病蹇呰鍐峴ender_->set_in_table(false);
         _sender_map.erase(ip_node);
     }
 }

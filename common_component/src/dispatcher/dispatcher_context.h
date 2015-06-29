@@ -18,12 +18,12 @@
  */
 #ifndef MOOON_DISPATCHER_CONTEXT_H
 #define MOOON_DISPATCHER_CONTEXT_H
-#include "dispatcher/dispatcher.h"
+#include "mooon/dispatcher/dispatcher.h"
 
-#include <sys/atomic.h>
-#include <sys/lock.h>
-#include <sys/read_write_lock.h>
-#include <sys/thread_pool.h>
+#include <mooon/sys/atomic.h>
+#include <mooon/sys/lock.h>
+#include <mooon/sys/read_write_lock.h>
+#include <mooon/sys/thread_pool.h>
 
 #include "send_thread.h"
 #include "dispatcher_log.h"

@@ -18,8 +18,8 @@
  */
 #include <agent/agent.h>
 #include <sys/main_template.h>
-#include <sys/util.h>
-#include <util/args_parser.h>
+#include <sys/utils.h>
+#include <utils/args_parser.h>
 
 // 命令行参数--center_ip，指定center的IP地址，可以为以逗号分隔的IP列表或域名
 STRING_ARG_DEFINE(false, center_ip, "127.0.0.1", "center IP");

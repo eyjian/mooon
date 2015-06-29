@@ -18,8 +18,8 @@
  */
 #ifndef MOOON_DISPATCHER_H
 #define MOOON_DISPATCHER_H
-#include <dispatcher/message.h>
-#include <dispatcher/reply_handler.h>
+#include <mooon/dispatcher/message.h>
+#include <mooon/dispatcher/reply_handler.h>
 
 /***
   * 名词解释

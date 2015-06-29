@@ -18,8 +18,8 @@
  */
 #ifndef MOOON_SERVER_MESSAGE_OBSERVER_H
 #define MOOON_SERVER_MESSAGE_OBSERVER_H
-#include <server/packet_handler.h>
-#include <net/inttypes.h>
+#include <mooon/net/inttypes.h>
+#include <mooon/server/packet_handler.h>
 SERVER_NAMESPACE_BEGIN
 
 /***

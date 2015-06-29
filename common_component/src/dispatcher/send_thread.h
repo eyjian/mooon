@@ -19,9 +19,9 @@
 #ifndef MOOON_DISPATCHER_SEND_THREAD_H
 #define MOOON_DISPATCHER_SEND_THREAD_H
 #include <list>
-#include <net/epoller.h>
-#include <sys/pool_thread.h>
-#include <util/timeout_manager.h>
+#include <mooon/net/epoller.h>
+#include <mooon/sys/pool_thread.h>
+#include <mooon/utils/timeout_manager.h>
 #include "dispatcher_log.h"
 #include "dispatcher/dispatcher.h"
 DISPATCHER_NAMESPACE_BEGIN
@@ -63,7 +63,7 @@ private:
     
 private:
     time_t _current_time;
-    time_t _last_connect_time;   // 上一次连接时间    
+    time_t _last_connect_time;   // 上一次连接时间
     
 private:
     typedef void (CSendThread::*epoll_event_proc_t)(net::CEpollable* epollable);
@@ -83,7 +83,7 @@ private:
     mutable net::CEpoller _epoller;
     sys::CLock _unconnected_lock;
     CSenderQueue _reconnect_queue; // 重连接队列
-    CSenderQueue _unconnected_queue; // 待连接队列    
+    CSenderQueue _unconnected_queue; // 待连接队列
     CDispatcherContext* _context;
     util::CTimeoutManager<CSender> _timeout_manager;
 };

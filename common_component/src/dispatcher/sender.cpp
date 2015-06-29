@@ -16,7 +16,7 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include <util/string_util.h>
+#include <mooon/utils/string_utils.h>
 #include "sender.h"
 #include "send_thread.h"
 #include "sender_table.h"
@@ -136,7 +136,7 @@ void CSender::reset_resend_times()
     _cur_resend_times = 0;
 }
 
-util::handle_result_t CSender::do_handle_reply()
+utils::handle_result_t CSender::do_handle_reply()
 {    
     size_t buffer_length = _sender_info.reply_handler->get_buffer_length();
     size_t buffer_offset = _sender_info.reply_handler->get_buffer_offset();
@@ -158,17 +158,17 @@ util::handle_result_t CSender::do_handle_reply()
         return util::handle_error; // 连接被关闭
     }
 
-    // 处理应答，如果处理失败则关闭连接    
-    util::handle_result_t retval = _sender_info.reply_handler->handle_reply((size_t)data_size);
-    if (util::handle_finish == retval)
+    // 处理应答，如果处理失败则关闭连接
+    utils::handle_result_t retval = _sender_info.reply_handler->handle_reply((size_t)data_size);
+    if (utils::handle_finish == retval)
     {
         DISPATCHER_LOG_DEBUG("%s reply finished.\n", to_string().c_str());
     }
-    else if (util::handle_error == retval)
+    else if (utils::handle_error == retval)
     {
         DISPATCHER_LOG_ERROR("%s reply error.\n", to_string().c_str());
     }
-    else if (util::handle_close == retval)
+    else if (utils::handle_close == retval)
     {
         DISPATCHER_LOG_ERROR("%s reply close.\n", to_string().c_str());
     }
@@ -317,16 +317,16 @@ net::epoll_event_t CSender::handle_epoll_event(void* input_ptr, uint32_t events,
             } 
             else if (EPOLLIN & events)
             {                      
-                util::handle_result_t reply_retval = do_handle_reply();
-                if (util::handle_error == reply_retval) 
+                utils::handle_result_t reply_retval = do_handle_reply();
+                if (utils::handle_error == reply_retval)
                 {
                     break;
                 }                
-                if (util::handle_close == reply_retval) 
+                if (utils::handle_close == reply_retval)
                 {
                     break;
                 } 
-                if (util::handle_release == reply_retval)
+                if (utils::handle_release == reply_retval)
                 {
                     // 通知线程：释放，销毁Sender，不能再使用
                     return net::epoll_destroy;
@@ -362,7 +362,7 @@ net::epoll_event_t CSender::handle_epoll_event(void* input_ptr, uint32_t events,
     }
     catch (sys::CSyscallException& ex)
     {
-        // 连接异常        
+        // 连接异常
         DISPATCHER_LOG_ERROR("%s error for %s.\n", to_string().c_str(), ex.to_string().c_str());
     }
 

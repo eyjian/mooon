@@ -17,7 +17,7 @@
  * Author: JianYi, eyjian@qq.com or eyjian@gmail.com
  */
 #include <sstream>
-#include <sys/util.h>
+#include <mooon/sys/utils.h>
 #include "dispatcher_context.h"
 DISPATCHER_NAMESPACE_BEGIN
 
@@ -120,7 +120,7 @@ void CDispatcherContext::destroy_thread_pool()
 uint16_t CDispatcherContext::get_default_thread_count() const
 {
     // 设置默认的线程池中线程个数为CPU核个数减1个，如果取不到CPU核个数，则取1
-    uint16_t thread_count = sys::CUtil::get_cpu_number();
+    uint16_t thread_count = sys::CUtils::get_cpu_number();
     return (thread_count < 2)? 1: thread_count-1;
 }
 

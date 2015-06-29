@@ -18,8 +18,8 @@
  */
 #ifndef MOOON_SERVER_CONFIG_H
 #define MOOON_SERVER_CONFIG_H
-#include <sys/log.h>
-#include <net/ip_address.h>
+#include <mooon/net/ip_address.h>
+#include <mooon/sys/log.h>
 
 /***
  * 编译开关宏
@@ -60,7 +60,7 @@ public:
     /** 得到epool等待超时毫秒数 */
     virtual uint32_t get_epoll_timeout_milliseconds() const { return 2000; }
 
-    /** 得到监听参数 */    
+    /** 得到监听参数 */
     virtual const net::ip_port_pair_array_t& get_listen_parameter() const = 0;
 
     /** 得到每个线程的接管队列的大小 */
