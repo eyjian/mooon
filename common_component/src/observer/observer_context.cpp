@@ -33,9 +33,9 @@ bool CObserverContext::create()
 	{
 		_observer_thread->start();
 	}
-	catch (sys::CSyscallException& ex)
+	catch (sys::CSyscallException& syscall_ex)
 	{
-		OBSERVER_LOG_FATAL("Created observer manager failed for %s at %s:%d.\n", strerror(ex.get_errcode()), ex.get_filename(), ex.get_linenumber());
+		OBSERVER_LOG_FATAL("Created observer manager failed: %s.\n", syscall_ex.str().c_str());
         _observer_thread->dec_refcount();
 		return false;
 	}

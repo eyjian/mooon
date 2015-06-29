@@ -63,7 +63,7 @@ utils::handle_result_t CNonNameValuePairCommand::do_execute(const char* buffer, 
         if ('\0' == *iter) break;
         if (NULL == _begin) 
 		{
-            iter = utils::CStringUtil::skip_spaces(iter);
+            iter = utils::CStringUtils::skip_spaces(iter);
 			if (NULL == iter) // 空格过多
 			{
                 get_http_event()->on_error("too much spaces in the first line");
@@ -171,7 +171,7 @@ utils::handle_result_t CNameValuePairCommand::execute(const char* buffer, int& o
         }
         else if ((NULL == _value_begin) && (_name_end != NULL))
         {
-            iter = util::CStringUtil::skip_spaces(iter);
+            iter = utils::CStringUtils::skip_spaces(iter);
             if (NULL == iter)
             {
                 get_http_event()->on_error("too much spaces in NV pair");

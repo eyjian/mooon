@@ -23,12 +23,12 @@
 #include <mooon/sys/pool_thread.h>
 #include <mooon/utils/timeout_manager.h>
 #include "dispatcher_log.h"
-#include "dispatcher/dispatcher.h"
+#include "mooon/dispatcher/dispatcher.h"
 DISPATCHER_NAMESPACE_BEGIN
 
 class CSender;
 class CDispatcherContext;
-class CSendThread: public sys::CPoolThread, public util::ITimeoutHandler<CSender>
+class CSendThread: public sys::CPoolThread, public utils::ITimeoutHandler<CSender>
 {
     typedef std::list<CSender*> CSenderQueue;
     
@@ -39,14 +39,14 @@ public:
     virtual void set_parameter(void* parameter);
 
     net::CEpoller& get_epoller() const { return _epoller; }
-    util::CTimeoutManager<CSender>* get_timeout_manager() { return &_timeout_manager; }                
+    utils::CTimeoutManager<CSender>* get_timeout_manager() { return &_timeout_manager; }
         
 private:
     virtual void run();  
-    virtual bool before_run();
-    virtual void after_run();
-    virtual bool before_start();   
-    virtual void before_stop();
+    virtual bool before_run() throw ();
+    virtual void after_run() throw ();
+    virtual void before_start() throw (utils::CException, sys::CSyscallException);
+    virtual void before_stop() throw (utils::CException, sys::CSyscallException);
     virtual void on_timeout_event(CSender* timeoutable);
     
 private:    
@@ -85,7 +85,7 @@ private:
     CSenderQueue _reconnect_queue; // 重连接队列
     CSenderQueue _unconnected_queue; // 待连接队列
     CDispatcherContext* _context;
-    util::CTimeoutManager<CSender> _timeout_manager;
+    utils::CTimeoutManager<CSender> _timeout_manager;
 };
 
 DISPATCHER_NAMESPACE_END

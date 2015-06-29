@@ -19,7 +19,7 @@
 #ifndef MOOON_SERVER_PACKET_HANDLER_H
 #define MOOON_SERVER_PACKET_HANDLER_H
 #include <mooon/server/config.h>
-#include <mooon/sys/epoll.h>
+#include <sys/epoll.h>
 #include <sstream>
 SERVER_NAMESPACE_BEGIN
 
@@ -134,7 +134,7 @@ public:
       *         util::handle_release表示需要对连接进行线程切换
       *         其它值表示连接出错，需要关闭连接
       */
-    virtual util::handle_result_t on_handle_request(size_t data_size, Indicator& indicator) = 0;
+    virtual utils::handle_result_t on_handle_request(size_t data_size, Indicator& indicator) = 0;
 
     /***
       * 复位解析状态
@@ -203,9 +203,9 @@ public:
      *         IPacketHandler将交给indicator.thread_index指定的线程调度；
      *         返回其它值则关闭连接
      */
-    virtual util::handle_result_t on_response_completed(Indicator& indicator)
+    virtual utils::handle_result_t on_response_completed(Indicator& indicator)
     {
-        return util::handle_continue;
+        return utils::handle_continue;
     }
 
 public:

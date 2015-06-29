@@ -98,10 +98,10 @@ bool CDispatcherContext::create_thread_pool()
 
         return true;
     }
-    catch (sys::CSyscallException& ex)
+    catch (sys::CSyscallException& syscall_ex)
     {
         delete _thread_pool;
-        DISPATCHER_LOG_ERROR("Failed to create thread pool: %s.\n", ex.to_string().c_str());
+        DISPATCHER_LOG_ERROR("Failed to create thread pool: %s.\n", syscall_ex.str().c_str());
     }
 
     return false;

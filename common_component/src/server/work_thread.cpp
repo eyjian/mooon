@@ -61,7 +61,7 @@ void CWorkThread::run()
     }
     catch (sys::CSyscallException& ex)
     {
-        SERVER_LOG_FATAL("Waiter thread wait error for %s.\n", ex.to_string().c_str());
+        SERVER_LOG_FATAL("Waiter thread wait error for %s.\n", ex.str().c_str());
         throw; // timed_wait异常是不能恢复的
     }
 
@@ -104,11 +104,11 @@ void CWorkThread::run()
     }
     catch (sys::CSyscallException& ex)
     {
-        SERVER_LOG_FATAL("Waiter thread run error for %s.\n", ex.to_string().c_str());
+        SERVER_LOG_FATAL("Waiter thread run error for %s.\n", ex.str().c_str());
     }
 }
 
-bool CWorkThread::before_run()
+bool CWorkThread::before_run() throw ()
 {
 #if ENABLE_SET_SERVER_THREAD_NAME==1
     std::stringstream thread_name;
@@ -120,14 +120,14 @@ bool CWorkThread::before_run()
     return _follower->before_run();
 }
 
-void CWorkThread::after_run()
+void CWorkThread::after_run() throw ()
 {
     if (_follower != NULL)
         _follower->after_run();
     SERVER_LOG_INFO("Server thread %u has exited.\n", get_thread_id());
 }
 
-bool CWorkThread::before_start()
+void CWorkThread::before_start() throw (utils::CException, sys::CSyscallException)
 {
     try
     {      
@@ -149,19 +149,17 @@ bool CWorkThread::before_start()
         catch (std::runtime_error& ex)
         {
             SERVER_LOG_ERROR("%s.\n", ex.what());
-            return false;
+            THROW_EXCEPTION(ex.what(), -1);
         }
-
-        return true;
     }
     catch (sys::CSyscallException& ex)
     {
-        SERVER_LOG_ERROR("Start server-thread error: %s.\n", ex.to_string().c_str());
-        return false;
+        SERVER_LOG_ERROR("Start server-thread error: %s.\n", ex.str().c_str());
+        throw;
     }
 }
 
-void CWorkThread::before_stop()
+void CWorkThread::before_stop() throw (utils::CException, sys::CSyscallException)
 {
     _epoller.wakeup();
 }
@@ -187,7 +185,7 @@ void CWorkThread::on_timeout_event(CWaiter* waiter)
         }
         catch (sys::CSyscallException& ex)
         {
-            SERVER_LOG_ERROR("Deleted %s error: %s.\n", waiter->to_string().c_str(), ex.to_string().c_str());
+            SERVER_LOG_ERROR("Deleted %s error: %s.\n", waiter->to_string().c_str(), ex.str().c_str());
         }
         
         _waiter_pool->push_waiter(waiter);
@@ -242,7 +240,7 @@ bool CWorkThread::watch_waiter(CWaiter* waiter, uint32_t epoll_events)
         _waiter_pool->push_waiter(waiter);
         SERVER_LOG_ERROR("Set %s epoll events error: %s.\n"
             , waiter->to_string().c_str()
-            , ex.to_string().c_str());
+            , ex.str().c_str());
         
         return false;
     }
@@ -285,7 +283,7 @@ void CWorkThread::remove_waiter(CWaiter* waiter)
     }
     catch (sys::CSyscallException& ex)
     {
-        SERVER_LOG_ERROR("Delete waiter error for %s.\n", ex.to_string().c_str());
+        SERVER_LOG_ERROR("Delete waiter error for %s.\n", ex.str().c_str());
     }    
 }
 

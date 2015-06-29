@@ -94,7 +94,7 @@ public:
       * @sender: 发送者
       * @data_size: 本次收到的数据字节数
       */
-    virtual util::handle_result_t handle_reply(size_t data_size) { return util::handle_error; }
+    virtual utils::handle_result_t handle_reply(size_t data_size) { return utils::handle_error; }
 
     /***
       * 得到状态值

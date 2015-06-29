@@ -21,7 +21,7 @@
 #include <stdexcept>
 #include <mooon/utils/array_queue.h>
 #include "waiter.h"
-#include "server/server.h"
+#include "mooon/server/server.h"
 SERVER_NAMESPACE_BEGIN
 
 class CWorkThread;
@@ -45,7 +45,7 @@ private:
     CWorkThread* _thread;
     CWaiter* _waiter_array;
     IFactory* _factory;
-    util::CArrayQueue<CWaiter*>* _waiter_queue;
+    utils::CArrayQueue<CWaiter*>* _waiter_queue;
 };
 
 SERVER_NAMESPACE_END

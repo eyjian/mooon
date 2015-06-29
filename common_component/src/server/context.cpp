@@ -78,10 +78,7 @@ bool CContext::create()
     }
     catch (sys::CSyscallException& ex)
     {
-		SERVER_LOG_FATAL("Created context failed for %s at %s:%d.\n"
-		                , strerror(ex.get_errcode())
-		                , ex.get_filename()
-		                , ex.get_linenumber());
+		SERVER_LOG_FATAL("Created context failed: %s.\n", ex.str().c_str());
         return false;
     }
 

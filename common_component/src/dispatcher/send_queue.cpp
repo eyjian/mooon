@@ -22,7 +22,7 @@
 DISPATCHER_NAMESPACE_BEGIN
 
 CSendQueue::CSendQueue(uint32_t queue_max, CSender* sender)
-    :net::CEpollableQueue<util::CArrayQueue<message_t*> >(queue_max)
+    :net::CEpollableQueue<utils::CArrayQueue<message_t*> >(queue_max)
     ,_sender(sender)
 {
 }

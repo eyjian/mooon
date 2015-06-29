@@ -21,11 +21,11 @@
 #include <mooon/utils/array_queue.h>
 #include <mooon/net/epollable_queue.h>
 #include "dispatcher_log.h"
-#include "dispatcher/dispatcher.h"
+#include "mooon/dispatcher/dispatcher.h"
 DISPATCHER_NAMESPACE_BEGIN
 
 class CSender;
-class CSendQueue: public net::CEpollableQueue<util::CArrayQueue<message_t*> >
+class CSendQueue: public net::CEpollableQueue<utils::CArrayQueue<message_t*> >
 {
 public:
     CSendQueue(uint32_t queue_max, CSender* sender);

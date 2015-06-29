@@ -23,13 +23,13 @@
 #include <mooon/net/tcp_waiter.h>
 #include <mooon/utils/timeoutable.h>
 #include "log.h"
-#include "server/connection.h"
-#include "server/packet_handler.h"
+#include "mooon/server/connection.h"
+#include "mooon/server/packet_handler.h"
 SERVER_NAMESPACE_BEGIN
 
 class CWaiter: public net::CTcpWaiter
-             , public util::CTimeoutable
-             , public util::CListable<CWaiter>
+             , public utils::CTimeoutable
+             , public utils::CListable<CWaiter>
              , public IConnection
 {
     friend class CWaiterPool;

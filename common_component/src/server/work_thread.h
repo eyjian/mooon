@@ -58,10 +58,10 @@ public:
         
 private:
     virtual void run();
-    virtual bool before_run();
-    virtual void after_run();
-    virtual bool before_start(); 
-    virtual void before_stop();
+    virtual bool before_run() throw ();
+    virtual void after_run() throw ();
+    virtual void before_start() throw (utils::CException, sys::CSyscallException);
+    virtual void before_stop() throw (utils::CException, sys::CSyscallException);
     virtual void on_timeout_event(CWaiter* waiter);
     virtual uint16_t index() const;    
 

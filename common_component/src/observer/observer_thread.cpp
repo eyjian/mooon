@@ -29,7 +29,7 @@ CObserverThread::CObserverThread(CObserverContext* observer_context)
 void CObserverThread::run()
 {
 #if ENABLE_SET_OBSERVER_THREAD_NAME==1 
-    sys::CUtil::set_process_name("ob-thread");
+    sys::CUtils::set_process_name("ob-thread");
 #endif // ENABLE_SET_OBSERVER_THREAD_NAME
 
 	while (!is_stop())

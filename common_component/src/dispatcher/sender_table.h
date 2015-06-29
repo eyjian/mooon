@@ -20,10 +20,9 @@
 #define MOOON_DISPATCHER_SENDER_TABLE_H
 #include <mooon/sys/lock.h>
 #include "sender.h"
-#include "dispatcher/dispatcher.h"
+#include "mooon/dispatcher/dispatcher.h"
 DISPATCHER_NAMESPACE_BEGIN
 
-// ��������SenderInfo�Ƿ���ȷ
 extern bool check_sender_info(const SenderInfo& sender_info);
 
 class CDispatcherContext;

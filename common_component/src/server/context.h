@@ -23,7 +23,7 @@
 #include <mooon/net/listen_manager.h>
 #include "listener.h"
 #include "work_thread.h"
-#include "server/server.h"
+#include "mooon/server/server.h"
 SERVER_NAMESPACE_BEGIN
 
 class CContext

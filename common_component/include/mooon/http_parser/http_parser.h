@@ -141,7 +141,7 @@ public:
       * @buffer: 需要解析的Buffer
       * @return: 请参考TReturnResult的说明
       */
-    virtual util::handle_result_t parse(const char* buffer) = 0;
+    virtual utils::handle_result_t parse(const char* buffer) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////////

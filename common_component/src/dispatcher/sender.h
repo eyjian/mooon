@@ -27,7 +27,7 @@ DISPATCHER_NAMESPACE_BEGIN
 
 class CSendThread;
 class CSenderTable;
-class CSender: public ISender, public net::CTcpClient, public util::CTimeoutable, public util::CListable<CSender>
+class CSender: public ISender, public net::CTcpClient, public utils::CTimeoutable, public utils::CListable<CSender>
 {   
     // reset动作
     typedef enum

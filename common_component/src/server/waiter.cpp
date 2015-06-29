@@ -91,10 +91,10 @@ net::epoll_event_t CWaiter::handle_epoll_event(void* input_ptr, uint32_t events,
     }
     catch (sys::CSyscallException& ex)
     {
-        SERVER_LOG_ERROR("Waiter %s error: %s.\n", to_string().c_str(), ex.to_string().c_str());	
+        SERVER_LOG_ERROR("Waiter %s error: %s.\n", to_string().c_str(), ex.str().c_str());
 
         // 如果是IO错误，则进行回调
-        if (EIO == ex.get_errcode())
+        if (EIO == ex.errcode())
         {
             _packet_handler->on_io_error();
         }
@@ -124,11 +124,11 @@ net::epoll_event_t CWaiter::do_handle_epoll_send(void* input_ptr, void* ouput_pt
     // 无响应数据需要发送
     if (size < offset)
     {
-        MYLOG_WARN("Response size %"PRIu64" less than offset %"PRIu64".\n", size, offset);
+        MYLOG_WARN("Response size %zd less than offset %zd.\n", size, offset);
     }    
     else if (size == offset)
     {
-        MYLOG_DEBUG("Response size %"PRIu64" equal to offset %"PRIu64".\n", size, offset);
+        MYLOG_DEBUG("Response size %zd equal to offset %zd.\n", size, offset);
     }
     else if (size > offset)
     {
@@ -162,7 +162,7 @@ net::epoll_event_t CWaiter::do_handle_epoll_send(void* input_ptr, void* ouput_pt
         catch (sys::CSyscallException& ex)
         {
             // EINVAL比较容易犯，故特别处理一下，以方便定位问题
-            if (EINVAL == ex.get_errcode())
+            if (EINVAL == ex.errcode())
             {
                 SERVER_LOG_ERROR("Invalid argument: %s.\n", response_context->to_string().c_str());
             }
@@ -262,7 +262,7 @@ net::epoll_event_t CWaiter::do_handle_epoll_read(void* input_ptr, void* ouput_pt
     catch (sys::CSyscallException& ex)
     {
         // EINVAL比较容易犯，故特别处理一下，以方便定位问题
-        if (EINVAL == ex.get_errcode())
+        if (EINVAL == ex.errcode())
         {
             SERVER_LOG_ERROR("Invalid argument: %s.\n", request_context->to_string().c_str());
         }
@@ -307,7 +307,7 @@ net::epoll_event_t CWaiter::do_handle_epoll_read(void* input_ptr, void* ouput_pt
         //return do_handle_epoll_send(ptr);
         return net::epoll_write;
     }
-    else if (util::handle_continue == handle_result)
+    else if (utils::handle_continue == handle_result)
     {        
         //SERVER_LOG_DEBUG("%s continue to receive ...\n", to_string().c_str());
         return net::epoll_none; // 也可以返回net::epoll_read

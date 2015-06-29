@@ -73,10 +73,10 @@ public:
      * @return util::handle_continue 表示不关闭连接继续使用，
      *         返回其它值则会关闭连接
      */
-    virtual util::handle_result_t on_response_completed()
+    virtual utils::handle_result_t on_response_completed()
     {
         //return util::handle_close; // 短连接时
-        return util::handle_continue; // 长连接时
+        return utils::handle_continue; // 长连接时
     }
 };
 

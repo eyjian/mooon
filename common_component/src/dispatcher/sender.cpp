@@ -69,7 +69,7 @@ bool CSender::on_timeout()
 std::string CSender::to_string() const
 {
     return std::string("sender://")
-        + util::CStringUtil::int_tostring(_sender_info.key)
+        + utils::CStringUtils::int_tostring(_sender_info.key)
         + std::string("-")
         + net::CTcpClient::do_to_string();
 }
@@ -145,17 +145,17 @@ utils::handle_result_t CSender::do_handle_reply()
     // 关闭连接
     if ((buffer_offset >= buffer_length) || (NULL == buffer)) 
     {
-        DISPATCHER_LOG_ERROR("%s encountered invalid buffer %"PRIu64":%"PRIu64":%p.\n"
+        DISPATCHER_LOG_ERROR("%s encountered invalid buffer %zd:%zd:%p.\n"
             , to_string().c_str()
             , buffer_length, buffer_offset, buffer);
-        return util::handle_error;
+        return utils::handle_error;
     }
     
     ssize_t data_size = this->receive(buffer+buffer_offset, buffer_length-buffer_offset);
     if (0 == data_size) 
     {
         DISPATCHER_LOG_WARN("%s closed by peer.\n", to_string().c_str());
-        return util::handle_error; // 连接被关闭
+        return utils::handle_error; // 连接被关闭
     }
 
     // 处理应答，如果处理失败则关闭连接
@@ -285,7 +285,7 @@ net::epoll_event_t CSender::do_send_message(void* input_ptr, uint32_t events, vo
 
 net::epoll_event_t CSender::handle_epoll_event(void* input_ptr, uint32_t events, void* output_ptr)
 {    
-    util::CTimeoutManager<CSender>* timeout_manager;
+    utils::CTimeoutManager<CSender>* timeout_manager;
     timeout_manager = get_send_thread()->get_timeout_manager();
     timeout_manager->remove(this);
     
@@ -360,10 +360,10 @@ net::epoll_event_t CSender::handle_epoll_event(void* input_ptr, uint32_t events,
             }
         } while (false);
     }
-    catch (sys::CSyscallException& ex)
+    catch (sys::CSyscallException& syscall_ex)
     {
         // 连接异常
-        DISPATCHER_LOG_ERROR("%s error for %s.\n", to_string().c_str(), ex.to_string().c_str());
+        DISPATCHER_LOG_ERROR("%s error for %s.\n", to_string().c_str(), syscall_ex.str().c_str());
     }
 
     reset_current_message(false);    

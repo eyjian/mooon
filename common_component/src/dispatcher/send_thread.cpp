@@ -136,18 +136,18 @@ void CSendThread::epoll_event_release(net::CEpollable* epollable)
     epoll_event_close((CSender*)epollable);
 }
 
-bool CSendThread::before_run()
+bool CSendThread::before_run() throw ()
 {
 #if ENABLE_SET_DISPATCHER_THREAD_NAME==1
     std::stringstream thread_name;
     thread_name << "snd-thread[" << get_index() << "]";
-    sys::CUtil::set_process_name(thread_name.str().c_str());
+    sys::CUtils::set_process_name(thread_name.str().c_str());
 #endif // ENABLE_SET_DISPATCHER_THREAD_NAME
 
     return true;
 }
 
-void CSendThread::after_run()
+void CSendThread::after_run() throw ()
 {    
     clear_unconnected_queue();
     clear_reconnect_queue();    
@@ -156,16 +156,14 @@ void CSendThread::after_run()
     DISPATCHER_LOG_INFO("Sending thread %u has exited.\n", get_thread_id());
 }
 
-bool CSendThread::before_start()
+void CSendThread::before_start() throw (utils::CException, sys::CSyscallException)
 {
     _timeout_manager.set_timeout_seconds(_context->get_timeout_seconds());
     _timeout_manager.set_timeout_handler(this);    
     _epoller.create(10000);
-    
-    return true;
 }
 
-void CSendThread::before_stop()
+void CSendThread::before_stop() throw (utils::CException, sys::CSyscallException)
 {
     _epoller.wakeup();
 }
@@ -227,7 +225,7 @@ void CSendThread::clear_unconnected_queue()
 void CSendThread::check_reconnect_queue()
 {
     // 限制重连接的频率
-    if (_current_time - _last_connect_time < _context->get_reconnect_seconds()) return;
+    if (_current_time - _last_connect_time < (time_t)_context->get_reconnect_seconds()) return;
     _last_connect_time = _current_time;
     
     CSenderQueue::size_type reconnect_number =  _reconnect_queue.size();
