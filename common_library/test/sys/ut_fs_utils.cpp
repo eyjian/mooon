@@ -45,7 +45,7 @@ int main()
 			unsigned long used = (stat_buf.total_block_nubmer-stat_buf.free_block_nubmer) * (stat_buf.block_bytes/1024);
 			unsigned long avail = stat_buf.avail_block_nubmer*(stat_buf.block_bytes/1024);
 
-			printf("%-15s%12Ld%12Ld%12Ld%5d    %s\n"
+			printf("%-15s%12"PRIu64"%12"PRIu64"%12"PRIu64"%5"PRIu64"    %s\n"
 			      ,fs_entry.fs_name.c_str()
 			      ,total
 			      ,used
@@ -54,9 +54,9 @@ int main()
 			      ,fs_entry.dir_path.c_str()
 			);
 		}
-		catch (CSyscallException& ex)
+		catch (CSyscallException& syscall_ex)
 		{
-			printf("stat_fs exception: %s\n", ex.str().c_str());
+			printf("stat_fs exception: %s\n", syscall_ex.str().c_str());
 		}
 	}
 

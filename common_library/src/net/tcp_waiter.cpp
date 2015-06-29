@@ -16,9 +16,9 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
+#include "data_channel.h"
+#include "mooon/net/tcp_waiter.h"
 #include <sstream>
-#include "net/tcp_waiter.h"
-#include "net/data_channel.h"
 NET_NAMESPACE_BEGIN
 
 CTcpWaiter::CTcpWaiter()

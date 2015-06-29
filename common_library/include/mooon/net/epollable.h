@@ -26,6 +26,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include "mooon/net/ip_address.h"
+#include "mooon/net/utils.h"
 #include "mooon/sys/ref_countable.h"
 #include "mooon/sys/syscall_exception.h"
 NET_NAMESPACE_BEGIN
