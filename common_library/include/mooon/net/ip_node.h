@@ -18,7 +18,6 @@
  */
 #ifndef MOOON_NET_IP_NODE_H
 #define MOOON_NET_IP_NODE_H
-#include <mooon/utils/hash_map.h>
 #include <mooon/net/ip_address.h>
 NET_NAMESPACE_BEGIN
 
@@ -226,22 +225,6 @@ typedef struct
         return (lhs.port == rhs.port) && (lhs.ip == rhs.ip);
     }
 }ip_node_comparer;
-
-//////////////////////////////////////////////////////////////////////////
-template <class ValueClass>
-class ipv4_hash_map: public hash_map<net::ipv4_node_t, ValueClass, ipv4_node_hasher, ipv4_node_comparer>
-{    
-};
-
-template <class ValueClass>
-class ipv6_hash_map: public hash_map<net::ipv6_node_t, ValueClass, ipv6_node_hasher, ipv6_node_comparer>
-{    
-};
-
-template <class ValueClass>
-class ip_hash_map: public hash_map<net::ip_node_t, ValueClass, ip_node_hasher, ip_node_comparer>
-{    
-};
 
 NET_NAMESPACE_END
 #endif // MOOON_NET_IP_NODE_H
