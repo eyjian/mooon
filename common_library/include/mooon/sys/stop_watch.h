@@ -13,8 +13,11 @@ public:
     CStopWatch()
     {
         restart();
+
         _stop_time.tv_sec = 0;
         _stop_time.tv_usec = 0;
+        _total_time.tv_sec = _start_time.tv_sec;
+        _total_time.tv_usec = _start_time.tv_usec;
     }
 
     // 重新开始计时
@@ -40,7 +43,15 @@ public:
         return elapsed_microseconds;
     }
 
+    unsigned int get_total_elapsed_microseconds()
+    {
+        (void)gettimeofday(&_stop_time, NULL);
+        unsigned int total_elapsed_microseconds = static_cast<unsigned int>((_stop_time.tv_sec - _total_time.tv_sec) * 1000000 + (_stop_time.tv_usec - _total_time.tv_usec));
+        return total_elapsed_microseconds;
+    }
+
 private:
+    struct timeval _total_time;
     struct timeval _start_time;
     struct timeval _stop_time;
 };
