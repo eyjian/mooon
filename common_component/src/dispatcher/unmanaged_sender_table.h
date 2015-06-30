@@ -19,9 +19,9 @@
 #ifndef MOOON_DISPATCHER_UNMANAGED_SENDER_TABLE_H
 #define MOOON_DISPATCHER_UNMANAGED_SENDER_TABLE_H
 #include <mooon/net/ip_node.h>
-#include <mooon/utils/hash_map.h>
 #include "sender_table.h"
 #include "unmanaged_sender.h"
+#include <ext/hash_map>
 DISPATCHER_NAMESPACE_BEGIN
 
 class CDispatcherContext;
@@ -45,7 +45,7 @@ private:
     void clear_sender();
 
 private:
-    typedef net::ip_hash_map<CUnmanagedSender*> SenderMap;
+    typedef __gnu_cxx::hash_map<net::ip_node_t, CUnmanagedSender*, net::ip_node_hasher, net::ip_node_comparer> SenderMap;
     sys::CLock _lock;
     SenderMap _sender_map;
 };
