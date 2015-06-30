@@ -16,12 +16,12 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include <agent/message.h>
-#include <server/server.h>
-#include <net/recv_machine.h>
-#include <sys/main_template.h>
-#include <sys/utils.h>
-#include <utils/args_parser.h>
+#include <mooon/agent/message.h>
+#include <mooon/server/server.h>
+#include <mooon/net/recv_machine.h>
+#include <mooon/sys/main_template.h>
+#include <mooon/sys/utils.h>
+#include <mooon/utils/args_parser.h>
 
 // 提供两种实现，一种基于server::IMessageObserver，
 // 另一种基于server::IPacketHandler，前者简单，后者复杂

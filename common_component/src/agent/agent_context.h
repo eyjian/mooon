@@ -28,7 +28,7 @@ public:
     CAgentContext(const TAgentInfo& agent_info);
     ~CAgentContext();
 
-    bool create();
+    void create();
     void destroy();
 
     const TAgentInfo& get_agent_info() const

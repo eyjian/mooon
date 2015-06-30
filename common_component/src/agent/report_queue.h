@@ -24,7 +24,7 @@
 AGENT_NAMESPACE_BEGIN
 
 class CAgentThread;
-class CReportQueue: public net::CEpollableQueue<util::CArrayQueue<net::TCommonMessageHeader*> >
+class CReportQueue: public net::CEpollableQueue<utils::CArrayQueue<net::TCommonMessageHeader*> >
 {
 public:
     CReportQueue(uint32_t queue_max, CAgentThread* agent_thread);

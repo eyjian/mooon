@@ -142,9 +142,9 @@ void CAgentThread::run()
                 }
             }
         }
-        catch (sys::CSyscallException& ex)
+        catch (sys::CSyscallException& syscall_ex)
         {
-            AGENT_LOG_ERROR("Network exception: %s.\n", ex.to_string().c_str());
+            AGENT_LOG_ERROR("%s.\n", syscall_ex.str().c_str());
         }
     }
     
@@ -152,15 +152,13 @@ void CAgentThread::run()
     AGENT_LOG_INFO("Agent thread[%u] exited.\n", get_thread_id());
 }
 
-bool CAgentThread::before_start()
+void CAgentThread::before_start() throw (utils::CException, sys::CSyscallException)
 {
     _epoller.create(1024);
     enable_queue_read();
-    
-    return true;
 }
 
-void CAgentThread::before_stop()
+void CAgentThread::before_stop() throw (utils::CException, sys::CSyscallException)
 {
     sys::LockHelper<sys::CLock> lh(_center_lock);
     _center_event.signal();
@@ -188,17 +186,19 @@ bool CAgentThread::parse_domainname_or_iplist()
     
     std::string errinfo;
     net::string_ip_array_t string_ip_array;
-    if (!net::CUtil::get_ip_address(domainname_or_iplist.c_str(), string_ip_array, errinfo))
+    if (!net::CUtils::get_ip_address(domainname_or_iplist.c_str(), string_ip_array, errinfo))
     {
         // 也许是IP列表，尝试一下
-        util::CTokenList::TTokenList token_list;
-        util::CTokenList::parse(token_list, domainname_or_iplist, ",");
+        utils::CTokener tokner;
+        std::vector<std::string> token_list;
+
+        tokner.split(&token_list, domainname_or_iplist, ",");
         if (token_list.empty())
         {
             AGENT_LOG_WARN("Not found any IP from %s.\n", domainname_or_iplist.c_str());
             return false;
         }
-        
+
         std::copy(token_list.begin(), token_list.end(), std::back_inserter(string_ip_array));
     }
 
@@ -322,10 +322,10 @@ bool CAgentThread::connect_center()
             AGENT_LOG_DEBUG("%s successfully.\n", _connector.to_string().c_str());   
             return true;
         }
-        catch (sys::CSyscallException& ex)
+        catch (sys::CSyscallException& syscall_ex)
         {
             host->inc_reconn_times();
-            AGENT_LOG_ERROR("%s failed: %s.\n", _connector.to_string().c_str(), ex.to_string().c_str());
+            AGENT_LOG_ERROR("%s failed: %s.\n", _connector.to_string().c_str(), syscall_ex.str().c_str());
             do_millisleep(_connector.get_connect_timeout_milliseconds());
         }
     }

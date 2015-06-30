@@ -18,10 +18,10 @@
  */
 #ifndef MOOON_OBSERVER_CONTEXT_H
 #define MOOON_OBSERVER_CONTEXT_H
-#include <set>
+#include "observer_thread.h"
 #include <mooon/sys/lock.h>
 #include <mooon/observer/observer_manager.h>
-#include "observer/observer_thread.h"
+#include <set>
 OBSERVER_NAMESPACE_BEGIN
 
 class CObserverContext: public IObserverManager

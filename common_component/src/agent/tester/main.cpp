@@ -16,10 +16,10 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include <agent/agent.h>
-#include <sys/main_template.h>
-#include <sys/utils.h>
-#include <utils/args_parser.h>
+#include <mooon/agent/agent.h>
+#include <mooon/sys/main_template.h>
+#include <mooon/sys/utils.h>
+#include <mooon/utils/args_parser.h>
 
 // 命令行参数--center_ip，指定center的IP地址，可以为以逗号分隔的IP列表或域名
 STRING_ARG_DEFINE(false, center_ip, "127.0.0.1", "center IP");
@@ -110,7 +110,7 @@ private:
         std::string report("test");
         while (true)
         {
-            sys::CUtil::millisleep(3000);
+            sys::CUtils::millisleep(3000);
             // 记得size()是不包含结尾符的，这里需要将结尾符也发送过去，
             // 这样接收端就不用再添加结尾符了，
             // 因为需要+1，否则对端的valgrind会报“Invalid read of size 1”

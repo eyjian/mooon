@@ -30,16 +30,12 @@ IAgent* create(const TAgentInfo& agent_info)
     try
     {
         agent = new CAgentContext(agent_info);
-        if (!agent->create())
-        {
-            throw sys::CSyscallException(EINVAL, __FILE__, __LINE__, "create agent");
-        }
-        
+        agent->create();
         AGENT_LOG_INFO("Created agent successfully.\n");
     }
-    catch (sys::CSyscallException& ex)
+    catch (sys::CSyscallException& syscall_ex)
     {
-        AGENT_LOG_ERROR("Created agent error: %s.\n", ex.to_string().c_str());
+        AGENT_LOG_ERROR("Created agent error: %s.\n", syscall_ex.str().c_str());
         delete agent;
         agent = NULL;
     }
@@ -72,10 +68,9 @@ CAgentContext::~CAgentContext()
     delete _agent_info.heartbeat_hook;
 }
 
-bool CAgentContext::create()
+void CAgentContext::create()
 {
-    _agent_thread->start();    
-    return true;
+    _agent_thread->start();
 }
 
 void CAgentContext::destroy()
@@ -111,9 +106,9 @@ bool CAgentContext::report(uint32_t timeout_millisecond, const char* format, ...
 	va_list args;
 	va_start(args, format);
 	char* data = new char[REPORT_MAX + sizeof(net::TCommonMessageHeader)];
-	util::DeleteHelper<char> dh(data, true);
+	utils::DeleteHelper<char> dh(data, true);
 
-	int data_bytes = util::CStringUtil::fix_vsnprintf(data, REPORT_MAX, format, args);
+	int data_bytes = utils::CStringUtils::fix_vsnprintf(data, REPORT_MAX, format, args);
 	return report(data, data_bytes, timeout_millisecond);
 }
 

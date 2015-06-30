@@ -21,7 +21,7 @@
 AGENT_NAMESPACE_BEGIN
 
 CReportQueue::CReportQueue(uint32_t queue_max, CAgentThread* agent_thread)
- :net::CEpollableQueue<util::CArrayQueue<net::TCommonMessageHeader*> >(queue_max)
+ :net::CEpollableQueue<utils::CArrayQueue<net::TCommonMessageHeader*> >(queue_max)
  ,_agent_thread(agent_thread)
 {
 }

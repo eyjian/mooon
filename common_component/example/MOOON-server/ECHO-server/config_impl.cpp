@@ -16,7 +16,7 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include <net/util.h>
+#include <net/utils.h>
 #include "config_impl.h"
 
 bool CConfigImpl::init(uint16_t port)
@@ -24,7 +24,7 @@ bool CConfigImpl::init(uint16_t port)
     try
     {        
         net::eth_ip_array_t eth_ip_array;
-        net::CUtil::get_ethx_ip(eth_ip_array);
+        net::CUtils::get_ethx_ip(eth_ip_array);
 
         // 设置默认的监听端口
         if (0 == port) 
@@ -44,9 +44,9 @@ bool CConfigImpl::init(uint16_t port)
         
         return !_ip_port_pair_array.empty();
     }
-    catch (sys::CSyscallException& ex)
+    catch (sys::CSyscallException& syscall_ex)
     {
-        fprintf(stderr, "Get IP error: %s.\n", ex.to_string().c_str());
+        fprintf(stderr, "Get IP error: %s.\n", syscall_ex.str().c_str());
         return false;
     }
 }

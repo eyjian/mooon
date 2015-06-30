@@ -54,9 +54,9 @@ net::epoll_event_t CAgentConnector::handle_epoll_event(void* input_ptr, uint32_t
             handle_result = handle_error(input_ptr, ouput_ptr);
         }
     }
-    catch (sys::CSyscallException& ex)
+    catch (sys::CSyscallException& syscall_ex)
     {
-        AGENT_LOG_ERROR("%s exception(%u): %s.\n", to_string().c_str(), events, ex.to_string().c_str());
+        AGENT_LOG_ERROR("events[%d]: %s\n", events, syscall_ex.str().c_str());
     }
     
     return handle_result;
@@ -84,14 +84,14 @@ net::epoll_event_t CAgentConnector::handle_input(void* input_ptr, void* ouput_pt
         return net::epoll_none;
     }
     
-    return util::handle_error == _recv_machine.work(recv_buffer, bytes_recved)
+    return utils::handle_error == _recv_machine.work(recv_buffer, bytes_recved)
          ? net::epoll_close
          : net::epoll_none;
 }
 
 net::epoll_event_t CAgentConnector::handle_output(void* input_ptr, void* ouput_ptr) 
 {
-    util::handle_result_t hr = util::handle_finish;
+    utils::handle_result_t hr = utils::handle_finish;
     
     // 如果上次有未发送完的，则先保证原有的发送完
     if (!_send_machine.is_finish())
@@ -100,7 +100,7 @@ net::epoll_event_t CAgentConnector::handle_output(void* input_ptr, void* ouput_p
     }
     
     // 发送新的消息
-    if (util::handle_finish == hr)
+    if (utils::handle_finish == hr)
     {
         _send_machine.reset(true);
 
@@ -112,14 +112,14 @@ net::epoll_event_t CAgentConnector::handle_output(void* input_ptr, void* ouput_p
                 // 需要将CReportQueue再次放入Epoller中监控
                 AGENT_LOG_DEBUG("No message to send.\n");
                 _thread->enable_queue_read();
-                hr = util::handle_finish;
+                hr = utils::handle_finish;
                 break;
             }
             
             size_t bytes_sent = sizeof(net::TCommonMessageHeader) + agent_message->size;
             AGENT_LOG_DEBUG("Will send %zu bytes\n", bytes_sent);
             hr = _send_machine.send(reinterpret_cast<const char*>(agent_message), bytes_sent);
-            if (util::handle_finish == hr)
+            if (utils::handle_finish == hr)
             {
                 _send_machine.reset(true);
             }
@@ -131,13 +131,13 @@ net::epoll_event_t CAgentConnector::handle_output(void* input_ptr, void* ouput_p
     }
     
     // 转换返回值
-    if (util::handle_error == hr)
+    if (utils::handle_error == hr)
     {
         return net::epoll_close;
     }
     else
     {
-        return util::handle_continue == hr
+        return utils::handle_continue == hr
              ? net::epoll_read_write
              : net::epoll_read;
     }

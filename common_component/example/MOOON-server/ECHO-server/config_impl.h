@@ -18,7 +18,7 @@
  */
 #ifndef MOOON_ECHO_SERVER_CONFIG_IMPL_H
 #define MOOON_ECHO_SERVER_CONFIG_IMPL_H
-#include <server/server.h>
+#include <mooon/server/server.h>
 
 class CConfigImpl: public server::IConfig
 {

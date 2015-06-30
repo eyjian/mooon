@@ -51,8 +51,8 @@ public:
      
 private:
     virtual void run();
-    virtual bool before_start();
-    virtual void before_stop();
+    virtual void before_start() throw (utils::CException, sys::CSyscallException);
+    virtual void before_stop() throw (utils::CException, sys::CSyscallException);
     
 private:    
     bool parse_domainname_or_iplist();

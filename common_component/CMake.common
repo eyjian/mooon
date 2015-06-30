@@ -1,0 +1,14 @@
+# 定义公共的、可直接复用的
+
+include(../common_library/CMake.common)
+
+if (EXISTS ../common_library/include)
+    include_directories(../common_library/include)
+    link_directories(../common_library/src)
+elseif (EXISTS /usr/local/thirdparty/mooon/include)
+    include_directories(/usr/local/thirdparty/mooon/include)
+    link_directories(/usr/local/thirdparty/mooon/lib)
+elseif (EXISTS /usr/local/mooon/include)
+    include_directories(/usr/local/mooon/include)
+    link_directories(/usr/local/mooon/lib)
+endif ()
