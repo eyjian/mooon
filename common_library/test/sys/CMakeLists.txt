@@ -1,3 +1,5 @@
+# Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
+
 include_directories(../../include)
 link_directories(../../src)
 link_libraries(libmooon.a)

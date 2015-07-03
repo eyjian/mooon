@@ -1,3 +1,5 @@
+# Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
+
 include_directories(.)
 include_directories(../../include)
 include_directories(../../include/mooon)
