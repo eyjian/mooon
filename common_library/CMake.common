@@ -24,6 +24,13 @@ if (NOT WIN32)
     set(BoldWhite   "${Esc}[1;37m")
 endif ()
 
+#
+# 只要MySQL、Boost、Thrift等安装在下述三个目录，即可自动发现：
+# 1) /usr/local/thirdparty
+# 2) /usr/local
+# 3) 用户主目录，即环境变量$HOME对应的目录
+#
+
 # MySQL
 if (EXISTS /usr/local/thirdparty/mysql)
     set(HAVE_MYSQL 1)
