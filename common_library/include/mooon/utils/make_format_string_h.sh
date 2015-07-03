@@ -16,6 +16,7 @@ echo "#include <string>"
 echo "#include <vector>"
 echo "UTILS_NAMESPACE_BEGIN"
 echo ""
+echo "enum { FORMAT_STRING_SIZE = $paramter_number };"
 echo "inline std::string format_string(const char* format, const std::vector<std::string>& tokens)"
 echo "{"
 
