@@ -129,6 +129,8 @@ inline std::string format_string(const char* format, const std::vector<std::stri
     {
         return CStringUtils::format_string(format, tokens[0].c_str(), tokens[1].c_str(), tokens[2].c_str(), tokens[3].c_str(), tokens[4].c_str(), tokens[5].c_str(), tokens[6].c_str(), tokens[7].c_str(), tokens[8].c_str(), tokens[9].c_str(), tokens[10].c_str(), tokens[11].c_str(), tokens[12].c_str(), tokens[13].c_str(), tokens[14].c_str(), tokens[15].c_str(), tokens[16].c_str(), tokens[17].c_str(), tokens[18].c_str(), tokens[19].c_str(), tokens[20].c_str(), tokens[21].c_str(), tokens[22].c_str(), tokens[23].c_str(), tokens[24].c_str(), tokens[25].c_str(), tokens[26].c_str(), tokens[27].c_str(), tokens[28].c_str());
     }
+
+    return std::string("");
 }
 
 UTILS_NAMESPACE_END

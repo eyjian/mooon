@@ -34,6 +34,7 @@ do
 	echo "        return $str"
 	echo "    }"
 done
+echo "    return std::string(\"\");"
 echo "}"
 echo ""
 echo "UTILS_NAMESPACE_END"
