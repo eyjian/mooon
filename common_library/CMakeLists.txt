@@ -8,3 +8,8 @@ include(CMake.common)
 add_subdirectory(src)
 add_subdirectory(test)
 
+# CMAKE_INSTALL_PREFIX
+install(
+        FILES CMake.common        
+        DESTINATION .
+       )
