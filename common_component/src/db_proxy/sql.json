@@ -30,7 +30,7 @@
         {
             "index": 2,
             "database_index": 2,
-            "sql_template": "SELECT %s,%s,%s,%s FROM $x WHERE %s=%s",
+            "sql_template": "SELECT %s,%s,%s,%s FROM %s WHERE %s=%s",
             "cached_seconds": 10,
             "sign": ""
         }
