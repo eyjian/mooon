@@ -17,7 +17,7 @@
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
 #include <sstream>
-#include <sys/util.h>
+#include <mooon/sys/utils.h>
 #include "getter.h"
 #include "reply_handler_impl.h"
 
@@ -29,23 +29,23 @@ CReplyHandlerImpl::CReplyHandlerImpl(CGetter* getter)
     ,_offset(0)
     ,_fd(-1)
 {
-    _http_parser = http_parser::create(false);
+    _http_parser = mooon::http_parser::create(false);
     _http_parser->set_http_event(&_http_event_impl);
 
-    _length = sys::CUtil::get_page_size();
+    _length = mooon::sys::CUtils::get_page_size();
     _buffer = new char[_length];    
 }
 
 CReplyHandlerImpl::~CReplyHandlerImpl()
 {
-    http_parser::destroy(_http_parser);
+    mooon::http_parser::destroy(_http_parser);
     delete []_buffer;
 
     if (_fd != -1)
         close(_fd);
 }
 
-void CReplyHandlerImpl::attach(dispatcher::ISender* sender)
+void CReplyHandlerImpl::attach(mooon::dispatcher::ISender* sender)
 {
     _sender = sender;
     _http_event_impl.attach(sender);  
@@ -73,7 +73,7 @@ size_t CReplyHandlerImpl::get_buffer_length() const
     return _length - _offset;
 }
 
-util::handle_result_t CReplyHandlerImpl::handle_reply(size_t data_size)
+mooon::utils::handle_result_t CReplyHandlerImpl::handle_reply(size_t data_size)
 {   
     write_file(data_size);
     _response_size += data_size;
@@ -81,24 +81,24 @@ util::handle_result_t CReplyHandlerImpl::handle_reply(size_t data_size)
     if (0 == _http_event_impl.get_content_length())
     {        
         // 接收HTTP头部分
-        util::handle_result_t handle_result;
+        mooon::utils::handle_result_t handle_result;
 
         handle_result = _http_parser->parse(_buffer+_offset);
-        if (util::handle_continue == handle_result)
+        if (mooon::utils::handle_continue == handle_result)
         {
             _offset += data_size;
             return handle_result;
         }
-        if (handle_result != util::handle_finish)
+        if (handle_result != mooon::utils::handle_finish)
         {
-            return util::handle_close;
+            return mooon::utils::handle_close;
         }
         else
         {
             _offset = 0;
             if (0 == _http_event_impl.get_content_length())
             {
-                return util::handle_close;
+                return mooon::utils::handle_close;
             }
         }
     }
@@ -108,10 +108,10 @@ util::handle_result_t CReplyHandlerImpl::handle_reply(size_t data_size)
         // 全部接收完了
         fprintf(stdout, "HTTP_header_length=%d, HTTP_body_length=%d from %s.\n", _http_parser->get_head_length(), (int)_http_event_impl.get_content_length(), _sender->str().c_str());
         _getter->request_success(_sender);
-        return util::handle_close;
+        return mooon::utils::handle_close;
     }
 
-    return util::handle_continue;
+    return mooon::utils::handle_continue;
 }
 
 std::string CReplyHandlerImpl::get_filename() const
@@ -119,7 +119,7 @@ std::string CReplyHandlerImpl::get_filename() const
     std::stringstream filename;
 
     // 文件格式：html_域名_key_IP_端口_网页文件名
-    filename << sys::CUtil::get_program_path()
+    filename << mooon::sys::CUtils::get_program_path()
              << "/html_"
              << _getter->get_domain_name()
              << "_"

@@ -16,15 +16,15 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include <util/string_util.h>
-#include <sys/main_template.h>
+#include <mooon/utils/string_utils.h>
+#include <mooon/sys/main_template.h>
 #include "config_impl.h"
 #include "factory_impl.h"
 
 /***
   * 使用main函数模板，需要实现sys::IMainHelper接口
   */
-class CMainHelper: public sys::IMainHelper
+class CMainHelper: public mooon::sys::IMainHelper
 {
 public:
     CMainHelper();
@@ -38,7 +38,7 @@ private:
     uint16_t get_listen_port(int argc, char* argv[]);
 
 private:
-    server::server_t _server;
+    mooon::server::server_t _server;
     CConfigImpl _config_impl;
     CFactoryImpl _factory_impl;
 };
@@ -49,7 +49,7 @@ private:
 int main(int argc, char* argv[])
 {
     CMainHelper main_helper;
-    return sys::main_template(&main_helper, argc, argv);
+    return mooon::sys::main_template(&main_helper, argc, argv);
 }
 
 CMainHelper::CMainHelper()
@@ -63,7 +63,7 @@ bool CMainHelper::init(int argc, char* argv[])
     _config_impl.init(port);
 
     // 创建一个MOOON-server组件实例
-    _server = server::create(&_config_impl, &_factory_impl);
+    _server = mooon::server::create(&_config_impl, &_factory_impl);
     return _server != NULL;
 }
 
@@ -72,7 +72,7 @@ void CMainHelper::fini()
     if (_server != NULL)
     {
         // 销毁MOOON-server组件实例
-        server::destroy(_server);
+        mooon::server::destroy(_server);
         _server = NULL;
     }
 }
@@ -83,7 +83,7 @@ uint16_t CMainHelper::get_listen_port(int argc, char* argv[])
 
     if (argc > 1)
     {
-        (void)util::CStringUtil::string2int(argv[1], port);
+        (void)mooon::utils::CStringUtils::string2int(argv[1], port);
     }
 
     return port;

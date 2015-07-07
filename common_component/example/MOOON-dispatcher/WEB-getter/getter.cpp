@@ -17,8 +17,8 @@
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
 #include <sstream>
-#include <net/util.h>
-#include <util/string_util.h>
+#include <mooon/net/utils.h>
+#include <mooon/utils/string_utils.h>
 #include "getter.h"
 #include "reply_handler_impl.h"
 
@@ -46,7 +46,7 @@ void CGetter::set_domain_name(const std::string& domain_name)
     _domain_name = domain_name;
 }
 
-void CGetter::set_dispatcher(dispatcher::IDispatcher* dispatcher)
+void CGetter::set_dispatcher(mooon::dispatcher::IDispatcher* dispatcher)
 {
     _dispatcher = dispatcher;
 }
@@ -70,15 +70,15 @@ bool CGetter::start()
     return false;
 }
 
-void CGetter::connect_over(dispatcher::ISender* sender)
+void CGetter::connect_over(mooon::dispatcher::ISender* sender)
 {
-    dispatcher::IReplyHandler* reply_handler;
+    mooon::dispatcher::IReplyHandler* reply_handler;
     reply_handler = sender->get_sender_info().reply_handler;
 
     int state = reply_handler->get_state();
     if (state != GETTER_FINISH)
     {
-        sys::LockHelper<sys::CLock> lh(_lock);
+        mooon::sys::LockHelper<mooon::sys::CLock> lh(_lock);
 
         reply_handler->set_state(GETTER_ERROR);
         ++_number_finished;
@@ -86,12 +86,12 @@ void CGetter::connect_over(dispatcher::ISender* sender)
     }
 }
 
-void CGetter::request_success(dispatcher::ISender* sender)
+void CGetter::request_success(mooon::dispatcher::ISender* sender)
 {
-    dispatcher::IReplyHandler* reply_handler;
+    mooon::dispatcher::IReplyHandler* reply_handler;
     reply_handler = sender->get_sender_info().reply_handler;
 
-    sys::LockHelper<sys::CLock> lh(_lock);
+    mooon::sys::LockHelper<mooon::sys::CLock> lh(_lock);
 
     reply_handler->set_state(GETTER_FINISH);
     ++_number_finished;
@@ -100,7 +100,7 @@ void CGetter::request_success(dispatcher::ISender* sender)
 
 std::string CGetter::get_filename() const
 {
-    std::string filename = util::CStringUtil::extract_filename(_url);
+    std::string filename = mooon::utils::CStringUtils::extract_filename(_url);
     if (filename.empty())
         filename = "index.htm";
 
@@ -110,8 +110,8 @@ std::string CGetter::get_filename() const
 bool CGetter::get_ip_list()
 {
     std::string errinfo;
-    net::string_ip_array_t string_ip_array;
-    if (!net::CUtil::get_ip_address(_domain_name.c_str(), string_ip_array, errinfo))
+    mooon::net::string_ip_array_t string_ip_array;
+    if (!mooon::net::CUtils::get_ip_address(_domain_name.c_str(), string_ip_array, errinfo))
     {
         fprintf(stderr, "Resolve IP from %s error: %s.\n", _domain_name.c_str(), errinfo.c_str());
         return false;
@@ -122,7 +122,7 @@ bool CGetter::get_ip_list()
     for (int i=0; i<(int)string_ip_array.size(); ++i)
     {
         uint32_t int_ip;
-        if (net::CUtil::string_toipv4(string_ip_array[i].c_str(), int_ip))
+        if (mooon::net::CUtils::string_toipv4(string_ip_array[i].c_str(), int_ip))
         {
             _int_ip_array.push_back(int_ip);
         }
@@ -151,8 +151,8 @@ bool CGetter::send_http_request()
                  << "\r\n"
                  << "\r\n";
 
-    dispatcher::ISender* sender;
-    dispatcher::IManagedSenderTable* sender_table;
+    mooon::dispatcher::ISender* sender;
+    mooon::dispatcher::IManagedSenderTable* sender_table;
     
     // 发送的请求
     fprintf(stdout, "%s", http_request.str().c_str());
@@ -160,8 +160,8 @@ bool CGetter::send_http_request()
     sender_table = _dispatcher->get_managed_sender_table();
     for (int i=0; i<(int)_int_ip_array.size(); ++i)
     {
-        dispatcher::SenderInfo sender_info;
-        dispatcher::buffer_message_t* buffer_message;
+        mooon::dispatcher::SenderInfo sender_info;
+        mooon::dispatcher::buffer_message_t* buffer_message;
 
         fill_sender_info(sender_info, i, _int_ip_array[i]);        
         buffer_message = create_request_message(http_request.str());
@@ -187,17 +187,17 @@ bool CGetter::wait_response()
     return true;
 }
 
-dispatcher::buffer_message_t* CGetter::create_request_message(const std::string& request)
+mooon::dispatcher::buffer_message_t* CGetter::create_request_message(const std::string& request)
 {
-    dispatcher::buffer_message_t* buffer_message;
+    mooon::dispatcher::buffer_message_t* buffer_message;
 
-    buffer_message = dispatcher::create_buffer_message(request.size()+1);
+    buffer_message = mooon::dispatcher::create_buffer_message(request.size()+1);
     strcpy(buffer_message->data, request.c_str());
 
     return buffer_message;
 }
 
-void CGetter::fill_sender_info(dispatcher::SenderInfo& sender_info, uint16_t key, uint32_t ip)
+void CGetter::fill_sender_info(mooon::dispatcher::SenderInfo& sender_info, uint16_t key, uint32_t ip)
 {
     sender_info.key = key;
     sender_info.ip_node.port = _port;

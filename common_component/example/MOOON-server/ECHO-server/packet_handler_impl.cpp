@@ -16,13 +16,13 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include <sys/util.h>
+#include <mooon/sys/utils.h>
 #include "packet_handler_impl.h"
 
-CPakcetHandlerImpl::CPakcetHandlerImpl(server::IConnection* connection)
+CPakcetHandlerImpl::CPakcetHandlerImpl(mooon::server::IConnection* connection)
     :_connection(connection)
 {
-    _request_context.request_size = sys::CUtil::get_page_size();
+    _request_context.request_size = mooon::sys::CUtils::get_page_size();
     _request_context.request_buffer = new char[_request_context.request_size];
 }
 
@@ -37,17 +37,17 @@ void CPakcetHandlerImpl::reset()
     _response_context.response_offset = 0;
 }
 
-util::handle_result_t CPakcetHandlerImpl::on_handle_request(size_t data_size, server::Indicator& indicator)
+mooon::utils::handle_result_t CPakcetHandlerImpl::on_handle_request(size_t data_size, mooon::server::Indicator& indicator)
 {
     _response_context.response_size = data_size;
     _response_context.response_buffer = _request_context.request_buffer;
-    return util::handle_finish; /** finish表示请求已经接收完成，可进入响应过程 */
+    return mooon::utils::handle_finish; /** finish表示请求已经接收完成，可进入响应过程 */
 }
 
-util::handle_result_t CPakcetHandlerImpl::on_response_completed(server::Indicator& indicator)
+mooon::utils::handle_result_t CPakcetHandlerImpl::on_response_completed(mooon::server::Indicator& indicator)
 {
     // 如果收到quit指令，则关闭连接
     return 0 == strncmp(_request_context.request_buffer, "quit", sizeof("quit")-1)
-        ? util::handle_finish /** finish表示可关闭连接 */
-        : util::handle_continue; /** continue表示连接保持，不要关闭 */
+        ? mooon::utils::handle_finish /** finish表示可关闭连接 */
+        : mooon::utils::handle_continue; /** continue表示连接保持，不要关闭 */
 }

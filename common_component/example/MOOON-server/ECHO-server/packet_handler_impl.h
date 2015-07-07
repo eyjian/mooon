@@ -18,21 +18,21 @@
  */
 #ifndef MOOON_ECHO_SERVER_PACKET_HANDLER_IMPL_H
 #define MOOON_ECHO_SERVER_PACKET_HANDLER_IMPL_H
-#include <server/server.h>
+#include <mooon/server/server.h>
 
-class CPakcetHandlerImpl: public server::IPacketHandler
+class CPakcetHandlerImpl: public mooon::server::IPacketHandler
 {
 public:    
-    CPakcetHandlerImpl(server::IConnection* connection);
+    CPakcetHandlerImpl(mooon::server::IConnection* connection);
     ~CPakcetHandlerImpl();
 
 private:  
     virtual void reset();
-    virtual util::handle_result_t on_handle_request(size_t data_size, server::Indicator& indicator);
-    virtual util::handle_result_t on_response_completed(server::Indicator& indicator);
+    virtual mooon::utils::handle_result_t on_handle_request(size_t data_size, mooon::server::Indicator& indicator);
+    virtual mooon::utils::handle_result_t on_response_completed(mooon::server::Indicator& indicator);
 
 private:
-    server::IConnection* _connection; // 建立的连接
+    mooon::server::IConnection* _connection; // 建立的连接
 };
 
 #endif // MOOON_ECHO_SERVER_PACKET_HANDLER_IMPL_H

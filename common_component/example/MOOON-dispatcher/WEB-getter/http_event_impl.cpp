@@ -17,7 +17,7 @@
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
 #include <strings.h>
-#include <util/string_util.h>
+#include <mooon/utils/string_utils.h>
 #include "http_event_impl.h"
 
 CHttpEventImpl::CHttpEventImpl()
@@ -26,7 +26,7 @@ CHttpEventImpl::CHttpEventImpl()
 {
 }
 
-void CHttpEventImpl::attach(dispatcher::ISender* sender)
+void CHttpEventImpl::attach(mooon::dispatcher::ISender* sender)
 {
     _sender = sender;
 }
@@ -70,7 +70,7 @@ bool CHttpEventImpl::on_name_value_pair(const char* name_begin, const char* name
                   , static_cast<int>(value_end-name_begin), name_begin);
             return false;
         }
-        if (!util::CStringUtil::string2int(value_begin, _content_length, value_end-value_begin))
+        if (!mooon::utils::CStringUtils::string2int(value_begin, _content_length, value_end-value_begin))
         {
             fprintf(stderr, "Invalid Content-Length found from %s: %*.s.\n"
                   , _sender->str().c_str()

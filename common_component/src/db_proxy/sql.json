@@ -1,0 +1,48 @@
+{
+    "database": [
+        {
+            "index": 1,
+            "host": "127.0.0.1",
+            "port": 3306,
+            "name": "test",
+            "user": "root",
+            "password": "2015",
+            "charset": ""
+        },
+        {
+            "index": 2,
+            "host": "127.0.0.1",
+            "port": 3306,
+            "name": "test",
+            "user": "root",
+            "password": "2015",
+            "charset": "utf-8"
+        }
+    ],
+    "query": [
+        {
+            "index": 1,
+            "database_index": 1,
+            "sql_template": "SELECT %s,%s,%s FROM %s",
+            "cached_seconds": 0 
+        },
+        {
+            "index": 2,
+            "database_index": 2,
+            "sql_template": "SELECT %s,%s,%s,%s FROM $x WHERE %s=%s",
+            "cached_seconds": 10
+        }
+    ],
+    "update": [
+        {
+            "index": 1,
+            "database_index": 1,
+            "sql_template": "INSERT INTO %s VALUES (%s, \"%s\", %s)"
+        },
+        {
+            "index": 2,
+            "database_index": 1,
+            "sql_template": "UPDATE %s set f1=%s,f2=%s WHERE f3=%s"
+        }
+    ]
+}

@@ -1,0 +1,42 @@
+# Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
+
+include_directories(.)
+include_directories(../..)
+link_libraries(libmooon.a)
+
+# 执行cmake时，就编译好thrift文件
+exec_program(mkdir ARGS -p ${CMAKE_CURRENT_SOURCE_DIR}/rpc)
+exec_program(${THRIFT_HOME}/bin/thrift ARGS --gen cpp -r -out ${CMAKE_CURRENT_SOURCE_DIR}/rpc ${CMAKE_CURRENT_SOURCE_DIR}/db_proxy.thrift)
+
+set(RPC rpc/DbProxyService.cpp rpc/db_proxy_constants.cpp rpc/db_proxy_types.cpp)
+add_executable(db_proxy main.cpp db_proxy_handler.cpp config_loader.cpp ${RPC})
+target_link_libraries(db_proxy libjsoncpp.a libmysqlclient_r.a libthriftnb.a libthrift.a libevent.a)
+
+add_executable(db_proxy-tester tester.cpp ${RPC})
+target_link_libraries(db_proxy-tester libjsoncpp.a libthriftnb.a libthrift.a libevent.a)
+
+# 供C++客户端使用的静态库
+add_library(mooon_db_proxy STATIC ${RPC})
+
+# 方便thrift文件更新时不需要从头执行cmake
+add_custom_target(
+                   rpc
+                   DEPENDS db_proxy.thrift
+                 )
+add_custom_command(
+                   TARGET rpc
+                   PRE_BUILD
+                   COMMAND mkdir -p ./rpc
+                   COMMAND thrift --gen cpp -r -out ./rpc db_proxy.thrift
+                  )
+
+# CMAKE_INSTALL_PREFIX
+install(
+        TARGETS mooon_db_proxy
+        DESTINATION lib
+       )
+
+install(
+        FILES db_proxy.thrift db_proxy.h rpc/DbProxyService.h rpc/db_proxy_types.h rpc/db_proxy_constants.h
+        DESTINATION include/mooon/db_proxy
+       )

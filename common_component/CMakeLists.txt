@@ -1,3 +1,5 @@
+# Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
+
 cmake_minimum_required(VERSION 3.2)
 project(mooon-component)
 

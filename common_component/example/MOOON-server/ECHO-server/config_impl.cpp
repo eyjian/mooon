@@ -16,15 +16,15 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include <net/utils.h>
+#include <mooon/net/utils.h>
 #include "config_impl.h"
 
 bool CConfigImpl::init(uint16_t port)
 {
     try
     {        
-        net::eth_ip_array_t eth_ip_array;
-        net::CUtils::get_ethx_ip(eth_ip_array);
+        mooon::net::eth_ip_array_t eth_ip_array;
+        mooon::net::CUtils::get_ethx_ip(eth_ip_array);
 
         // 设置默认的监听端口
         if (0 == port) 
@@ -35,7 +35,7 @@ bool CConfigImpl::init(uint16_t port)
         // 取得网卡上所有的IP地址
         for (int i=0; i<(int)eth_ip_array.size(); ++i)
         {
-            net::ip_port_pair_t ip_port_pair;
+            mooon::net::ip_port_pair_t ip_port_pair;
             ip_port_pair.first = eth_ip_array[i].second.c_str();
             ip_port_pair.second = port;
 
@@ -44,14 +44,14 @@ bool CConfigImpl::init(uint16_t port)
         
         return !_ip_port_pair_array.empty();
     }
-    catch (sys::CSyscallException& syscall_ex)
+    catch (mooon::sys::CSyscallException& syscall_ex)
     {
         fprintf(stderr, "Get IP error: %s.\n", syscall_ex.str().c_str());
         return false;
     }
 }
 
-const net::ip_port_pair_array_t& CConfigImpl::get_listen_parameter() const
+const mooon::net::ip_port_pair_array_t& CConfigImpl::get_listen_parameter() const
 {
     return _ip_port_pair_array;
 }
