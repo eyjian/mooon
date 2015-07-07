@@ -25,9 +25,6 @@ if (NOT WIN32)
     set(BoldWhite   "${Esc}[1;37m")
 endif ()
 
-# 当前目录加入到include搜索中
-include_directories(.)
-
 #
 # 只要MySQL、Boost、Thrift等安装在下述三个目录，即可自动发现：
 # 1) /usr/local/thirdparty
