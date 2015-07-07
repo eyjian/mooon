@@ -53,7 +53,7 @@ int CException::errcode() const throw ()
 std::string CException::str() const throw ()
 {
     std::stringstream ss;
-    ss << prefix() << _errmsg << "@" << _file << ":" << _line;
+    ss << prefix() << "[" << _errcode << "]" << _errmsg << "@" << _file << ":" << _line;
 
     return ss.str();
 }
