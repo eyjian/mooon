@@ -18,6 +18,11 @@ void CDbProxyHandler::query(DBTable& _return, const std::string& sign, const int
         MYLOG_ERROR("query_index[%d] not exists\n", query_index);
         throw apache::thrift::TApplicationException("query_index not exists");
     }
+    if (sign != query_info.sign)
+    {
+        MYLOG_ERROR("sign[%s] error: %s\n", sign.c_str(), query_info.sign.c_str());
+        throw apache::thrift::TApplicationException("sign error");
+    }
 
     try
     {

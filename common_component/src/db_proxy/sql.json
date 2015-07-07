@@ -24,25 +24,29 @@
             "index": 1,
             "database_index": 1,
             "sql_template": "SELECT %s,%s,%s FROM %s",
-            "cached_seconds": 0 
+            "cached_seconds": 0,
+            "sign": ""
         },
         {
             "index": 2,
             "database_index": 2,
             "sql_template": "SELECT %s,%s,%s,%s FROM $x WHERE %s=%s",
-            "cached_seconds": 10
+            "cached_seconds": 10,
+            "sign": ""
         }
     ],
     "update": [
         {
             "index": 1,
             "database_index": 1,
-            "sql_template": "INSERT INTO %s VALUES (%s, \"%s\", %s)"
+            "sql_template": "INSERT INTO %s VALUES (%s, \"%s\", %s)",
+            "sign": ""
         },
         {
             "index": 2,
             "database_index": 1,
-            "sql_template": "UPDATE %s set f1=%s,f2=%s WHERE f3=%s"
+            "sql_template": "UPDATE %s set f1=%s,f2=%s WHERE f3=%s",
+            "sign": ""
         }
     ]
 }

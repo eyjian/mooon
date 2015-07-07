@@ -5,6 +5,7 @@
 #include <mooon/net/thrift_helper.h>
 #include <mooon/sys/main_template.h>
 #include <mooon/sys/safe_logger.h>
+#include <mooon/sys/thread_engine.h>
 #include <mooon/utils/args_parser.h>
 
 // 服务端口
@@ -53,6 +54,9 @@ bool CMainHelper::init(int argc, char* argv[])
 
 bool CMainHelper::run()
 {
+    mooon::db_proxy::CConfigLoader* config_loader = mooon::db_proxy::CConfigLoader::get_singleton();
+    mooon::sys::CThreadEngine monitor(mooon::sys::bind(&mooon::db_proxy::CConfigLoader::monitor, config_loader));
+
     try
     {
         MYLOG_INFO("thrift will listen on port[%u]\n", ArgsParser::port->get_value());

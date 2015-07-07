@@ -25,6 +25,12 @@ struct DbInfo
     std::string password;
     std::string charset;
 
+    DbInfo()
+    {
+        index = -1;
+        port = -1;
+    }
+
     DbInfo(const Json::Value& json)
     {
         index = json["index"].asInt();
@@ -34,6 +40,19 @@ struct DbInfo
         user = json["user"].asString();
         password = json["password"].asString();
         charset = json["charset"].asString();
+    }
+
+    DbInfo& operator =(const DbInfo& other)
+    {
+        index = other.index;
+        host = other.host;
+        port = other.port;
+        name = other.name;
+        user = other.user;
+        password = other.password;
+        charset = other.charset;
+
+        return *this;
     }
 
     std::string str() const
@@ -54,6 +73,7 @@ struct QueryInfo
     int database_index;
     int cached_seconds;
     std::string sql_template;
+    std::string sign;
 
     QueryInfo()
     {
@@ -68,6 +88,7 @@ struct QueryInfo
         database_index = json["database_index"].asInt();
         cached_seconds = json["cached_seconds"].asInt();
         sql_template = json["sql_template"].asString();
+        sign = json["sign"].asString();
     }
 
     QueryInfo(const QueryInfo& other)
@@ -76,6 +97,7 @@ struct QueryInfo
         database_index = other.database_index;
         cached_seconds = other.cached_seconds;
         sql_template = other.sql_template;
+        sign = other.sign;
     }
 
     QueryInfo& operator =(const QueryInfo& other)
@@ -84,6 +106,7 @@ struct QueryInfo
         database_index = other.database_index;
         cached_seconds = other.cached_seconds;
         sql_template = other.sql_template;
+        sign = other.sign;
 
         return *this;
     }
@@ -105,6 +128,7 @@ struct UpdateInfo
     int index;
     int database_index;
     std::string sql_template;
+    std::string sign;
 
     UpdateInfo()
     {
@@ -117,6 +141,7 @@ struct UpdateInfo
         index = json["index"].asInt();
         database_index = json["database_index"].asInt();
         sql_template = json["sql_template"].asString();
+        sign = json["sign"].asString();
     }
 
     UpdateInfo(const QueryInfo& other)
@@ -124,6 +149,7 @@ struct UpdateInfo
         index = other.index;
         database_index = other.database_index;
         sql_template = other.sql_template;
+        sign = other.sign;
     }
 
     UpdateInfo& operator =(const UpdateInfo& other)
@@ -131,6 +157,7 @@ struct UpdateInfo
         index = other.index;
         database_index = other.database_index;
         sql_template = other.sql_template;
+        sign = other.sign;
 
         return *this;
     }
@@ -155,6 +182,10 @@ public:
     static std::string get_filepath();
 
 public:
+    // 监控配置文件的变化
+    void monitor();
+
+public:
     CConfigLoader();
     bool load(const std::string& filepath);
     sys::DBConnection* get_db_connection(int index) const;
@@ -162,17 +193,12 @@ public:
     bool get_update_info(int index, struct UpdateInfo* update_info) const;
 
 private:
-    void init_db_info_array();
-    void init_query_info_array();
-    void init_update_info_array();
-    bool add_db_info(struct DbInfo* db_info);
-    bool add_query_info(struct QueryInfo* query_info);
-    bool add_update_info(struct UpdateInfo* update_info);
-
-private:
-    bool load_database(const Json::Value& json);
-    bool load_query(const Json::Value& json);
-    bool load_update(const Json::Value& json);
+    bool load_database(const Json::Value& json, struct DbInfo* db_info_array[]);
+    bool load_query(const Json::Value& json, struct QueryInfo* query_info_array[]);
+    bool load_update(const Json::Value& json, struct UpdateInfo* update_info_array[]);
+    bool add_db_info(struct DbInfo* db_info, struct DbInfo* db_info_array[]);
+    bool add_query_info(struct QueryInfo* query_info, struct QueryInfo* query_info_array[]);
+    bool add_update_info(struct UpdateInfo* update_info, struct UpdateInfo* update_info_array[]);
 
 private:
     sys::DBConnection* init_db_connection(int index) const;
@@ -182,6 +208,7 @@ private:
     struct DbInfo* _db_info_array[MAX_DB_CONNECTION];
     struct QueryInfo* _query_info_array[MAX_SQL_TEMPLATE];
     struct UpdateInfo* _update_info_array[MAX_SQL_TEMPLATE];
+    std::string _md5_sum;
 };
 
 } // namespace mooon
