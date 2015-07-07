@@ -23,6 +23,11 @@ private:
         mooon::db_proxy::CDbProxyHandler, mooon::db_proxy::DbProxyServiceProcessor> _thrift_server;
 };
 
+// 参数说明：
+// 1) --port rpc服务端口号
+//
+// 运行示例：
+// ./db_proxy --port=8888
 extern "C" int main(int argc, char* argv[])
 {
     CMainHelper main_helper;
