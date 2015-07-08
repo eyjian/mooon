@@ -1,7 +1,7 @@
 // Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 #include "config_loader.h"
 #include "db_proxy_handler.h"
-#include "rpc/DbProxyService.h"
+#include "rpc/DbProxyService.h" // 执行cmake或make rpc时生成的文件
 #include <mooon/net/thrift_helper.h>
 #include <mooon/sys/main_template.h>
 #include <mooon/sys/safe_logger.h>
