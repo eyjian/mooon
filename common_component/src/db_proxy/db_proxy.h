@@ -2,7 +2,7 @@
 #ifndef MOOON_DB_PROXY_H
 #define MOOON_DB_PROXY_H
 #include <ostream>
-#include <rpc/db_proxy_types.h>
+#include "rpc/db_proxy_types.h"
 
 std::ostream& operator <<(std::ostream& out, const mooon::db_proxy::DBTable& db_table)
 {

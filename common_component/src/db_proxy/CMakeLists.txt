@@ -37,6 +37,10 @@ install(
        )
 
 install(
-        FILES db_proxy.thrift db_proxy.h rpc/DbProxyService.h rpc/db_proxy_types.h rpc/db_proxy_constants.h
+        FILES db_proxy.thrift
         DESTINATION include/mooon/db_proxy
+       )
+install(
+        FILES rpc/DbProxyService.h rpc/db_proxy_types.h rpc/db_proxy_constants.h
+        DESTINATION include/mooon/db_proxy/rpc
        )
