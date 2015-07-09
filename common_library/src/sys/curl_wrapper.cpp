@@ -134,7 +134,7 @@ void CCurlWrapper::proxy_http_get(std::string& response_header, std::string& res
     errcode = curl_easy_setopt(curl, CURLOPT_PROXY, proxy_host.c_str());
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
-    errcode = curl_easy_setopt(curl, CURLOPT_PROXYPORT, mooon::utils::CStringUtils::int_tostring(proxy_port).c_str());
+    errcode = curl_easy_setopt(curl, CURLOPT_PROXYPORT, proxy_port);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
