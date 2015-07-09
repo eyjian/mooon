@@ -1,5 +1,6 @@
 // Writed by yijian, eyjian@qq.com or eyjian@gmail.com
 #include "sys/curl_wrapper.h"
+#include "utils/string_utils.h"
 
 #if HAVE_CURL==1
 #include <curl/curl.h>
@@ -123,6 +124,21 @@ void CCurlWrapper::http_get(std::string& response_header, std::string& response_
     errcode = curl_easy_perform(curl);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+}
+
+void CCurlWrapper::proxy_http_get(std::string& response_header, std::string& response_body, const std::string& proxy_host, uint16_t proxy_port, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
+{
+    CURLcode errcode;
+    CURL* curl = (CURL*)_curl;
+
+    errcode = curl_easy_setopt(curl, CURLOPT_PROXY, proxy_host.c_str());
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+    errcode = curl_easy_setopt(curl, CURLOPT_PROXYPORT, mooon::utils::CStringUtils::int_tostring(proxy_port).c_str());
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    http_get(response_header, response_body, url, enable_insecure, cookie);
 }
 
 int CCurlWrapper::get_response_code() const throw (utils::CException)
