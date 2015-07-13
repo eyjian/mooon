@@ -100,8 +100,8 @@ bool self_restart(IMainHelper* main_helper)
     std::string env_name = main_helper->get_restart_env_name();
     utils::CStringUtils::trim(env_name);
 
-    // 如果环境变量名为空，则认为不自重启
-    if (env_name.empty()) return false;
+    // 如果环境变量名为空，则认为总是自重启
+    if (env_name.empty()) return true;
 
     // 由环境变量SELF_RESTART来决定是否自重启
     char* restart = getenv(env_name.c_str());

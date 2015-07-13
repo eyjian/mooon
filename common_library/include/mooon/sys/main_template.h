@@ -74,7 +74,8 @@ public:
 
     /***
       * 得到控制重启功能的环境变量名
-      * @return 如果返回空，包括空格，则表示禁用该功能
+      * @return 如果返回空，包括空格，则表示总是自重启，
+      *  否则是否自重启，由同名的环境变量值决定，值为true则自重启，否则不自重启
       */
     virtual std::string get_restart_env_name() const { return "SELF_RESTART"; }
     
