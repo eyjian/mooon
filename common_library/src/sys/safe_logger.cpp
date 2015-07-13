@@ -22,6 +22,7 @@
 #include "mooon/sys/file_utils.h"
 #include "mooon/utils/scoped_ptr.h"
 #include "mooon/utils/string_utils.h"
+#include <libgen.h>
 #include <pthread.h>
 #include <sstream>
 #include <unistd.h>
@@ -53,7 +54,11 @@ CSafeLogger* create_safe_logger(bool enable_program_path, uint16_t log_line_size
 
 CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std::string& cpp_filename, uint16_t log_line_size) throw (CSyscallException)
 {
-    std::string log_filename = utils::CStringUtils::replace_suffix(cpp_filename, ".log");
+    char* cpp_filepath = strdup(cpp_filename.c_str());
+    std::string only_filename = basename(cpp_filepath);
+    free(cpp_filepath);
+
+    std::string log_filename = utils::CStringUtils::replace_suffix(only_filename, ".log");
     CSafeLogger* logger = new CSafeLogger(log_dirpath.c_str(), log_filename.c_str(), log_line_size);
 
     set_log_level_by_env(logger);
