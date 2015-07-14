@@ -16,9 +16,10 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include <pthread.h> // localtime_r
-#include <utils/string_utils.h>
 #include "sys/datetime_utils.h"
+#include <pthread.h> // localtime_r
+#include <sys/time.h>
+#include <utils/string_utils.h>
 SYS_NAMESPACE_BEGIN
 
 bool CDatetimeUtils::is_leap_year(int year)
@@ -366,6 +367,41 @@ std::string CDatetimeUtils::to_time(time_t datetime)
         ,result.tm_hour, result.tm_min, result.tm_sec);
 
     return time_buffer;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void get_formatted_current_datetime(char* datetime_buffer, size_t datetime_buffer_size, bool with_milliseconds)
+{
+    struct timeval current;
+    gettimeofday(&current, NULL);
+    time_t current_seconds = current.tv_sec;
+
+    struct tm result;
+    localtime_r(&current_seconds, &result);
+
+    if (with_milliseconds)
+    {
+        snprintf(datetime_buffer, datetime_buffer_size
+            ,"%04d-%02d-%02d %02d:%02d:%02d/%u"
+            ,result.tm_year+1900, result.tm_mon+1, result.tm_mday
+            ,result.tm_hour, result.tm_min, result.tm_sec, (unsigned int)(current.tv_usec/1000));
+    }
+    else
+    {
+        snprintf(datetime_buffer, datetime_buffer_size
+            ,"%04d-%02d-%02d %02d:%02d:%02d"
+            ,result.tm_year+1900, result.tm_mon+1, result.tm_mday
+            ,result.tm_hour, result.tm_min, result.tm_sec);
+    }
+}
+
+std::string get_formatted_current_datetime(bool with_milliseconds)
+{
+    char datetime_buffer[sizeof("YYYY-MM-DD hh:mm:ss/0123456789")];
+    size_t datetime_buffer_size = sizeof(datetime_buffer);
+    get_formatted_current_datetime(datetime_buffer, datetime_buffer_size, with_milliseconds);
+
+    return datetime_buffer;
 }
 
 SYS_NAMESPACE_END

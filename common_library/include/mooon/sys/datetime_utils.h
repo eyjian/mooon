@@ -114,5 +114,17 @@ public:
     static std::string to_time(time_t datetime);
 };
 
+// 取得格式化的当前日期时间，
+// 如果with_milliseconds为true，则返回格式为：YYYY-MM-DD hh:mm:ss/ms，其中ms最长为10位数字；
+// 如果with_milliseconds为false，则返回格式为：YYYY-MM-DD hh:mm:ss。
+//
+// 如果with_milliseconds为true则datetime_buffer_size的大小不能小于sizeof("YYYY-MM-DD hh:mm:ss/0123456789")，
+// 如果with_milliseconds为false则datetime_buffer_size的大小不能小于sizeof("YYYY-MM-DD hh:mm:ss")，
+extern void get_formatted_current_datetime(char* datetime_buffer, size_t datetime_buffer_size, bool with_milliseconds=true);
+
+// 如果with_milliseconds为false，则返回同CDatetimeUtils::get_current_datetime()
+// 如果with_milliseconds为true，则返回为：YYYY-MM-DD hh:mm:ss/milliseconds
+extern std::string get_formatted_current_datetime(bool with_milliseconds=true);
+
 SYS_NAMESPACE_END
 #endif // MOOON_SYS_DATETIME_UTILS_H

@@ -548,9 +548,9 @@ void CLogger::do_log(log_level_t log_level, const char* filename, int lineno, co
     va_copy(args_copy, args);
     utils::VaListHelper vh(args_copy);
     log_message_t* log_message = (log_message_t*)malloc(_log_line_size+sizeof(log_message_t)+1);
-    
-    char datetime[sizeof("2012-12-12 12:12:12")];
-    CDatetimeUtils::get_current_datetime(datetime, sizeof(datetime));
+
+    char datetime[sizeof("2012-12-12 12:12:12/0123456789")];
+    get_formatted_current_datetime(datetime, sizeof(datetime));
     
     // 模块名称
     std::string module_name_field;

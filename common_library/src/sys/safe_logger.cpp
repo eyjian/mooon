@@ -323,8 +323,8 @@ bool CSafeLogger::need_rotate(int fd) const
 void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno, const char* module_name, const char* format, va_list& args)
 {
     std::stringstream log_header; // 每条日志的头
-    char datetime[sizeof("2012-12-12 12:12:12")];
-    CDatetimeUtils::get_current_datetime(datetime, sizeof(datetime));
+    char datetime[sizeof("2012-12-12 12:12:12/0123456789")];
+    get_formatted_current_datetime(datetime, sizeof(datetime));
 
     // 日志头内容：[日期][线程ID/进程ID][日志级别][模块名][代码文件名][代码行号]
     log_header << "[" << datetime << "]"
