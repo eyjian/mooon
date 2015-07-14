@@ -349,7 +349,17 @@ sys::DBConnection* CConfigLoader::init_db_connection(int index) const
     db_connection->set_charset(_db_info->charset);
     db_connection->enable_auto_reconnect();
 
-    db_connection->open();
+    try
+    {
+        db_connection->open();
+    }
+    catch (sys::CDBException& db_ex)
+    {
+        MYLOG_ERROR("connect %s failed: %s\n", _db_info->str().c_str(), db_ex.str().c_str());
+        mooon::sys::DBConnection::destroy_connection(db_connection);
+        db_connection = NULL;
+    }
+
     return db_connection;
 }
 
