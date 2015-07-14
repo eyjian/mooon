@@ -1,6 +1,6 @@
 # Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 # 定义公共的、可直接复用的
-   
+
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../common_library/CMake.common)
     message("found ${CMAKE_CURRENT_SOURCE_DIR}/../common_library")
     set(MOOON_HOME ${CMAKE_CURRENT_SOURCE_DIR}/../common_library)
@@ -14,7 +14,7 @@ elseif (EXISTS /usr/local/thirdparty/mooon/CMake.common)
     include_directories(${MOOON_HOME}/include)
     link_directories(${MOOON_HOME}/lib)
 elseif (EXISTS /usr/local/mooon/CMake.common)
-    message("found /usr/local/mooon")
+    message("found /usr/local/mooon27[m")
     set(MOOON_HOME /usr/local/mooon)
     include(${MOOON_HOME}/CMake.common)
     include_directories(${MOOON_HOME}/include)

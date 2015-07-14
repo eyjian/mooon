@@ -151,7 +151,16 @@ bool CConfigLoader::load(const std::string& filepath)
     for (i=0; i<MAX_DB_CONNECTION; ++i)
     {
         if (db_info_array[i] != NULL)
+        {
+            // 启动时即连接一下，以早期发现配置等问题
             _db_info_array[i] = new struct DbInfo(*db_info_array[i]);
+            sys::DBConnection* db_connection = init_db_connection(i);
+            if (db_connection != NULL)
+            {
+                mooon::sys::DBConnection::destroy_connection(db_connection);
+                db_connection = NULL;
+            }
+        }
     }
     for (i=0; i<MAX_SQL_TEMPLATE; ++i)
     {
