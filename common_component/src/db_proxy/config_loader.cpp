@@ -4,7 +4,6 @@
 #include <fstream>
 #include <mooon/net/utils.h>
 #include <mooon/sys/file_utils.h>
-#include <mooon/sys/log.h>
 #include <mooon/sys/utils.h>
 #include <mooon/utils/md5_helper.h>
 #include <sys/inotify.h> // 一些低版本内核没有实现
@@ -218,7 +217,6 @@ bool CConfigLoader::load_database(const Json::Value& json, struct DbInfo* db_inf
 
         if (!db_info->check())
         {
-            MYLOG_ERROR("checked failed: %s\n", db_info->str().c_str());
             delete db_info;
             return false;
         }
@@ -244,7 +242,6 @@ bool CConfigLoader::load_query(const Json::Value& json, struct QueryInfo* query_
 
         if (!query_info->check())
         {
-            MYLOG_ERROR("checked failed: %s\n", query_info->str().c_str());
             delete query_info;
             return false;
         }
@@ -270,7 +267,6 @@ bool CConfigLoader::load_update(const Json::Value& json, struct UpdateInfo* upda
 
         if (!update_info->check())
         {
-            MYLOG_ERROR("checked failed: %s\n", update_info->str().c_str());
             delete update_info;
             return false;
         }

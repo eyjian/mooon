@@ -2,6 +2,7 @@
 #ifndef MOOON_DB_PROXY_CONFIG_LOADER_H
 #define MOOON_DB_PROXY_CONFIG_LOADER_H
 #include <json/json.h>
+#include <mooon/sys/log.h>
 #include <mooon/sys/read_write_lock.h>
 #include <mooon/sys/simple_db.h>
 #include <mooon/utils/string_utils.h>
@@ -63,6 +64,12 @@ struct DbInfo
 
     bool check() const
     {
+        if (index >= MAX_DB_CONNECTION)
+        {
+            MYLOG_ERROR("invalid index[%d]: %s\n", index, str().c_str());
+            return false;
+        }
+
         return true;
     }
 };
@@ -119,6 +126,12 @@ struct QueryInfo
 
     bool check() const
     {
+        if (index >= MAX_SQL_TEMPLATE)
+        {
+            MYLOG_ERROR("invalid index[%d]: %s\n", index, str().c_str());
+            return false;
+        }
+
         return true;
     }
 };
@@ -170,6 +183,12 @@ struct UpdateInfo
 
     bool check() const
     {
+        if (index >= MAX_SQL_TEMPLATE)
+        {
+            MYLOG_ERROR("invalid index[%d]: %s\n", index, str().c_str());
+            return false;
+        }
+
         return true;
     }
 };
