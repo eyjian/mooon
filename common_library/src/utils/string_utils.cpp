@@ -725,4 +725,24 @@ std::string CStringUtils::replace_suffix(const std::string& filepath, const std:
     }
 }
 
+std::string CStringUtils::to_hex(const std::string& source, bool lowercase)
+{
+    std::string hex;
+    hex.resize(source.size()*2);
+
+    char* hex_p = const_cast<char*>(hex.data());
+    for (std::string::size_type i=0; i<source.size(); ++i)
+    {
+        if (lowercase)
+            snprintf(hex_p, 3, "%02x", source[i]);
+        else
+            snprintf(hex_p, 3, "%02X", source[i]);
+
+        hex_p += 2;
+    }
+
+    *hex_p = '\0';
+    return hex;
+}
+
 UTILS_NAMESPACE_END

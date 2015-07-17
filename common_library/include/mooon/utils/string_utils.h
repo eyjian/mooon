@@ -278,6 +278,11 @@ public:
     // abc.exe  .          abc
     // abc.exe             abc
     static std::string replace_suffix(const std::string& filepath, const std::string& new_suffix);
+
+    // 将一个字符流转换成十六进制字符串
+    // source 注意它是一个字节流，不一定是字符串
+    // 返回十六进制字符串
+    static std::string to_hex(const std::string& source, bool lowercase=true);
 };
 
 UTILS_NAMESPACE_END
