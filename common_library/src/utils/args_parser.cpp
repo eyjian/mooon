@@ -42,6 +42,7 @@ static std::string remove_prefix_of_argument_name(const std::string& argument_na
 // 解析命令行参数
 bool parse_arguments(int argc, char* argv[], std::string* errmsg)
 {
+    assert(errmsg != NULL);
     for (int i=1; i<argc; ++i)
     {
         std::string argument = argv[i];
