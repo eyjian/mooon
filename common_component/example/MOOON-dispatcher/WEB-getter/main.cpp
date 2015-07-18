@@ -26,9 +26,9 @@
   * 使用示例：./web_getter --dn=news.163.com --port=80 --url=/11/0811/00/7B4S5OP50001121M.html
   */
 
-INTEGER_ARG_DEFINE(true, uint16_t, port, 80, 1, 65535, "web server port")
-STRING_ARG_DEFINE(false, dn, "", "domain name")
-STRING_ARG_DEFINE(false, url, "", "URL")
+INTEGER_ARG_DEFINE(uint16_t, port, 80, 1, 65535, "web server port")
+STRING_ARG_DEFINE(dn, "", "domain name")
+STRING_ARG_DEFINE(url, "", "URL")
 
 class CMainHelper: public mooon::sys::IMainHelper
 {
@@ -68,12 +68,13 @@ CMainHelper::~CMainHelper()
 bool CMainHelper::init(int argc, char* argv[])
 {    
     // 解析命令行参数
-    if (!ArgsParser::parse(argc, argv))
+    std::string errmsg;
+    if (!mooon::utils::parse_arguments(argc, argv, &errmsg))
     {
-        fprintf(stderr, "Command parameter error: %s.\n", ArgsParser::g_error_message.c_str());
+        fprintf(stderr, "Command parameter error: %s.\n", errmsg.c_str());
         return false;
     }
-    if (0 == ArgsParser::port->get_value())
+    if (0 == mooon::argument::port->value())
     {
         fprintf(stderr, "--port value is zero.\n");
         return false;
@@ -96,9 +97,9 @@ bool CMainHelper::init(int argc, char* argv[])
         return false;
     }
     
-    CGetter::get_singleton()->set_port(ArgsParser::port->get_value());
-    CGetter::get_singleton()->set_domain_name(ArgsParser::dn->get_value());
-    CGetter::get_singleton()->set_url(ArgsParser::url->get_value());
+    CGetter::get_singleton()->set_port(mooon::argument::port->value());
+    CGetter::get_singleton()->set_domain_name(mooon::argument::dn->value());
+    CGetter::get_singleton()->set_url(mooon::argument::url->value());
     CGetter::get_singleton()->set_dispatcher(_dispatcher);
 
     return true;

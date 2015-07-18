@@ -22,9 +22,9 @@
 #include <mooon/utils/args_parser.h>
 
 // 命令行参数--center_ip，指定center的IP地址，可以为以逗号分隔的IP列表或域名
-STRING_ARG_DEFINE(false, center_ip, "127.0.0.1", "center IP");
+STRING_ARG_DEFINE(center_ip, "127.0.0.1", "center IP");
 // 命令行参数--center_port，指定center的端口号
-INTEGER_ARG_DEFINE(false, uint16_t, center_port, 10000, 2048, 65535, "center port");
+INTEGER_ARG_DEFINE(uint16_t, center_port, 10000, 2048, 65535, "center port");
 
 AGENT_NAMESPACE_BEGIN
 
@@ -103,9 +103,7 @@ private:
         _agent->register_command_processor(&_command_processor1);
         _agent->register_command_processor(&_command_processor2);
         _agent->register_command_processor(&_command_processor3);
-
-        _agent->set_center(ArgsParser::center_ip->get_value(), 
-                           ArgsParser::center_port->get_value());
+        _agent->set_center(mooon::argument::center_ip->value(), mooon::argument::center_port->value());
 
         std::string report("test");
         while (true)
@@ -142,9 +140,10 @@ private:
 // 入口函数
 extern "C" int main(int argc, char* argv[])
 {
-    if (!ArgsParser::parse(argc, argv))
+    std::string errmsg;
+    if (!mooon::utils::parse_arguments(argc, argv, &errmsg))
     {
-        fprintf(stderr, "Args error: %s.\n", ArgsParser::g_error_message.c_str());
+        fprintf(stderr, "Args error: %s.\n", errmsg.c_str());
         exit(1);
     }
     

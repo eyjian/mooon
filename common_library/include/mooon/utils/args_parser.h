@@ -43,11 +43,18 @@
 //     return 0;
 // }
 
-/***
- * 字符串类型参数定义
- * @param_name: 参数名，如果命令行参数中有名字和它的相同的，则将值赋给变量ArgsParser::##param_name
- * @default_value: 默认值
- */
+// 应当总是在main()函数所在文件中调用STRING_ARG_DEFINE()和INTEGER_ARG_DEFINE()，
+// 如果其它文件中也需要访问，则应当使用STRING_ARG_DECLARE()和INTEGER_ARG_DECLARE()。
+
+// 字符串类型参数定义（供main()函数所在文件中调用）
+// param_name 参数名
+// default_value 参数的默认值，如果没有通过命令行指定，则default_value为参数值
+// help_string 对这个参数的说明
+//
+// 使用示例（假设参数名为ip）：
+// STRING_ARG_DEFINE(ip, "127.0.0.1", "listen IP address");
+// mooon::argument::ip->value(); // 返回类型为“const std::string”
+// mooon::argument::ip->c_value(); // 返回类型为“const char*”
 #define STRING_ARG_DEFINE(param_name, default_value, help_string) \
     namespace mooon { namespace argument \
     { \
@@ -56,19 +63,16 @@
                 #param_name, default_value, help_string); \
     }}
 
-/***
- * 整数类型参数定义
- * @int_type: 整数类型，如int或short等
- * @param_name: 参数名，如果命令行参数中有名字和它的相同的，则将值赋给变量ArgsParser::##param_name
- * @default_value: 默认值
- * @min_value: 可取的最小值
- * @max_value: 可取的最大值
- * @help_string: 帮助信息，用来显示参数作用
- * @使用方法: ArgsParser::param_name.get_value()，
- *            假设参数名为port，则为ArgsParser::port.get_value()，
- *            port的数据类型为CArgInfo<IntegerType>
- * @提示: 各种类型整数的最大最小值使用std::numeric_limits<uint16_t>.min()系列来判断
- */
+// 整数类型参数定义（供main()函数所在文件中调用）
+// param_name 参数名
+// default_value 参数的默认值，如果没有通过命令行指定，则default_value为参数值
+// help_string 对这个参数的说明
+// min_value 可取的最小值
+// max_value 可取的最大值
+//
+// 使用示例（假设参数名为port）:
+// INTEGER_ARG_DEFINE(uint16_t, port, 2015, 1000, 65535, "listen port");
+// mooon::argument::port->value(); // 返回类型为“uint16_t”
 #define INTEGER_ARG_DEFINE(int_type, param_name, default_value, min_value, max_value, help_string) \
     namespace mooon { namespace argument \
     { \
@@ -77,14 +81,14 @@
                 #param_name, default_value, min_value, max_value, help_string); \
     }}
 
-// 整数类型参数声明
+// 整数类型参数声明（供非main()函数所在文件中调用）
 #define INTEGER_ARG_DECLARE(int_type, param_name) \
     namespace mooon { namespace argument /** 保证不污染全局空间 */ \
     { \
         extern mooon::utils::CIntArgument<int_type>* param_name; \
     }}
 
-// 整数类型参数声明
+// 整数类型参数声明（供非main()函数所在文件中调用）
 #define STRING_ARG_DECLARE(param_name) \
     namespace mooon { namespace argument /** 保证不污染全局空间 */ \
     { \

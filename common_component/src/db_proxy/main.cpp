@@ -9,7 +9,7 @@
 #include <mooon/utils/args_parser.h>
 
 // 服务端口
-INTEGER_ARG_DEFINE(true, uint16_t, port, 8080, 1000, 65535, listen port of db proxy);
+INTEGER_ARG_DEFINE(uint16_t, port, 8080, 1000, 65535, "listen port of db proxy");
 
 class CMainHelper: public mooon::sys::IMainHelper
 {
@@ -36,9 +36,10 @@ extern "C" int main(int argc, char* argv[])
 
 bool CMainHelper::init(int argc, char* argv[])
 {
-    if (!ArgsParser::parse(argc, argv))
+    std::string errmsg;
+    if (!mooon::utils::parse_arguments(argc, argv, &errmsg))
     {
-        fprintf(stderr, "%s\n", ArgsParser::g_error_message.c_str());
+        fprintf(stderr, "%s\n", errmsg.c_str());
         return false;
     }
 
@@ -64,8 +65,8 @@ bool CMainHelper::run()
 
     try
     {
-        MYLOG_INFO("thrift will listen on port[%u]\n", ArgsParser::port->get_value());
-        _thrift_server.serve(ArgsParser::port->get_value());
+        MYLOG_INFO("thrift will listen on port[%u]\n", mooon::argument::port->value());
+        _thrift_server.serve(mooon::argument::port->value());
         return true;
     }
     catch (apache::thrift::TException& tx)

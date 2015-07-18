@@ -27,8 +27,8 @@
 // 另一种基于server::IPacketHandler，前者简单，后者复杂
 //#define USE_PACKET_HANDLER
 
-STRING_ARG_DEFINE(false, ip, "127.0.0.1", "listen IP");
-INTEGER_ARG_DEFINE(false, uint16_t, port, 10000, 2048, 65535, "listen port");
+STRING_ARG_DEFINE(ip, "127.0.0.1", "listen IP");
+INTEGER_ARG_DEFINE(uint16_t, port, 10000, 2048, 65535, "listen port");
 
 AGENT_NAMESPACE_BEGIN
 
@@ -221,8 +221,8 @@ public:
 private:
     virtual bool init(int argc, char* argv[])
     {
-        _config.add_ipnode(ArgsParser::ip->get_value()
-                          ,ArgsParser::port->get_value());
+        _config.add_ipnode(mooon::argument::ip->value()
+                          ,mooon::argument::port->value());
                 
         return true;
     }
@@ -251,9 +251,10 @@ private:
 
 extern "C" int main(int argc, char* argv[])
 {
-    if (!ArgsParser::parse(argc, argv))
+    std::string errmsg;
+    if (!mooon::utils::parse_arguments(argc, argv, &errmsg))
     {
-        fprintf(stderr, "Args error: %s.\n", ArgsParser::g_error_message.c_str());
+        fprintf(stderr, "%s\n", errmsg.c_str());
         exit(1);
     }
     
