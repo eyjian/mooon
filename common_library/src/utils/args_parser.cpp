@@ -14,160 +14,102 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Author: eyjian@qq.com, eyjian@gmail.com
+ * Writed by yijian on 2015/7/18, eyjian@gmail/eyjian@qq.com
  */
 #include "utils/args_parser.h"
-namespace ArgsParser {
+UTILS_NAMESPACE_BEGIN
 
-std::string g_error_message;
-static std::map<std::string, IArgInfo*>& ArgsInfoMap()
+std::string g_help_string; // --help的说明
+std::string g_version_string; // --version的说明
+
+// 跳过前缀
+static std::string remove_prefix_of_argument_name(const std::string& argument_name)
 {
-	static std::map<std::string, IArgInfo*> s_ArgsInfoMap;
-	return s_ArgsInfoMap;
+    std::string::size_type pos = 0;
+    std::string new_argument_name;
+
+    for (pos=0; pos<argument_name.size(); ++pos)
+    {
+        if (argument_name[pos] != '-')
+            break;
+    }
+
+    new_argument_name = argument_name.substr(pos);
+    return new_argument_name;
 }
 
-bool parse(int argc, char* argv[])
+// 解析命令行参数
+bool parse_arguments(int argc, char* argv[], std::string* errmsg)
 {
-    char* param;
-    bool with_value;
-    std::string name;
-	std::string param_str;
-	std::string value_str;
+    for (int i=1; i<argc; ++i)
+    {
+        std::string argument = argv[i];
+        std::string argument_name;
+        std::string argument_value;
 
-	for (int i=1; i<argc; ++i)
-	{
-		param = argv[i];
-		with_value = false;
-        value_str.clear();
-		name.clear();
+        // 只找第一个等号，这样参数值中有等号时可正常运行
+        std::string::size_type equal_sign_pos = argument.find("=");
+        if (std::string::npos == equal_sign_pos)
+        {
+            argument_name = argument;
+        }
+        else
+        {
+            argument_name = argument.substr(0, equal_sign_pos);
+            argument_value = argument.substr(equal_sign_pos + 1);
+        }
 
-		//--开始
-		if (('-' == param[0]) && ('-' == param[1]))
-		{
-			param_str = param;
-			param_str = param_str.substr(2);
-			int index = param_str.find('=');
-
-			if (index)
-			{
-				name = param_str.substr(0, index);
-				value_str = param_str.substr(index + 1);
-				with_value = true;
-			}
-            else
-			{
-				name = param_str;
-			}
-
-			// 名字长度须大于2
-			if (name.length() < 2)
-			{
-				g_error_message += "Error:" + (std::string)param + " the min length of arg name should be 2";
-				return false;
-			}
-		}
-        else if (param[0] == '-') // -开始
-		{
-			param_str = param;
-			param_str = param_str.substr(1);
-			name = param_str;
-
-			if (name.length() != 1)
-			{
-				g_error_message += "Error:" + (std::string)param + " the length of arg name should be 1";
-				return false;
-			}
-		}
-
-		if (name.empty())
-		{
-			g_error_message += "Error:" + (std::string)param + " arg name can not be null";
-			return false;
-		}
-
-		// 按具体参数的规则判断
-		if (ArgsInfoMap().find(name) == ArgsInfoMap().end())
-		{
-			g_error_message += "Error:" + (std::string)param + " the command rule not contains: " + name;
-			return false;
-		}
-
-		// 判断value
-		if (with_value)
-		{
-			if (!ArgsInfoMap().find(name)->second->validate_value(value_str))
-			{
-				g_error_message += std::string("Error:") + std::string(param) + " the value of " + name + " is not valid";
-				return false;
-			}
-
-			ArgsInfoMap().find(name)->second->set_value(value_str);
-		}
-
-		ArgsInfoMap().find(name)->second->set();
-	}
-
-	// 检测必填参数是否都填上
-	std::map<std::string, IArgInfo*>::iterator iter = ArgsInfoMap().begin();
-    for (; iter!=ArgsInfoMap().end(); ++iter)
-	{
-		if (!iter->second->is_optional()
-         && !iter->second->is_set())
-		{
-			g_error_message += std::string("Error: param ") + iter->second->get_param_name() + std::string(" not set");
-			return false;
-		}
-	}
+        // 对help和version做内置处理
+        argument_name = remove_prefix_of_argument_name(argument_name);
+        if ("help" == argument_name)
+        {
+            *errmsg = g_help_string;
+            return false;
+        }
+        if ("version" == argument_name)
+        {
+            *errmsg = g_version_string;
+            return false;
+        }
+        if (!mooon::utils::CArgumentContainer::get_singleton()->set_argument(
+            argument_name, argument_value, errmsg))
+        {
+            return false;
+        }
+    }
 
     return true;
 }
 
-/***
- * 注册参数，
- * 不要直接调用它，而应当总是由宏来调用
- */
-void register_arg(const std::string& param_name, IArgInfo* arg_info)
+////////////////////////////////////////////////////////////////////////////////
+CArgumentBase::CArgumentBase(const std::string& name, const std::string& help_string)
+    : _name(name), _help_string(help_string)
 {
-	ArgsInfoMap().insert(std::make_pair(param_name, arg_info));
 }
 
-/**
- * 获取帮助信息
- */
-std::string get_help_info()
+////////////////////////////////////////////////////////////////////////////////
+SINGLETON_IMPLEMENT(CArgumentContainer);
+
+void  CArgumentContainer::add_argument(CArgumentBase* argument)
 {
-    std::string name;
-	std::string info = "Options:\r\n";
-	std::string optional;
-
-	IArgInfo* argInfo;
-    std::map<std::string, IArgInfo*>::iterator iter = ArgsInfoMap().begin();
-
-	for (; iter!=ArgsInfoMap().end(); ++iter)
-	{
-		argInfo = iter->second;
-		name = argInfo->get_param_name();
-		if(argInfo->is_optional())
-		{
-			optional = "true";
-		}
-		else
-		{
-			optional = "false";
-		}
-		if (name.length() == 1)
-		{
-			info += "\t-" + name + "\t" + "optional:" + optional + "\t" + argInfo->get_help_string()
-					+ "\r\n";
-		}
-        else
-		{
-			info += "\t--" + name + "\t" + "optional:" + optional + "\t" + argInfo->get_help_string()
-					+ "\r\n";
-		}
-	}
-
-	return info;
+    _argument_table.insert(std::make_pair(argument->name(), argument));
 }
 
-} // namespace ArgsParser
+bool CArgumentContainer::set_argument(const std::string& name, const std::string& value, std::string* errmsg)
+{
+    CArgumentBase* argument = NULL;
+    std::map<std::string, CArgumentBase*>::iterator iter = _argument_table.find(name);
+
+    if (iter == _argument_table.end())
+    {
+        *errmsg = CStringUtils::format_string("undefined argument: %s", name.c_str());
+        return false;
+    }
+    else
+    {
+        argument = iter->second;
+        return argument->set_value(value, errmsg);
+    }
+}
+
+UTILS_NAMESPACE_END
