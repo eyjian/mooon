@@ -112,6 +112,7 @@ public:
     CArgumentBase(const std::string& name, const std::string& help_string);
     virtual ~CArgumentBase() {}
     virtual bool set_value(const std::string& new_value, std::string* errmsg) = 0;
+    virtual std::string usage_string() const { return std::string(""); }
 
 public:
     const std::string name() const
@@ -146,6 +147,7 @@ class CArgumentContainer
 public:
     void add_argument(CArgumentBase* argument);
     bool set_argument(const std::string& name, const std::string& value, std::string* errmsg);
+    std::string usage_string() const;
 
 private:
     std::map<std::string, CArgumentBase*> _argument_table;
@@ -186,6 +188,12 @@ public:
     {
         _value = new_value;
         return true;
+    }
+
+    virtual std::string usage_string() const
+    {
+        return mooon::utils::CStringUtils::format_string(
+             "--%s[%s]: %s", c_name(), c_default_value(), c_help_string());
     }
 
 private:
@@ -242,6 +250,12 @@ public:
 
         _value = value;
         return true;
+    }
+
+    virtual std::string usage_string() const
+    {
+        return mooon::utils::any2string(
+            "--", name(), "[", _default_value, "/", _min_value, ",", _max_value, "]: ", help_string());
     }
 
 private:

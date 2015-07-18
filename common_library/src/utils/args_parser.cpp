@@ -17,6 +17,7 @@
  * Writed by yijian on 2015/7/18, eyjian@gmail/eyjian@qq.com
  */
 #include "utils/args_parser.h"
+#include <sstream>
 UTILS_NAMESPACE_BEGIN
 
 std::string g_help_string; // --help的说明
@@ -61,14 +62,17 @@ bool parse_arguments(int argc, char* argv[], std::string* errmsg)
 
         // 对help和version做内置处理
         argument_name = remove_prefix_of_argument_name(argument_name);
-        if ("help" == argument_name)
-        {
-            *errmsg = g_help_string;
-            return false;
-        }
         if ("version" == argument_name)
         {
             *errmsg = g_version_string;
+            return false;
+        }
+        if ("help" == argument_name)
+        {
+            if (g_help_string.empty())
+                g_help_string = mooon::utils::CArgumentContainer::get_singleton()->usage_string();
+
+            *errmsg = g_help_string;
             return false;
         }
         if (!mooon::utils::CArgumentContainer::get_singleton()->set_argument(
@@ -110,6 +114,21 @@ bool CArgumentContainer::set_argument(const std::string& name, const std::string
         argument = iter->second;
         return argument->set_value(value, errmsg);
     }
+}
+
+std::string CArgumentContainer::usage_string() const
+{
+    std::stringstream usage_stream;
+    std::map<std::string, CArgumentBase*>::const_iterator iter = _argument_table.begin();
+
+    usage_stream << "usage:" << std::endl;
+    for (; iter!=_argument_table.end(); ++iter)
+    {
+        CArgumentBase* argument = iter->second;
+        usage_stream << argument->usage_string() << std::endl;
+    }
+
+    return usage_stream.str();
 }
 
 UTILS_NAMESPACE_END
