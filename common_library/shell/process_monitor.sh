@@ -3,8 +3,8 @@
 # Created by yijian on 2012/7/23
 #
 # 运行日志：/tmp/process_monitor.log，由于多进程同时写，不一定完整，仅供参考。
-# 请放到crontab中运行，如：
-# * * * * * /usr/local/bin/process_monitor.sh /usr/sbin/rinetd /usr/sbin/rinetd > /dev/null 2>&1
+# 请放到crontab中运行，如（注意要以后台方式运行，因为脚本是常驻不退出的）：
+# * * * * * /usr/local/bin/process_monitor.sh /usr/sbin/rinetd /usr/sbin/rinetd > /dev/null 2>&1 &
 #
 # 进程监控脚本，当指定进程不存在时，执行重启脚本将它拉起
 # 特色：
