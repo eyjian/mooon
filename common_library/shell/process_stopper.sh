@@ -10,6 +10,7 @@
 # 参数1：需要停止的进程名或它的完整命令行或部分命令行
 if test $# -ne 1; then
 	printf "\033[1;33musage: $0 process_cmdline\033[m\n"
+    printf "\033[1;33mexample: /usr/local/bin/process_stopper.sh \"/usr/sbin/rinetd\"\033[m\n"
 	exit 1
 fi
 
