@@ -12,7 +12,7 @@ log_rotate_bytes=102400000 # 日志滚动字节数
 get_file_size()
 {
 	file_size=`ls --time-style=long-iso -l $1 2>/dev/null|cut -d" " -f5`
-	if test -z $size; then
+	if test -z $file_size; then
 		echo "0"
 	else
 		echo $file_size

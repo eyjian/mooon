@@ -2,8 +2,9 @@
 # http://code.google.com/p/mooon
 # Created by yijian on 2012/7/23
 #
+# 运行日志：/tmp/process_monitor.log，由于多进程同时写，不一定完整，仅供参考。
 # 请放到crontab中运行，如：
-# * * * * * /usr/local/bin/process_monitor.sh /usr/sbin/rinetd /usr/sbin/rinetd
+# * * * * * /usr/local/bin/process_monitor.sh /usr/sbin/rinetd /usr/sbin/rinetd > /dev/null 2>&1
 #
 # 进程监控脚本，当指定进程不存在时，执行重启脚本将它拉起
 # 特色：
@@ -42,12 +43,42 @@ process_name=$(basename `echo "$process_cmdline"|cut -d" " -f1`)
 # 这样保证了可同时对不同对象进行监控。
 active=0
 
+# 日志文件
+log_filepath=/tmp/process_monitor.log
+# 日志文件大小（10M）
+log_filesize=10485760
+
+# 写日志函数，带1个参数：
+# 1) 需要写入的日志
+log()
+{
+    record=$1
+    # 得到日志文件大小
+    file_size=`ls --time-style=long-iso -l $log_filepath 2>/dev/null|cut -d" " -f5`
+    
+    # 处理日志文件过大
+    # 日志加上头[$process_cmdline]，用来区分对不同对象的监控
+    if test ! -z $file_size; then        
+        if test $file_size -lt $log_filesize; then
+            printf "[$process_cmdline]$record"
+            printf "[$process_cmdline]$record" >> $log_filepath
+        else
+            printf "[$process_cmdline][`date +'%Y-%m-%d %H:%M:%S'`]truncated\n"
+            printf "[$process_cmdline][`date +'%Y-%m-%d %H:%M:%S'`]truncated\n" > $log_filepath
+
+            printf "[$process_cmdline]$record"
+            printf "[$process_cmdline]$record" >> $log_filepath
+            return
+        fi
+    fi
+}
+
 # 以死循环方式，定时检测指定的进程是否存在
 # 一个重要原因是crontab最高频率为1分钟，不满足秒级的监控要求
 while true; do
     self_count=`ps -C $self_name h -o euser,args| awk 'BEGIN { num=0; } { if (($1==uid || $1==cur_user) && match($0, self_cmdline)) {++num;}} END { printf("%d",num); }' uid=$uid cur_user=$cur_user self_cmdline="$self_cmdline"`
-    if test $self_count -gt 2; then
-        printf "\033[0;32;31m[`date +'%Y-%m-%d %H:%M:%S'`]$0 is running[$self_count/active:$active], current user is $cur_user.\033[m\n"
+    if test $self_count -gt 2; then 
+        log "\033[0;32;31m[`date +'%Y-%m-%d %H:%M:%S'`]$0 is running[$self_count/active:$active], current user is $cur_user.\033[m\n"
         # 经测试，正常情况下一般为2，
         # 但运行一段时间后，会出现值为3，因此放在crontab中非常必要
         # 如果监控脚本已经运行，则退出不重复运行
@@ -60,7 +91,7 @@ while true; do
     process_count=`ps -C $process_name h -o euser,args| awk 'BEGIN { num=0; } { if (($1==uid || $1==cur_user) && match($0, process_cmdline)) {++num;}} END { printf("%d",num); }' uid=$uid cur_user=$cur_user process_cmdline="$process_cmdline"`
     if test $process_count -lt 1; then
         # 执行重启脚本，要求这个脚本能够将指定的进程拉起来
-        printf "\033[0;32;34m[`date +'%Y-%m-%d %H:%M:%S'`]restart \"$process_cmdline\"\033[m\n"
+        log "\033[0;32;34m[`date +'%Y-%m-%d %H:%M:%S'`]restart \"$process_cmdline\"\033[m\n"
         sh -c "$restart_script" # 注意一定要以“sh -c”方式执行
     fi
 
