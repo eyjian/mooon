@@ -147,6 +147,32 @@ else ()
     #link_libraries(libevent.a)
 endif ()
 
+# libssh2
+# http://www.libssh2.org/
+# libssh
+# http://www.libssh.org/
+if (EXISTS /usr/local/thirdparty/libssh2)
+    set(HAVE_LIBSSH2 1)
+    set(LIBSSH2_HOME /usr/local/thirdparty/libssh2)    
+elseif (EXISTS /usr/local/libssh2)
+    set(HAVE_LIBSSH2 1)
+    set(LIBSSH2_HOME /usr/local/libssh2)
+elseif (EXISTS $ENV{HOME}/libssh2)
+    set(HAVE_LIBSSH2 1)
+    set(LIBSSH2_HOME $ENV{HOME}/libssh2)
+else ()
+    set(HAVE_LIBSSH2 0)
+endif ()
+if (NOT HAVE_LIBSSH2)
+    message("${Green}not found libssh2 (www.libssh2.org)${ColourReset}")
+else ()
+    message("${Red}libssh2 found in ${LIBSSH2_HOME}${ColourReset}")
+    add_definitions("-DHAVE_LIBSSH2=1")
+    include_directories(${LIBSSH2_HOME}/include)
+    link_directories(${LIBSSH2_HOME}/lib)
+    #link_libraries(libssh2.a)
+endif ()
+
 # Boost
 if (EXISTS /usr/local/thirdparty/boost)
     set(HAVE_BOOST 1)
