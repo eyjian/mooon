@@ -38,6 +38,12 @@ int main(int argc, char* argv[])
     std::vector<struct utils::CLoginTokener::LoginInfo> login_infos;
     int num = utils::CLoginTokener::parse(&login_infos, login, ",");
 
+    if (-1 == num)
+    {
+        fprintf(stderr, "invalid paramter: %s\n", login.c_str());
+        fprintf(stderr, "usage: ut_libssh2 username@ip:port#password command\n");
+        exit(1);
+    }
     for (int i=0; i<num; ++i)
     {
         try
@@ -48,12 +54,12 @@ int main(int argc, char* argv[])
             int num_bytes;
             const utils::CLoginTokener::LoginInfo& login_info = login_infos[i];
 
-            printf("ip[%s], port[%u], username[%s], password[%s]\n",
+            printf("ip[%s], port[%u], username[%s], password[%s]\n\n",
                 login_info.ip.c_str(), login_info.port, login_info.username.c_str(), login_info.password.c_str());
             net::CLibssh2 libssh2(login_info.ip, login_info.port, login_info.username, login_info.password);
 
             libssh2.remotely_execute(command, std::cout, &exitcode, &exitsignal, &errmsg, &num_bytes);
-            printf("exitcode=%d, exitsignal=%s, errmsg=%s, num_bytes=%d\n", exitcode, exitsignal.c_str(), errmsg.c_str(), num_bytes);
+            printf("\nexitcode=%d(%s), exitsignal=%s, errmsg=%s, num_bytes=%d\n", exitcode, strerror(exitcode), exitsignal.c_str(), errmsg.c_str(), num_bytes);
         }
         catch (sys::CSyscallException& syscall_ex)
         {

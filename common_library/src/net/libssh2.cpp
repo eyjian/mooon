@@ -68,13 +68,16 @@ CLibssh2::CLibssh2(const std::string& ip, uint16_t port, const std::string& user
             THROW_SYSCALL_EXCEPTION(strerror(errno), errno, "connect");
         }
 
+        // 创建ssh2会话
         session = libssh2_session_init();
         if (nonblocking) // 设置为非阻塞
             libssh2_session_set_blocking(session, 0);
 
         _session = session;
+        _socket_fd = socket_fd;
         while (true)
         {
+            // ssh2握手
             errcode = libssh2_session_handshake(session, socket_fd);
             if (0 == errcode)
             {
@@ -83,6 +86,10 @@ CLibssh2::CLibssh2(const std::string& ip, uint16_t port, const std::string& user
             else if (errcode != LIBSSH2_ERROR_EAGAIN)
             {
                 THROW_EXCEPTION(get_session_errmsg(), get_session_errcode());
+            }
+            else if (!wait_socket())
+            {
+                THROW_SYSCALL_EXCEPTION("handshake timeout", ETIMEDOUT, "poll");
             }
         }
 
@@ -143,18 +150,21 @@ CLibssh2::CLibssh2(const std::string& ip, uint16_t port, const std::string& user
             }
         }
 
+        // 建立会话通道
         while (true)
         {
             channel = libssh2_channel_open_session(session);
             if (channel != NULL)
                 break;
 
-            errcode = libssh2_session_last_error(session, NULL,NULL, 0);
+            errcode = get_session_errcode();
             if (errcode != LIBSSH2_ERROR_EAGAIN)
-                THROW_EXCEPTION(get_session_errmsg(), errcode);
-            if (!wait_socket())
             {
-                THROW_SYSCALL_EXCEPTION("timeout", ETIMEDOUT, "poll");
+                THROW_EXCEPTION(get_session_errmsg(), errcode);
+            }
+            else if (!wait_socket())
+            {
+                THROW_SYSCALL_EXCEPTION("open session timeout", ETIMEDOUT, "poll");
             }
         }
 
@@ -164,6 +174,7 @@ CLibssh2::CLibssh2(const std::string& ip, uint16_t port, const std::string& user
     }
     catch (...)
     {
+        // 异常处理：释放资源
         if (channel != NULL)
         {
             libssh2_channel_free(channel);
@@ -235,9 +246,10 @@ void CLibssh2::remotely_execute(
     const std::string& command, std::ostream& out,
     int* exitcode, std::string* exitsignal, std::string* errmsg, int* num_bytes) throw (utils::CException, sys::CSyscallException)
 {
+    int bytes;
     int errcode;
     LIBSSH2_CHANNEL* channel = static_cast<LIBSSH2_CHANNEL*>(_channel);
-    LIBSSH2_SESSION* session = static_cast<LIBSSH2_SESSION*>(_session);
+    //LIBSSH2_SESSION* session = static_cast<LIBSSH2_SESSION*>(_session);
 
     while (true)
     {
@@ -253,61 +265,70 @@ void CLibssh2::remotely_execute(
     }
 
     *num_bytes = 0;
-    for (;;)
+    while (true)
     {
-        int bytes;
+        char buffer[4096];
+        bytes = libssh2_channel_read(channel, buffer, sizeof(buffer)-1);
 
-        do
+        if (0 == bytes)
         {
-            char buffer[4096];
-            bytes = libssh2_channel_read(channel, buffer, sizeof(buffer)-1);
-            if (bytes > 0)
-            {
-                *num_bytes += bytes;
-                buffer[bytes] = '\0';
-                out << buffer;
-            }
-            else if (bytes != LIBSSH2_ERROR_EAGAIN )
-            {
-                THROW_EXCEPTION("libssh2 read failed", get_session_errcode());
-            }
-        } while (bytes > 0);
+            break; // connection closed now
+        }
+        else if (bytes > 0)
+        {
+            *num_bytes += bytes;
+            buffer[bytes] = '\0';
+            out << buffer;
+        }
+        else
+        {
+            errcode = get_session_errcode();
 
-        if (LIBSSH2_ERROR_EAGAIN == bytes)
+            if (errcode != LIBSSH2_ERROR_EAGAIN)
+            {
+                THROW_EXCEPTION(get_session_errmsg(), errcode);
+            }
+            else if (!wait_socket())
+            {
+                THROW_SYSCALL_EXCEPTION("channel read timeout", ETIMEDOUT, "poll");
+            }
+        }
+    }
+
+    while (true)
+    {
+        errcode = libssh2_channel_close(channel);
+        if (0 == errcode)
+        {
+            char* errmsg_ = NULL;
+            char* exitsignal_ = NULL;
+
+            *exitcode = 127; // command not exists
+            *exitcode = libssh2_channel_get_exit_status(channel);
+            if (*exitcode != 0) // 0 success
+            {
+                // 调用端可以strerror(*exitcode)取得出错原因
+                libssh2_channel_get_exit_signal(channel, &exitsignal_, NULL, &errmsg_, NULL, NULL, NULL);
+                if (errmsg_ != NULL)
+                {
+                    *errmsg = errmsg_;
+                    free(errmsg_);
+                }
+                if (exitsignal_ != NULL)
+                {
+                    *exitsignal = exitsignal_;
+                    free(exitsignal_);
+                }
+            }
+
+            break;
+        }
+        else if (LIBSSH2_ERROR_EAGAIN == errcode)
         {
             if (!wait_socket())
             {
-                THROW_SYSCALL_EXCEPTION("timeout", ETIMEDOUT, "poll");
+                THROW_SYSCALL_EXCEPTION("channel close timeout", ETIMEDOUT, "poll");
             }
-        }
-    }
-
-    *exitcode = 127;
-    errcode = libssh2_channel_close(channel);
-    while (LIBSSH2_ERROR_EAGAIN  == errcode)
-    {
-        if (!wait_socket())
-        {
-            THROW_SYSCALL_EXCEPTION("timeout", ETIMEDOUT, "poll");
-        }
-    }
-
-    if (0 == errcode)
-    {
-        char* errmsg_ = NULL;
-        char* exitsignal_ = NULL;
-
-        *exitcode = libssh2_channel_get_exit_status(channel);
-        libssh2_channel_get_exit_signal(channel, &exitsignal_, NULL, &errmsg_, NULL, NULL, NULL);
-        if (errmsg_ != NULL)
-        {
-            *errmsg = errmsg_;
-            free(errmsg_);
-        }
-        if (exitsignal_ != NULL)
-        {
-            *exitsignal = exitsignal_;
-            free(exitsignal_);
         }
     }
 }
