@@ -1,8 +1,12 @@
 # Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 
 include_directories(../../include)
-link_directories(../../src)
-link_libraries(libmooon.a)
+link_directories(../../src/net)
+link_directories(../../src/sys)
+link_directories(../../src/utils)
+link_libraries(libmooon_net.a)
+link_libraries(libmooon_sys.a)
+link_libraries(libmooon_utils.a)
 
 add_executable(udp_client_test udp_client_test.cpp)
 add_executable(udp_server_test udp_server_test.cpp)

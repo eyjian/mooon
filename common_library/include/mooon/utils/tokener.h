@@ -254,7 +254,7 @@ public:
             {
                 const struct LoginInfo& login_info = login_infos[i];
                 printf("[%d] => %s@%s:%u#%s\n",
-                    i, login_info.username.c_str(), login_info.ip.c_str(), login_info.port, login_info.password.c_str());
+                    (int)i, login_info.username.c_str(), login_info.ip.c_str(), login_info.port, login_info.password.c_str());
             }
         }
     }
