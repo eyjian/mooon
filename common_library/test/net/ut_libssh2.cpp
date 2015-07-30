@@ -58,8 +58,17 @@ int main(int argc, char* argv[])
                 login_info.ip.c_str(), login_info.port, login_info.username.c_str(), login_info.password.c_str());
             net::CLibssh2 libssh2(login_info.ip, login_info.port, login_info.username, login_info.password);
 
+            // 远程执行命令
             libssh2.remotely_execute(command, std::cout, &exitcode, &exitsignal, &errmsg, &num_bytes);
             printf("\nexitcode=%d(%s), exitsignal=%s, errmsg=%s, num_bytes=%d\n", exitcode, strerror(exitcode), exitsignal.c_str(), errmsg.c_str(), num_bytes);
+
+            // 下载文件
+            libssh2.download("/etc/hosts", std::cout, &num_bytes);
+            printf("num_bytes: %d\n", num_bytes);
+
+            // 上传文件
+            libssh2.upload("/etc/hosts", "/tmp/hosts", &num_bytes);
+            printf("num_bytes: %d\n", num_bytes);
         }
         catch (sys::CSyscallException& syscall_ex)
         {

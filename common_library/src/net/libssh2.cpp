@@ -19,10 +19,14 @@
 #include "net/libssh2.h"
 #include "mooon/net/config.h"
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <mooon/net/utils.h>
+#include <mooon/utils/string_utils.h>
 #include <sys/select.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 #if HAVE_LIBSSH2 == 1
 #include <libssh2.h>
 #endif // HAVE_LIBSSH2
@@ -43,7 +47,7 @@ void CLibssh2::fini()
 }
 
 CLibssh2::CLibssh2(const std::string& ip, uint16_t port, const std::string& username, const std::string& password, uint32_t timeout_seconds, bool nonblocking) throw (utils::CException, sys::CSyscallException)
-    : _socket_fd(-1), _channel(NULL), _session(NULL), _ip(ip), _port(port), _username(username), _timeout_seconds(timeout_seconds)
+    : _socket_fd(-1), _session(NULL), _ip(ip), _port(port), _username(username), _timeout_seconds(timeout_seconds)
 {
     create_session(nonblocking);
 
@@ -92,13 +96,12 @@ void CLibssh2::remotely_execute(
     const std::string& command, std::ostream& out,
     int* exitcode, std::string* exitsignal, std::string* errmsg, int* num_bytes) throw (utils::CException, sys::CSyscallException)
 {
-    open_channel();
+    LIBSSH2_CHANNEL* channel = static_cast<LIBSSH2_CHANNEL*>(open_ssh_channel());
 
     try
     {
         while (true)
         {
-            LIBSSH2_CHANNEL* channel = static_cast<LIBSSH2_CHANNEL*>(_channel);
             int errcode = libssh2_channel_exec(channel, command.c_str());
             if (0 == errcode)
             {
@@ -110,27 +113,100 @@ void CLibssh2::remotely_execute(
             }
         }
 
-        *num_bytes = read_channel(out);
+        *num_bytes = read_channel(channel, out);
     }
     catch (...)
     {
-        *exitcode = close_channel(exitsignal, errmsg);
+        *exitcode = close_ssh_channel(channel, exitsignal, errmsg);
         throw;
     }
 
     // 不能放在try{}中，
     // 否则可能会触发递归调用close_channel()，原因是close_channel()也抛异常
-    *exitcode = close_channel(exitsignal, errmsg);
+    *exitcode = close_ssh_channel(channel, exitsignal, errmsg);
+}
+
+void CLibssh2::download(const std::string& remote_filepath, std::ostream& out, int* num_bytes)
+{
+    LIBSSH2_CHANNEL* channel = static_cast<LIBSSH2_CHANNEL*>(open_scp_read_channel(remote_filepath));
+
+    try
+    {
+        *num_bytes = read_channel(channel, out);
+        libssh2_channel_free(channel);
+    }
+    catch (...)
+    {
+        libssh2_channel_free(channel);
+        throw;
+    }
+}
+
+void CLibssh2::upload(const std::string& local_filepath, const std::string& remote_filepath, int* num_bytes)
+{
+    int local_fd = -1;
+    LIBSSH2_CHANNEL* channel = NULL;
+
+    try
+    {
+        struct stat fileinfo;
+
+        local_fd = open(local_filepath.c_str(), O_RDONLY);
+        if (-1 == local_fd)
+        {
+            THROW_SYSCALL_EXCEPTION("open failed", errno, "open");
+        }
+        if (-1 == fstat(local_fd, &fileinfo))
+        {
+            THROW_SYSCALL_EXCEPTION(
+                utils::CStringUtils::format_string(
+                    "stat %s failed", local_filepath.c_str()), errno, "stat");
+        }
+        if (0 == fileinfo.st_size)
+        {
+            // 阻止空文件
+            THROW_EXCEPTION("empty file", -1);
+        }
+
+        channel = static_cast<LIBSSH2_CHANNEL*>(open_scp_write_channel(
+            remote_filepath, fileinfo.st_mode, fileinfo.st_size, fileinfo.st_mtime, fileinfo.st_atime));
+
+        *num_bytes = 0;
+        for (;;)
+        {
+            char buffer[4096];
+            int bytes = read(local_fd, buffer, sizeof(buffer));
+
+            if (-1 == bytes)
+            {
+                THROW_SYSCALL_EXCEPTION("read failed", errno, "read");
+            }
+            else if (0 == bytes)
+            {
+                break;
+            }
+            else
+            {
+                *num_bytes += bytes;
+                write_channel(channel, buffer, bytes);
+            }
+        }
+
+        libssh2_channel_free(channel);
+        close(local_fd);
+    }
+    catch (...)
+    {
+        if (channel != NULL)
+            libssh2_channel_free(channel);
+        if (local_fd != -1)
+            close(local_fd);
+        throw;
+    }
 }
 
 void CLibssh2::cleanup()
 {
-    if (_channel != NULL)
-    {
-        LIBSSH2_CHANNEL* channel = static_cast<LIBSSH2_CHANNEL*>(_channel);
-        libssh2_channel_free(channel);
-        _channel = NULL;
-    }
     if (_session != NULL)
     {
         LIBSSH2_SESSION* session = static_cast<LIBSSH2_SESSION*>(_session);
@@ -294,7 +370,7 @@ void CLibssh2::handshake()
     }
 }
 
-void CLibssh2::open_channel()
+void* CLibssh2::open_ssh_channel()
 {
     LIBSSH2_CHANNEL* channel = NULL;
     LIBSSH2_SESSION* session = static_cast<LIBSSH2_SESSION*>(_session);
@@ -317,27 +393,78 @@ void CLibssh2::open_channel()
         }
     }
 
-    _channel = channel;
+    return channel;
 }
 
-int CLibssh2::close_channel(std::string* exitsignal, std::string* errmsg)
+void* CLibssh2::open_scp_read_channel(const std::string& remote_filepath)
+{
+    LIBSSH2_CHANNEL* channel = NULL;
+    LIBSSH2_SESSION* session = static_cast<LIBSSH2_SESSION*>(_session);
+
+    for (;;)
+    {
+        struct stat fileinfo;
+        channel = libssh2_scp_recv(session, remote_filepath.c_str(), &fileinfo);
+        if (channel != NULL)
+            break;
+
+        int errcode = get_session_errcode();
+        if (errcode != LIBSSH2_ERROR_EAGAIN)
+        {
+            THROW_EXCEPTION(get_session_errmsg(), errcode);
+        }
+        else if (!wait_socket())
+        {
+            THROW_SYSCALL_EXCEPTION("open scp channel timeout", ETIMEDOUT, "poll");
+        }
+    }
+
+    return channel;
+}
+
+void* CLibssh2::open_scp_write_channel(const std::string& remote_filepath, int filemode, size_t filesize, time_t mtime, time_t atime)
+{
+    LIBSSH2_CHANNEL* channel = NULL;
+    LIBSSH2_SESSION* session = static_cast<LIBSSH2_SESSION*>(_session);
+
+    for (;;)
+    {
+        channel = libssh2_scp_send_ex(session, remote_filepath.c_str(), filemode, filesize, (long)mtime, (long)atime);
+        if (channel != NULL)
+            break;
+
+        int errcode = get_session_errcode();
+        if (errcode != LIBSSH2_ERROR_EAGAIN)
+        {
+            THROW_EXCEPTION(get_session_errmsg(), errcode);
+        }
+        else if (!wait_socket())
+        {
+            THROW_SYSCALL_EXCEPTION("open scp channel timeout", ETIMEDOUT, "poll");
+        }
+    }
+
+    return channel;
+}
+
+int CLibssh2::close_ssh_channel(void* channel, std::string* exitsignal, std::string* errmsg)
 {
     int exitcode = 127; // 127: command not exists
-    LIBSSH2_CHANNEL* channel = static_cast<LIBSSH2_CHANNEL*>(_channel);
+    LIBSSH2_CHANNEL* channel_ = static_cast<LIBSSH2_CHANNEL*>(channel);
 
-    while (_channel != NULL)
+    while (channel_ != NULL)
     {
-        int errcode = libssh2_channel_close(channel);
+        int errcode = libssh2_channel_close(channel_);
         if (0 == errcode)
         {
             char* errmsg_ = NULL;
             char* exitsignal_ = NULL;
 
-            exitcode = libssh2_channel_get_exit_status(channel);
+            exitcode = libssh2_channel_get_exit_status(channel_);
             if (exitcode != 0) // 0 success
             {
                 // 调用端可以strerror(*exitcode)取得出错原因
-                libssh2_channel_get_exit_signal(channel, &exitsignal_, NULL, &errmsg_, NULL, NULL, NULL);
+                libssh2_channel_get_exit_signal(channel_, &exitsignal_, NULL, &errmsg_, NULL, NULL, NULL);
                 if (errmsg_ != NULL)
                 {
                     *errmsg = errmsg_;
@@ -350,7 +477,8 @@ int CLibssh2::close_channel(std::string* exitsignal, std::string* errmsg)
                 }
             }
 
-            _channel = NULL;
+            libssh2_channel_free(channel_);
+            channel_ = NULL;
             break;
         }
         else if (LIBSSH2_ERROR_EAGAIN == errcode)
@@ -360,20 +488,24 @@ int CLibssh2::close_channel(std::string* exitsignal, std::string* errmsg)
                 THROW_SYSCALL_EXCEPTION("channel close timeout", ETIMEDOUT, "poll");
             }
         }
+        else
+        {
+            THROW_EXCEPTION(get_session_errmsg(), errcode);
+        }
     }
 
     return exitcode;
 }
 
-int CLibssh2::read_channel(std::ostream& out)
+int CLibssh2::read_channel(void* channel, std::ostream& out)
 {
     int num_bytes = 0;
-    LIBSSH2_CHANNEL* channel = static_cast<LIBSSH2_CHANNEL*>(_channel);
+    LIBSSH2_CHANNEL* channel_ = static_cast<LIBSSH2_CHANNEL*>(channel);
 
     while (true)
     {
         char buffer[4096];
-        int bytes = libssh2_channel_read(channel, buffer, sizeof(buffer)-1);
+        int bytes = libssh2_channel_read(channel_, buffer, sizeof(buffer)-1);
 
         if (0 == bytes)
         {
@@ -396,6 +528,43 @@ int CLibssh2::read_channel(std::ostream& out)
             else if (!wait_socket())
             {
                 THROW_SYSCALL_EXCEPTION("channel read timeout", ETIMEDOUT, "poll");
+            }
+        }
+    }
+
+    return num_bytes;
+}
+
+void CLibssh2::write_channel(void* channel, const char *buffer, size_t buffer_size)
+{
+    const char* buffer_ = buffer;
+    size_t buffer_size_ = buffer_size;
+    LIBSSH2_CHANNEL* channel_ = static_cast<LIBSSH2_CHANNEL*>(channel);
+
+    for (;;)
+    {
+        int bytes = libssh2_channel_write(channel_, buffer_, buffer_size_);
+
+        if (bytes == static_cast<int>(buffer_size_))
+        {
+            break;
+        }
+        else if (bytes > 0)
+        {
+            buffer_ += bytes;
+            buffer_size_ -= bytes;
+        }
+        else
+        {
+            int errcode = get_session_errcode();
+
+            if (errcode != LIBSSH2_ERROR_EAGAIN)
+            {
+                THROW_EXCEPTION(get_session_errmsg(), errcode);
+            }
+            else if (!wait_socket())
+            {
+                THROW_SYSCALL_EXCEPTION("channel write timeout", ETIMEDOUT, "poll");
             }
         }
     }

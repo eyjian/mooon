@@ -74,6 +74,15 @@ public:
     // num_bytes 远程命令吐出的字节数
     void remotely_execute(const std::string& command, std::ostream& out, int* exitcode, std::string* exitsignal, std::string* errmsg, int* num_bytes) throw (utils::CException, sys::CSyscallException);
 
+    // 下载远端的文件到本地
+    // remote_filepath 被下载的远端文件
+    // num_bytes 远端文件的字节数
+    void download(const std::string& remote_filepath, std::ostream& out, int* num_bytes);
+
+    // 上传本地文件到远端
+    // num_bytes 本地文件的字节数
+    void upload(const std::string& local_filepath, const std::string& remote_filepath, int* num_bytes);
+
 private:
     void cleanup();
     void create_session(bool nonblocking);
@@ -81,13 +90,18 @@ private:
     void validate_authorization(const std::string& password);
     bool wait_socket();
     void handshake();
-    void open_channel();
-    int close_channel(std::string* exitsignal, std::string* errmsg);
-    int read_channel(std::ostream& out);
+    void* open_ssh_channel();
+    void* open_scp_read_channel(const std::string& remote_filepath);
+
+    // mtime 最近一次修改时间
+    // atime 最近一次访问时间
+    void* open_scp_write_channel(const std::string& remote_filepath, int filemode, size_t filesize, time_t mtime, time_t atime);
+    int close_ssh_channel(void* channel, std::string* exitsignal, std::string* errmsg);
+    int read_channel(void* channel, std::ostream& out);
+    void write_channel(void* channel, const char *buffer, size_t buffer_size);
 
 private:
     int _socket_fd;
-    void* _channel; // LIBSSH2_CHANNEL
     void* _session; // LIBSSH2_SESSION
     std::string _ip;
     uint16_t _port;
