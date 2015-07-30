@@ -119,11 +119,11 @@ public:
     // 下载远端的文件到本地
     // remote_filepath 被下载的远端文件
     // num_bytes 远端文件的字节数
-    void download(const std::string& remote_filepath, std::ostream& out, int* num_bytes);
+    void download(const std::string& remote_filepath, std::ostream& out, int* num_bytes) throw (utils::CException, sys::CSyscallException);
 
     // 上传本地文件到远端
     // num_bytes 本地文件的字节数
-    void upload(const std::string& local_filepath, const std::string& remote_filepath, int* num_bytes);
+    void upload(const std::string& local_filepath, const std::string& remote_filepath, int* num_bytes) throw (utils::CException, sys::CSyscallException);
 
 private:
     void cleanup();

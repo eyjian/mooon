@@ -168,7 +168,7 @@ void CLibssh2::remotely_execute(
     *exitcode = close_ssh_channel(channel, exitsignal, errmsg);
 }
 
-void CLibssh2::download(const std::string& remote_filepath, std::ostream& out, int* num_bytes)
+void CLibssh2::download(const std::string& remote_filepath, std::ostream& out, int* num_bytes) throw (utils::CException, sys::CSyscallException)
 {
     LIBSSH2_CHANNEL* channel = static_cast<LIBSSH2_CHANNEL*>(open_scp_read_channel(remote_filepath));
 
@@ -184,7 +184,7 @@ void CLibssh2::download(const std::string& remote_filepath, std::ostream& out, i
     }
 }
 
-void CLibssh2::upload(const std::string& local_filepath, const std::string& remote_filepath, int* num_bytes)
+void CLibssh2::upload(const std::string& local_filepath, const std::string& remote_filepath, int* num_bytes) throw (utils::CException, sys::CSyscallException)
 {
     int local_fd = -1;
     LIBSSH2_CHANNEL* channel = NULL;
