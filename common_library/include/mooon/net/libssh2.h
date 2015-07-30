@@ -24,8 +24,29 @@
 #include <iostream>
 NET_NAMESPACE_BEGIN
 
+// 为非线程安全类
+//
 // 提供执行远程命令的能力，类似于ssh命令
 // 可配合utils::CLoginTokener一起使用：#include <mooon/utils/tokener.h>
+//
+// 使用示例（执行远程命令）：
+// try
+// {
+//     int exitcode;
+//     std::string exitsignal;
+//     std::string errmsg;
+//     int num_bytes;
+//     net::CLibssh2 libssh2(ip, port, username, password);
+//     libssh2.remotely_execute(command, std::cout, &exitcode, &exitsignal, &errmsg, &num_bytes);
+// }
+// catch (sys::CSyscallException& syscall_ex)
+// {
+//     fprintf(stderr, "%s\n", syscall_ex.str().c_str());
+// }
+// catch (utils::CException& ex)
+// {
+//     fprintf(stderr, "%s\n", ex.str().c_str());
+// }
 class CLibssh2
 {
 public:
