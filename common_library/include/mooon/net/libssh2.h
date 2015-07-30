@@ -24,6 +24,8 @@
 #include <iostream>
 NET_NAMESPACE_BEGIN
 
+// 提供执行远程命令的能力，类似于ssh命令
+// 可配合utils::CLoginTokener一起使用：#include <mooon/utils/tokener.h>
 class CLibssh2
 {
 public:
