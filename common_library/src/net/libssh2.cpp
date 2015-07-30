@@ -429,7 +429,7 @@ void* CLibssh2::open_scp_write_channel(const std::string& remote_filepath, int f
 
     for (;;)
     {
-        channel = libssh2_scp_send_ex(session, remote_filepath.c_str(), filemode, filesize, (long)mtime, (long)atime);
+        channel = libssh2_scp_send_ex(session, remote_filepath.c_str(), filemode&0777, filesize, (long)mtime, (long)atime);
         if (channel != NULL)
             break;
 
