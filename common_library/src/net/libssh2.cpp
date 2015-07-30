@@ -111,29 +111,6 @@ CLibssh2::~CLibssh2()
     cleanup();
 }
 
-int CLibssh2::get_session_errcode() const
-{
-    LIBSSH2_SESSION* session = static_cast<LIBSSH2_SESSION*>(_session);
-    return libssh2_session_last_errno(session);
-}
-
-std::string CLibssh2::get_session_errmsg() const
-{
-    std::string result;
-    char* errmsg;
-    int errmsg_len = 0;
-    LIBSSH2_SESSION* session = static_cast<LIBSSH2_SESSION*>(_session);
-
-    (void)libssh2_session_last_error(session, &errmsg, &errmsg_len, 1);
-    if (errmsg != NULL)
-    {
-        result = errmsg;
-        free(errmsg);
-    }
-
-    return result;
-}
-
 void CLibssh2::remotely_execute(
     const std::string& command, std::ostream& out,
     int* exitcode, std::string* exitsignal, std::string* errmsg, int* num_bytes) throw (utils::CException, sys::CSyscallException)
@@ -245,6 +222,29 @@ void CLibssh2::upload(const std::string& local_filepath, const std::string& remo
             close(local_fd);
         throw;
     }
+}
+
+int CLibssh2::get_session_errcode() const
+{
+    LIBSSH2_SESSION* session = static_cast<LIBSSH2_SESSION*>(_session);
+    return libssh2_session_last_errno(session);
+}
+
+std::string CLibssh2::get_session_errmsg() const
+{
+    std::string result;
+    char* errmsg;
+    int errmsg_len = 0;
+    LIBSSH2_SESSION* session = static_cast<LIBSSH2_SESSION*>(_session);
+
+    (void)libssh2_session_last_error(session, &errmsg, &errmsg_len, 1);
+    if (errmsg != NULL)
+    {
+        result = errmsg;
+        free(errmsg);
+    }
+
+    return result;
 }
 
 void CLibssh2::cleanup()
