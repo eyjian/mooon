@@ -54,7 +54,15 @@ public:
     void remotely_execute(const std::string& command, std::ostream& out, int* exitcode, std::string* exitsignal, std::string* errmsg, int* num_bytes) throw (utils::CException, sys::CSyscallException);
 
 private:
+    void cleanup();
+    void create_session(bool nonblocking);
+    void set_known_hosts();
+    void validate_authorization(const std::string& password);
     bool wait_socket();
+    void handshake();
+    void open_channel();
+    int close_channel(std::string* exitsignal, std::string* errmsg);
+    int read_channel(std::ostream& out);
 
 private:
     int _socket_fd;
