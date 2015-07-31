@@ -27,58 +27,58 @@ bool CDatetimeUtils::is_leap_year(int year)
     return ((0 == year%4) && (year%100 != 0)) || (0 == year%400);
 }
 
-void CDatetimeUtils::get_current_datetime(char* datetime_buffer, size_t datetime_buffer_size)
+void CDatetimeUtils::get_current_datetime(char* datetime_buffer, size_t datetime_buffer_size, const char* format)
 {
     struct tm result;
     time_t now = time(NULL);
 
     localtime_r(&now, &result);
     snprintf(datetime_buffer, datetime_buffer_size
-        ,"%04d-%02d-%02d %02d:%02d:%02d"
+        ,format
         ,result.tm_year+1900, result.tm_mon+1, result.tm_mday
         ,result.tm_hour, result.tm_min, result.tm_sec);
 }
 
-std::string CDatetimeUtils::get_current_datetime()
+std::string CDatetimeUtils::get_current_datetime(const char* format)
 {
-    char datetime_buffer[sizeof("YYYY-MM-DD HH:SS:MM")];
-    get_current_datetime(datetime_buffer, sizeof(datetime_buffer));
+    char datetime_buffer[sizeof("YYYY-MM-DD HH:SS:MM")+100];
+    get_current_datetime(datetime_buffer, sizeof(datetime_buffer), format);
     return datetime_buffer;
 }
 
-void CDatetimeUtils::get_current_date(char* date_buffer, size_t date_buffer_size)
+void CDatetimeUtils::get_current_date(char* date_buffer, size_t date_buffer_size, const char* format)
 {
     struct tm result;
     time_t now = time(NULL);
 
     localtime_r(&now, &result);
     snprintf(date_buffer, date_buffer_size
-        ,"%04d-%02d-%02d"
+        ,format
         ,result.tm_year+1900, result.tm_mon+1, result.tm_mday);
 }
 
-std::string CDatetimeUtils::get_current_date()
+std::string CDatetimeUtils::get_current_date(const char* format)
 {
-    char date_buffer[sizeof("YYYY-MM-DD")];
-    get_current_date(date_buffer, sizeof(date_buffer));
+    char date_buffer[sizeof("YYYY-MM-DD")+100];
+    get_current_date(date_buffer, sizeof(date_buffer), format);
     return date_buffer;
 }
 
-void CDatetimeUtils::get_current_time(char* time_buffer, size_t time_buffer_size)
+void CDatetimeUtils::get_current_time(char* time_buffer, size_t time_buffer_size, const char* format)
 {
     struct tm result;
     time_t now = time(NULL);
 
     localtime_r(&now, &result);
     snprintf(time_buffer, time_buffer_size
-        ,"%02d:%02d:%02d"
+        ,format
         ,result.tm_hour, result.tm_min, result.tm_sec);
 }
 
-std::string CDatetimeUtils::get_current_time()
+std::string CDatetimeUtils::get_current_time(const char* format)
 {
-    char time_buffer[sizeof("HH:SS:MM")];
-    get_current_time(time_buffer, sizeof(time_buffer));
+    char time_buffer[sizeof("HH:SS:MM")+100];
+    get_current_time(time_buffer, sizeof(time_buffer), format);
     return time_buffer;
 }
 
@@ -88,46 +88,46 @@ void CDatetimeUtils::get_current_datetime_struct(struct tm* current_datetime_str
     localtime_r(&now, current_datetime_struct);
 }
 
-void CDatetimeUtils::to_current_datetime(struct tm* current_datetime_struct, char* datetime_buffer, size_t datetime_buffer_size)
+void CDatetimeUtils::to_current_datetime(struct tm* current_datetime_struct, char* datetime_buffer, size_t datetime_buffer_size, const char* format)
 {
     snprintf(datetime_buffer, datetime_buffer_size
-        ,"%04d-%02d-%02d %02d:%02d:%02d"
+        ,format
         ,current_datetime_struct->tm_year+1900, current_datetime_struct->tm_mon+1, current_datetime_struct->tm_mday
         ,current_datetime_struct->tm_hour, current_datetime_struct->tm_min, current_datetime_struct->tm_sec);
 }
 
-std::string CDatetimeUtils::to_current_datetime(struct tm* current_datetime_struct)
+std::string CDatetimeUtils::to_current_datetime(struct tm* current_datetime_struct, const char* format)
 {
-    char datetime_buffer[sizeof("YYYY-MM-DD HH:SS:MM")];
-    to_current_datetime(current_datetime_struct, datetime_buffer, sizeof(datetime_buffer));
+    char datetime_buffer[sizeof("YYYY-MM-DD HH:SS:MM")+100];
+    to_current_datetime(current_datetime_struct, datetime_buffer, sizeof(datetime_buffer), format);
     return datetime_buffer;
 }
 
-void CDatetimeUtils::to_current_date(struct tm* current_datetime_struct, char* date_buffer, size_t date_buffer_size)
+void CDatetimeUtils::to_current_date(struct tm* current_datetime_struct, char* date_buffer, size_t date_buffer_size, const char* format)
 {
     snprintf(date_buffer, date_buffer_size
-        ,"%04d-%02d-%02d"
+        ,format
         ,current_datetime_struct->tm_year+1900, current_datetime_struct->tm_mon+1, current_datetime_struct->tm_mday);
 }
 
-std::string CDatetimeUtils::to_current_date(struct tm* current_datetime_struct)
+std::string CDatetimeUtils::to_current_date(struct tm* current_datetime_struct, const char* format)
 {
-    char date_buffer[sizeof("YYYY-MM-DD")];
-    to_current_date(current_datetime_struct, date_buffer, sizeof(date_buffer));
+    char date_buffer[sizeof("YYYY-MM-DD")+100];
+    to_current_date(current_datetime_struct, date_buffer, sizeof(date_buffer), format);
     return date_buffer;
 }
 
-void CDatetimeUtils::to_current_time(struct tm* current_datetime_struct, char* time_buffer, size_t time_buffer_size)
+void CDatetimeUtils::to_current_time(struct tm* current_datetime_struct, char* time_buffer, size_t time_buffer_size, const char* format)
 {
     snprintf(time_buffer, time_buffer_size
-        ,"%02d:%02d:%02d"
+        ,format
         ,current_datetime_struct->tm_hour, current_datetime_struct->tm_min, current_datetime_struct->tm_sec);
 }
 
-std::string CDatetimeUtils::to_current_time(struct tm* current_datetime_struct)
+std::string CDatetimeUtils::to_current_time(struct tm* current_datetime_struct, const char* format)
 {
-    char time_buffer[sizeof("HH:SS:MM")];
-    to_current_date(current_datetime_struct, time_buffer, sizeof(time_buffer));
+    char time_buffer[sizeof("HH:SS:MM")+100];
+    to_current_date(current_datetime_struct, time_buffer, sizeof(time_buffer), format);
     return time_buffer;
 }
 
@@ -324,46 +324,46 @@ bool CDatetimeUtils::datetime_struct_from_string(const char* str, time_t* dateti
     return true;
 }
 
-std::string CDatetimeUtils::to_string(time_t datetime)
+std::string CDatetimeUtils::to_string(time_t datetime, const char* format)
 {
     struct tm result;
     localtime_r(&datetime, &result);
 
-    char datetime_buffer[sizeof("YYYY-MM-DD HH:SS:MM")];
+    char datetime_buffer[sizeof("YYYY-MM-DD HH:SS:MM")+100];
     (void)snprintf(datetime_buffer, sizeof(datetime_buffer)
-        ,"%04d-%02d-%02d %02d:%02d:%02d"
+        ,format
         ,result.tm_year+1900, result.tm_mon+1, result.tm_mday
         ,result.tm_hour, result.tm_min, result.tm_sec);
 
     return datetime_buffer;
 }
 
-std::string CDatetimeUtils::to_datetime(time_t datetime)
+std::string CDatetimeUtils::to_datetime(time_t datetime, const char* format)
 {
     return CDatetimeUtils::to_string(datetime);
 }
 
-std::string CDatetimeUtils::to_date(time_t datetime)
+std::string CDatetimeUtils::to_date(time_t datetime, const char* format)
 {
     struct tm result;
     localtime_r(&datetime, &result);
 
-    char date_buffer[sizeof("YYYY-MM-DD")];
+    char date_buffer[sizeof("YYYY-MM-DD")+100];
     (void)snprintf(date_buffer, sizeof(date_buffer)
-        ,"%04d-%02d-%02d"
+        ,format
         ,result.tm_year+1900, result.tm_mon+1, result.tm_mday);
 
     return date_buffer;
 }
 
-std::string CDatetimeUtils::to_time(time_t datetime)
+std::string CDatetimeUtils::to_time(time_t datetime, const char* format)
 {
     struct tm result;
     localtime_r(&datetime, &result);
 
-    char time_buffer[sizeof("HH:SS:MM")];
+    char time_buffer[sizeof("HH:SS:MM")+100];
     (void)snprintf(time_buffer, sizeof(time_buffer)
-        ,"%02d:%02d:%02d"
+        ,format
         ,result.tm_hour, result.tm_min, result.tm_sec);
 
     return time_buffer;

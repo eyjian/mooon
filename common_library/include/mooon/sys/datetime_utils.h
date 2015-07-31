@@ -30,26 +30,26 @@ public:
     /** 判断指定年份是否为闰年 */
     static bool is_leap_year(int year);
     
-    /** 得到当前日期和时间，返回格式为: YYYY-MM-DD HH:SS:MM
+    /** 得到当前日期和时间，返回格式由参数format决定，默认为: YYYY-MM-DD HH:SS:MM
       * @datetime_buffer: 用来存储当前日期和时间的缓冲区
       * @datetime_buffer_size: datetime_buffer的字节大小，不应当于小“YYYY-MM-DD HH:SS:MM”
       */
-    static void get_current_datetime(char* datetime_buffer, size_t datetime_buffer_size);
-    static std::string get_current_datetime();    
+    static void get_current_datetime(char* datetime_buffer, size_t datetime_buffer_size, const char* format="%04d-%02d-%02d %02d:%02d:%02d");
+    static std::string get_current_datetime(const char* format="%04d-%02d-%02d %02d:%02d:%02d");
 
-    /** 得到当前日期，返回格式为: YYYY-MM-DD
+    /** 得到当前日期，返回格式由参数format决定，默认为: YYYY-MM-DD
       * @date_buffer: 用来存储当前日期的缓冲区
       * @date_buffer_size: date_buffer的字节大小，不应当于小“YYYY-MM-DD”
       */
-    static void get_current_date(char* date_buffer, size_t date_buffer_size);
-    static std::string get_current_date();
+    static void get_current_date(char* date_buffer, size_t date_buffer_size, const char* format="%04d-%02d-%02d");
+    static std::string get_current_date(const char* format="%04d-%02d-%02d");
 
-    /** 得到当前时间，返回格式为: HH:SS:MM
+    /** 得到当前时间，返回格式由参数format决定，默认为: HH:SS:MM
       * @time_buffer: 用来存储当前时间的缓冲区
       * @time_buffer_size: time_buffer的字节大小，不应当于小“HH:SS:MM”
       */
-    static void get_current_time(char* time_buffer, size_t time_buffer_size);
-    static std::string get_current_time();
+    static void get_current_time(char* time_buffer, size_t time_buffer_size, const char* format="%02d:%02d:%02d");
+    static std::string get_current_time(const char* format="%02d:%02d:%02d");
 
     /** 得到当前日期和时间结构
       * @current_datetime_struct: 指向当前日期和时间结构的指针
@@ -57,16 +57,16 @@ public:
     static void get_current_datetime_struct(struct tm* current_datetime_struct);
 
     /** 日期和时间 */
-    static void to_current_datetime(struct tm* current_datetime_struct, char* datetime_buffer, size_t datetime_buffer_size);
-    static std::string to_current_datetime(struct tm* current_datetime_struct);
+    static void to_current_datetime(struct tm* current_datetime_struct, char* datetime_buffer, size_t datetime_buffer_size, const char* format="%04d-%02d-%02d %02d:%02d:%02d");
+    static std::string to_current_datetime(struct tm* current_datetime_struct, const char* format="%04d-%02d-%02d %02d:%02d:%02d");
 
     /** 仅日期 */
-    static void to_current_date(struct tm* current_datetime_struct, char* date_buffer, size_t date_buffer_size);
-    static std::string to_current_date(struct tm* current_datetime_struct);
+    static void to_current_date(struct tm* current_datetime_struct, char* date_buffer, size_t date_buffer_size, const char* format="%04d-%02d-%02d");
+    static std::string to_current_date(struct tm* current_datetime_struct, const char* format="%04d-%02d-%02d");
 
     /** 仅时间 */
-    static void to_current_time(struct tm* current_datetime_struct, char* time_buffer, size_t time_buffer_size);
-    static std::string to_current_time(struct tm* current_datetime_struct);
+    static void to_current_time(struct tm* current_datetime_struct, char* time_buffer, size_t time_buffer_size, const char* format="%02d:%02d:%02d");
+    static std::string to_current_time(struct tm* current_datetime_struct, const char* format="%02d:%02d:%02d");
 
     /** 仅年份 */
     static void to_current_year(struct tm* current_datetime_struct, char* year_buffer, size_t year_buffer_size);
@@ -102,16 +102,16 @@ public:
     static bool datetime_struct_from_string(const char* str, time_t* datetime);
 
     // 返回“YYYY-MM-DD HH:MM:SS”格式的日期时间
-    static std::string to_string(time_t datetime);
+    static std::string to_string(time_t datetime, const char* format="%04d-%02d-%02d %02d:%02d:%02d");
 
-    // 返回“YYYY-MM-DD HH:MM:SS”格式的日期时间
-    static std::string to_datetime(time_t datetime);
+    // 返回格式由参数format决定，默认为“YYYY-MM-DD HH:MM:SS”格式的日期时间
+    static std::string to_datetime(time_t datetime, const char* format="%04d-%02d-%02d %02d:%02d:%02d");
 
-    // 返回“YYYY-MM-DD”格式的日期时间
-    static std::string to_date(time_t datetime);
+    // 返回格式由参数format决定，默认为“YYYY-MM-DD”格式的日期时间
+    static std::string to_date(time_t datetime, const char* format="%04d-%02d-%02d");
 
-    // 返回“HH:MM:SS”格式的日期时间
-    static std::string to_time(time_t datetime);
+    // 返回格式由参数format决定，默认为“HH:MM:SS”格式的日期时间
+    static std::string to_time(time_t datetime, const char* format="%02d:%02d:%02d");
 };
 
 // 取得格式化的当前日期时间，
