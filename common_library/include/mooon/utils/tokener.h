@@ -36,14 +36,17 @@ public:
       * @tokens: 存储Token的容器，可为list或vector等，只要它支持push_back()
       * @source: 被解析的字符串
       * @sep: Token分隔符
+      * @skip_sep: 是否跳过连续的sep，即如果连接相同的sep存在，则只算作一个sep
       * 返回解析出来的Token个数，但不包括容器在解析之前已存在的
       */
     template <class ContainerType>
-    static int split(ContainerType* tokens, const std::string& source, const std::string& sep)
+    static int split(ContainerType* tokens, const std::string& source, const std::string& sep, bool skip_sep=false)
     {
-        int num_tokens = 0;
-
-        if (!source.empty())
+        if (sep.empty())
+        {
+            tokens->push_back(source);
+        }
+        else if (!source.empty())
         {
             std::string str = source;
             std::string::size_type pos = str.find(sep);
@@ -52,11 +55,27 @@ public:
             {
                 std::string token = str.substr(0, pos);
                 tokens->push_back(token);
-                ++num_tokens;
 
                 if (std::string::npos == pos)
                 {
                     break;
+                }
+                if (skip_sep)
+                {
+                    bool end = false;
+                    while (0 == strncmp(sep.c_str(), &str[pos+1], sep.size()))
+                    {
+                        pos += sep.size();
+                        if (pos >= str.size())
+                        {
+                            end = true;
+                            tokens->push_back(std::string(""));
+                            break;
+                        }
+                    }
+
+                    if (end)
+                        break;
                 }
 
                 str = str.substr(pos + sep.size());
