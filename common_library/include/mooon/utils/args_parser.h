@@ -244,7 +244,11 @@ public:
         }
         if ((value < _min_value) || (value > _max_value))
         {
-            *errmsg = any2string("value[", value, "] of argument[", name(), "] not between ", _min_value, " and ", _max_value);
+            // 对于int8_t或uint8_t需要强制转换一下，否则按字符显示
+            if (sizeof(IntType) == sizeof(char))
+                *errmsg = any2string("value[", (int)value, "] of argument[", name(), "] not between ", (int)_min_value, " and ", (int)_max_value);
+            else
+                *errmsg = any2string("value[", value, "] of argument[", name(), "] not between ", _min_value, " and ", _max_value);
             return false;
         }
 
@@ -254,8 +258,12 @@ public:
 
     virtual std::string usage_string() const
     {
-        return mooon::utils::any2string(
-            "--", name(), "[", _default_value, "/", _min_value, ",", _max_value, "]: ", help_string());
+        if (sizeof(IntType) == sizeof(char))
+            return mooon::utils::any2string(
+                "--", name(), "[", (int)_default_value, "/", (int)_min_value, ",", (int)_max_value, "]: ", help_string());
+        else
+            return mooon::utils::any2string(
+                "--", name(), "[", _default_value, "/", _min_value, ",", _max_value, "]: ", help_string());
     }
 
 private:
