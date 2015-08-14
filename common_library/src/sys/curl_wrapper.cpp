@@ -141,6 +141,37 @@ void CCurlWrapper::proxy_http_get(std::string& response_header, std::string& res
     http_get(response_header, response_body, url, enable_insecure, cookie);
 }
 
+std::string CCurlWrapper::escape(const std::string& source)
+{
+    std::string result;
+    CURL* curl = (CURL*)_curl;
+
+    char *output = curl_easy_escape(curl, source.c_str(), static_cast<int>(source.length()));
+    if (output != NULL)
+    {
+        result = output;
+        curl_free(output);
+    }
+
+    return result;
+}
+
+std::string CCurlWrapper::unescape(const std::string& source_encoded)
+{
+    std::string result;
+    CURL* curl = (CURL*)_curl;
+    int outlength;
+
+    char *output = curl_easy_unescape(curl, source_encoded.c_str(), static_cast<int>(source_encoded.length()), &outlength);
+    if (output != NULL)
+    {
+        result = output;
+        curl_free(output);
+    }
+
+    return result;
+}
+
 int CCurlWrapper::get_response_code() const throw (utils::CException)
 {
     long response_code = 0;

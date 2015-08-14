@@ -24,6 +24,9 @@ public:
     void http_get(std::string& response_header, std::string& response_body, const std::string& url, bool enable_insecure=false, const char* cookie=NULL) throw (utils::CException);
     void proxy_http_get(std::string& response_header, std::string& response_body, const std::string& proxy_host, uint16_t proxy_port, const std::string& url, bool enable_insecure=false, const char* cookie=NULL) throw (utils::CException);
 
+    std::string escape(const std::string& source);
+    std::string unescape(const std::string& source_encoded);
+
 public:
     // 取得响应的状态码，如：200、403、500等
     int get_response_code() const throw (utils::CException);
