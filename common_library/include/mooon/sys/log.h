@@ -46,7 +46,8 @@ typedef enum
     LOG_LEVEL_ERROR  = 4,
     LOG_LEVEL_FATAL  = 5,    
     LOG_LEVEL_STATE  = 6,  /** 仅输出状态数据 */
-    LOG_LEVEL_TRACE  = 7
+    LOG_LEVEL_TRACE  = 7,
+    LOG_LEVEL_RAW    = 8   /** 裸日志，传入什么输出什么 */
 }log_level_t;
 
 /** 通过日志级别名得到日志级别 */
@@ -135,6 +136,8 @@ public:
 
     /** 写二进制日志 */
     virtual void bin_log(const char* filename, int lineno, const char* module_name, const char* log, uint16_t size) {}
+    /** 写裸日志 */
+    virtual void raw_log(const char* format, ...) __attribute__((format(printf, 2, 3))) {}
 };
 
 //////////////////////////////////////////////////////////////////////////

@@ -294,6 +294,14 @@ void CSafeLogger::bin_log(const char* filename, int lineno, const char* module_n
     }
 }
 
+void CSafeLogger::raw_log(const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    utils::VaListHelper vh(args);
+    do_log(LOG_LEVEL_RAW, NULL, -1, NULL, format, args);
+}
+
 int CSafeLogger::get_thread_log_fd() const
 {
     if (sg_thread_log_fd != _log_fd)
@@ -322,43 +330,52 @@ bool CSafeLogger::need_rotate(int fd) const
 
 void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno, const char* module_name, const char* format, va_list& args)
 {
-    std::stringstream log_header; // 每条日志的头
-    char datetime[sizeof("2012-12-12 12:12:12/0123456789")];
-    get_formatted_current_datetime(datetime, sizeof(datetime));
-
-    // 日志头内容：[日期][线程ID/进程ID][日志级别][模块名][代码文件名][代码行号]
-    log_header << "[" << datetime << "]"
-               << "[" << pthread_self() << "/" << getpid() << "]"
-               << "[" << get_log_level_name(log_level) << "]";
-    if (module_name != NULL)
-        log_header << "[" << module_name << "]";
-    log_header << "[" << filename << ":" << lineno << "]";
-
-    int m, n, log_real_size;
+    int log_real_size;
     utils::ScopedArray<char> log_line(new char[_log_line_size]);
-    m = snprintf(log_line.get(), _log_line_size, "%s", log_header.str().c_str());
-    n = vsnprintf(log_line.get()+m, _log_line_size-m, format, args);
-    log_real_size = m + n;
 
-    // 是否自动添加结尾用的点号
-    if (_auto_adddot)
+    if (LOG_LEVEL_RAW == log_level)
     {
-        // 如果已有结尾的点，则不再添加，以免重复
-        if (log_line.get()[log_real_size-1] != '.')
-        {
-            log_line.get()[log_real_size] = '.';
-            ++log_real_size;
-        }
+        log_real_size = utils::CStringUtils::fix_vsnprintf(log_line.get(), _log_line_size, format, args);
     }
-
-    // 是否自动换行
-    if (_auto_newline)
+    else
     {
-        // 如果已有一个换行符，则不再添加
-        if (log_line.get()[log_real_size-1] != '\n')
+        std::stringstream log_header; // 每条日志的头
+        char datetime[sizeof("2012-12-12 12:12:12/0123456789")];
+        get_formatted_current_datetime(datetime, sizeof(datetime));
+
+        // 日志头内容：[日期][线程ID/进程ID][日志级别][模块名][代码文件名][代码行号]
+        log_header << "[" << datetime << "]"
+                   << "[" << pthread_self() << "/" << getpid() << "]"
+                   << "[" << get_log_level_name(log_level) << "]";
+        if (module_name != NULL)
+            log_header << "[" << module_name << "]";
+        log_header << "[" << filename << ":" << lineno << "]";
+
+        int m, n;
+        m = utils::CStringUtils::fix_snprintf(log_line.get(), _log_line_size, "%s", log_header.str().c_str());
+        n = utils::CStringUtils::fix_vsnprintf(log_line.get()+m, _log_line_size-m, format, args);
+        log_real_size = m + n;
+
+        // 是否自动添加结尾用的点号
+        if (_auto_adddot)
         {
-            log_line.get()[log_real_size] = '\n';
-            ++log_real_size;
+            // 如果已有结尾的点，则不再添加，以免重复
+            if (log_line.get()[log_real_size-1] != '.')
+            {
+                log_line.get()[log_real_size] = '.';
+                ++log_real_size;
+            }
+        }
+
+        // 是否自动换行
+        if (_auto_newline)
+        {
+            // 如果已有一个换行符，则不再添加
+            if (log_line.get()[log_real_size-1] != '\n')
+            {
+                log_line.get()[log_real_size] = '\n';
+                ++log_real_size;
+            }
         }
     }
 

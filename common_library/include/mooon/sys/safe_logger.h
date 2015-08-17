@@ -61,7 +61,7 @@ extern CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std
 class CSafeLogger: public ILogger
 {
 public:
-    CSafeLogger(const char* log_dir, const char* log_filename, uint16_t log_line_size=4096) throw (CSyscallException);
+    CSafeLogger(const char* log_dir, const char* log_filename, uint16_t log_line_size=8192) throw (CSyscallException);
     ~CSafeLogger();
 
     /** 是否允许同时在标准输出上打印日志 */
@@ -111,6 +111,8 @@ public:
 
     /** 写二进制日志 */
     virtual void bin_log(const char* filename, int lineno, const char* module_name, const char* log, uint16_t size);
+    /** 写裸日志 */
+    virtual void raw_log(const char* format, ...) __attribute__((format(printf, 2, 3)));
 
 private:
     int get_thread_log_fd() const;
