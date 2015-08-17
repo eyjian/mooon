@@ -70,6 +70,8 @@ public:
     virtual void enable_bin_log(bool enabled);
     /** 是否允许跟踪日志，跟踪日志必须通过它来打开 */
     virtual void enable_trace_log(bool enabled);
+    /** 是否允许裸日志，裸日志必须通过它来打开 */
+    virtual void enable_raw_log(bool enabled);
     /** 是否自动在一行后添加结尾的点号，如果最后已经有点号或换符符，则不会再添加 */
     virtual void enable_auto_adddot(bool enabled);
     /** 是否自动添加换行符，如果已经有换行符，则不会再自动添加换行符 */
@@ -99,6 +101,8 @@ public:
     virtual bool enabled_state();
     /** 是否允许Trace级别日志 */
     virtual bool enabled_trace();
+    /** 是否允许Raw级别日志 */
+    virtual bool enabled_raw();
 
     virtual void log_detail(const char* filename, int lineno, const char* module_name, const char* format, ...)  __attribute__((format(printf, 5, 6)));
     virtual void log_debug(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
@@ -109,10 +113,11 @@ public:
     virtual void log_state(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
     virtual void log_trace(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
 
-    /** 写二进制日志 */
-    virtual void bin_log(const char* filename, int lineno, const char* module_name, const char* log, uint16_t size);
     /** 写裸日志 */
-    virtual void raw_log(const char* format, ...) __attribute__((format(printf, 2, 3)));
+    virtual void log_raw(const char* format, ...) __attribute__((format(printf, 2, 3)));
+
+    /** 写二进制日志 */
+    virtual void log_bin(const char* filename, int lineno, const char* module_name, const char* log, uint16_t size);
 
 private:
     int get_thread_log_fd() const;
@@ -128,6 +133,7 @@ private:
     atomic_t _log_level;
     bool _bin_log_enabled;
     bool _trace_log_enabled;
+    bool _raw_log_enabled;
 
 private:
     bool _screen_enabled;

@@ -745,7 +745,7 @@ void CLogger::log_trace(const char* filename, int lineno, const char* module_nam
     }
 }
 
-void CLogger::bin_log(const char* filename, int lineno, const char* module_name, const char* log, uint16_t size)
+void CLogger::log_bin(const char* filename, int lineno, const char* module_name, const char* log, uint16_t size)
 {
     if (enabled_bin())
     {        

@@ -146,7 +146,7 @@ public:
     virtual void log_state(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
     virtual void log_trace(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
 
-    virtual void bin_log(const char* filename, int lineno, const char* module_name, const char* log, uint16_t size);
+    virtual void log_bin(const char* filename, int lineno, const char* module_name, const char* log, uint16_t size);
 
 private: // 日志文件操作
     void close_logfile();

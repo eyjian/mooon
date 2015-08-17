@@ -71,6 +71,7 @@ CSafeLogger::CSafeLogger(const char* log_dir, const char* log_filename, uint16_t
     ,_auto_newline(true)
     ,_bin_log_enabled(false)
     ,_trace_log_enabled(false)
+    ,_raw_log_enabled(false)
     ,_screen_enabled(false)
     ,_log_dir(log_dir)
     ,_log_filename(log_filename)
@@ -116,6 +117,11 @@ void CSafeLogger::enable_bin_log(bool enabled)
 void CSafeLogger::enable_trace_log(bool enabled)
 {
     _trace_log_enabled = enabled;
+}
+
+void CSafeLogger::enable_raw_log(bool enabled)
+{
+    _raw_log_enabled = enabled;
 }
 
 void CSafeLogger::enable_auto_adddot(bool enabled)
@@ -187,6 +193,11 @@ bool CSafeLogger::enabled_state()
 bool CSafeLogger::enabled_trace()
 {
     return _trace_log_enabled;
+}
+
+bool CSafeLogger::enabled_raw()
+{
+    return _raw_log_enabled;
 }
 
 void CSafeLogger::log_detail(const char* filename, int lineno, const char* module_name, const char* format, ...)
@@ -285,21 +296,24 @@ void CSafeLogger::log_trace(const char* filename, int lineno, const char* module
     }
 }
 
-void CSafeLogger::bin_log(const char* filename, int lineno, const char* module_name, const char* log, uint16_t size)
+void CSafeLogger::log_raw(const char* format, ...)
+{
+    if (enabled_raw())
+    {
+        va_list args;
+        va_start(args, format);
+        utils::VaListHelper vh(args);
+        do_log(LOG_LEVEL_RAW, NULL, -1, NULL, format, args);
+    }
+}
+
+void CSafeLogger::log_bin(const char* filename, int lineno, const char* module_name, const char* log, uint16_t size)
 {
     if (enabled_bin())
     {
         //set_log_length(log, size);
         //_log_thread->push_log(log);
     }
-}
-
-void CSafeLogger::raw_log(const char* format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    utils::VaListHelper vh(args);
-    do_log(LOG_LEVEL_RAW, NULL, -1, NULL, format, args);
 }
 
 int CSafeLogger::get_thread_log_fd() const
