@@ -366,9 +366,10 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
         log_header << "[" << filename << ":" << lineno << "]";
 
         int m, n;
+        // 注意fix_snprintf()的返回值大小包含了结尾符
         m = utils::CStringUtils::fix_snprintf(log_line.get(), _log_line_size, "%s", log_header.str().c_str());
-        n = utils::CStringUtils::fix_vsnprintf(log_line.get()+m, _log_line_size-m, format, args);
-        log_real_size = m + n;
+        n = utils::CStringUtils::fix_vsnprintf(log_line.get()+m-1, _log_line_size-m, format, args);
+        log_real_size = m + n - 2;
 
         // 是否自动添加结尾用的点号
         if (_auto_adddot)
