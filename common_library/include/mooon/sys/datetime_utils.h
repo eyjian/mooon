@@ -27,6 +27,9 @@ SYS_NAMESPACE_BEGIN
 class CDatetimeUtils
 {
 public:
+    /** 判断是否为同一天 */
+    static bool is_same_day(time_t t1, time_t t2);
+
     /** 判断指定年份是否为闰年 */
     static bool is_leap_year(int year);
     

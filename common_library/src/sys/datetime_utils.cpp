@@ -22,6 +22,19 @@
 #include <utils/string_utils.h>
 SYS_NAMESPACE_BEGIN
 
+bool CDatetimeUtils::is_same_day(time_t t1, time_t t2)
+{
+    struct tm result1;
+    struct tm result2;
+
+    localtime_r(&t1, &result1);
+    localtime_r(&t2, &result2);
+
+    return (result1.tm_year == result2.tm_year) &&
+           (result1.tm_mon == result2.tm_mon) &&
+           (result1.tm_mday == result2.tm_mday);
+}
+
 bool CDatetimeUtils::is_leap_year(int year)
 {
     return ((0 == year%4) && (year%100 != 0)) || (0 == year%400);
