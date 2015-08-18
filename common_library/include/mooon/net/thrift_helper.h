@@ -99,6 +99,9 @@ public:
     ThriftClient* operator ->() { return get(); }
     ThriftClient* operator ->() const { return get(); }
 
+    const std::string& get_host() const { return _host; }
+    uint16_t get_port() const { return _port; }
+
 private:
     std::string _host;
     uint16_t _port;
