@@ -349,7 +349,9 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
 
     if (LOG_LEVEL_RAW == log_level)
     {
+        // fix_vsnprintf()的返回值包含了结尾符在内的长度
         log_real_size = utils::CStringUtils::fix_vsnprintf(log_line.get(), _log_line_size, format, args);
+        --log_real_size; // 结尾符不需要写入日志文件中
     }
     else
     {
