@@ -50,6 +50,13 @@ public:
         return total_elapsed_microseconds;
     }
 
+    // 相当于time(NULL)
+    // 得到构造时系统的当前时间
+    time_t get_start_seconds() const
+    {
+        return _total_time.tv_sec;
+    }
+
 private:
     struct timeval _total_time;
     struct timeval _start_time;
