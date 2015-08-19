@@ -28,7 +28,7 @@ public:
 
     // 返回微秒级的耗时
     // restart 调用之后是否重新开始计时
-    unsigned int get_elapsed_microseconds(bool restart)
+    unsigned int get_elapsed_microseconds(bool restart=true)
     {
         (void)gettimeofday(&_stop_time, NULL);
         unsigned int elapsed_microseconds = static_cast<unsigned int>((_stop_time.tv_sec - _start_time.tv_sec) * 1000000 + (_stop_time.tv_usec - _start_time.tv_usec));
