@@ -42,6 +42,13 @@ inline bool thrift_not_connected(
         || (apache::thrift::transport::TTransportException::END_OF_FILE == type);
 }
 
+inline bool thrift_not_connected(
+        apache::thrift::transport::TTransportException& ex)
+{
+    apache::thrift::transport::TTransportException::TTransportExceptionType type = ex.getType();
+    return thrift_not_connected(type);
+}
+
 // thrift客户端辅助类
 //
 // 使用示例：
@@ -63,7 +70,19 @@ inline bool thrift_not_connected(
 // {
 //     MYLOG_ERROR("thrift exception: %s\n", tx.what());
 // }
-template <class ThriftClient>
+// Transport除默认的TFramedTransport (TBufferTransports.h)，还可选择：
+// TBufferedTransport (TBufferTransports.h)
+// THttpTransport
+// TZlibTransport
+// TFDTransport (TSimpleFileTransport)
+//
+// Protocol除默认的apache::thrift::protocol::TBinaryProtocol，还可选择：
+// TCompactProtocol
+// TJSONProtocol
+// TDebugProtocol
+template <class ThriftClient,
+          class Protocol=apache::thrift::protocol::TBinaryProtocol,
+          class Transport=apache::thrift::transport::TFramedTransport>
 class CThriftClientHelper
 {
 public:
@@ -125,7 +144,19 @@ private:
 // {
 //     MYLOG_ERROR("thrift exception: %s\n", tx.what());
 // }
-template <class ThriftHandler, class ServiceProcessor>
+// ProtocolFactory除了默认的TBinaryProtocolFactory，还可选择：
+// TCompactProtocolFactory
+// TJSONProtocolFactory
+// TDebugProtocolFactory
+//
+// Server除默认的TNonblockingServer外，还可选择：
+// TSimpleServer
+// TThreadedServer
+// TThreadPoolServer
+template <class ThriftHandler,
+          class ServiceProcessor,
+          class ProtocolFactory=apache::thrift::protocol::TBinaryProtocolFactory,
+          class Server=apache::thrift::server::TNonblockingServer>
 class CThriftServerHelper
 {
 public:
@@ -152,8 +183,8 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-template <class ThriftClient>
-CThriftClientHelper<ThriftClient>::CThriftClientHelper(
+template <class ThriftClient, class Protocol, class Transport>
+CThriftClientHelper<ThriftClient, Protocol, Transport>::CThriftClientHelper(
         const std::string &host, uint16_t port,
         int connect_timeout_milliseconds, int receive_timeout_milliseconds, int send_timeout_milliseconds)
         : _host(host)
@@ -166,20 +197,22 @@ CThriftClientHelper<ThriftClient>::CThriftClientHelper(
     _sock_pool->setSendTimeout(send_timeout_milliseconds);
 
     _socket = _sock_pool;
-    _transport.reset(new apache::thrift::transport::TFramedTransport(_socket));
-    _protocol.reset(new apache::thrift::protocol::TBinaryProtocol(_transport));
+    // Transport默认为apache::thrift::transport::TFramedTransport
+    _transport.reset(new Transport(_socket));
+    // Protocol默认为apache::thrift::protocol::TBinaryProtocol
+    _protocol.reset(new Protocol(_transport));
 
     _client.reset(new ThriftClient(_protocol));
 }
 
-template <class ThriftClient>
-CThriftClientHelper<ThriftClient>::~CThriftClientHelper()
+template <class ThriftClient, class Protocol, class Transport>
+CThriftClientHelper<ThriftClient, Protocol, Transport>::~CThriftClientHelper()
 {
     close();
 }
 
-template <class ThriftClient>
-void CThriftClientHelper<ThriftClient>::connect()
+template <class ThriftClient, class Protocol, class Transport>
+void CThriftClientHelper<ThriftClient, Protocol, Transport>::connect()
 {
     if (!_transport->isOpen())
     {
@@ -187,8 +220,8 @@ void CThriftClientHelper<ThriftClient>::connect()
     }
 }
 
-template <class ThriftClient>
-void CThriftClientHelper<ThriftClient>::close()
+template <class ThriftClient, class Protocol, class Transport>
+void CThriftClientHelper<ThriftClient, Protocol, Transport>::close()
 {
     if (_transport->isOpen())
     {
@@ -197,38 +230,39 @@ void CThriftClientHelper<ThriftClient>::close()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-template <class ThriftHandler, class ServiceProcessor>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor>::serve(uint16_t port)
+template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(uint16_t port)
 {
     serve("0.0.0.0", port, 1);
 }
 
-template <class ThriftHandler, class ServiceProcessor>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor>::serve(uint16_t port, uint8_t num_threads)
+template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(uint16_t port, uint8_t num_threads)
 {
     serve("0.0.0.0", port, num_threads);
 }
 
-template <class ThriftHandler, class ServiceProcessor>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor>::serve(const std::string &ip, uint16_t port, uint8_t num_threads)
+template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(const std::string &ip, uint16_t port, uint8_t num_threads)
 {
     _handler.reset(new ThriftHandler);
     _processor.reset(new ServiceProcessor(_handler));
-    _protocol_factory.reset(new apache::thrift::protocol::TBinaryProtocolFactory());
+
+    // ProtocolFactory默认为apache::thrift::protocol::TBinaryProtocolFactory
+    _protocol_factory.reset(new ProtocolFactory());
     _thread_manager = apache::thrift::server::ThreadManager::newSimpleThreadManager(num_threads);
     _thread_factory.reset(new apache::thrift::concurrency::PosixThreadFactory());
 
     _thread_manager->threadFactory(_thread_factory);
     _thread_manager->start();
 
-    _server.reset(new apache::thrift::server::TNonblockingServer(
-            _processor, _protocol_factory, port, _thread_manager));
-
-    _server->serve();
+    // Server默认为apache::thrift::server::TNonblockingServer
+    _server.reset(new Server(_processor, _protocol_factory, port, _thread_manager));
+    _server->run(); // 这里也可直接调用serve()，但推荐run()
 }
 
-template <class ThriftHandler, class ServiceProcessor>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor>::stop()
+template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::stop()
 {
     _server->stop();
 }
