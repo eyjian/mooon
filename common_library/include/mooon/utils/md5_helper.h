@@ -23,6 +23,13 @@
 #include <stdint.h>
 UTILS_NAMESPACE_BEGIN
 
+// 使用示例：
+// uint64_t url2int(const std::string& url)
+// {
+//     CMd5Helper md5_helper;
+//     md5_helper.update(url);
+//     return md5_helper.low_8bytes();
+// }
 class CMd5Helper
 {
 public:
