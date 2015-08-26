@@ -1,5 +1,6 @@
 # Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 # 定义公共的、可直接复用的
+# 注意使用静态库时有顺序要求，假设静态库libx.a依赖于libz.a，则指定顺序须为-lx -lz（或libx.a libz.a），不能反过来为-lz -lx（或libz.a libx.a）。
 
 # 让make时显示编译命令
 set(CMAKE_VERBOSE_MAKEFILE ON)
