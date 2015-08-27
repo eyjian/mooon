@@ -92,11 +92,16 @@ public:
 class CEnhancedTokener
 {
 public:
+    const std::map<std::string, std::string>& tokens() const
+    {
+        return _name_value_pair_map;
+    }
+
     std::string operator [](const std::string& name) const
     {
         return get(name);
     }
-    
+
     bool exist(const std::string& name) const
     {
         return _name_value_pair_map.count(name) > 0;
