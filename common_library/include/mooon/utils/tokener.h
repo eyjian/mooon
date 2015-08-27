@@ -17,7 +17,7 @@
  * Author: jian yi, eyjian@qq.com or eyjian@gmail.com
  *
  * CTokener：普通的Token解析器，每个Token之间可以单个或多个字符分隔
- * CEnhancedCTokener：可用来解析URL参数形式的
+ * CEnhancedTokener：可用来解析URL参数形式的
  */
 #ifndef MOOON_UTILS_TOKENER_H
 #define MOOON_UTILS_TOKENER_H
@@ -89,7 +89,7 @@ public:
 
 // 解析如下形式的字符串：
 // name1=value2|name2=value3|name3=value3...
-class CEnhancedCTokener
+class CEnhancedTokener
 {
 public:
     std::string operator [](const std::string& name) const
@@ -158,14 +158,14 @@ private:
 };
 
 /*
- * CEnhancedCTokener使用示例：
+ * CEnhancedTokener使用示例：
 #include <mooon/utils/tokener.h>
 
 int main()
 {
     using namespace mooon::utils;
 
-    CEnhancedCTokener tokener;
+    CEnhancedTokener tokener;
     std::string str = "n1=v1&n2=va2&n3=v3";
     printf("%s\n", str.c_str());
 
