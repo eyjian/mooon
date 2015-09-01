@@ -168,9 +168,9 @@ public:
     // apache::thrift::transport::TTransportException
     // apache::thrift::TApplicationException
     // apache::thrift::TException
-    void serve(uint16_t port);
-    void serve(uint16_t port, uint8_t num_threads);
-    void serve(const std::string &ip, uint16_t port, uint8_t num_threads);
+    // 参数num_io_threads，只有当Server为TNonblockingServer才有效
+    void serve(uint16_t port, uint8_t num_worker_threads=1, uint8_t num_io_threads=1);
+    void serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads=1);
     void stop();
 
 private:
@@ -231,33 +231,30 @@ void CThriftClientHelper<ThriftClient, Protocol, Transport>::close()
 
 ////////////////////////////////////////////////////////////////////////////////
 template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(uint16_t port)
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads)
 {
-    serve("0.0.0.0", port, 1);
+    serve("0.0.0.0", port, num_worker_threads, num_io_threads);
 }
 
 template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(uint16_t port, uint8_t num_threads)
-{
-    serve("0.0.0.0", port, num_threads);
-}
-
-template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(const std::string &ip, uint16_t port, uint8_t num_threads)
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads)
 {
     _handler.reset(new ThriftHandler);
     _processor.reset(new ServiceProcessor(_handler));
 
     // ProtocolFactory默认为apache::thrift::protocol::TBinaryProtocolFactory
     _protocol_factory.reset(new ProtocolFactory());
-    _thread_manager = apache::thrift::server::ThreadManager::newSimpleThreadManager(num_threads);
+    _thread_manager = apache::thrift::server::ThreadManager::newSimpleThreadManager(num_worker_threads);
     _thread_factory.reset(new apache::thrift::concurrency::PosixThreadFactory());
 
     _thread_manager->threadFactory(_thread_factory);
     _thread_manager->start();
 
     // Server默认为apache::thrift::server::TNonblockingServer
-    _server.reset(new Server(_processor, _protocol_factory, port, _thread_manager));
+    Server* server = new Server(_processor, _protocol_factory, port, _thread_manager);
+    if (sizeof(Server) == sizeof(apache::thrift::server::TNonblockingServer))
+        server->setNumIOThreads(num_io_threads);
+    _server.reset(server);
     _server->run(); // 这里也可直接调用serve()，但推荐run()
 }
 
