@@ -21,6 +21,7 @@
 #ifndef MOOON_NET_THRIFT_HELPER_H
 #define MOOON_NET_THRIFT_HELPER_H
 #include <mooon/net/config.h>
+#include <mooon/sys/log.h>
 #include <mooon/utils/scoped_ptr.h>
 #include <arpa/inet.h>
 #include <boost/scoped_ptr.hpp>
@@ -183,6 +184,22 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+// 被thrift回调的写日志函数，由set_thrift_log_write_function()调用它
+inline void write_log_function(const char* log)
+{
+    MYLOG_INFO("%s", log);
+}
+
+// 将thrift输出写入到日志文件中
+inline void set_thrift_log_write_function()
+{
+    if (log != NULL)
+    {
+        apache::thrift::GlobalOutput.setOutputFunction(write_log_function);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 template <class ThriftClient, class Protocol, class Transport>
 CThriftClientHelper<ThriftClient, Protocol, Transport>::CThriftClientHelper(
         const std::string &host, uint16_t port,
@@ -190,6 +207,8 @@ CThriftClientHelper<ThriftClient, Protocol, Transport>::CThriftClientHelper(
         : _host(host)
         , _port(port)
 {
+    set_thrift_log_write_function();
+
     _sock_pool.reset(new apache::thrift::transport::TSocketPool());
     _sock_pool->addServer(host, (int)port);
     _sock_pool->setConnTimeout(connect_timeout_milliseconds);
@@ -239,6 +258,8 @@ void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Serve
 template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
 void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads)
 {
+    set_thrift_log_write_function();
+
     _handler.reset(new ThriftHandler);
     _processor.reset(new ServiceProcessor(_handler));
 
