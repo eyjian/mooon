@@ -41,7 +41,7 @@ fi
 influx1_byte=`cat /proc/net/dev|grep $EthXname|awk -F"[: ]+" '{ printf("%d", $3); }'`
 outflux1_byte=`cat /proc/net/dev|grep $EthXname|awk -F"[: ]+" '{ printf("%d", $11); }'`
 
-echo "Date,IN-Kbps,IN-Mbps,OUT-Kbps,OUT-Mbps"
+printf "\033[1;33mDate,IN-Kbps,IN-Mbps,OUT-Kbps,OUT-Mbps\033[m\n"
 while test 2 -gt 1;
 do
 	sleep $StatFreq
@@ -80,7 +80,11 @@ do
 	# SHOW on screen
 
 	# COLUMN: Date,IN-Kbps,IN-Mbps,OUT-Kbps,OUT-Mbps
-	echo "$dd,${influx_kbps}Kbps,${influx_mbps}Mbps,${outflux_kbps}Kbps,${outflux_mbps}Mbps"
+	#echo "$dd,${influx_kbps}Kbps,${influx_mbps}Mbps,${outflux_kbps}Kbps,${outflux_mbps}Mbps"
+	printf "$dd,${influx_kbps}Kbps,"
+	printf "\033[1;33m${influx_mbps}Mbps\033[m,"
+	printf "${outflux_kbps}Kbps,"
+	printf "\033[1;33m${outflux_mbps}Mbps\033[m\n"
 	
 	let influx1_byte=influx2_byte
 	let outflux1_byte=outflux2_byte
