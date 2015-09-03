@@ -1,6 +1,6 @@
 #!/bin/sh
 # Writed by yijian on 2008-3-20
-# Linux网卡流量统计工具
+# 流量统计工具
 # 可带一个参数：网卡名，如eth0或eth1等
 # 输出格式：统计时间,入流量(Kbps),入流量(Mbps),出流量(Kbps),出流量(Mbps)
 
@@ -20,12 +20,21 @@ influx_mbps=0
 outflux_mbps=0
 unsigned_long_max=4294967295
 
+# 检查是否存在EthXname
 Ethname=`cat /proc/net/dev|grep $EthXname|awk -F"[: ]+" '{ printf("%s", $2); }'`
 if test "$EthXname" != "$Ethname"; then
 	echo "Please set EthXname first before running"
 	echo "Usage: flux.sh ethX"
 	echo "Example: flux.sh eth0"
-	exit
+	exit 1
+fi
+# 进一步检查是否存在EthXname
+netstat -ie|grep $EthXname> /dev/null 2>&1 
+if test $? -ne 0; then
+	echo "Please set EthXname first before running"
+	echo "Usage: flux.sh ethX"
+	echo "Example: flux.sh eth0"
+	exit 1
 fi
 
 influx1_byte=`cat /proc/net/dev|grep $EthXname|awk -F"[: ]+" '{ printf("%d", $3); }'`
@@ -37,7 +46,7 @@ do
 	sleep $StatFreq
 	#influx2_byte=`cat /proc/net/dev|grep $EthXname|awk -F"[: ]+" '{ printf("%d", $3); }'`
 	#outflux2_byte=`cat /proc/net/dev|grep $EthXname|awk -F"[: ]+" '{ printf("%d", $11); }'`
-	inout_bytes=`awk -F"[: ]+" /eth1/'{ printf("%s %s", $3, $11) }' /proc/net/dev`
+	inout_bytes=`awk -F"[: ]+" /$EthXname/'{ printf("%s %s", $3, $11) }' /proc/net/dev`
 	inout_bytes_array=($inout_bytes)
 	influx2_byte=${inout_bytes_array[0]}
 	outflux2_byte=${inout_bytes_array[1]}
