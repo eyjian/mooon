@@ -37,6 +37,7 @@ if test $? -ne 0; then
 	exit 1
 fi
 
+# 初始化
 influx1_byte=`cat /proc/net/dev|grep $EthXname|awk -F"[: ]+" '{ printf("%d", $3); }'`
 outflux1_byte=`cat /proc/net/dev|grep $EthXname|awk -F"[: ]+" '{ printf("%d", $11); }'`
 
