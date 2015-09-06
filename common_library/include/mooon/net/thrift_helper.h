@@ -193,7 +193,7 @@ inline void write_log_function(const char* log)
 // 将thrift输出写入到日志文件中
 inline void set_thrift_log_write_function()
 {
-    if (log != NULL)
+    if (::mooon::sys::g_logger != NULL)
     {
         apache::thrift::GlobalOutput.setOutputFunction(write_log_function);
     }
