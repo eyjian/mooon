@@ -283,6 +283,14 @@ public:
     // source 注意它是一个字节流，不一定是字符串
     // 返回十六进制字符串
     static std::string to_hex(const std::string& source, bool lowercase=true);
+
+    // URL编码
+    static std::string encode_url(const std::string& url);
+    static std::string encode_url(const char* url, size_t url_length);
+
+    // URL解码
+    static std::string decode_url(const std::string& encoded_url);
+    static std::string decode_url(const char* encoded_url, size_t encoded_url_length);
 };
 
 UTILS_NAMESPACE_END

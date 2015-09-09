@@ -745,4 +745,94 @@ std::string CStringUtils::to_hex(const std::string& source, bool lowercase)
     return hex;
 }
 
+// 一个汉字，
+// GBK编码时占2字节，UTF8编码时占3字节
+std::string CStringUtils::encode_url(const std::string& url)
+{
+    return encode_url(url.c_str(), url.size());
+}
+
+std::string CStringUtils::encode_url(const char* url, size_t url_length)
+{
+    static char hex[] = "0123456789ABCDEF";
+    std::string result(url_length*3+1, '\0');
+
+    int i = 0;
+    while (*url != '\0')
+    {
+        char c = *url++;
+
+        if (' ' == c)
+        {
+            // 新标准将空格替换为加号+
+            result[i+0] = '%';
+            result[i+1] = '2';
+            result[i+2] = '0';
+            i += 3;
+        }
+        else if ((c >= '0' && c <= '9') ||
+                 (c >= 'a' && c <= 'z') ||
+                 (c >= 'A' && c <= 'Z') ||
+                 (c == '-') || (c == '_') ||
+                 (c == '.') || (c == '~'))
+        {
+            // RFC 3986标准定义的未保留字符 (2005年1月)
+            result[i++] = c;
+        }
+        else
+        {
+            // 有符号的c值可能是负数
+            result[i+0] = '%';
+            result[i+1] = hex[static_cast<unsigned char>(c) / 16];
+            result[i+2] = hex[static_cast<unsigned char>(c) % 16];
+            i += 3;
+        }
+    }
+
+    result.resize(i);
+    return result;
+}
+
+std::string CStringUtils::decode_url(const std::string& encoded_url)
+{
+    return decode_url(encoded_url.c_str(), encoded_url.size());
+}
+
+std::string CStringUtils::decode_url(const char* encoded_url, size_t encoded_url_length)
+{
+    std::string result(encoded_url_length+1, '\0');
+
+    int i = 0;
+    while (*encoded_url != '\0')
+    {
+        char c = *encoded_url++;
+
+        if (c != '%')
+        {
+            result[i++] = c;
+        }
+        else
+        {
+            if (!isxdigit(encoded_url[0]) ||
+                !isxdigit(encoded_url[1]))
+            {
+                result[i++] = '%';
+            }
+            else
+            {
+                char hex[3];
+                hex[0] = encoded_url[0];
+                hex[1] = encoded_url[1];
+                hex[2] = '\0';
+
+                char x = strtol(hex, NULL, 16);
+                result[i++] = x;
+                encoded_url += 2;
+            }
+        }
+    }
+
+    return result;
+}
+
 UTILS_NAMESPACE_END
