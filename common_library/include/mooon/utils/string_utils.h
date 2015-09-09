@@ -285,8 +285,9 @@ public:
     static std::string to_hex(const std::string& source, bool lowercase=true);
 
     // URL编码
-    static std::string encode_url(const std::string& url);
-    static std::string encode_url(const char* url, size_t url_length);
+    // space2plus 如果为true则空格被编码成“加号”，否则被编码成“%20”
+    static std::string encode_url(const std::string& url, bool space2plus=false);
+    static std::string encode_url(const char* url, size_t url_length, bool space2plus=false);
 
     // URL解码
     static std::string decode_url(const std::string& encoded_url);

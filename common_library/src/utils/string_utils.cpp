@@ -747,12 +747,12 @@ std::string CStringUtils::to_hex(const std::string& source, bool lowercase)
 
 // 一个汉字，
 // GBK编码时占2字节，UTF8编码时占3字节
-std::string CStringUtils::encode_url(const std::string& url)
+std::string CStringUtils::encode_url(const std::string& url, bool space2plus)
 {
-    return encode_url(url.c_str(), url.size());
+    return encode_url(url.c_str(), url.size(), space2plus);
 }
 
-std::string CStringUtils::encode_url(const char* url, size_t url_length)
+std::string CStringUtils::encode_url(const char* url, size_t url_length, bool space2plus)
 {
     static char hex[] = "0123456789ABCDEF";
     std::string result(url_length*3+1, '\0');
@@ -764,11 +764,18 @@ std::string CStringUtils::encode_url(const char* url, size_t url_length)
 
         if (' ' == c)
         {
-            // 新标准将空格替换为加号+
-            result[i+0] = '%';
-            result[i+1] = '2';
-            result[i+2] = '0';
-            i += 3;
+            if (space2plus)
+            {
+                result[i++] = '+';
+            }
+            else
+            {
+                // 新标准将空格替换为加号+
+                result[i+0] = '%';
+                result[i+1] = '2';
+                result[i+2] = '0';
+                i += 3;
+            }
         }
         else if ((c >= '0' && c <= '9') ||
                  (c >= 'a' && c <= 'z') ||
@@ -807,7 +814,11 @@ std::string CStringUtils::decode_url(const char* encoded_url, size_t encoded_url
     {
         char c = *encoded_url++;
 
-        if (c != '%')
+        if (c == '+')
+        {
+            result[i++] = ' ';
+        }
+        else if (c != '%')
         {
             result[i++] = c;
         }
