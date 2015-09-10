@@ -843,6 +843,7 @@ std::string CStringUtils::decode_url(const char* encoded_url, size_t encoded_url
         }
     }
 
+    result.resize(i);
     return result;
 }
 
