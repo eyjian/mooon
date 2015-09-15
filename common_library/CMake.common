@@ -26,6 +26,15 @@ if (NOT WIN32)
     set(BoldWhite   "${Esc}[1;37m")
 endif ()
 
+# 检查是32位还是64位系统
+if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+    message("${Yellow}x86 system${ColourReset}")
+elseif (CMAKE_SIZEOF_VOID_P EQUAL 8)
+    message("${Yellow}x86_64 system${ColourReset}")
+else ()
+    message("${Yellow}unknown bits system${ColourReset}")
+endif ()
+
 #
 # 只要MySQL、Boost、Thrift等安装在下述三个目录，即可自动发现：
 # 1) /usr/local/thirdparty
