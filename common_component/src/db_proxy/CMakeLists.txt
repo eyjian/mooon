@@ -20,11 +20,11 @@ add_library(mooon_db_proxy STATIC ${RPC})
 
 # 方便thrift文件更新时不需要从头执行cmake
 add_custom_target(
-                   rpc
+                   db_proxy_rpc
                    DEPENDS db_proxy.thrift
                  )
 add_custom_command(
-                   TARGET rpc
+                   TARGET db_proxy_rpc
                    PRE_BUILD
                    COMMAND mkdir -p ./rpc
                    COMMAND thrift --gen cpp -r -out ./rpc db_proxy.thrift
