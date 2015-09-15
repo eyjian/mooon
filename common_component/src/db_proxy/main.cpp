@@ -10,6 +10,10 @@
 
 // 服务端口
 INTEGER_ARG_DEFINE(uint16_t, port, 8080, 1000, 65535, "listen port of db proxy");
+// 是否日志打屏
+STRING_ARG_DEFINE(screen, "false", "print log on screen");
+// 日志级别
+STRING_ARG_DEFINE(log_level, "info", "set log level: detail, debug, info, error, warn, fatal");
 
 class CMainHelper: public mooon::sys::IMainHelper
 {
@@ -46,14 +50,17 @@ bool CMainHelper::init(int argc, char* argv[])
     try
     {
         mooon::sys::g_logger = mooon::sys::create_safe_logger(true, 1024);
-        mooon::sys::g_logger->enable_screen(true);
+        if (mooon::argument::screen->value() == "true")
+            mooon::sys::g_logger->enable_screen(true);
+        mooon::sys::log_level_t log_level = mooon::sys::get_log_level(mooon::argument::log_level->c_value());
+        mooon::sys::g_logger->set_log_level(log_level);
 
         std::string filepath = mooon::db_proxy::CConfigLoader::get_filepath();
         return mooon::db_proxy::CConfigLoader::get_singleton()->load(filepath);
     }
     catch (mooon::sys::CSyscallException& syscall_ex)
     {
-        fprintf(stderr, "%s\n", syscall_ex.what());
+        MYLOG_ERROR("%s\n", syscall_ex.str().c_str());
         return false;
     }
 }

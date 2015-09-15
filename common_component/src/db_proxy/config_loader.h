@@ -220,7 +220,11 @@ private:
     bool add_update_info(struct UpdateInfo* update_info, struct UpdateInfo* update_info_array[]);
 
 private:
-    sys::DBConnection* init_db_connection(int index) const;
+    // 有锁版本
+    // need_lock 用来指示是否需要加锁
+    sys::DBConnection* init_db_connection(int index, bool need_lock) const;
+    // 无锁版本，被init_db_connection()调用
+    sys::DBConnection* do_init_db_connection(int index) const;
 
 private:
     mutable sys::CReadWriteLock _read_write_lock;

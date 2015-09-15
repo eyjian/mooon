@@ -127,7 +127,7 @@ bool CConfigLoader::load(const std::string& filepath)
     std::string md5_sum = utils::CMd5Helper::lowercase_md5("%s", root.toStyledString().c_str());
     if (md5_sum == _md5_sum)
     {
-        MYLOG_DETAIL("not changed: %s\n", filepath.c_str());
+        MYLOG_DETAIL("not changed: (%s)%s\n", md5_sum.c_str(), filepath.c_str());
         return true; // 未发生变化
     }
 
@@ -153,7 +153,7 @@ bool CConfigLoader::load(const std::string& filepath)
         {
             // 启动时即连接一下，以早期发现配置等问题
             _db_info_array[i] = new struct DbInfo(*db_info_array[i]);
-            sys::DBConnection* db_connection = init_db_connection(i);
+            sys::DBConnection* db_connection = init_db_connection(i, false);
             if (db_connection != NULL)
             {
                 mooon::sys::DBConnection::destroy_connection(db_connection);
@@ -180,7 +180,7 @@ sys::DBConnection* CConfigLoader::get_db_connection(int index) const
         return NULL;
 
     if (NULL == g_db_connection[index])
-        g_db_connection[index] = init_db_connection(index);
+        g_db_connection[index] = init_db_connection(index, true);
 
     return g_db_connection[index];
 }
@@ -341,10 +341,21 @@ bool CConfigLoader::add_update_info(struct UpdateInfo* update_info, struct Updat
     return true;
 }
 
-sys::DBConnection* CConfigLoader::init_db_connection(int index) const
+sys::DBConnection* CConfigLoader::init_db_connection(int index, bool need_lock) const
 {
-    sys::ReadLockHelper read_lock(_read_write_lock);
+    if (!need_lock)
+    {
+        return do_init_db_connection(index);
+    }
+    else
+    {
+        sys::ReadLockHelper read_lock(_read_write_lock);
+        return do_init_db_connection(index);
+    }
+}
 
+sys::DBConnection* CConfigLoader::do_init_db_connection(int index) const
+{
     const struct DbInfo* _db_info = _db_info_array[index];
     sys::DBConnection* db_connection = mooon::sys::DBConnection::create_connection("mysql");
 
