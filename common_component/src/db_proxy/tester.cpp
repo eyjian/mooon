@@ -1,8 +1,22 @@
 // Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
-#include "db_proxy.h"
 #include "rpc/DbProxyService.h"
 #include <iostream>
 #include <mooon/net/thrift_helper.h>
+
+static std::ostream& operator <<(std::ostream& out, const mooon::db_proxy::DBTable& db_table)
+{
+    for (size_t row=0; row<db_table.size(); ++row)
+    {
+        const mooon::db_proxy::DBRow& db_row = db_table[row];
+        for (size_t col=0; col<db_row.size(); ++col)
+        {
+            out << db_row[col] << "\t";
+        }
+        out << std::endl;
+    }
+
+    return out;
+}
 
 int main()
 {

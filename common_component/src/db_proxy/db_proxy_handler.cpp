@@ -83,46 +83,67 @@ void CDbProxyHandler::query(DBTable& _return, const std::string& sign, const int
 
 int CDbProxyHandler::update(const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string>& tokens)
 {
+    return do_update(true, sign, seq, update_index, tokens);
+}
+
+void CDbProxyHandler::async_update(const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string>& tokens)
+{
+    // 异步版本，忽略返回值，
+    // 降低了可靠性，提升了性能。
+    (void)do_update(false, sign, seq, update_index, tokens);
+}
+
+int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string>& tokens)
+{
     CConfigLoader* config_loader = CConfigLoader::get_singleton();
     struct UpdateInfo update_info;
 
     if (check_token(seq, tokens))
     {
-        throw apache::thrift::TApplicationException("invalid parameter");
+        if (throw_exception)
+            throw apache::thrift::TApplicationException("invalid parameter");
     }
-    if (!config_loader->get_update_info(update_index, &update_info))
+    else if (!config_loader->get_update_info(update_index, &update_info))
     {
         MYLOG_ERROR("[%d]update_index[%d] not exists\n", seq, update_index);
-        throw apache::thrift::TApplicationException("update_index not exists");
+        if (throw_exception)
+            throw apache::thrift::TApplicationException("update_index not exists");
+    }
+    else
+    {
+        try
+        {
+            sys::DBConnection* db_connection = config_loader->get_db_connection(update_info.database_index);
+            if (NULL == db_connection)
+            {
+                MYLOG_ERROR("[%d]database_index[%d] not exists\n", seq, update_info.database_index);
+                if (throw_exception)
+                    throw apache::thrift::TApplicationException("database_index not exists");
+            }
+            else if (tokens.size() > utils::FORMAT_STRING_SIZE)
+            {
+                MYLOG_ERROR("[%d]too big: %d\n", seq, (int)tokens.size());
+                if (throw_exception)
+                    throw apache::thrift::TApplicationException("tokens too many");
+            }
+            else
+            {
+                std::string sql = utils::format_string(update_info.sql_template.c_str(), tokens);
+
+                MYLOG_DEBUG("%s\n", sql.c_str());
+                int affected_rows = db_connection->update("%s", sql.c_str());
+                return affected_rows;
+            }
+        }
+        catch (sys::CDBException& db_ex)
+        {
+            MYLOG_ERROR("[%d]%s\n", seq, db_ex.str().c_str());
+            if (throw_exception)
+                throw apache::thrift::TApplicationException(db_ex.str());
+        }
     }
 
-    try
-    {
-        sys::DBConnection* db_connection = config_loader->get_db_connection(update_info.database_index);
-        if (NULL == db_connection)
-        {
-            MYLOG_ERROR("[%d]database_index[%d] not exists\n", seq, update_info.database_index);
-            throw apache::thrift::TApplicationException("database_index not exists");
-        }
-        else if (tokens.size() > utils::FORMAT_STRING_SIZE)
-        {
-            MYLOG_ERROR("[%d]too big: %d\n", seq, (int)tokens.size());
-            throw apache::thrift::TApplicationException("tokens too many");
-        }
-        else
-        {
-            std::string sql = utils::format_string(update_info.sql_template.c_str(), tokens);
-
-            MYLOG_DEBUG("%s\n", sql.c_str());
-            int affected_rows = db_connection->update("%s", sql.c_str());
-            return affected_rows;
-        }
-    }
-    catch (sys::CDBException& db_ex)
-    {
-        MYLOG_ERROR("[%d]%s\n", seq, db_ex.str().c_str());
-        throw apache::thrift::TApplicationException(db_ex.str());
-    }
+    return -1;
 }
 
 } // namespace mooon
