@@ -46,6 +46,7 @@ public:
     CDBConnectionBase(size_t sql_size);
     
 private:
+    virtual std::string escape_string(const std::string& str) const { return str; }
     virtual void set_host(const std::string& db_ip, uint16_t db_port);
     virtual void set_db_name(const std::string& db_name);
     virtual void set_user(const std::string& db_user, const std::string& db_password);
@@ -97,6 +98,7 @@ public:
     ~CMySQLConnection();
 
 private:
+    virtual std::string escape_string(const std::string& str) const;
     virtual void open() throw (CDBException);
     virtual void close() throw ();
     virtual void reopen() throw (CDBException);
@@ -386,6 +388,26 @@ CMySQLConnection::CMySQLConnection(size_t sql_max)
 CMySQLConnection::~CMySQLConnection()
 {
     close(); // 不要在父类的析构中调用虚拟函数
+}
+
+std::string CMySQLConnection::escape_string(const std::string& str) const
+{
+    int escaped_string_length = 0;
+    std::string escaped_string(str.size()*2+1, '\0');
+
+    if (NULL == _mysql_handler)
+    {
+        escaped_string_length = mysql_escape_string(
+            const_cast<char*>(escaped_string.data()), str.c_str(), str.length());
+    }
+    else
+    {
+        escaped_string_length = mysql_real_escape_string(
+            _mysql_handler, const_cast<char*>(escaped_string.data()), str.c_str(), str.length());
+    }
+
+    escaped_string.resize(escaped_string_length);
+    return escaped_string;
 }
 
 void CMySQLConnection::open() throw (CDBException)

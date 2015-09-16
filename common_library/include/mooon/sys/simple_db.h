@@ -79,6 +79,10 @@ public:
 public:
     virtual ~DBConnection() {}
     
+    // 对字符串进行编码，以防止SQL注入
+    // str 需要编码的字符串，返回被编码后的字符串
+    virtual std::string escape_string(const std::string& str) const = 0;
+
     /***
      * 设置需要连接的DB的IP和服务端口号
      * 注意，只有在open()或reopen()之前调用才生效

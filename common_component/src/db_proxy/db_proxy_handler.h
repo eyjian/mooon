@@ -12,6 +12,10 @@ private:
     virtual void async_update(const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string> & tokens);
 
 private:
+    // 对字符串进行编码，以防止SQL注入
+    // 参数db_connection不能为NULL
+    void escape_tokens(void* db_connection, const std::vector<std::string>& tokens, std::vector<std::string>* escaped_tokens);
+
     // throw_exception 是否抛异常，对于同步版本需要抛，异步版本不抛
     int do_update(bool throw_exception, const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string> & tokens);
 };
