@@ -22,6 +22,7 @@
 #define MOOON_NET_THRIFT_HELPER_H
 #include <mooon/net/config.h>
 #include <mooon/sys/log.h>
+#include <mooon/utils/string_utils.h>
 #include <mooon/utils/scoped_ptr.h>
 #include <arpa/inet.h>
 #include <boost/scoped_ptr.hpp>
@@ -119,8 +120,16 @@ public:
     ThriftClient* operator ->() { return get(); }
     ThriftClient* operator ->() const { return get(); }
 
+    // 取thrift服务端的IP地址
     const std::string& get_host() const { return _host; }
+    // 取thrift服务端的端口号
     uint16_t get_port() const { return _port; }
+
+    // 返回可读的标识，常用于记录日志
+    std::string str() const
+    {
+        return utils::CStringUtils::format_string("thrift://%s:%u", _host.c_str(), _port);
+    }
 
 private:
     std::string _host;
