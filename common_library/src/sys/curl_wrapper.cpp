@@ -4,9 +4,73 @@
 
 #if HAVE_CURL==1
 #include <curl/curl.h>
-
 SYS_NAMESPACE_BEGIN
 
+CHttpPostData::CHttpPostData()
+    : _last(NULL), _post(NULL)
+{
+}
+
+CHttpPostData::~CHttpPostData()
+{
+    reset();
+}
+
+void CHttpPostData::reset()
+{
+    if (_post != NULL)
+    {
+        struct curl_httppost* post = (struct curl_httppost*)_post;
+        curl_formfree(post);
+        _post = NULL;
+    }
+}
+
+void CHttpPostData::add_content(const std::string& name, const std::string& contents, const std::string& content_type) throw (utils::CException)
+{
+    CURLFORMcode errcode = CURL_FORMADD_OK;
+
+    if (content_type.empty())
+    {
+        errcode = curl_formadd((struct curl_httppost**)&_post, (struct curl_httppost**)&_last,
+            CURLFORM_COPYNAME, name.c_str(),
+            CURLFORM_COPYCONTENTS, contents.c_str(), CURLFORM_END);
+    }
+    else
+    {
+        errcode = curl_formadd((struct curl_httppost**)&_post, (struct curl_httppost**)&_last,
+            CURLFORM_COPYNAME, name.c_str(),
+            CURLFORM_COPYCONTENTS, contents.c_str(),
+            CURLFORM_CONTENTTYPE, content_type.c_str(), CURLFORM_END);
+    }
+
+    if (errcode != CURL_FORMADD_OK)
+        THROW_EXCEPTION(utils::CStringUtils::format_string("add content[%s] error", name.c_str()), errcode);
+}
+
+void CHttpPostData::add_file(const std::string& name, const std::string& filepath, const std::string& content_type) throw (utils::CException)
+{
+    CURLFORMcode errcode = CURL_FORMADD_OK;
+
+    if (content_type.empty())
+    {
+        errcode = curl_formadd((struct curl_httppost**)&_post, (struct curl_httppost**)&_last,
+            CURLFORM_COPYNAME, name.c_str(),
+            CURLFORM_FILE, filepath.c_str(), CURLFORM_END);
+    }
+    else
+    {
+        errcode = curl_formadd((struct curl_httppost**)&_post, (struct curl_httppost**)&_last,
+            CURLFORM_COPYNAME, name.c_str(),
+            CURLFORM_FILE, filepath.c_str(),
+            CURLFORM_CONTENTTYPE, content_type.c_str(), CURLFORM_END);
+    }
+
+    if (errcode != CURL_FORMADD_OK)
+        THROW_EXCEPTION(utils::CStringUtils::format_string("add file[%s] error", name.c_str()), errcode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void CCurlWrapper::global_init()
 {
     curl_global_init(CURL_GLOBAL_ALL);
@@ -121,6 +185,11 @@ void CCurlWrapper::http_get(std::string& response_header, std::string& response_
             THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
     }
 
+    // 之前如何调用了非GET如POST，这个是必须的
+    errcode = curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
     errcode = curl_easy_perform(curl);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
@@ -140,6 +209,70 @@ void CCurlWrapper::proxy_http_get(std::string& response_header, std::string& res
 
     http_get(response_header, response_body, url, enable_insecure, cookie);
 }
+
+void CCurlWrapper::http_post(const CHttpPostData* http_post_data, std::string& response_header, std::string& response_body, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
+{
+    CURLcode errcode;
+    CURL* curl = (CURL*)_curl;
+
+    errcode = curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    // CURLOPT_HEADERFUNCTION
+    errcode = curl_easy_setopt(curl, CURLOPT_HEADERDATA, &response_header);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    // CURLOPT_WRITEDATA
+    errcode = curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    // 相当于curl命令的“-k”或“--insecure”参数
+    int ssl_verifypeer = enable_insecure? 0: 1;
+    //int ssl_verifyhost = enable_insecure? 0: 1;
+    errcode = curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYPEER, ssl_verifypeer);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    //errcode = curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYHOST, ssl_verifyhost);
+    //if (errcode != CURLE_OK)
+    //    THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    // 设置cookie
+    if (cookie != NULL)
+    {
+        errcode = curl_easy_setopt(curl, CURLOPT_COOKIE, cookie);
+        if (errcode != CURLE_OK)
+            THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+    }
+
+    // 之前如何调用了非GET如POST，这个是必须的
+    errcode = curl_easy_setopt(curl, CURLOPT_HTTPPOST, http_post_data->get_post());
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    errcode = curl_easy_perform(curl);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+}
+
+void CCurlWrapper::proxy_http_post(const CHttpPostData* http_post_data, std::string& response_header, std::string& response_body, const std::string& proxy_host, uint16_t proxy_port, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
+{
+    CURLcode errcode;
+    CURL* curl = (CURL*)_curl;
+
+    errcode = curl_easy_setopt(curl, CURLOPT_PROXY, proxy_host.c_str());
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+    errcode = curl_easy_setopt(curl, CURLOPT_PROXYPORT, proxy_port);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    http_post(http_post_data, response_header, response_body, url, enable_insecure, cookie);
+}
+
 
 std::string CCurlWrapper::escape(const std::string& source)
 {
@@ -193,7 +326,8 @@ extern "C" int main(int argc, char* argv[])
     
     try
     {
-        CCurlWrapper curl_wrapper(2);
+        const int timeout_seconds = 2;
+        CCurlWrapper curl_wrapper(timeout_seconds);
         std::string response_body;
         curl_wrapper.get(NULL, &response_body, argv[1]);
         printf("result =>\n%s\n", response_body.c_str());
