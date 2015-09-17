@@ -18,6 +18,7 @@
  */
 #ifndef MOOON_OBSERVER_CONFIG_H
 #define MOOON_OBSERVER_CONFIG_H
+#include <mooon/utils/config.h>
 
 /***
   * 编译宏开关

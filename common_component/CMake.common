@@ -22,3 +22,10 @@ elseif (EXISTS /usr/local/mooon/CMake.common)
 else ()
     message("not found common_library or installed")
 endif ()
+
+# 包含自己
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+link_directories(src/dispatcher)
+link_directories(src/http_parser)
+link_directories(src/observer)
+link_directories(src/server)

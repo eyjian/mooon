@@ -22,7 +22,7 @@
 OBSERVER_NAMESPACE_BEGIN
 
 /***
-  * 数据上报器
+  * 上报或记录日志
   */
 class CALLBACK_INTERFACE IDataReporter
 {
@@ -30,11 +30,11 @@ public:
     /** 虚拟析构函数，仅为应付编译器告警 */
     virtual ~IDataReporter() {}
 
-    /** 上报文本数据 */
-	virtual void report(const char* format, ...) = 0;
+    /** 上报或记录日志 */
+	virtual void report(const char* format, ...) {}
 
-    /** 上报二进制数据 */
-    virtual void report(const void* data, uint32_t data_size) = 0;
+	/** 上报或记录日志 */
+    virtual void report(const void* data, uint32_t data_size) {}
 };
 
 OBSERVER_NAMESPACE_END

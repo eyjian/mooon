@@ -1,6 +1,7 @@
 // Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 #include "db_proxy_handler.h"
 #include "config_loader.h"
+#include <mooon/observer/observer_manager.h>
 #include <mooon/sys/log.h>
 #include <mooon/sys/simple_db.h>
 #include <mooon/utils/format_string.h>
@@ -9,66 +10,112 @@
 #include <vector>
 namespace mooon { namespace db_proxy {
 
+CDbProxyHandler::CDbProxyHandler()
+{
+    mooon::observer::IObserverManager* observer_mananger = mooon::observer::get();
+    if (observer_mananger != NULL)
+        observer_mananger->register_observee(this);
+
+    reset();
+}
+
+CDbProxyHandler::~CDbProxyHandler()
+{
+    mooon::observer::IObserverManager* observer_mananger = mooon::observer::get();
+    if (observer_mananger != NULL)
+        observer_mananger->deregister_objservee(this);
+}
+
 void CDbProxyHandler::query(DBTable& _return, const std::string& sign, const int32_t seq, const int32_t query_index, const std::vector<std::string> & tokens, const int32_t limit, const int32_t limit_start)
 {
     CConfigLoader* config_loader = CConfigLoader::get_singleton();
     struct QueryInfo query_info;
     std::vector<std::string> escaped_tokens;
 
-    if (!config_loader->get_query_info(query_index, &query_info))
-    {
-        MYLOG_ERROR("query_index[%d] not exists\n", query_index);
-        throw apache::thrift::TApplicationException("query_index not exists");
-    }
-    if (sign != query_info.sign)
-    {
-        MYLOG_ERROR("sign[%s] error: %s\n", sign.c_str(), query_info.sign.c_str());
-        throw apache::thrift::TApplicationException("sign error");
-    }
-
     try
     {
-        sys::DBConnection* db_connection = config_loader->get_db_connection(query_info.database_index);
-        if (NULL == db_connection)
+        if (!config_loader->get_query_info(query_index, &query_info))
         {
-            MYLOG_ERROR("database_index[%d] not exists\n", query_info.database_index);
-            throw apache::thrift::TApplicationException("database_index not exists");
+            MYLOG_ERROR("query_index[%d] not exists\n", query_index);
+            throw apache::thrift::TApplicationException("query_index not exists");
         }
-        else if (tokens.size() > utils::FORMAT_STRING_SIZE)
+        if (sign != query_info.sign)
         {
-            MYLOG_ERROR("[%d]too big: %d\n", seq, (int)tokens.size());
-            throw apache::thrift::TApplicationException("tokens too many");
+            MYLOG_ERROR("sign[%s] error: %s\n", sign.c_str(), query_info.sign.c_str());
+            throw apache::thrift::TApplicationException("sign error");
         }
-        else
-        {
-            std::vector<std::string> escaped_tokens;
-            escape_tokens(db_connection, tokens, &escaped_tokens);
-            std::string sql = utils::format_string(query_info.sql_template.c_str(), escaped_tokens);
 
-            MYLOG_DEBUG("%s LIMIT %d,%d\n", sql.c_str(), limit_start, limit);
-            if (limit_start > 0)
-                db_connection->query(_return, "%s LIMIT %d,%d", sql.c_str(), limit_start, limit);
+        try
+        {
+            sys::DBConnection* db_connection = config_loader->get_db_connection(query_info.database_index);
+            if (NULL == db_connection)
+            {
+                MYLOG_ERROR("database_index[%d] not exists\n", query_info.database_index);
+                throw apache::thrift::TApplicationException("database_index not exists");
+            }
+            else if (tokens.size() > utils::FORMAT_STRING_SIZE)
+            {
+                MYLOG_ERROR("[%d]too big: %d\n", seq, (int)tokens.size());
+                throw apache::thrift::TApplicationException("tokens too many");
+            }
             else
-                db_connection->query(_return, "%s LIMIT %d", sql.c_str(), limit);
+            {
+                std::vector<std::string> escaped_tokens;
+                escape_tokens(db_connection, tokens, &escaped_tokens);
+                std::string sql = utils::format_string(query_info.sql_template.c_str(), escaped_tokens);
+
+                MYLOG_DEBUG("%s LIMIT %d,%d\n", sql.c_str(), limit_start, limit);
+                if (limit_start > 0)
+                    db_connection->query(_return, "%s LIMIT %d,%d", sql.c_str(), limit_start, limit);
+                else
+                    db_connection->query(_return, "%s LIMIT %d", sql.c_str(), limit);
+
+                ++_num_query_success;
+            }
+        }
+        catch (sys::CDBException& db_ex)
+        {
+            MYLOG_ERROR("[%d]%s\n", seq, db_ex.str().c_str());
+            throw apache::thrift::TApplicationException(db_ex.str());
         }
     }
-    catch (sys::CDBException& db_ex)
+    catch (...)
     {
-        MYLOG_ERROR("[%d]%s\n", seq, db_ex.str().c_str());
-        throw apache::thrift::TApplicationException(db_ex.str());
+        ++_num_query_failure;
+        throw;
     }
 }
 
 int CDbProxyHandler::update(const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string>& tokens)
 {
-    return do_update(true, sign, seq, update_index, tokens);
+    int ret = -1;
+
+    try
+    {
+        ret = do_update(true, sign, seq, update_index, tokens);
+        if (-1 == ret)
+            ++_num_update_failure;
+        else
+            ++_num_update_success;
+    }
+    catch (...)
+    {
+        ++_num_update_failure;
+        throw;
+    }
+
+    return ret;
 }
 
 void CDbProxyHandler::async_update(const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string>& tokens)
 {
     // 异步版本，忽略返回值，
     // 降低了可靠性，提升了性能。
-    (void)do_update(false, sign, seq, update_index, tokens);
+    int ret = do_update(false, sign, seq, update_index, tokens);
+    if (-1 == ret)
+        ++_num_async_update_failure;
+    else
+        ++_num_async_update_success;
 }
 
 void CDbProxyHandler::escape_tokens(void* db_connection, const std::vector<std::string>& tokens, std::vector<std::string>* escaped_tokens)
@@ -133,6 +180,30 @@ int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, co
     }
 
     return -1;
+}
+
+void CDbProxyHandler::on_report(mooon::observer::IDataReporter* data_reporter)
+{
+    if ((_num_query_success != 0) && (_num_query_failure != 0) &&
+        (_num_update_success != 0) && (_num_update_failure != 0) &&
+        (_num_async_update_success != 0) && (_num_async_update_failure != 0))
+    {
+        data_reporter->report("%d,%d,%d,%d\n",
+            _num_query_success, _num_query_failure,
+            _num_update_success, _num_update_failure,
+            _num_async_update_success, _num_async_update_failure);
+        reset();
+    }
+}
+
+void CDbProxyHandler::reset()
+{
+    _num_query_success = 0;
+    _num_query_failure = 0;
+    _num_update_success = 0;
+    _num_update_failure = 0;
+    _num_async_update_success = 0;
+    _num_async_update_failure = 0;
 }
 
 } // namespace mooon

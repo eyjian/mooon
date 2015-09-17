@@ -2,14 +2,14 @@
 
 include_directories(.)
 include_directories(../..)
-link_libraries(libmooon.a)
+link_libraries(libmooon_observer.a libmooon.a)
 
 # 执行cmake时，就编译好thrift文件
 exec_program(mkdir ARGS -p ${CMAKE_CURRENT_SOURCE_DIR}/rpc)
 exec_program(${THRIFT_HOME}/bin/thrift ARGS --gen cpp -r -out ${CMAKE_CURRENT_SOURCE_DIR}/rpc ${CMAKE_CURRENT_SOURCE_DIR}/db_proxy.thrift)
 
 set(RPC rpc/DbProxyService.cpp rpc/db_proxy_constants.cpp rpc/db_proxy_types.cpp)
-add_executable(db_proxy main.cpp db_proxy_handler.cpp config_loader.cpp ${RPC})
+add_executable(db_proxy main.cpp db_proxy_handler.cpp config_loader.cpp data_reporter.cpp ${RPC})
 target_link_libraries(db_proxy libjsoncpp.a libmysqlclient_r.a libthriftnb.a libthrift.a libevent.a)
 
 add_executable(db_proxy-tester tester.cpp ${RPC})
