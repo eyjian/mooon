@@ -5,7 +5,6 @@
 #include "rpc/DbProxyService.h" // 执行cmake或make rpc时生成的文件
 #include <mooon/net/thrift_helper.h>
 #include <mooon/observer/observer_manager.h>
-#include <mooon/sys/dir_utils.h>
 #include <mooon/sys/main_template.h>
 #include <mooon/sys/safe_logger.h>
 #include <mooon/sys/thread_engine.h>
@@ -34,11 +33,8 @@ private:
     virtual void fini();
 
 private:
-    std::string get_data_dirpath() const;
-
-private:
     mooon::utils::ScopedPtr<mooon::sys::CSafeLogger> _data_logger;
-    mooon::utils::ScopedPtr<mooon::db_proxy::CDataReporter> _data_reporter;
+    mooon::utils::ScopedPtr<mooon::observer::CDefaultDataReporter> _data_reporter;
     mooon::observer::IObserverManager* _observer_manager;
     mooon::net::CThriftServerHelper<
         mooon::db_proxy::CDbProxyHandler, mooon::db_proxy::DbProxyServiceProcessor> _thrift_server;
@@ -86,13 +82,13 @@ bool CMainHelper::init(int argc, char* argv[])
         int report_frequency_seconds = mooon::argument::report_frequency_seconds->value();
         if (report_frequency_seconds > 0)
         {
-            std::string data_dirpath = get_data_dirpath();
+            std::string data_dirpath = mooon::observer::get_data_dirpath();
             if (data_dirpath.empty())
                 return false;
 
             _data_logger.reset(new mooon::sys::CSafeLogger(data_dirpath.c_str(), "db_proxy.data"));
             _data_logger->enable_raw_log(true);
-            _data_reporter.reset(new mooon::db_proxy::CDataReporter(_data_logger.get()));
+            _data_reporter.reset(new mooon::observer::CDefaultDataReporter(_data_logger.get()));
 
             _observer_manager = mooon::observer::create(_data_reporter.get(), report_frequency_seconds);
             if (NULL == _observer_manager)
@@ -129,28 +125,4 @@ bool CMainHelper::run()
 
 void CMainHelper::fini()
 {
-}
-
-std::string CMainHelper::get_data_dirpath() const
-{
-    std::string program_path = mooon::sys::CUtils::get_program_path();
-    std::string data_dirpath = program_path + std::string("/../data");
-
-    try
-    {
-        if (mooon::sys::CDirUtils::exist(data_dirpath))
-        {
-            return data_dirpath;
-        }
-        else
-        {
-            MYLOG_ERROR("datadir[%s] not exist\n", data_dirpath.c_str());
-        }
-    }
-    catch (mooon::sys::CSyscallException& syscall_ex)
-    {
-        MYLOG_ERROR("%s\n", syscall_ex.str().c_str());
-    }
-
-    return std::string("");
 }

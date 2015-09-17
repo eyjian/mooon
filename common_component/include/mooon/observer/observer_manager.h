@@ -64,5 +64,11 @@ extern IObserverManager* get();
   */
 extern IObserverManager* create(IDataReporter* data_reporter, uint16_t report_frequency_seconds);
 
+/***
+ * 取得数据目录，用来存放observer收集到的数据
+ * 数据目录强制为与程序所在目录的同级目录，目录名固定为data
+ */
+extern std::string get_data_dirpath();
+
 OBSERVER_NAMESPACE_END
 #endif // MOOON_OBSERVER_MANAGER_H

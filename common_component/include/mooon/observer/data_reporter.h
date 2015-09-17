@@ -19,6 +19,10 @@
 #ifndef MOOON_OBSERVER_DATA_REPORTER_H
 #define MOOON_OBSERVER_DATA_REPORTER_H
 #include <mooon/observer/config.h>
+#include <stdarg.h>
+#include <mooon/sys/log.h>
+#include <mooon/utils/scoped_ptr.h>
+#include <mooon/utils/string_utils.h>
 OBSERVER_NAMESPACE_BEGIN
 
 /***
@@ -35,6 +39,35 @@ public:
 
 	/** 上报或记录日志 */
     virtual void report(const void* data, uint32_t data_size) {}
+};
+
+/**
+ * 默认的，能满足多数时候的需求
+ */
+class CDefaultDataReporter: public IDataReporter
+{
+public:
+    // line_length 第行数据的最大长度
+    CDefaultDataReporter(mooon::sys::ILogger* report_logger, size_t line_length=1024)
+        : _report_logger(report_logger), _line_length(line_length)
+    {
+    }
+
+private:
+    virtual void report(const char* format, ...)
+    {
+        va_list ap;
+        utils::ScopedArray<char> line(new char[_line_length+1]);
+
+        va_start(ap, format);
+        utils::CStringUtils::fix_vsnprintf(line.get(), _line_length+1, format, ap);
+        _report_logger->log_raw("%s", line.get());
+        va_end(ap);
+    }
+
+private:
+    mooon::sys::ILogger* _report_logger;
+    size_t _line_length;
 };
 
 OBSERVER_NAMESPACE_END

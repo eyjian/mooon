@@ -17,6 +17,8 @@
  * Author: JianYi, eyjian@qq.com or eyjian@gmail.com
  */
 #include "observer_context.h"
+#include <mooon/sys/dir_utils.h>
+#include <mooon/sys/utils.h>
 OBSERVER_NAMESPACE_BEGIN
 
 CObserverContext::CObserverContext(IDataReporter* data_reporter, uint16_t report_frequency_seconds)
@@ -103,6 +105,30 @@ IObserverManager* create(IDataReporter* data_reporter, uint16_t report_frequency
     }
     
     return g_observer_context;
+}
+
+std::string get_data_dirpath()
+{
+    std::string program_path = mooon::sys::CUtils::get_program_path();
+    std::string data_dirpath = program_path + std::string("/../data");
+
+    try
+    {
+        if (mooon::sys::CDirUtils::exist(data_dirpath))
+        {
+            return data_dirpath;
+        }
+        else
+        {
+            MYLOG_ERROR("datadir[%s] not exist\n", data_dirpath.c_str());
+        }
+    }
+    catch (mooon::sys::CSyscallException& syscall_ex)
+    {
+        MYLOG_ERROR("%s\n", syscall_ex.str().c_str());
+    }
+
+    return std::string("");
 }
 
 OBSERVER_NAMESPACE_END

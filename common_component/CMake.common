@@ -1,6 +1,13 @@
 # Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 # 定义公共的、可直接复用的
 
+# 先包含自己，以让自己源码所在目录的include放在前面
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+link_directories(src/dispatcher)
+link_directories(src/http_parser)
+link_directories(src/observer)
+link_directories(src/server)
+
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../common_library/CMake.common)
     message("found ${CMAKE_CURRENT_SOURCE_DIR}/../common_library")
     set(MOOON_HOME ${CMAKE_CURRENT_SOURCE_DIR}/../common_library)
@@ -22,10 +29,3 @@ elseif (EXISTS /usr/local/mooon/CMake.common)
 else ()
     message("not found common_library or installed")
 endif ()
-
-# 包含自己
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-link_directories(src/dispatcher)
-link_directories(src/http_parser)
-link_directories(src/observer)
-link_directories(src/server)
