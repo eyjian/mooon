@@ -574,6 +574,11 @@ std::string CStringUtils::extract_dirpath(const char* filepath)
     return dirpath;
 }
 
+// 提取示例（printf("%s => %s\n", str.c_str(), extract_filename(str).c_str());）：
+// /a/b/c => c
+// abc => abc
+// /abc => abc
+// abc.cpp => abc.cpp
 std::string CStringUtils::extract_filename(const std::string& filepath)
 {
     std::string filename;
@@ -584,6 +589,24 @@ std::string CStringUtils::extract_filename(const std::string& filepath)
         filename.assign(slash_position+1);
 
     return filename;
+}
+
+/**
+ * 提取示例：
+/a/b/c => c
+abc => abc
+/abc => abc
+abc.txt => abc.txt
+. => .
+ =>
+ */
+const char* CStringUtils::extract_filename(const char* filepath)
+{
+    const char* slash_position = strrchr(filepath, '/');
+    if (NULL == slash_position)
+        return filepath;
+
+    return slash_position + 1;
 }
 
 // snprintf()第2个参数的大小，要求包含结尾符'\0'

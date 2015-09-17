@@ -244,9 +244,30 @@ public:
     
     /***
       * 从文件路径中提取出文件名
-      * @return 返回提取到文件名，如果filepath是一个目录形式，则返回空串
+      * @return 返回提取到文件名
+      *         如果输入是空则返回空，如果输入是.则返回.，如果输入是/则返回空
+      * 提取示例：
+      * /a/b/c => c
+      * abc => abc
+      * /abc => abc
+      * abc.cpp => abc.cpp
+      * / =>
+      *   =>
+      * . => .
       */
     static std::string extract_filename(const std::string& filepath);
+
+    // 返回filepath上文件名的起始位置
+    /**
+     * 提取示例：
+    /a/b/c => c
+    abc => abc
+    /abc => abc
+    abc.txt => abc.txt
+    . => .
+     =>
+     */
+    static const char* extract_filename(const char* filepath);
 
     /***
       * 通过格式化生成一个字符串
