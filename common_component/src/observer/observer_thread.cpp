@@ -32,9 +32,12 @@ void CObserverThread::run()
     sys::CUtils::set_process_name("ob-thread");
 #endif // ENABLE_SET_OBSERVER_THREAD_NAME
 
+    uint16_t report_frequency_seconds = _observer_context->get_report_frequency_seconds();
+    int milliseconds = report_frequency_seconds * 1000;
+
 	while (!is_stop())
 	{
-        do_millisleep(_observer_context->get_report_frequency_seconds());
+        do_millisleep(milliseconds);
 		_observer_context->collect();
 	}
 }
