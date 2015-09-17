@@ -19,7 +19,7 @@ INTEGER_ARG_DEFINE(uint16_t, port, 4077, 1000, 65535, "listen port of db proxy")
 STRING_ARG_DEFINE(screen, "false", "print log on screen");
 // 日志级别
 STRING_ARG_DEFINE(log_level, "info", "set log level: detail, debug, info, error, warn, fatal");
-// 状态数据上报频率，单位为秒
+// 数据上报频率（单位为秒），如果值为0表示禁止收集数据
 INTEGER_ARG_DEFINE(uint16_t, report_frequency_seconds, 0, 0, 3600, "frequency seconds to report data");
 
 class CMainHelper: public mooon::sys::IMainHelper
