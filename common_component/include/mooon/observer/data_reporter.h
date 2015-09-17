@@ -61,8 +61,9 @@ private:
 
         va_start(ap, format);
         utils::CStringUtils::fix_vsnprintf(line.get(), _line_length+1, format, ap);
-        _report_logger->log_raw("%s", line.get());
+
         va_end(ap);
+        _report_logger->log_raw("%s", line.get());
     }
 
 private:
