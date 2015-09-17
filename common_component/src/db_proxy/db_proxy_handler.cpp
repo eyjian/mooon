@@ -2,6 +2,7 @@
 #include "db_proxy_handler.h"
 #include "config_loader.h"
 #include <mooon/observer/observer_manager.h>
+#include <mooon/sys/datetime_utils.h>
 #include <mooon/sys/log.h>
 #include <mooon/sys/simple_db.h>
 #include <mooon/utils/format_string.h>
@@ -184,11 +185,11 @@ int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, co
 
 void CDbProxyHandler::on_report(mooon::observer::IDataReporter* data_reporter)
 {
-    if ((_num_query_success != 0) && (_num_query_failure != 0) &&
-        (_num_update_success != 0) && (_num_update_failure != 0) &&
-        (_num_async_update_success != 0) && (_num_async_update_failure != 0))
+    if ((_num_query_success != 0) || (_num_query_failure != 0) ||
+        (_num_update_success != 0) || (_num_update_failure != 0) ||
+        (_num_async_update_success != 0) || (_num_async_update_failure != 0))
     {
-        data_reporter->report("%d,%d,%d,%d\n",
+        data_reporter->report("[%s]%d,%d,%d,%d,%d,%d\n", sys::get_formatted_current_datetime(true).c_str(),
             _num_query_success, _num_query_failure,
             _num_update_success, _num_update_failure,
             _num_async_update_success, _num_async_update_failure);
