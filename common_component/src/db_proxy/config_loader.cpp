@@ -211,7 +211,7 @@ bool CConfigLoader::get_update_info(int index, struct UpdateInfo* update_info) c
 
 bool CConfigLoader::load_database(const Json::Value& json, struct DbInfo* db_info_array[])
 {
-    for (size_t i=0; i<json.size(); ++i)
+    for (int i=0; i<static_cast<int>(json.size()); ++i)
     {
         struct DbInfo* db_info = new struct DbInfo(json[i]);
 
@@ -236,7 +236,7 @@ bool CConfigLoader::load_database(const Json::Value& json, struct DbInfo* db_inf
 
 bool CConfigLoader::load_query(const Json::Value& json, struct QueryInfo* query_info_array[])
 {
-    for (size_t i=0; i<json.size(); ++i)
+    for (int i=0; i<static_cast<int>(json.size()); ++i)
     {
         struct QueryInfo* query_info = new struct QueryInfo(json[i]);
 
@@ -261,7 +261,7 @@ bool CConfigLoader::load_query(const Json::Value& json, struct QueryInfo* query_
 
 bool CConfigLoader::load_update(const Json::Value& json, struct UpdateInfo* update_info_array[])
 {
-    for (size_t i=0; i<json.size(); ++i)
+    for (int i=0; i<static_cast<int>(json.size()); ++i)
     {
         struct UpdateInfo* update_info = new struct UpdateInfo(json[i]);
 
