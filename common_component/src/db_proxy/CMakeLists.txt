@@ -15,6 +15,11 @@ target_link_libraries(db_proxy libjsoncpp.a libmysqlclient_r.a libthriftnb.a lib
 add_executable(db_proxy-tester tester.cpp ${RPC})
 target_link_libraries(db_proxy-tester libjsoncpp.a libthriftnb.a libthrift.a libevent.a)
 
+# DBConnection依赖于SQLite3，虽然db_proxy并未使用SQLite3
+if (HAVE_SQLITE3)
+    target_link_libraries(db_proxy libsqlite3.a)
+endif ()
+
 # 供C++客户端使用的静态库
 add_library(mooon_db_proxy STATIC ${RPC})
 
