@@ -10,3 +10,8 @@ cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local/thirdparty/mooo
 如果机器上没有cmake工具，则需要先安装好。对于可连接外网，并有yum的机器，只需要执行：yum install cmake即可安装cmake。
 
 注意使用静态库时有顺序要求，假设静态库libx.a依赖于libz.a，则指定顺序须为-lx -lz（或libx.a libz.a），不能反过来为-lz -lx（或libz.a libx.a）。
+
+如果需要使用SQLite3，则cmake时需要加上参数：-DUSE_SQLITE3=1，如：
+cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local/thirdparty/mooon -DUSE_SQLITE3=1 .
+
+
