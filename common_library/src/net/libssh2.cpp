@@ -294,6 +294,7 @@ void CLibssh2::create_session(bool nonblocking)
     catch (...)
     {
         close(socket_fd);
+        throw;
     }
 }
 
