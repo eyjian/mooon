@@ -34,7 +34,7 @@ public:
     CSQLite3Connection(size_t sql_max=8192);
     ~CSQLite3Connection();
 
-private:
+public:
     virtual void open() throw (CDBException);
     virtual void close() throw ();
     virtual void reopen() throw (CDBException);

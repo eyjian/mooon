@@ -34,7 +34,7 @@ public:
     CMySQLConnection(size_t sql_max=8192);
     ~CMySQLConnection();
 
-private:
+public:
     virtual std::string escape_string(const std::string& str) const;
     virtual void open() throw (CDBException);
     virtual void close() throw ();
