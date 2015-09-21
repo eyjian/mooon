@@ -173,7 +173,7 @@ class CDBConnectionBase: public DBConnection
 public:
     CDBConnectionBase(size_t sql_size);
 
-private:
+public:
     virtual std::string escape_string(const std::string& str) const { return str; }
     virtual void set_host(const std::string& db_ip, uint16_t db_port);
     virtual void set_db_name(const std::string& db_name);
@@ -183,7 +183,7 @@ private:
     virtual void set_timeout_seconds(int timeout_seconds);
     virtual void set_null_value(const std::string& null_value);
 
-private:
+public:
     virtual void query(DBTable& db_table, const char* format, ...) throw (CDBException) __attribute__((format(printf, 3, 4)));
     virtual void query(DBRow& db_row, const char* format, ...) throw (CDBException) __attribute__((format(printf, 3, 4)));
     virtual std::string query(const char* format, ...) throw (CDBException) __attribute__((format(printf, 2, 3)));
