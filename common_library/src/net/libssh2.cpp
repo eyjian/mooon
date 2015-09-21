@@ -380,13 +380,16 @@ void CLibssh2::validate_authorization(const std::string& password)
         }
         else
         {
-            sys::CUtils::millisleep(10);
+            if (!timedwait_socket())
+            {
+                THROW_SYSCALL_EXCEPTION("validate_authorization timeout", ETIMEDOUT, "poll");
+            }
         }
     }
 }
 
 // http://www.libssh2.org/examples/ssh2_exec.html
-bool CLibssh2::wait_socket()
+bool CLibssh2::timedwait_socket()
 {
     int events_requested = 0;
     LIBSSH2_SESSION* session = static_cast<LIBSSH2_SESSION*>(_session);
@@ -419,9 +422,7 @@ void CLibssh2::handshake()
         }
         else
         {
-            sys::CUtils::millisleep(10);
-
-            if (!wait_socket())
+            if (!timedwait_socket())
             {
                 THROW_SYSCALL_EXCEPTION("handshake timeout", ETIMEDOUT, "poll");
             }
@@ -448,9 +449,7 @@ void* CLibssh2::open_ssh_channel()
         }
         else
         {
-            sys::CUtils::millisleep(10);
-
-            if (!wait_socket())
+            if (!timedwait_socket())
             {
                 THROW_SYSCALL_EXCEPTION("open session timeout", ETIMEDOUT, "poll");
             }
@@ -479,9 +478,7 @@ void* CLibssh2::open_scp_read_channel(const std::string& remote_filepath)
         }
         else
         {
-            sys::CUtils::millisleep(10);
-
-            if (!wait_socket())
+            if (!timedwait_socket())
             {
                 THROW_SYSCALL_EXCEPTION("open scp channel timeout", ETIMEDOUT, "poll");
             }
@@ -509,9 +506,7 @@ void* CLibssh2::open_scp_write_channel(const std::string& remote_filepath, int f
         }
         else
         {
-            sys::CUtils::millisleep(10);
-
-            if (!wait_socket())
+            if (!timedwait_socket())
             {
                 THROW_SYSCALL_EXCEPTION("open scp channel timeout", ETIMEDOUT, "poll");
             }
@@ -557,7 +552,7 @@ int CLibssh2::close_ssh_channel(void* channel, std::string* exitsignal, std::str
         }
         else if (LIBSSH2_ERROR_EAGAIN == errcode)
         {
-            if (!wait_socket())
+            if (!timedwait_socket())
             {
                 THROW_SYSCALL_EXCEPTION("channel close timeout", ETIMEDOUT, "poll");
             }
@@ -601,9 +596,7 @@ int CLibssh2::read_channel(void* channel, std::ostream& out)
             }
             else
             {
-                sys::CUtils::millisleep(10);
-
-                if (!wait_socket())
+                if (!timedwait_socket())
                 {
                     THROW_SYSCALL_EXCEPTION("channel read timeout", ETIMEDOUT, "poll");
                 }
@@ -643,9 +636,7 @@ void CLibssh2::write_channel(void* channel, const char *buffer, size_t buffer_si
             }
             else
             {
-                sys::CUtils::millisleep(10);
-
-                if (!wait_socket())
+                if (!timedwait_socket())
                 {
                     THROW_SYSCALL_EXCEPTION("channel write timeout", ETIMEDOUT, "poll");
                 }

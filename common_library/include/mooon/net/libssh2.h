@@ -130,7 +130,7 @@ private:
     void create_session(bool nonblocking);
     void set_known_hosts();
     void validate_authorization(const std::string& password);
-    bool wait_socket();
+    bool timedwait_socket();
     void handshake();
     void* open_ssh_channel();
     void* open_scp_read_channel(const std::string& remote_filepath);
