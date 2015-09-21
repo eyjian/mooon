@@ -104,7 +104,7 @@ public:
     // password 用户名username的密码
     // timeout_seconds 连接超时时长，单位为秒
     // nonblocking 连接是否主国非阻塞方式，为true表示为非阻塞，为false表示为阻塞方式，建议采用非阻塞方式
-    CLibssh2(const std::string& ip, uint16_t port, const std::string& username, const std::string& password, uint32_t timeout_seconds=2, bool nonblocking=true) throw (utils::CException, sys::CSyscallException);
+    CLibssh2(const std::string& ip, uint16_t port, const std::string& username, const std::string& password, uint32_t timeout_seconds=2, bool nonblocking=false) throw (utils::CException, sys::CSyscallException);
     ~CLibssh2();
 
     // command 被远程执行的命令，如：whoami

@@ -292,6 +292,8 @@ void CLibssh2::create_session(bool nonblocking)
         LIBSSH2_SESSION* session = libssh2_session_init();
         if (nonblocking) // 设置为非阻塞
             libssh2_session_set_blocking(session, 0);
+        else if (_timeout_seconds > 0)
+            libssh2_session_set_timeout(session, _timeout_seconds*1000);
 
         _session = session;
         _socket_fd = socket_fd;
