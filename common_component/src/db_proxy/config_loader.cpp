@@ -4,6 +4,7 @@
 #include <fstream>
 #include <mooon/net/utils.h>
 #include <mooon/sys/file_utils.h>
+#include <mooon/sys/mysql_db.h>
 #include <mooon/sys/utils.h>
 #include <mooon/utils/md5_helper.h>
 #include <sys/inotify.h> // 一些低版本内核没有实现
@@ -62,7 +63,7 @@ SINGLETON_IMPLEMENT(CConfigLoader);
 
 std::string CConfigLoader::get_filepath()
 {
-    std::string program_path = mooon::sys::CUtils::get_program_path();
+    std::string program_path = sys::CUtils::get_program_path();
     std::string filepath = program_path + "/../conf/sql.json";
 
     if (access(filepath.c_str(), F_OK) != 0)
@@ -78,7 +79,7 @@ void CConfigLoader::monitor()
 {
     while (true)
     {
-        mooon::sys::CUtils::millisleep(2000);
+        sys::CUtils::millisleep(2000);
 
         std::string filepath = CConfigLoader::get_filepath();
         (void)load(filepath);
@@ -156,7 +157,7 @@ bool CConfigLoader::load(const std::string& filepath)
             sys::DBConnection* db_connection = init_db_connection(i, false);
             if (db_connection != NULL)
             {
-                mooon::sys::DBConnection::destroy_connection(db_connection);
+                delete db_connection;
                 db_connection = NULL;
             }
         }
@@ -357,27 +358,34 @@ sys::DBConnection* CConfigLoader::init_db_connection(int index, bool need_lock) 
 sys::DBConnection* CConfigLoader::do_init_db_connection(int index) const
 {
     const struct DbInfo* _db_info = _db_info_array[index];
-    sys::DBConnection* db_connection = mooon::sys::DBConnection::create_connection("mysql");
+    sys::DBConnection* db_connection = new sys::CMySQLConnection;
 
-    db_connection->set_host(_db_info->host, (uint16_t)_db_info->port);
-    db_connection->set_user(_db_info->user, _db_info->password);
-    db_connection->set_db_name(_db_info->name);
-    db_connection->set_charset(_db_info->charset);
-    db_connection->enable_auto_reconnect();
-
-    try
+    if (NULL == db_connection)
     {
-        db_connection->open();
+        MYLOG_ERROR("can not create MySQL connection by 'mysql_connection'\n");
     }
-    catch (sys::CDBException& db_ex)
+    else
     {
-        MYLOG_ERROR("connect %s failed: %s\n", _db_info->str().c_str(), db_ex.str().c_str());
-        mooon::sys::DBConnection::destroy_connection(db_connection);
-        db_connection = NULL;
+        db_connection->set_host(_db_info->host, (uint16_t)_db_info->port);
+        db_connection->set_user(_db_info->user, _db_info->password);
+        db_connection->set_db_name(_db_info->name);
+        db_connection->set_charset(_db_info->charset);
+        db_connection->enable_auto_reconnect();
+
+        try
+        {
+            db_connection->open();
+        }
+        catch (sys::CDBException& db_ex)
+        {
+            MYLOG_ERROR("connect %s failed: %s\n", _db_info->str().c_str(), db_ex.str().c_str());
+            delete db_connection;
+            db_connection = NULL;
+        }
     }
 
     return db_connection;
 }
 
-} // namespace mooon
 } // namespace db_proxy
+} // namespace mooon

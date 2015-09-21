@@ -45,24 +45,19 @@
 #define UTILS_NAMESPACE_END                   }}
 #define UTILS_NAMESPACE_USE using namespace mooon::utils;
 
+// 单例
+// 为规避多线程问题，请在所有线程创建之前先调用一次ClassName::get_singleton()，
+// 可以通过delete来删除单例对象
 #define SINGLETON_DECLARE(ClassName) \
-    private: \
-        static ClassName* _pClassName; \
     public: \
-        static ClassName* get_singleton(); \
-        static void delete_singleton();
+        static ClassName* get_singleton();
 
 #define SINGLETON_IMPLEMENT(ClassName) \
-    ClassName* ClassName::_pClassName = NULL; \
     ClassName* ClassName::get_singleton() { \
-        if (NULL == ClassName::_pClassName) \
-            ClassName::_pClassName = new ClassName; \
-        return ClassName::_pClassName; \
-    } \
-    void ClassName::delete_singleton() \
-    { \
-        delete ClassName::_pClassName; \
-        ClassName::_pClassName = NULL; \
+        static ClassName* s_pClassName = NULL; \
+        if (NULL == s_pClassName) \
+            s_pClassName = new ClassName; \
+        return s_pClassName; \
     }
 
 /** 回调接口 */

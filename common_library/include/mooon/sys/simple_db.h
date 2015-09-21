@@ -56,27 +56,6 @@ DBConnection::destroy_connection(db_connection);
 class DBConnection
 {
 public:
-    /***
-     * 工厂方法 - 创建一个DB连接
-     * @db_type_name DB类型名，如：mysql、oracle、postgreSQL，不区别大小写
-     *               当前只支持MySQL，也就是参数值只能输入mysql（不区别大小写）
-     * 如果是支持的DB类型，则返回非NULL，否则返回NULL
-     */
-    static DBConnection* create_connection(const std::string& db_type_name);
-
-    /***
-     * 销毁一个由create_connection()创建的DB连接
-     * @db_connection 需要销毁的DB连接
-     */
-    static void destroy_connection(DBConnection* db_connection);
-
-    /***
-     * 判断是否为网络连接断开异常，
-     * 如使用过程中，与MySQL间的网络中断，或MySQL进程死掉等，这种情况下可以尝试重连接
-     */
-    static bool is_disconnected_exception(CDBException& db_error);
-
-public:
     virtual ~DBConnection() {}
     
     // 对字符串进行编码，以防止SQL注入
@@ -183,6 +162,55 @@ public:
     virtual void commit() throw (CDBException) = 0;
     virtual void rollback() throw (CDBException) = 0;
     virtual void enable_autocommit(bool enabled) throw (CDBException) = 0;
+};
+
+
+/**
+ * 不同DB的通用操作
+ */
+class CDBConnectionBase: public DBConnection
+{
+public:
+    CDBConnectionBase(size_t sql_size);
+
+private:
+    virtual std::string escape_string(const std::string& str) const { return str; }
+    virtual void set_host(const std::string& db_ip, uint16_t db_port);
+    virtual void set_db_name(const std::string& db_name);
+    virtual void set_user(const std::string& db_user, const std::string& db_password);
+    virtual void set_charset(const std::string& charset);
+    virtual void enable_auto_reconnect();
+    virtual void set_timeout_seconds(int timeout_seconds);
+    virtual void set_null_value(const std::string& null_value);
+
+private:
+    virtual void query(DBTable& db_table, const char* format, ...) throw (CDBException) __attribute__((format(printf, 3, 4)));
+    virtual void query(DBRow& db_row, const char* format, ...) throw (CDBException) __attribute__((format(printf, 3, 4)));
+    virtual std::string query(const char* format, ...) throw (CDBException) __attribute__((format(printf, 2, 3)));
+
+    virtual void ping() throw (CDBException);
+    virtual void commit() throw (CDBException);
+    virtual void rollback() throw (CDBException);
+    virtual void enable_autocommit(bool enabled) throw (CDBException);
+
+private:
+    virtual void do_query(DBTable& db_table, const char* sql, int sql_length) throw (CDBException) = 0;
+
+protected:
+    const size_t _sql_size; // 支持的最大SQL语句长度，单位为字节数，不含结尾符
+    bool _is_established;  // 是否已经和数据库建立的连接
+    std::string _id;       // 身份标识，用来识别
+
+protected:
+    std::string _db_ip;
+    uint16_t _db_port;
+    std::string _db_name;
+    std::string _db_user;
+    std::string _db_password;
+    std::string _charset;
+    bool _auto_reconnect;
+    int _timeout_seconds;
+    std::string _null_value; // 字段在DB表中的值为NULL时，返回的内容
 };
 
 SYS_NAMESPACE_END

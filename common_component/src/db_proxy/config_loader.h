@@ -234,6 +234,6 @@ private:
     std::string _md5_sum;
 };
 
-} // namespace mooon
 } // namespace db_proxy
+} // namespace mooon
 #endif // MOOON_DB_PROXY_CONFIG_LOADER_H
