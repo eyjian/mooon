@@ -42,6 +42,8 @@ endif ()
 # 3) 用户主目录，即环境变量$HOME对应的目录
 #
 
+# find_library/find_path/find_package/find_program
+
 # MySQL
 if (EXISTS /usr/local/thirdparty/mysql)
     set(HAVE_MYSQL 1)
