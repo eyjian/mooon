@@ -44,6 +44,16 @@ CMySQLConnection::~CMySQLConnection()
     close(); // 不要在父类的析构中调用虚拟函数
 }
 
+bool CMySQLConnection::is_disconnected_exception(CDBException& db_error) const
+{
+    int errcode = db_error.errcode();
+
+    // ER_QUERY_INTERRUPTED：比如mysqld进程挂了
+    // CR_SERVER_GONE_ERROR：比如客户端将连接close了
+    return (ER_QUERY_INTERRUPTED == errcode) || // Query execution was interrupted
+           (CR_SERVER_GONE_ERROR == errcode);   // MySQL server has gone away
+}
+
 std::string CMySQLConnection::escape_string(const std::string& str) const
 {
     MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);

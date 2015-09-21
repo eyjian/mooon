@@ -58,6 +58,9 @@ class DBConnection
 public:
     virtual ~DBConnection() {}
     
+    // 判断是否为断开连接异常
+    virtual bool is_disconnected_exception(CDBException& db_error) const { return false; }
+
     // 对字符串进行编码，以防止SQL注入
     // str 需要编码的字符串，返回被编码后的字符串
     virtual std::string escape_string(const std::string& str) const = 0;

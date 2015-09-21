@@ -35,6 +35,7 @@ public:
     ~CMySQLConnection();
 
 public:
+    virtual bool is_disconnected_exception(CDBException& db_error) const;
     virtual std::string escape_string(const std::string& str) const;
     virtual void open() throw (CDBException);
     virtual void close() throw ();
