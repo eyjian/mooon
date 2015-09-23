@@ -30,7 +30,8 @@ typedef std::vector<DBRow> DBTable;     // 用来存储所有行
  * 访问DB的接口，是一个抽象接口，当前只支持MySQL
  *
  * 使用示例：
-DBConnection* db_connection = DBConnection::create_connection("mysql");
+#include <mooon/sys/mysql_db.h>
+DBConnection* db_connection = new CMySQLConnection;
 try
 {
     DBTable db_table;
@@ -51,7 +52,7 @@ catch (CDBException& db_error)
     log("%s error: %s at %s:%d", db_connection.str().c_str(), db_error.what(), db_error.file(), db_error.lien());
 }
 
-DBConnection::destroy_connection(db_connection);
+delete db_connection;
  */
 class DBConnection
 {
