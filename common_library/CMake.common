@@ -102,7 +102,7 @@ discover_library(GPERFTOOLS gperftools)
 #link_libraries(libtcmalloc.a libtcmalloc_debug.a libtcmalloc_minimal.a libtcmalloc_minimal_debug.a libtcmalloc_and_profiler.a libprofiler.a)
 
 # Sparsehash
-discover_library(SPARSE_HASH Sparsehash)
+discover_library(SPARSE_HASH sparsehash)
 # Sparsehash只有头文件
 
 # Libevent
