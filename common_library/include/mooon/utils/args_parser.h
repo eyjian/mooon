@@ -60,7 +60,7 @@
     namespace mooon { namespace argument \
     { \
         utils::CStringArgument* param_name = \
-            new ::utils::CStringArgument( \
+            new utils::CStringArgument( \
                 #param_name, default_value, help_string); \
     }}
 
@@ -78,8 +78,8 @@
 #define INTEGER_ARG_DEFINE(int_type, param_name, default_value, min_value, max_value, help_string) \
     namespace mooon { namespace argument \
     { \
-        ::mooon::utils::CIntArgument<int_type>* param_name = \
-            new ::mooon::utils::CIntArgument<int_type>( \
+        utils::CIntArgument<int_type>* param_name = \
+            new utils::CIntArgument<int_type>( \
                 #param_name, default_value, min_value, max_value, help_string); \
     }}
 
