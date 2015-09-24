@@ -46,6 +46,7 @@
 // 应当总是在main()函数所在文件中调用STRING_ARG_DEFINE()和INTEGER_ARG_DEFINE()，
 // 如果其它文件中也需要访问，则应当使用STRING_ARG_DECLARE()和INTEGER_ARG_DECLARE()。
 
+// 注意不用要在其它namespace内调用
 // 字符串类型参数定义（供main()函数所在文件中调用）
 // param_name 参数名
 // default_value 参数的默认值，如果没有通过命令行指定，则default_value为参数值
@@ -58,11 +59,12 @@
 #define STRING_ARG_DEFINE(param_name, default_value, help_string) \
     namespace mooon { namespace argument \
     { \
-        mooon::utils::CStringArgument* param_name = \
-            new mooon::utils::CStringArgument( \
+        utils::CStringArgument* param_name = \
+            new ::utils::CStringArgument( \
                 #param_name, default_value, help_string); \
     }}
 
+// 注意不用要在其它namespace内调用
 // 整数类型参数定义（供main()函数所在文件中调用）
 // param_name 参数名
 // default_value 参数的默认值，如果没有通过命令行指定，则default_value为参数值
@@ -76,23 +78,25 @@
 #define INTEGER_ARG_DEFINE(int_type, param_name, default_value, min_value, max_value, help_string) \
     namespace mooon { namespace argument \
     { \
-        mooon::utils::CIntArgument<int_type>* param_name = \
-            new mooon::utils::CIntArgument<int_type>( \
+        ::mooon::utils::CIntArgument<int_type>* param_name = \
+            new ::mooon::utils::CIntArgument<int_type>( \
                 #param_name, default_value, min_value, max_value, help_string); \
     }}
 
+// 注意不用要在其它namespace内调用
 // 整数类型参数声明（供非main()函数所在文件中调用）
 #define INTEGER_ARG_DECLARE(int_type, param_name) \
     namespace mooon { namespace argument /** 保证不污染全局空间 */ \
     { \
-        extern mooon::utils::CIntArgument<int_type>* param_name; \
+        extern utils::CIntArgument<int_type>* param_name; \
     }}
 
+// 注意不用要在其它namespace内调用
 // 整数类型参数声明（供非main()函数所在文件中调用）
 #define STRING_ARG_DECLARE(param_name) \
     namespace mooon { namespace argument /** 保证不污染全局空间 */ \
     { \
-        extern mooon::utils::CStringArgument* param_name; \
+        extern utils::CStringArgument* param_name; \
     }}
 
 ////////////////////////////////////////////////////////////////////////////////

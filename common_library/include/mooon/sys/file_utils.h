@@ -68,6 +68,13 @@ public:
       * @exception 如果出错，抛出sys::CSyscallException异常
       */
     static void remove(const char* filepath) throw (CSyscallException);
+
+    /***
+     * 重命名一个文件
+     * from_filepath 被重命名的文件，可包含文件路径和文件名
+     * to_filepath 新的文件，可包含文件路径和文件名
+     */
+    static void rename(const char* from_filepath, const char* to_filepath) throw (CSyscallException);
 };
 
 SYS_NAMESPACE_END

@@ -183,4 +183,10 @@ void CFileUtils::remove(const char* filepath) throw (CSyscallException)
     }
 }
 
+void CFileUtils::rename(const char* from_filepath, const char* to_filepath) throw (CSyscallException)
+{
+    if (-1 == rename(from_filepath, to_filepath))
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "rename");
+}
+
 SYS_NAMESPACE_END
