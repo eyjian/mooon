@@ -211,6 +211,9 @@ public:
     bool get_query_info(int index, struct QueryInfo* query_info) const;
     bool get_update_info(int index, struct UpdateInfo* update_info) const;
 
+public:
+    bool get_db_info(int index, struct DbInfo* db_info) const;
+
 private:
     bool load_database(const Json::Value& json, struct DbInfo* db_info_array[]);
     bool load_query(const Json::Value& json, struct QueryInfo* query_info_array[]);

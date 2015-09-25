@@ -210,6 +210,19 @@ bool CConfigLoader::get_update_info(int index, struct UpdateInfo* update_info) c
     return true;
 }
 
+bool CConfigLoader::get_db_info(int index, struct DbInfo* db_info) const
+{
+    sys::ReadLockHelper read_lock(_read_write_lock);
+
+    if ((index < 0) || (index >= MAX_SQL_TEMPLATE))
+        return false;
+    if (NULL == _db_info_array[index])
+        return false;
+
+    *db_info = *(_db_info_array[index]);
+    return true;
+}
+
 bool CConfigLoader::load_database(const Json::Value& json, struct DbInfo* db_info_array[])
 {
     for (int i=0; i<static_cast<int>(json.size()); ++i)
