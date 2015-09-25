@@ -6,7 +6,9 @@ namespace mooon { namespace db_proxy {
 
 struct DbInfo;
 
-// 将SQL写入到SQL专用日志文件中
+// 将SQL写入到SQL专用日志文件中，
+// 这些SQL日志是可以使用MySQL工具直接导入的
+//
 // SQL日志存放目录为：
 // homedir/sql_log/db_host_db_name/current/db_host_db_name_YYYYMMDDHHmmss.sql
 // homedir为程序文件所在目录的父目录，运行时会自动创建所需要的目录，但运行前就需要保证能够创建成功
