@@ -17,6 +17,7 @@
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
 #include "sys/dir_utils.h"
+#include "utils/string_utils.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -101,6 +102,49 @@ bool CDirUtils::exist(const std::string& dirpath) throw (CSyscallException)
     }
 
     return S_ISDIR(buf.st_mode);
+}
+
+void CDirUtils::create_directory(const char* dirpath, mode_t permissions)
+{
+    if (-1 == mkdir(dirpath, permissions))
+        if (errno != EEXIST)
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "mkdir");
+}
+
+void CDirUtils::create_directory_recursive(const char* dirpath, mode_t permissions)
+{
+    char* slash;
+    char* pathname = strdupa(dirpath); // _GNU_SOURCE
+    char* pathname_p = pathname;
+
+    // 过滤掉头部的斜杠
+    while ('/' == *pathname_p) ++pathname_p;
+
+    for (;;)
+    {
+        slash = strchr(pathname_p, '/');
+        if (NULL == slash) // 叶子目录
+        {
+            if (0 == mkdir(pathname, permissions)) break;
+            if (EEXIST == errno) break;
+
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "mkdir");
+        }
+
+        *slash = '\0';
+        if ((-1 == mkdir(pathname, permissions)) && (errno != EEXIST))
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "mkdir");
+
+        *slash++ = '/';
+        while ('/' == *slash) ++slash; // 过滤掉相连的斜杠
+        pathname_p = slash;
+    }
+}
+
+void CDirUtils::create_directory_byfilepath(const char* filepath, mode_t permissions)
+{
+    std::string dirpath = utils::CStringUtils::extract_dirpath(filepath);
+    create_directory_recursive(dirpath.c_str(),  permissions);
 }
 
 SYS_NAMESPACE_END

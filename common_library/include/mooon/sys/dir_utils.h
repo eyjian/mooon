@@ -37,6 +37,33 @@ public:
 
     // 判断是否存在指定的目录
     static bool exist(const std::string& dirpath) throw (CSyscallException);
+
+    /***
+      * 递归的创建目录
+      * @dirpath: 需要创建的目录
+      * @permissions: 目录权限，取值可以为下列的任意组合:
+      *                    S_IRWXU, S_IRUSR, S_IWUSR, S_IXUSR
+      *                    S_IRWXG, S_IRGRP, S_IWGRP, S_IXGRP
+      *                    S_IRWXO, S_IROTH, S_IWOTH, S_IXOTH
+      * @exception: 出错则抛出CSyscallException
+      */
+    static void create_directory(const char* dirpath, mode_t permissions=DIRECTORY_DEFAULT_PERM);
+
+    /***
+      * 递归的创建目录
+      * @dirpath: 需要创建的目录
+      * @permissions: 目录权限
+      * @exception: 出错则抛出CSyscallException
+      */
+    static void create_directory_recursive(const char* dirpath, mode_t permissions=DIRECTORY_DEFAULT_PERM);
+
+    /***
+      * 根据文件路径，递归的创建目录
+      * @dirpath: 文件路径
+      * @permissions: 目录权限
+      * @exception: 出错则抛出CSyscallException
+      */
+    static void create_directory_byfilepath(const char* filepath, mode_t permissions=DIRECTORY_DEFAULT_PERM);
 };
 
 SYS_NAMESPACE_END
