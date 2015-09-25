@@ -53,6 +53,11 @@ inline std::string to_string(int errcode)
 {
     return strerror(errcode);
 }
+
+inline bool is_not(int errcode)
+{
+    return errno != errcode;
+}
 }
 
 SYS_NAMESPACE_END
