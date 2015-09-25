@@ -223,6 +223,110 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+// 带4个参数
+
+template <typename ReturnType, typename Parameter1Type, typename Parameter2Type, typename Parameter3Type, typename Parameter4Type>
+class FunctionWith4Parameter: public Function<ReturnType>
+{
+public:
+    typedef ReturnType (*FunctionPtr)(Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type);
+
+    FunctionWith4Parameter(FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3, Parameter4Type parameter4)
+        : _function_ptr(function_ptr), _parameter1(parameter1), _parameter2(parameter2), _parameter3(parameter3), _parameter4(parameter4)
+    {
+    }
+
+    virtual ReturnType operator ()()
+    {
+        return (*_function_ptr)(_parameter1, _parameter2, _parameter3, _parameter4);
+    }
+
+private:
+    FunctionPtr _function_ptr;
+    Parameter1Type _parameter1;
+    Parameter2Type _parameter2;
+    Parameter3Type _parameter3;
+    Parameter4Type _parameter4;
+};
+
+template <typename ReturnType, class ObjectType, typename Parameter1Type, typename Parameter2Type, typename Parameter3Type, typename Parameter4Type>
+class MemberFunctionWith4Parameter: public Function<ReturnType>
+{
+public:
+    typedef ReturnType (ObjectType::*MemberFunctionPtr)(Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type);
+    MemberFunctionWith4Parameter(MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3, Parameter4Type parameter4)
+        : _member_function_ptr(member_function_ptr), _object(object), _parameter1(parameter1), _parameter2(parameter2), _parameter3(parameter3), _parameter4(parameter4)
+    {
+    }
+
+    virtual ReturnType operator ()()
+    {
+        return (_object->*_member_function_ptr)(_parameter1, _parameter2, _parameter3, _parameter4);
+    }
+
+private:
+    MemberFunctionPtr _member_function_ptr;
+    ObjectType* _object;
+    Parameter1Type _parameter1;
+    Parameter2Type _parameter2;
+    Parameter3Type _parameter3;
+    Parameter4Type _parameter4;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// 带5个参数
+
+template <typename ReturnType, typename Parameter1Type, typename Parameter2Type, typename Parameter3Type, typename Parameter4Type, typename Parameter5Type>
+class FunctionWith5Parameter: public Function<ReturnType>
+{
+public:
+    typedef ReturnType (*FunctionPtr)(Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type, Parameter5Type);
+
+    FunctionWith5Parameter(FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3, Parameter4Type parameter4, Parameter5Type parameter5)
+        : _function_ptr(function_ptr), _parameter1(parameter1), _parameter2(parameter2), _parameter3(parameter3), _parameter4(parameter4), _parameter5(parameter5)
+    {
+    }
+
+    virtual ReturnType operator ()()
+    {
+        return (*_function_ptr)(_parameter1, _parameter2, _parameter3, _parameter4, _parameter5);
+    }
+
+private:
+    FunctionPtr _function_ptr;
+    Parameter1Type _parameter1;
+    Parameter2Type _parameter2;
+    Parameter3Type _parameter3;
+    Parameter4Type _parameter4;
+    Parameter5Type _parameter5;
+};
+
+template <typename ReturnType, class ObjectType, typename Parameter1Type, typename Parameter2Type, typename Parameter3Type, typename Parameter4Type, typename Parameter5Type>
+class MemberFunctionWith5Parameter: public Function<ReturnType>
+{
+public:
+    typedef ReturnType (ObjectType::*MemberFunctionPtr)(Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type, Parameter5Type);
+    MemberFunctionWith5Parameter(MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3, Parameter4Type parameter4, Parameter5Type parameter5)
+        : _member_function_ptr(member_function_ptr), _object(object), _parameter1(parameter1), _parameter2(parameter2), _parameter3(parameter3), _parameter4(parameter4), _parameter5(parameter5)
+    {
+    }
+
+    virtual ReturnType operator ()()
+    {
+        return (_object->*_member_function_ptr)(_parameter1, _parameter2, _parameter3, _parameter4, _parameter5);
+    }
+
+private:
+    MemberFunctionPtr _member_function_ptr;
+    ObjectType* _object;
+    Parameter1Type _parameter1;
+    Parameter2Type _parameter2;
+    Parameter3Type _parameter3;
+    Parameter4Type _parameter4;
+    Parameter5Type _parameter5;
+};
+
+////////////////////////////////////////////////////////////////////////////////
 template <typename ReturnType>
 class Functor
 {
@@ -309,6 +413,32 @@ public:
     Functor(typename MemberFunctionWith3Parameter<ReturnType, ObjectType, Parameter1Type, Parameter2Type, Parameter3Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3)
     {
         _function = new MemberFunctionWith3Parameter<ReturnType, ObjectType, Parameter1Type, Parameter2Type, Parameter3Type>(member_function_ptr, object, parameter1, parameter2, parameter3);
+    }
+
+    // 带4个参数
+    template <typename Parameter1Type, typename Parameter2Type, typename Parameter3Type, typename Parameter4Type>
+    Functor(typename FunctionWith4Parameter<ReturnType, Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3, Parameter4Type parameter4)
+    {
+        _function = new FunctionWith4Parameter<ReturnType, Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type>(function_ptr, parameter1, parameter2, parameter3, parameter4);
+    }
+
+    template <class ObjectType, typename Parameter1Type, typename Parameter2Type, typename Parameter3Type, typename Parameter4Type>
+    Functor(typename MemberFunctionWith4Parameter<ReturnType, ObjectType, Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3, Parameter4Type parameter4)
+    {
+        _function = new MemberFunctionWith4Parameter<ReturnType, ObjectType, Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type>(member_function_ptr, object, parameter1, parameter2, parameter3, parameter4);
+    }
+
+    // 带5个参数
+    template <typename Parameter1Type, typename Parameter2Type, typename Parameter3Type, typename Parameter4Type, typename Parameter5Type>
+    Functor(typename FunctionWith5Parameter<ReturnType, Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type, Parameter5Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3, Parameter4Type parameter4, Parameter5Type parameter5)
+    {
+        _function = new FunctionWith5Parameter<ReturnType, Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type, Parameter5Type>(function_ptr, parameter1, parameter2, parameter3, parameter4, parameter5);
+    }
+
+    template <class ObjectType, typename Parameter1Type, typename Parameter2Type, typename Parameter3Type, typename Parameter4Type, typename Parameter5Type>
+    Functor(typename MemberFunctionWith5Parameter<ReturnType, ObjectType, Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type, Parameter5Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3, Parameter4Type parameter4, Parameter5Type parameter5)
+    {
+        _function = new MemberFunctionWith5Parameter<ReturnType, ObjectType, Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type, Parameter5Type>(member_function_ptr, object, parameter1, parameter2, parameter3, parameter4, parameter5);
     }
 
 public:
