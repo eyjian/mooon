@@ -313,6 +313,10 @@ public:
     // URL解码
     static std::string decode_url(const std::string& encoded_url);
     static std::string decode_url(const char* encoded_url, size_t encoded_url_length);
+
+    // 删除行尾的回车符
+    void trim_CR(char* line);
+    void trim_CR(std::string& line);
 };
 
 UTILS_NAMESPACE_END

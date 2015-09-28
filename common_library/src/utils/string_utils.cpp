@@ -870,4 +870,23 @@ std::string CStringUtils::decode_url(const char* encoded_url, size_t encoded_url
     return result;
 }
 
+// CR: Carriage Return
+// LF: Line Feed
+void CStringUtils::trim_CR(char* line)
+{
+    if (line != NULL)
+    {
+        size_t len = strlen(line);
+        if ('\r' == line[len-1])
+            line[len-1] = '\0';
+    }
+}
+
+void CStringUtils::trim_CR(std::string& line)
+{
+    std::string::size_type tail = line.size() - 1;
+    if ('\r' == line[tail])
+        line.resize(tail);
+}
+
 UTILS_NAMESPACE_END
