@@ -23,6 +23,7 @@
 
 // 如果测试，请不需注释掉TEST_THREAD_ENGINE的定义
 //#define TEST_THREAD_ENGINE 1
+#include "mooon/sys/syscall_exception.h"
 
 #if !defined(TEST_THREAD_ENGINE)
 #include "mooon/sys/config.h" // 如果需要脱离mooon运行，请注释掉这行
@@ -401,7 +402,7 @@ public:
     }
 
 public:
-    CThreadEngine(const Functor& functor)
+    CThreadEngine(const Functor& functor) throw (CSyscallException)
         : _thread(0)
     {
         // bind()返回的是一个临时对象，
@@ -412,6 +413,7 @@ public:
         if (errcode != 0)
         {
             delete new_functor;
+            THROW_SYSCALL_EXCEPTION(strerror(errcode), errcode, "pthread_create");
         }
     }
     

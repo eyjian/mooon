@@ -23,7 +23,7 @@
 #include <string>
 
 #define THROW_EXCEPTION(errmsg, errcode) \
-    throw mooon::utils::CException(errmsg, errcode, __FILE__, __LINE__)
+    throw ::mooon::utils::CException(errmsg, errcode, __FILE__, __LINE__)
 
 UTILS_NAMESPACE_BEGIN
 

@@ -22,7 +22,7 @@
 #include "mooon/utils/exception.h"
 
 #define THROW_SYSCALL_EXCEPTION(errmsg, errcode, syscall) \
-    throw mooon::sys::CSyscallException(errmsg, errcode, __FILE__, __LINE__, syscall)
+    throw ::mooon::sys::CSyscallException(errmsg, errcode, __FILE__, __LINE__, syscall)
 
 SYS_NAMESPACE_BEGIN
 

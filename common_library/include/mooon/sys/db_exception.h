@@ -26,7 +26,7 @@
 #include "mooon/utils/exception.h"
 
 #define THROW_DB_EXCEPTION(sql, errmsg, errcode) \
-    throw mooon::sys::CDBException(sql, errmsg, errcode, __FILE__, __LINE__)
+    throw ::mooon::sys::CDBException(sql, errmsg, errcode, __FILE__, __LINE__)
 
 SYS_NAMESPACE_BEGIN
 
