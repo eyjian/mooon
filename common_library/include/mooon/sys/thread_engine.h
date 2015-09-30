@@ -20,24 +20,11 @@
  */
 #ifndef MOOON_SYS_THREAD_ENGINE_H
 #define MOOON_SYS_THREAD_ENGINE_H
-
-// 如果测试，请不需注释掉TEST_THREAD_ENGINE的定义
-//#define TEST_THREAD_ENGINE 1
 #include "mooon/sys/syscall_exception.h"
-
-#if !defined(TEST_THREAD_ENGINE)
-#include "mooon/sys/config.h" // 如果需要脱离mooon运行，请注释掉这行
-#endif // TEST_THREAD_ENGINE
-
 #include <stdint.h> // pthread_t在32位上是4字节，在64位上是8字节
 #include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
-
-#if defined(TEST_THREAD_ENGINE)
-#define SYS_NAMESPACE_BEGIN
-#define SYS_NAMESPACE_END
-#endif // TEST_THREAD_ENGINE
 SYS_NAMESPACE_BEGIN
 
 // 基类
@@ -620,7 +607,7 @@ int main()
 
     return 0;
 }
-
 #endif // TEST_THREAD_ENGINE
+
 SYS_NAMESPACE_END
 #endif // MOOON_SYS_THREAD_ENGINE_H
