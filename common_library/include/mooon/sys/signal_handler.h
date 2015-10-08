@@ -262,21 +262,23 @@ inline void CSignalHandler::handle(
         void (*on_exception)(int errcode)) throw ()
 {
     int signo = wait_signal();
+
     if (-1 == signo)
     {
-        on_exception(errno);
-        return;
+        if (on_exception != NULL)
+            on_exception(errno);
     }
-
-    if (SIGTERM == signo)
+    else if (SIGTERM == signo)
     {
         // 进程自己收到SIGTERM的回调
-        on_terminated();
+        if (on_terminated != NULL)
+            on_terminated();
     }
-    if (signo != SIGCHLD)
+    else if (signo != SIGCHLD)
     {
         // 非SIGTERM和SIGCHLD信号处理
-        on_signal_handler(signo);
+        if (on_signal_handler != NULL)
+            on_signal_handler(signo);
     }
     else
     {
@@ -294,7 +296,8 @@ inline void CSignalHandler::handle(
             else if (child_pid > 0)
             {
                 // 子进程结束回调
-                on_child_end(child_pid, child_exited_status);
+                if (on_child_end != NULL)
+                    on_child_end(child_pid, child_exited_status);
             }
             else
             {
@@ -303,7 +306,8 @@ inline void CSignalHandler::handle(
                     // /usr/include/asm-generic/errno-base.h:
                     // #define   ECHILD          10      /* No child processes */
                     // wait error
-                    on_exception(errno);
+                    if (on_exception != NULL)
+                        on_exception(errno);
                 }
 
                 break;
