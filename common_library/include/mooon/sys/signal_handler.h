@@ -221,6 +221,7 @@ inline bool CSignalHandler::block_signal(int signo) throw ()
         else
         {
             _signo_array.push_back(signo);
+            return true;
         }
     }
 }
