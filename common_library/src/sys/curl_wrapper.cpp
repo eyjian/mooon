@@ -210,6 +210,53 @@ void CCurlWrapper::proxy_http_get(std::string& response_header, std::string& res
     http_get(response_header, response_body, url, enable_insecure, cookie);
 }
 
+void CCurlWrapper::http_post(const std::string& data, std::string& response_header, std::string& response_body, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
+{
+    CURLcode errcode;
+    CURL* curl = (CURL*)_curl;
+
+    errcode = curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    errcode = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    errcode = curl_easy_setopt(curl, CURLOPT_POST, 1L);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    // CURLOPT_HEADERFUNCTION
+    errcode = curl_easy_setopt(curl, CURLOPT_HEADERDATA, &response_header);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    // CURLOPT_WRITEDATA
+    errcode = curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    // 相当于curl命令的“-k”或“--insecure”参数
+    int ssl_verifypeer = enable_insecure? 0: 1;
+    //int ssl_verifyhost = enable_insecure? 0: 1;
+    errcode = curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYPEER, ssl_verifypeer);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    // 设置cookie
+    if (cookie != NULL)
+    {
+        errcode = curl_easy_setopt(curl, CURLOPT_COOKIE, cookie);
+        if (errcode != CURLE_OK)
+            THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+    }
+
+    errcode = curl_easy_perform(curl);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+}
+
 void CCurlWrapper::http_post(const CHttpPostData* http_post_data, std::string& response_header, std::string& response_body, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
 {
     CURLcode errcode;
@@ -248,7 +295,6 @@ void CCurlWrapper::http_post(const CHttpPostData* http_post_data, std::string& r
             THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
     }
 
-    // 之前如何调用了非GET如POST，这个是必须的
     errcode = curl_easy_setopt(curl, CURLOPT_HTTPPOST, http_post_data->get_post());
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
