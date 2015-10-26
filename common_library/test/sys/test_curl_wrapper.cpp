@@ -30,13 +30,16 @@ extern "C" int main(int argc, char* argv[])
     try
     {
         sys::CCurlWrapper curl_wrapper(2);
-        std::string result;
-        curl_wrapper.get(&result, argv[1]);
-        printf("result =>\n%s\n", result.c_str());
+        std::string response_header;
+        std::string response_body;
 
-        result.clear();
-        curl_wrapper.get(&result, argv[1]);
-        printf("result =>\n%s\n", result.c_str());
+        curl_wrapper.http_get(response_header, response_body, argv[1]);
+        printf("result =>\n%s\n", response_body.c_str());
+
+        response_header.clear();
+        response_body.clear();
+        curl_wrapper.http_get(response_header, response_body, argv[1]);
+        printf("result =>\n%s\n", response_body.c_str());
     }
     catch (utils::CException& ex)
     {
