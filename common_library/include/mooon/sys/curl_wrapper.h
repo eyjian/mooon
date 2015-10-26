@@ -63,5 +63,33 @@ private:
     int _timeout_seconds;
 };
 
+/*
+ * 普通POST使用示例：
+ *
+#include <mooon/sys/curl_wrapper.h>
+#include <iostream>
+
+extern "C" int main(int argc, char* argv[])
+{
+    try
+    {
+        mooon::sys::CCurlWrapper curl_wrapper(2);
+        std::string response_header;
+        std::string response_body;
+
+        std::string url = "http://127.0.0.1/cgi-bin/hello.cgi";
+        curl_wrapper.http_post("helloX=world", response_header, response_body, url);
+
+        std::cout << response_body << std::endl;
+    }
+    catch (mooon::utils::CException& ex)
+    {
+        std::cout << ex.str() << std::endl;
+    }
+
+    return 0;
+}
+*/
+
 SYS_NAMESPACE_END
 #endif // MOOON_SYS_CURL_WRAPPER_H
