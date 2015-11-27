@@ -52,10 +52,15 @@ log_filesize=10485760
 # 1) 需要写入的日志
 log()
 {
+    # 创建日志文件，如果不存在的话
+    if test ! -f $log_filepath; then
+        touch $log_filepath
+    fi
+
     record=$1
     # 得到日志文件大小
     file_size=`ls --time-style=long-iso -l $log_filepath 2>/dev/null|cut -d" " -f5`
-    
+
     # 处理日志文件过大
     # 日志加上头[$process_cmdline]，用来区分对不同对象的监控
     if test ! -z $file_size; then        
@@ -92,7 +97,7 @@ while true; do
     if test $process_count -lt 1; then
         # 执行重启脚本，要求这个脚本能够将指定的进程拉起来
         log "\033[0;32;34m[`date +'%Y-%m-%d %H:%M:%S'`]restart \"$process_cmdline\"\033[m\n"
-        sh -c "$restart_script" # 注意一定要以“sh -c”方式执行
+        sh -c "$restart_script" >> $log_filepath 2>&1 # 注意一定要以“sh -c”方式执行
     fi
 
     active=1
