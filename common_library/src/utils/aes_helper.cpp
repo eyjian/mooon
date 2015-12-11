@@ -23,6 +23,12 @@
 #endif // HAVE_OPENSSL
 UTILS_NAMESPACE_BEGIN
 
+#if HAVE_OPENSSL == 1
+int CAESHelper::aes_block_size = AES_BLOCK_SIZE;
+#else
+int CAESHelper::aes_block_size = 0;
+#endif // HAVE_OPENSSL
+
 CAESHelper::CAESHelper(const std::string& key)
 {
 #if HAVE_OPENSSL == 1

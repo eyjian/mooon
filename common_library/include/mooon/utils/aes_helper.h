@@ -23,6 +23,9 @@ UTILS_NAMESPACE_BEGIN
 class CAESHelper
 {
 public:
+    static int aes_block_size;
+
+public:
     CAESHelper(const std::string& key);
     ~CAESHelper();
 
