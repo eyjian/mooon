@@ -315,8 +315,11 @@ public:
     static std::string decode_url(const char* encoded_url, size_t encoded_url_length);
 
     // 删除行尾的回车符
-    void trim_CR(char* line);
-    void trim_CR(std::string& line);
+    static void trim_CR(char* line);
+    static void trim_CR(std::string& line);
+
+    static std::string char2hex(unsigned char c);
+    static unsigned char hex2char(const std::string& hex);
 };
 
 UTILS_NAMESPACE_END

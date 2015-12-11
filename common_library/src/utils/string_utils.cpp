@@ -20,6 +20,7 @@
 #include "utils/scoped_ptr.h"
 #include "utils/tokener.h"
 //#include <alloca.h>
+#include <ctype.h> // toupper
 #include <limits>
 #include <stdarg.h>
 UTILS_NAMESPACE_BEGIN
@@ -887,6 +888,30 @@ void CStringUtils::trim_CR(std::string& line)
     std::string::size_type tail = line.size() - 1;
     if ('\r' == line[tail])
         line.resize(tail);
+}
+
+std::string CStringUtils::char2hex(unsigned char c)
+{
+    static unsigned char hex_table[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+    std::string hex(3, '\0');
+
+    hex[0] = hex_table[(c >> 4) & 0x0F];
+    hex[1] = hex_table[c & 0x0F];
+    return hex;
+}
+
+unsigned char CStringUtils::hex2char(const std::string& hex)
+{
+    unsigned char c = 0;
+
+    for (int i=0; i<std::min<int>(hex.size(), 2); ++i)
+    {
+        unsigned char c1 = toupper(hex[i]); // ctype.h
+        unsigned char c2 = (c1 >= 'A') ? (c1 - ('A' - 10)) : (c1 - '0');
+        (c <<= 4) += c2;
+    }
+
+    return c;
 }
 
 UTILS_NAMESPACE_END
