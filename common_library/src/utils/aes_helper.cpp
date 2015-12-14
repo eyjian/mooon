@@ -24,7 +24,7 @@
 UTILS_NAMESPACE_BEGIN
 
 #if HAVE_OPENSSL == 1
-int CAESHelper::aes_block_size = AES_BLOCK_SIZE;
+int CAESHelper::aes_block_size = AES_BLOCK_SIZE; // 16
 #else
 int CAESHelper::aes_block_size = 0;
 #endif // HAVE_OPENSSL
@@ -50,19 +50,29 @@ void CAESHelper::aes(bool flag, const std::string& in, std::string* out)
 {
 #if HAVE_OPENSSL == 1
     AES_KEY* aes_key = (AES_KEY*)_aes_key;
-    const char* in_p = in.data();
 
+    std::string in_tmp = in;
+    if (in.size() % AES_BLOCK_SIZE != 0)
+    {
+        std::string::size_type tmp_size = in.size() + (AES_BLOCK_SIZE - in.size() % AES_BLOCK_SIZE);
+        in_tmp.resize(tmp_size);
+    }
+
+    const char* in_p = in_tmp.data();
     for (std::string::size_type i=0; i<in.size(); i+=AES_BLOCK_SIZE)
     {
         char out_tmp[AES_BLOCK_SIZE];
+
         if (flag)
             AES_encrypt((const unsigned char*)(in_p), (unsigned char*)(out_tmp), aes_key);
         else
             AES_decrypt((const unsigned char*)(in_p), (unsigned char*)(out_tmp), aes_key);
 
         in_p += AES_BLOCK_SIZE;
-        out->insert(i, out_tmp, AES_BLOCK_SIZE);
+        out->append(out_tmp, AES_BLOCK_SIZE);
     }
+#else
+    *out = '\0'; // 需要加上这一句，不然难区分HAVE_OPENSSL值是否为1或不为1的情况
 #endif // HAVE_OPENSSL
 }
 
