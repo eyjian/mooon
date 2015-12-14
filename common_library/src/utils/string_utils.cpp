@@ -893,7 +893,7 @@ void CStringUtils::trim_CR(std::string& line)
 std::string CStringUtils::char2hex(unsigned char c)
 {
     static unsigned char hex_table[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-    std::string hex(3, '\0');
+    std::string hex(2, '\0');
 
     hex[0] = hex_table[(c >> 4) & 0x0F];
     hex[1] = hex_table[c & 0x0F];
