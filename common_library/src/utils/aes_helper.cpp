@@ -59,6 +59,9 @@ void CAESHelper::aes(bool flag, const std::string& in, std::string* out)
     }
 
     const char* in_p = in_tmp.data();
+    out->resize(in_tmp.size());
+    char* out_p = const_cast<char*>(out->data());
+
     for (std::string::size_type i=0; i<in.size(); i+=AES_BLOCK_SIZE)
     {
         char out_tmp[AES_BLOCK_SIZE];
@@ -69,7 +72,7 @@ void CAESHelper::aes(bool flag, const std::string& in, std::string* out)
             AES_decrypt((const unsigned char*)(in_p), (unsigned char*)(out_tmp), aes_key);
 
         in_p += AES_BLOCK_SIZE;
-        out->append(out_tmp, AES_BLOCK_SIZE);
+        memcpy(out_p+i, out_tmp, AES_BLOCK_SIZE);
     }
 #else
     *out = '\0'; // 需要加上这一句，不然难区分HAVE_OPENSSL值是否为1或不为1的情况
