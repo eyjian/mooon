@@ -29,22 +29,17 @@ public:
     CAESHelper(const std::string& key);
     ~CAESHelper();
 
-    void encrypt(const std::string& in, std::string* out)
-    {
-        aes(true, in, out);
-    }
-
-    void decrypt(const std::string& in, std::string* out)
-    {
-        aes(false, in, out);
-    }
+    void encrypt(const std::string& in, std::string* out);
+    void decrypt(const std::string& in, std::string* out);
 
 private:
     // flag 为true表示加密，为false表示解密
-    void aes(bool flag, const std::string& in, std::string* out);
+    void aes(bool flag, const std::string& in, std::string* out, void* aes_key);
 
 private:
-    void* _aes_key;
+    void* _encrypt_key;
+    void* _decrypt_key;
+    std::string _key;
 };
 
 UTILS_NAMESPACE_END

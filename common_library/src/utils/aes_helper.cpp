@@ -31,25 +31,49 @@ int CAESHelper::aes_block_size = 0;
 
 CAESHelper::CAESHelper(const std::string& key)
 {
-#if HAVE_OPENSSL == 1
-    _aes_key = new AES_KEY;
-    AES_set_encrypt_key((const unsigned char*)(key.data()), (int)(key.size()*8), (AES_KEY*)_aes_key);
-#else
-    _aes_key = NULL;
-#endif // HAVE_OPENSSL
+    _encrypt_key = NULL;
+    _decrypt_key = NULL;
+    _key = key;
 }
 
 CAESHelper::~CAESHelper()
 {
 #if HAVE_OPENSSL == 1
-    delete (AES_KEY*)_aes_key;
+    delete (AES_KEY*)_encrypt_key;
+    delete (AES_KEY*)_decrypt_key;
 #endif // HAVE_OPENSSL
 }
 
-void CAESHelper::aes(bool flag, const std::string& in, std::string* out)
+void CAESHelper::encrypt(const std::string& in, std::string* out)
 {
 #if HAVE_OPENSSL == 1
-    AES_KEY* aes_key = (AES_KEY*)_aes_key;
+    if (NULL == _encrypt_key)
+    {
+        _encrypt_key = new AES_KEY;
+        AES_set_encrypt_key((const unsigned char*)(_key.data()), (int)(_key.size()*8), (AES_KEY*)_encrypt_key);
+    }
+
+    aes(true, in, out, _encrypt_key);
+#endif // HAVE_OPENSSL
+}
+
+void CAESHelper::decrypt(const std::string& in, std::string* out)
+{
+#if HAVE_OPENSSL == 1
+    if (NULL == _decrypt_key)
+    {
+        _decrypt_key = new AES_KEY;
+        AES_set_decrypt_key((const unsigned char*)(_key.data()), (int)(_key.size()*8), (AES_KEY*)_decrypt_key);
+    }
+
+    aes(false, in, out, _decrypt_key);
+#endif // HAVE_OPENSSL
+}
+
+void CAESHelper::aes(bool flag, const std::string& in, std::string* out, void* aes_key)
+{
+#if HAVE_OPENSSL == 1
+    AES_KEY* aes_key_ = (AES_KEY*)aes_key;
 
     std::string in_tmp = in;
     if (in.size() % AES_BLOCK_SIZE != 0)
@@ -67,9 +91,9 @@ void CAESHelper::aes(bool flag, const std::string& in, std::string* out)
         char out_tmp[AES_BLOCK_SIZE];
 
         if (flag)
-            AES_encrypt((const unsigned char*)(in_p), (unsigned char*)(out_tmp), aes_key);
+            AES_encrypt((const unsigned char*)(in_p), (unsigned char*)(out_tmp), aes_key_);
         else
-            AES_decrypt((const unsigned char*)(in_p), (unsigned char*)(out_tmp), aes_key);
+            AES_decrypt((const unsigned char*)(in_p), (unsigned char*)(out_tmp), aes_key_);
 
         in_p += AES_BLOCK_SIZE;
         memcpy(out_p+i, out_tmp, AES_BLOCK_SIZE);
