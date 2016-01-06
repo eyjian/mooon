@@ -19,6 +19,7 @@
 #ifndef MOOON_SYS_EVENT_QUEUE_H
 #define MOOON_SYS_EVENT_QUEUE_H
 #include "mooon/sys/event.h"
+#include <list>
 SYS_NAMESPACE_BEGIN
 
 // 让std::list可直接应用在CEventQueue
