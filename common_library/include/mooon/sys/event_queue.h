@@ -177,10 +177,10 @@ public:
         return true;
     }
 
-    void pop_front()
+    bool pop_front()
     {
         DataType elem;
-        (void)pop_front(elem);
+        return pop_front(elem);
     }
     
 	/***
