@@ -31,10 +31,14 @@ SYS_NAMESPACE_BEGIN
 class CMySQLConnection: public CDBConnectionBase, public utils::CObject
 {
 public:
+    static bool is_duplicate(int errcode);
+
+public:
     CMySQLConnection(size_t sql_max=8192);
     ~CMySQLConnection();
 
 public:
+    virtual bool is_duplicate_exception(int errcode) const;
     virtual bool is_disconnected_exception(CDBException& db_error) const;
     virtual std::string escape_string(const std::string& str) const;
     virtual void open() throw (CDBException);

@@ -59,6 +59,9 @@ class DBConnection
 public:
     virtual ~DBConnection() {}
     
+    // 是否为重复记录
+    virtual bool is_duplicate_exception(int errcode) const { return false; }
+
     // 判断是否为断开连接异常
     virtual bool is_disconnected_exception(CDBException& db_error) const { return false; }
 

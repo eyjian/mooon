@@ -34,6 +34,12 @@ SYS_NAMESPACE_BEGIN
 // 将自己注释到CObjectFactdory中
 REGISTER_OBJECT_CREATOR("mysql_connection", CMySQLConnection)
 
+bool CMySQLConnection::is_duplicate(int errcode)
+{
+    return 1062 == errcode;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 CMySQLConnection::CMySQLConnection(size_t sql_max)
     : CDBConnectionBase(sql_max), _mysql_handler(NULL)
 {
@@ -42,6 +48,11 @@ CMySQLConnection::CMySQLConnection(size_t sql_max)
 CMySQLConnection::~CMySQLConnection()
 {
     close(); // 不要在父类的析构中调用虚拟函数
+}
+
+bool CMySQLConnection::is_duplicate_exception(int errcode) const
+{
+    return CMySQLConnection::is_duplicate(errcode);
 }
 
 bool CMySQLConnection::is_disconnected_exception(CDBException& db_error) const

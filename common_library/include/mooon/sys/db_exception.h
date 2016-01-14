@@ -46,6 +46,7 @@ public:
     /***
       * 构造一个异常对象
       * 请注意不应当显示调用构造函数
+      * 对于MySQL返回的出错码1062，表示重复插入
       */
     CDBException(const char* sql, const char* errmsg, int errcode=-1, const char* file=__FILE__, int line=__LINE__)
         : CException(errmsg, errcode, file, line)
