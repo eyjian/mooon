@@ -152,9 +152,10 @@ int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, co
     }
     else
     {
+        sys::DBConnection* db_connection = config_loader->get_db_connection(update_info.database_index);
+
         try
         {
-            sys::DBConnection* db_connection = config_loader->get_db_connection(update_info.database_index);
             if (NULL == db_connection)
             {
                 MYLOG_ERROR("[%d]database_index[%d] not exists\n", seq, update_info.database_index);
@@ -187,6 +188,7 @@ int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, co
         }
         catch (sys::CDBException& db_ex)
         {
+            //db_connection->is_duplicate_exception(db_ex.errcode());
             MYLOG_ERROR("[%d]%s\n", seq, db_ex.str().c_str());
             if (throw_exception)
                 throw apache::thrift::TApplicationException(db_ex.str());
