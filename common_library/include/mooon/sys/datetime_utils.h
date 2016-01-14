@@ -33,6 +33,9 @@ public:
     /** 判断指定年份是否为闰年 */
     static bool is_leap_year(int year);
     
+    /** 将time_t值转换成类似于20160114这样的整数 */
+    static uint32_t time2date(time_t t);
+
     /** 得到当前日期和时间，返回格式由参数format决定，默认为: YYYY-MM-DD HH:SS:MM
       * @datetime_buffer: 用来存储当前日期和时间的缓冲区
       * @datetime_buffer_size: datetime_buffer的字节大小，不应当于小“YYYY-MM-DD HH:SS:MM”

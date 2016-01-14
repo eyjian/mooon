@@ -40,6 +40,15 @@ bool CDatetimeUtils::is_leap_year(int year)
     return ((0 == year%4) && (year%100 != 0)) || (0 == year%400);
 }
 
+uint32_t CDatetimeUtils::time2date(time_t t)
+{
+    struct tm result;
+    localtime_r(&t, &result);
+
+    // 20160114
+    return (result.tm_year+1900)*10000 + (result.tm_mon+1)*100 + result.tm_mday;
+}
+
 void CDatetimeUtils::get_current_datetime(char* datetime_buffer, size_t datetime_buffer_size, const char* format)
 {
     struct tm result;
