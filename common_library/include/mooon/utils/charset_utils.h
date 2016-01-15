@@ -27,15 +27,15 @@ UTILS_NAMESPACE_BEGIN
 class CCharsetUtils
 {
 public:
-    void convert(const std::string& from_charset, const std::string& to_charset,
+    static void convert(const std::string& from_charset, const std::string& to_charset,
                  const std::string& from, std::string* to) throw (CException);
 
 public:
-    void gbk_to_utf8(const std::string& from, std::string* to) throw (CException);
-    void utf8_to_gbk(const std::string& from, std::string* to) throw (CException);
+    static void gbk_to_utf8(const std::string& from, std::string* to) throw (CException);
+    static void utf8_to_gbk(const std::string& from, std::string* to) throw (CException);
 
-    void gb2312_to_utf8(const std::string& from, std::string* to) throw (CException);
-    void utf8_to_gb2312(const std::string& from, std::string* to) throw (CException);
+    static void gb2312_to_utf8(const std::string& from, std::string* to) throw (CException);
+    static void utf8_to_gb2312(const std::string& from, std::string* to) throw (CException);
 };
 
 UTILS_NAMESPACE_END
