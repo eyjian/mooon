@@ -30,41 +30,48 @@ void CCharsetUtils::convert(const std::string& from_charset, const std::string& 
     char *inbuf = const_cast<char*>(from.c_str());
 
     // 保证足够大
+    size_t outbytes;
     size_t outbytesleft = inbytesleft + inbytesleft;
     char* outbuf = NULL;
+    char* outbuf_ptr = NULL;
     while (true)
     {
+        outbytes = outbytesleft;
         outbuf = new char[outbytesleft];
+        outbuf_ptr = outbuf;
 
-        if (-1 == iconv(cd, &inbuf, &inbytesleft, &outbuf, &outbytesleft))
+        // 调用iconv后，outbuf_ptr不一定仍然指向outbuf
+        if (iconv(cd, &inbuf, &inbytesleft, &outbuf_ptr, &outbytes) != -1)
         {
-            int errcode = errno;
-            delete []outbuf;
+            break;
+        }
 
-            if (E2BIG == errcode) // There is not sufficient room at *outbuf
-            {
-                outbytesleft += outbytesleft;
-            }
-            else
-            {
-                iconv_close(cd);
-                THROW_EXCEPTION(strerror(errcode), errcode);
-            }
+        int errcode = errno;
+        delete []outbuf;
+        outbuf = NULL;
+        if (E2BIG == errcode) // There is not sufficient room at *outbuf
+        {
+            outbytesleft += outbytesleft;
         }
         else
         {
-            break;
+            iconv_close(cd);
+            THROW_EXCEPTION(strerror(errcode), errcode);
         }
     }
 
     if (-1 == iconv_close(cd))
     {
         delete []outbuf;
+        outbuf = NULL;
         THROW_EXCEPTION(strerror(errno), errno);
     }
-
-    to->assign(outbuf, outbytesleft);
-    delete []outbuf;
+    else
+    {
+        to->assign(outbuf, outbytes);
+        delete []outbuf;
+        outbuf = NULL;
+    }
 }
 
 void CCharsetUtils::gbk_to_utf8(const std::string& from, std::string* to) throw (CException)
