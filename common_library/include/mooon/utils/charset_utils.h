@@ -28,14 +28,14 @@ class CCharsetUtils
 {
 public:
     static void convert(const std::string& from_charset, const std::string& to_charset,
-                 const std::string& from, std::string* to) throw (CException);
+                 const std::string& from, std::string* to, bool ignore_error=true) throw (CException);
 
 public:
-    static void gbk_to_utf8(const std::string& from, std::string* to) throw (CException);
-    static void utf8_to_gbk(const std::string& from, std::string* to) throw (CException);
+    static void gbk_to_utf8(const std::string& from, std::string* to, bool ignore_error=true) throw (CException);
+    static void utf8_to_gbk(const std::string& from, std::string* to, bool ignore_error=true) throw (CException);
 
-    static void gb2312_to_utf8(const std::string& from, std::string* to) throw (CException);
-    static void utf8_to_gb2312(const std::string& from, std::string* to) throw (CException);
+    static void gb2312_to_utf8(const std::string& from, std::string* to, bool ignore_error=true) throw (CException);
+    static void utf8_to_gb2312(const std::string& from, std::string* to, bool ignore_error=true) throw (CException);
 };
 
 UTILS_NAMESPACE_END
