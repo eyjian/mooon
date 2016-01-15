@@ -36,7 +36,7 @@ REGISTER_OBJECT_CREATOR("mysql_connection", CMySQLConnection)
 
 bool CMySQLConnection::is_duplicate(int errcode)
 {
-    return 1062 == errcode;
+    return ER_DUP_ENTRY == errcode; // 1062
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -48,6 +48,11 @@ CMySQLConnection::CMySQLConnection(size_t sql_max)
 CMySQLConnection::~CMySQLConnection()
 {
     close(); // 不要在父类的析构中调用虚拟函数
+}
+
+bool CMySQLConnection::is_syntax_exception(int errcode) const
+{
+    return ER_PARSE_ERROR == errcode; // 1064
 }
 
 bool CMySQLConnection::is_duplicate_exception(int errcode) const

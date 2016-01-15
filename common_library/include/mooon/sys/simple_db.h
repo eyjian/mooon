@@ -59,6 +59,9 @@ class DBConnection
 public:
     virtual ~DBConnection() {}
     
+    // 是否为语法错误
+    virtual bool is_syntax_exception(int errcode) const { return false; }
+
     // 是否为重复记录
     virtual bool is_duplicate_exception(int errcode) const { return false; }
 
