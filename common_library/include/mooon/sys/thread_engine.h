@@ -418,7 +418,7 @@ public:
         }
     }
 
-    pthread_t thread_id() { return _thread; }
+    uint64_t thread_id() { return static_cast<uint64_t>(_thread); }
     void cancel_thread()
     {
         pthread_cancel(_thread);
