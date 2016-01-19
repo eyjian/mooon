@@ -182,6 +182,10 @@ public:
     // 参数num_io_threads，只有当Server为TNonblockingServer才有效
     void serve(uint16_t port, uint8_t num_worker_threads=1, uint8_t num_io_threads=1);
     void serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads=1);
+    void serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads, void* attached);
+
+    // 要求ThriftHandler类有方法attach(void*)
+    void serve(uint16_t port, void* attached, uint8_t num_worker_threads=1, uint8_t num_io_threads=1);
     void stop();
 
     ThriftHandler* get()
@@ -192,6 +196,9 @@ public:
     {
         return _handler.get();
     }
+
+private:
+    void init(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads);
 
 private:
     boost::shared_ptr<ThriftHandler> _handler;
@@ -309,6 +316,50 @@ void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Serve
 template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
 void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads)
 {
+    init("0.0.0.0", port, num_worker_threads, num_io_threads);
+
+    // 这里也可直接调用serve()，但推荐run()
+    // !!!注意调用run()的进程或线程会被阻塞
+    _server->run();
+}
+
+template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads, void* attached)
+{
+    init(ip, port, num_worker_threads, num_io_threads);
+
+    // 关联
+    if (attached != NULL)
+        _handler->attach(attached);
+
+    // 这里也可直接调用serve()，但推荐run()
+    // !!!注意调用run()的进程或线程会被阻塞
+    _server->run();
+}
+
+template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(uint16_t port, void* attached, uint8_t num_worker_threads, uint8_t num_io_threads)
+{
+    init("0.0.0.0", port, num_worker_threads, num_io_threads);
+
+    // 关联
+    if (attached != NULL)
+        _handler->attach(attached);
+
+    // 这里也可直接调用serve()，但推荐run()
+    // !!!注意调用run()的进程或线程会被阻塞
+    _server->run();
+}
+
+template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::stop()
+{
+    _server->stop();
+}
+
+template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::init(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads)
+{
     set_thrift_debug_log_function();
 
     _handler.reset(new ThriftHandler);
@@ -327,13 +378,9 @@ void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Serve
     if (sizeof(Server) == sizeof(apache::thrift::server::TNonblockingServer))
         server->setNumIOThreads(num_io_threads);
     _server.reset(server);
-    _server->run(); // 这里也可直接调用serve()，但推荐run()
-}
 
-template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::stop()
-{
-    _server->stop();
+    // 不要调用_server->run()，交给serve()来调用，
+    // 因为一旦调用了run()后，调用线程或进程就被阻塞了。
 }
 
 NET_NAMESPACE_END
