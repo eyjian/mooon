@@ -183,6 +183,15 @@ public:
     void serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads=1);
     void stop();
 
+    ThriftHandler* get()
+    {
+        return _handler.get();
+    }
+    ThriftHandler* get() const
+    {
+        return _handler.get();
+    }
+
 private:
     boost::shared_ptr<ThriftHandler> _handler;
     boost::shared_ptr<apache::thrift::TProcessor> _processor;
@@ -193,18 +202,44 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// 被thrift回调的写日志函数，由set_thrift_log_write_function()调用它
-inline void write_log_function(const char* log)
+// 被thrift回调的写日志函数，由set_thrift_debug_log_function()调用它
+inline void write_thrift_debug_log(const char* log)
+{
+    MYLOG_DEBUG("%s", log);
+}
+
+inline void write_thrift_info_log(const char* log)
 {
     MYLOG_INFO("%s", log);
 }
 
+inline void write_thrift_error_log(const char* log)
+{
+    MYLOG_ERROR("%s", log);
+}
+
 // 将thrift输出写入到日志文件中
-inline void set_thrift_log_write_function()
+inline void set_thrift_debug_log_function()
 {
     if (::mooon::sys::g_logger != NULL)
     {
-        apache::thrift::GlobalOutput.setOutputFunction(write_log_function);
+        apache::thrift::GlobalOutput.setOutputFunction(write_thrift_debug_log);
+    }
+}
+
+inline void set_thrift_info_log_function()
+{
+    if (::mooon::sys::g_logger != NULL)
+    {
+        apache::thrift::GlobalOutput.setOutputFunction(write_thrift_info_log);
+    }
+}
+
+inline void set_thrift_error_log_function()
+{
+    if (::mooon::sys::g_logger != NULL)
+    {
+        apache::thrift::GlobalOutput.setOutputFunction(write_thrift_error_log);
     }
 }
 
@@ -216,7 +251,7 @@ CThriftClientHelper<ThriftClient, Protocol, Transport>::CThriftClientHelper(
         : _host(host)
         , _port(port)
 {
-    set_thrift_log_write_function();
+    set_thrift_debug_log_function();
 
     _sock_pool.reset(new apache::thrift::transport::TSocketPool());
     _sock_pool->addServer(host, (int)port);
@@ -267,7 +302,7 @@ void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Serve
 template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
 void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads)
 {
-    set_thrift_log_write_function();
+    set_thrift_debug_log_function();
 
     _handler.reset(new ThriftHandler);
     _processor.reset(new ServiceProcessor(_handler));
