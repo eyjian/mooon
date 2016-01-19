@@ -106,6 +106,7 @@ public:
     // apache::thrift::TApplicationException
     // apache::thrift::TException
     void connect();
+    bool is_connected() const;
 
     // 断开与thrift服务端的连接
     //
@@ -281,6 +282,12 @@ void CThriftClientHelper<ThriftClient, Protocol, Transport>::connect()
     {
         _transport->open();
     }
+}
+
+template <class ThriftClient, class Protocol, class Transport>
+bool CThriftClientHelper<ThriftClient, Protocol, Transport>::is_connected() const
+{
+    return _transport->isOpen();
 }
 
 template <class ThriftClient, class Protocol, class Transport>
