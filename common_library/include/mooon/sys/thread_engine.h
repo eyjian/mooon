@@ -424,6 +424,27 @@ public:
         pthread_cancel(_thread);
     }
 
+    bool is_alive() const
+    {
+//#ifdef __USE_GNU
+//        int ret = pthread_tryjoin_np(_thread, NULL);
+//        return EBUSY == ret;
+//#endif // __USE_GNU
+        int policy = -1;
+        struct sched_param param;
+        int ret = pthread_getschedparam(_thread, &policy, &param);
+        return ret != ESRCH; // 3 (No such process)
+    }
+
+    void detach() throw (CSyscallException)
+    {
+        int ret = pthread_detach(_thread);
+        if (ret != 0)
+        {
+            THROW_SYSCALL_EXCEPTION(strerror(errno), errno, "pthread_detach");
+        }
+    }
+
 private:
     CThreadEngine();
     CThreadEngine(const CThreadEngine&);
