@@ -76,8 +76,7 @@ log()
             printf "[$process_cmdline][`date +'%Y-%m-%d %H:%M:%S'`]truncated\n" > $log_filepath
 
             printf "[$process_cmdline]$record"
-            printf "[$process_cmdline]$record" >> $log_filepath
-            return
+            printf "[$process_cmdline]$record" >> $log_filepath            
         fi
     fi
 }
