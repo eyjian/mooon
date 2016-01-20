@@ -69,6 +69,9 @@ log()
             printf "[$process_cmdline]$record"
             printf "[$process_cmdline]$record" >> $log_filepath
         else
+            printf "[$process_cmdline]$record" >> $log_filepath
+            mv $log_filepath $log_filepath.bak # 备份
+
             printf "[$process_cmdline][`date +'%Y-%m-%d %H:%M:%S'`]truncated\n"
             printf "[$process_cmdline][`date +'%Y-%m-%d %H:%M:%S'`]truncated\n" > $log_filepath
 
