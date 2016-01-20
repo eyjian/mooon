@@ -160,14 +160,10 @@ private:
 // TJSONProtocolFactory
 // TDebugProtocolFactory
 //
-// Server除默认的TNonblockingServer外，还可选择：
-// TSimpleServer
-// TThreadedServer
-// TThreadPoolServer
+// 只支持TNonblockingServer一种Server
 template <class ThriftHandler,
           class ServiceProcessor,
-          class ProtocolFactory=apache::thrift::protocol::TBinaryProtocolFactory,
-          class Server=apache::thrift::server::TNonblockingServer>
+          class ProtocolFactory=apache::thrift::protocol::TBinaryProtocolFactory>
 class CThriftServerHelper
 {
 public:
@@ -307,14 +303,14 @@ void CThriftClientHelper<ThriftClient, Protocol, Transport>::close()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads)
+template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serve(uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads)
 {
     serve("0.0.0.0", port, num_worker_threads, num_io_threads);
 }
 
-template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads)
+template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads)
 {
     init("0.0.0.0", port, num_worker_threads, num_io_threads);
 
@@ -323,8 +319,8 @@ void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Serve
     _server->run();
 }
 
-template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads, void* attached)
+template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads, void* attached)
 {
     init(ip, port, num_worker_threads, num_io_threads);
 
@@ -337,8 +333,8 @@ void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Serve
     _server->run();
 }
 
-template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::serve(uint16_t port, void* attached, uint8_t num_worker_threads, uint8_t num_io_threads)
+template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serve(uint16_t port, void* attached, uint8_t num_worker_threads, uint8_t num_io_threads)
 {
     init("0.0.0.0", port, num_worker_threads, num_io_threads);
 
@@ -351,14 +347,14 @@ void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Serve
     _server->run();
 }
 
-template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::stop()
+template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::stop()
 {
     _server->stop();
 }
 
-template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory, class Server>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Server>::init(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads)
+template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::init(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads)
 {
     set_thrift_debug_log_function();
 
@@ -373,10 +369,8 @@ void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory, Serve
     _thread_manager->threadFactory(_thread_factory);
     _thread_manager->start();
 
-    // Server默认为apache::thrift::server::TNonblockingServer
-    Server* server = new Server(_processor, _protocol_factory, port, _thread_manager);
-    if (sizeof(Server) == sizeof(apache::thrift::server::TNonblockingServer))
-        server->setNumIOThreads(num_io_threads);
+    apache::thrift::server::TNonblockingServer* server = new apache::thrift::server::TNonblockingServer(_processor, _protocol_factory, port, _thread_manager);
+    server->setNumIOThreads(num_io_threads);
     _server.reset(server);
 
     // 不要调用_server->run()，交给serve()来调用，
