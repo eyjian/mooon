@@ -43,8 +43,9 @@ process_name=$(basename `echo "$process_cmdline"|cut -d" " -f1`)
 # 这样保证了可同时对不同对象进行监控。
 active=0
 
-# 日志文件
-log_filepath=/tmp/process_monitor.log
+# 日志文件，可能多个用户都在运行，
+# 所以日志文件名需要加上用户名，否则其它用户可能无权限写
+log_filepath=/tmp/process_monitor-$cur_user.log
 # 日志文件大小（10M）
 log_filesize=10485760
 
@@ -52,7 +53,7 @@ log_filesize=10485760
 # 1) 需要写入的日志
 log()
 {
-    # 创建日志文件，如果不存在的话
+    # 创建日志文件，如果不存在的话    
     if test ! -f $log_filepath; then
         touch $log_filepath
     fi
