@@ -60,17 +60,17 @@ inline bool thrift_not_connected(
 //     client.connect();
 //     client->foo();
 // }
-// catch (apache::thrift::transport::TTransportException& transport_ex)
+// catch (apache::thrift::transport::TTransportException& ex)
 // {
-//     MYLOG_ERROR("thrift exception: %s\n", transport_ex.what());
+//     MYLOG_ERROR("thrift exception: (%d)%s\n", ex.getType(), ex.what());
 // }
-// catch (apache::thrift::transport::TApplicationException& app_ex)
+// catch (apache::thrift::transport::TApplicationException& ex)
 // {
-//     MYLOG_ERROR("thrift exception: %s\n", app_ex.what());
+//     MYLOG_ERROR("thrift exception: %s\n", ex.what());
 // }
-// catch (apache::thrift::TException& tx)
+// catch (apache::thrift::TException& ex)
 // {
-//     MYLOG_ERROR("thrift exception: %s\n", tx.what());
+//     MYLOG_ERROR("thrift exception: %s\n", ex.what());
 // }
 // Transport除默认的TFramedTransport (TBufferTransports.h)，还可选择：
 // TBufferedTransport (TBufferTransports.h)
@@ -151,9 +151,9 @@ private:
 // {
 //     _thrift_server.serve(listen_port);
 // }
-// catch (apache::thrift::TException& tx)
+// catch (apache::thrift::TException& ex)
 // {
-//     MYLOG_ERROR("thrift exception: %s\n", tx.what());
+//     MYLOG_ERROR("thrift exception: %s\n", ex.what());
 // }
 // ProtocolFactory除了默认的TBinaryProtocolFactory，还可选择：
 // TCompactProtocolFactory
