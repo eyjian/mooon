@@ -618,7 +618,7 @@ const char* CStringUtils::extract_filename(const char* filepath)
 std::string CStringUtils::format_string(const char* format, ...)
 {
     va_list ap;
-    size_t size = 1024;
+    size_t size = 8192;
     ScopedArray<char> buffer(new char[size]);
 
     while (true)
