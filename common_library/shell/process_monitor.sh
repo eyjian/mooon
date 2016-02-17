@@ -1,5 +1,5 @@
 #!/bin/sh
-# https://github.com/eyjian/mooon
+# https://github.com/eyjian/mooon/blob/master/common_library/shell/process_monitor.sh
 # Created by yijian on 2012/7/23
 #
 # 运行日志：/tmp/process_monitor.log，由于多进程同时写，不一定完整，仅供参考。
