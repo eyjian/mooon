@@ -26,6 +26,7 @@ fi
 process_cmdline="$1" # 需要监控的进程名，或完整的命令行，也可以为部分命令行
 restart_script="$2"  # 用来重启进程的脚本，要求具有可执行权限
 monitor_interval=2   # 定时检测时间间隔，单位为秒
+start_seconds=5      # 被监控进程启动需要花费多少秒
 cur_user=`whoami`    # 执行本监控脚本的用户名
 
 # 取指定网卡上的IP地址
@@ -36,6 +37,8 @@ uid=`id -u $cur_user`
 self_name=`basename $0`
 self_cmdline="$0 $*"
 process_name=$(basename `echo "$process_cmdline"|cut -d" " -f1`)
+process_match="${process_cmdline#* }" # 只保留用来匹配的参数部分
+process_match=$(echo $process_match) # 去掉前后的空格
 
 # 用来做互斥，
 # 以保证只有最先启动的能运行，
@@ -96,7 +99,11 @@ while true; do
     fi
 
     # 检查被监控的进程是否存在，如果不存在则重启
-    process_count=`ps -C $process_name h -o euser,args| awk 'BEGIN { num=0; } { if (($1==uid || $1==cur_user) && match($0, process_cmdline)) {++num;}} END { printf("%d",num); }' uid=$uid cur_user=$cur_user process_cmdline="$process_cmdline"`
+    if test -z $process_match; then
+        process_count=`ps -C $process_name h -o euser,args| awk 'BEGIN { num=0; } { if (($1==uid || $1==cur_user)) {++num;}} END { printf("%d",num); }' uid=$uid cur_user=$cur_user`
+    else
+        process_count=`ps -C $process_name h -o euser,args| awk 'BEGIN { num=0; } { if (($1==uid || $1==cur_user) && match($0, process_match)) {++num;}} END { printf("%d",num); }' uid=$uid cur_user=$cur_user process_match="$process_match"`
+    fi
     if test $process_count -lt 1; then
         # 执行重启脚本，要求这个脚本能够将指定的进程拉起来
         log "\033[0;32;34m[`date +'%Y-%m-%d %H:%M:%S'`]restart \"$process_cmdline\"\033[m\n"
@@ -104,6 +111,7 @@ while true; do
     fi
 
     active=1
-    sleep $monitor_interval
+    # sleep时间得长一点，原因是启动可能没那么快，以防止启动多个进程
+    sleep $start_seconds
 done
 exit 0
