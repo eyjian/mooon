@@ -382,10 +382,12 @@ void CUtils::set_process_title(const std::string &new_title)
             strcpy(g_arg_start, new_title.c_str());
             memset(g_arg_start+new_title_len, 0, len-new_title_len);
 
+#if 0 // 从实际的测试来看，如果开启以下两句，会出现ps u输出的COMMAND一列为空
             // 当新的title比原title短时，
             // 填充argv[0]字段时，改为填充argv[0]区的后段，前段填充0
             memset(g_arg_start, 0, len);
             strcpy(g_arg_start+(len - new_title_len), new_title.c_str());
+#endif
         }
         else
         {
