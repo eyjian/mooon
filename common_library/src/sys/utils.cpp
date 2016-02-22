@@ -297,6 +297,8 @@ std::string CUtils::get_program_long_name()
     return program_invocation_name;
 }
 
+// 如果调用了set_process_title()，
+// 则通过program_invocation_short_name可能取不到预期的值，甚至返回的是空
 std::string CUtils::get_program_short_name()
 {
     //#define _GNU_SOURCE

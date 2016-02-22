@@ -106,7 +106,11 @@ public:
     /** 得到当前进程程序的名称，结果和main函数的argv[0]相同，如“./abc.exe”为“./abc.exe” */
     static std::string get_program_long_name();
 
-    /** 得到当前进程的的名称，不包含目录部分，如“./abc.exe”值为“abc.exe” */
+    /**
+     * 得到当前进程的的名称，不包含目录部分，如“./abc.exe”值为“abc.exe”
+     * 如果调用了set_process_title()，
+     * 则通过program_invocation_short_name可能取不到预期的值，甚至返回的是空
+     */
     static std::string get_program_short_name();
 
     /**
