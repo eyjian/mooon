@@ -285,6 +285,9 @@ public:
     // 判断一个字符串是否为变量型字符串，即：可包含字母、数字、下划线和横线
     static bool is_variable_string(const char* str);
     
+    // 判断一个字符串是否可能为正则表达式字符串
+    static bool is_regex_string(const char* str);
+
     // 删除文件名的后缀部分，如abc.exe变成abc，注意不会处理路径部分
     static std::string remove_suffix(const std::string& filename);
     

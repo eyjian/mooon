@@ -702,6 +702,74 @@ bool CStringUtils::is_variable_string(const char* str)
     return true;
 }
 
+bool CStringUtils::is_regex_string(const char* str)
+{
+    const char* p = str;
+
+    while (*p != '\0')
+    {
+        if (*p >= '0' && *p <= '9')
+        {
+            ++p;
+            continue;
+        }
+        if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z'))
+        {
+            ++p;
+            continue;
+        }
+        if (('_' == *p) || ('-' == *p))
+        {
+            ++p;
+            continue;
+        }
+        if (('\\' == *p) || ('/' == *p))
+        {
+            ++p;
+            continue;
+        }
+        if (('+' == *p) || ('*' == *p))
+        {
+            ++p;
+            continue;
+        }
+        if (('.' == *p) || (',' == *p))
+        {
+            ++p;
+            continue;
+        }
+        if (('<' == *p) || ('>' == *p))
+        {
+            ++p;
+            continue;
+        }
+        if (('{' == *p) || ('}' == *p))
+        {
+            ++p;
+            continue;
+        }
+        if (('(' == *p) || (')' == *p))
+        {
+            ++p;
+            continue;
+        }
+        if (('[' == *p) || (']' == *p))
+        {
+            ++p;
+            continue;
+        }
+        if (('$' == *p) || ('%' == *p) || ('^' == *p) || ('?' == *p) || ('"' == *p) || (' ' == *p))
+        {
+            ++p;
+            continue;
+        }
+
+        return false;
+    }
+
+    return true;
+}
+
 std::string CStringUtils::remove_suffix(const std::string& filename)
 {
     std::string::size_type pos = filename.find('.');
