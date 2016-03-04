@@ -17,18 +17,7 @@
 
 # 实际中，遇到脚本在crontab中运行时，找不到ls和ps等命令
 # 原来是有些环境ls和ps位于/usr/bin目录下，而不是常规的/bin目录
-export PATH=/bin:/usr/bin:/usr/local/bin:$PATH
-
-# 仅有上面的export还不放心，
-# 定义函数check_command()进一步对ls和ps做检查，以防止程序失控
-check_command()
-{
-    command=$1
-    which $command > /dev/null
-    if test $? -ne 0; then
-        exit 1
-    fi
-}
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:$PATH
 
 # 需要指定个数的命令行参数
 # 参数1：被监控的进程名（可以包含命令行参数）
@@ -73,8 +62,6 @@ log_filesize=10485760
 # 1) 需要写入的日志
 log()
 {
-    check_command ls
-
     # 创建日志文件，如果不存在的话    
     if test ! -f $log_filepath; then
         touch $log_filepath
@@ -106,8 +93,6 @@ log()
 # 以死循环方式，定时检测指定的进程是否存在
 # 一个重要原因是crontab最高频率为1分钟，不满足秒级的监控要求
 while true; do
-    check_command ps
-
     self_count=`ps -C $self_name h -o euser,args| awk 'BEGIN { num=0; } { if (($1==uid || $1==cur_user) && match($0, self_cmdline)) {++num;}} END { printf("%d",num); }' uid=$uid cur_user=$cur_user self_cmdline="$self_cmdline"`
     if test $self_count -gt 2; then 
         log "\033[0;32;31m[`date +'%Y-%m-%d %H:%M:%S'`]$0 is running[$self_count/active:$active], current user is $cur_user.\033[m\n"
