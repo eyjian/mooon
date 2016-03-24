@@ -16,6 +16,7 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
+#include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -50,6 +51,41 @@ static void child_process(IMainHelper* main_helper, int argc, char* argv[]);
   * @return: 返回true的情况下才会自重启，否则父子进程都退出
   */
 static bool parent_process(IMainHelper* main_helper, pid_t child_pid, int& child_exit_code);
+
+// 是否收到了退出信号
+int exit_by_signal = 0;
+
+// 信号线程
+static sigset_t sg_sigset;
+static pthread_t sg_signal_thread;
+static void* signal_thread_proc(void* param)
+{
+    IMainHelper* main_helper = static_cast<IMainHelper*>(param);
+    int exit_signo = main_helper->get_exit_signal();
+
+    while (true)
+    {
+        int signo = -1;
+        int errcode = sigwait(&sg_sigset, &signo);
+        if (EINTR == errcode)
+        {
+            continue;
+        }
+        if (errcode != 0)
+        {
+            __MYLOG_ERROR(main_helper->get_logger(), NULL, "Waited signal error: %s.\n", sys::Error::to_string().c_str());
+            break;
+        }
+        if (exit_signo == signo)
+        {
+            exit_by_signal = signo; // 标记
+            __MYLOG_INFO(main_helper->get_logger(), NULL, "Received exit signal %s and exited.\n", strsignal(signo));
+            break;
+        }
+    }
+
+    return NULL;
+}
 
 /***
   * main_template总是在main函数中调用，通常如下一行代码即可:
@@ -112,28 +148,36 @@ bool self_restart(IMainHelper* main_helper)
 void child_process(IMainHelper* main_helper, int argc, char* argv[])
 {
     int errcode = 0;
-    sigset_t sigset;
+    //sigset_t sigset;
     sigset_t old_sigset;
     
     int exit_signo = main_helper->get_exit_signal();
     if (exit_signo > 0)
     {            
         // 收到SIGUSR1信号时，则退出进程
-        if (-1 == sigemptyset(&sigset))
+        if (-1 == sigemptyset(&sg_sigset))
         {
             fprintf(stderr, "Initialized signal set error: %s.\n", sys::CUtils::get_last_error_message().c_str());
             exit(1);
         }
-        if (-1 == sigaddset(&sigset, exit_signo))
+        if (-1 == sigaddset(&sg_sigset, exit_signo))
         {
             fprintf(stderr, "Added %s to signal set error: %s.\n", strsignal(exit_signo), sys::CUtils::get_last_error_message().c_str());
             exit(1);
         }
-        if (-1 == sigprocmask(SIG_BLOCK, &sigset, &old_sigset))
+        if (-1 == sigprocmask(SIG_BLOCK, &sg_sigset, &old_sigset))
         {
             fprintf(stderr, "Blocked SIGUSR1 error: %s\n", sys::CUtils::get_last_error_message().c_str());
             exit(1);
-        }    
+        }
+
+        // 创建信号线程
+        errcode = pthread_create(&sg_signal_thread, NULL, signal_thread_proc, main_helper);
+        if (errcode != 0)
+        {
+            fprintf(stderr, "Create signal thread failed: %s\n", sys::CUtils::get_error_message(errcode).c_str());
+            exit(1);
+        }
     }
     
     // 请注意：只有在init成功后，才可以使用__MYLOG_INFO写日志，否则这个时候日志器可能还未created出来
@@ -156,23 +200,13 @@ void child_process(IMainHelper* main_helper, int argc, char* argv[])
 	// 记录工作进程号
     //__MYLOG_INFO(main_helper->get_logger(), "Work process is %d.\n", sys::CUtils::get_current_process_id());
 
-    while (exit_signo > 0)   
+    // 等待信号线程退出
+    if (exit_signo > 0)
     {
-        int signo = -1;
-        errcode = sigwait(&sigset, &signo);        
-        if (EINTR == errcode)
-        {
-            continue;
-        }
+        errcode = pthread_join(sg_signal_thread, NULL);
         if (errcode != 0)
         {
-            __MYLOG_ERROR(main_helper->get_logger(), NULL, "Waited signal error: %s.\n", sys::Error::to_string().c_str());
-            break;
-        }
-        if (exit_signo == signo)
-        {
-            __MYLOG_INFO(main_helper->get_logger(), NULL, "Received exit signal %s and exited.\n", strsignal(signo));
-            break;
+            fprintf(stderr, "Join signal thread failed: %s\n", sys::CUtils::get_error_message(errcode).c_str());
         }
     }
 

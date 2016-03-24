@@ -28,6 +28,9 @@
 #include <signal.h>
 SYS_NAMESPACE_BEGIN
 
+// 是否收到了退出信号，值为大于0，表示收到了退出信号
+extern int exit_by_signal;
+
 /***
   * main函数辅助接口，用于帮助自定义的初始化
   */
