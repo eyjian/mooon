@@ -140,6 +140,11 @@ discover_library(OPENSSL openssl)
 discover_library(PROTOBUF protobuf)
 #link_libraries(libprotobuf.a)
 
+# zookeeper
+discover_library(ZOOKEEPER zookeeper)
+#link_libraries(libzookeeper_st.a)
+#link_libraries(libzookeeper_mt.a)
+
 # 编译参数
 add_definitions("-Wall -fPIC -pthread -D_GNU_SOURCE -D__STDC_FORMAT_MACROS")
 
