@@ -7,6 +7,7 @@ include(CMake.common)
 
 add_subdirectory(src)
 add_subdirectory(test)
+add_subdirectory(tools)
 
 # CMAKE_INSTALL_PREFIX
 install(
