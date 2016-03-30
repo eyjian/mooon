@@ -182,6 +182,8 @@ int main(int argc, char* argv[])
 
             fprintf(stderr, "["PRINT_COLOR_RED"%s"PRINT_COLOR_NONE"] failed: %s\n", remote_host_ip.c_str(), ex.str().c_str());
         }
+
+        std::cout << std::endl;
     } // for
 
     // 输出总结
@@ -192,7 +194,7 @@ int main(int argc, char* argv[])
     for (std::vector<struct ResultInfo>::size_type i=0; i<results.size(); ++i)
     {
         const struct ResultInfo& result_info = results[i];
-        std::cout << result_info << std::endl << std::endl;
+        std::cout << result_info << std::endl;
 
         if (result_info.success)
             ++num_success;
