@@ -17,6 +17,10 @@
  * Writed by yijian on 2015/7/29, eyjian@qq.com eyjian@gmail.com
  */
 
+// Linux下编译libssh2，需要指定参数“--with-libssl-prefix”：
+// ./configure --prefix=/usr/local/libssh2-1.6.0 --with-libssl-prefix=/usr/local/openssl
+// 因此，编译之前需要先安装好openssl
+//
 // 基于libssh2（http://www.libssh2.org/）的实现，
 // 请使用时尊重libssh2的版本
 // 以下为libssh2的版本说明：
