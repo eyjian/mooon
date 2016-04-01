@@ -26,18 +26,18 @@
 #include <iostream>
 
 // 被执行的命令，可为一条或多条命令，如：ls /&&whoami
-STRING_ARG_DEFINE(commands, "", "command to execute remotely");
+STRING_ARG_DEFINE(c, "", "command to execute remotely");
 // 逗号分隔的远程主机列表
-STRING_ARG_DEFINE(hosts, "", "remote hosts");
+STRING_ARG_DEFINE(h, "", "remote hosts");
 // 远程主机的sshd端口号
-INTEGER_ARG_DEFINE(uint16_t, port, 36000, 10, 65535, "remote hosts port");
+INTEGER_ARG_DEFINE(uint16_t, p, 36000, 10, 65535, "remote hosts port");
 // 用户名
-STRING_ARG_DEFINE(user, "", "remote host user");
+STRING_ARG_DEFINE(u, "root", "remote host user");
 // 密码
-STRING_ARG_DEFINE(password, "", "remote host password");
+STRING_ARG_DEFINE(P, "", "remote host password");
 
 // 连接超时，单位为秒
-INTEGER_ARG_DEFINE(uint16_t, timeout, 10, 1, 65535, "timeout seconds to remote host");
+INTEGER_ARG_DEFINE(uint16_t, t, 10, 1, 65535, "timeout seconds to remote host");
 
 // 结果信息
 struct ResultInfo
@@ -66,7 +66,7 @@ inline std::ostream& operator <<(std::ostream& out, const struct ResultInfo& res
 }
 
 // 使用示例：
-// mooon_ssh --user=root --password=test --port=2016 --hosts="127.0.0.1,192.168.0.1" --commands='ls /tmp&&ps aux|grep -c test'
+// mooon_ssh -u=root -P=test -p=2016 -h="127.0.0.1,192.168.0.1" -c='ls /tmp&&ps aux|grep -c test'
 int main(int argc, char* argv[])
 {
     // 解析命令行参数
@@ -77,11 +77,11 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    uint16_t port = mooon::argument::port->value();
-    std::string commands = mooon::argument::commands->value();
-    std::string hosts = mooon::argument::hosts->value();
-    std::string user = mooon::argument::user->value();
-    std::string password = mooon::argument::password->value();
+    uint16_t port = mooon::argument::p->value();
+    std::string commands = mooon::argument::c->value();
+    std::string hosts = mooon::argument::h->value();
+    std::string user = mooon::argument::u->value();
+    std::string password = mooon::argument::P->value();
     mooon::utils::CStringUtils::trim(commands);
     mooon::utils::CStringUtils::trim(hosts);
     mooon::utils::CStringUtils::trim(user);
@@ -90,28 +90,28 @@ int main(int argc, char* argv[])
     // 检查参数（--commands）
     if (commands.empty())
     {
-        fprintf(stderr, "parameter[--commands]'s value not set\n");
+        fprintf(stderr, "parameter[-c]'s value not set\n");
         exit(1);
     }
 
     // 检查参数（--hosts）
     if (hosts.empty())
     {
-        fprintf(stderr, "parameter[--hosts]'s value not set\n");
+        fprintf(stderr, "parameter[-h]'s value not set\n");
         exit(1);
     }
 
     // 检查参数（--user）
     if (user.empty())
     {
-        fprintf(stderr, "parameter[--user]'s value not set\n");
+        fprintf(stderr, "parameter[-u]'s value not set\n");
         exit(1);
     }
 
     // 检查参数（--password）
     if (password.empty())
     {
-        fprintf(stderr, "parameter[--password]'s value not set\n");
+        fprintf(stderr, "parameter[-P]'s value not set\n");
         exit(1);
     }
 
@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
     int num_remote_hosts_ip = mooon::utils::CTokener::split(&hosts_ip, remote_hosts_ip, ",", true);
     if (0 == num_remote_hosts_ip)
     {
-        fprintf(stderr, "parameter[--hosts] error\n");
+        fprintf(stderr, "parameter[-h] error\n");
         exit(1);
     }
 
@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
             fprintf(stdout, PRINT_COLOR_GREEN);
             color = true;
 
-            mooon::net::CLibssh2 libssh2(remote_host_ip, port, user, password, mooon::argument::timeout->value());
+            mooon::net::CLibssh2 libssh2(remote_host_ip, port, user, password, mooon::argument::t->value());
             mooon::sys::CStopWatch stop_watch;
 
             libssh2.remotely_execute(commands, std::cout, &exitcode, &exitsignal, &errmsg, &num_bytes);
