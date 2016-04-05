@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
             mooon::net::CLibssh2 libssh2(remote_host_ip, port, user, password, mooon::argument::t->value());
             libssh2.upload(source, remote_filepath, &file_size);
 
-            fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"] SUCCESS\n", remote_host_ip.c_str());
+            fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"] SUCCESS: %d bytes\n", remote_host_ip.c_str(), file_size);
             results[i].success = true;
         }
         catch (mooon::sys::CSyscallException& ex)

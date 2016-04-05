@@ -216,6 +216,9 @@ void CLibssh2::upload(const std::string& local_filepath, const std::string& remo
             }
         }
 
+        libssh2_channel_send_eof(channel); // 告诉远端数据已发送完毕！少了这几步，对端收到的字节数可能不足够。
+        libssh2_channel_wait_eof(channel); // 等待远端回应libssh2_channel_send_eof()
+        libssh2_channel_wait_closed(channel); // 等待远端关闭通道
         libssh2_channel_free(channel);
         close(local_fd);
     }
