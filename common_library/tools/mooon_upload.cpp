@@ -16,19 +16,19 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-// 批量远程执行shell命令工具
-// 使用示例（-p指定端口，-P指定密码）：
-// mooon_ssh -u=root -P=test -p=2016 -h="127.0.0.1,192.168.0.1" -c='ls /tmp&&ps aux|grep -c test'
-#include "mooon/net/libssh2.h" // 提供远程执行命令接口
+// 批量上传工具
+// 使用示例：
+// ./mooon_upload -h=192.168.10.11,192.168.10.12 -p=6000 -u=root -P='root123' -s=./abc -d=/tmp/
+// 表示将本地的文件./abc上传到两台机器192.168.10.11和192.168.10.12的/tmp/目录
+#include "mooon/net/libssh2.h"
 #include "mooon/sys/stop_watch.h"
 #include "mooon/utils/args_parser.h"
 #include "mooon/utils/print_color.h"
 #include "mooon/utils/string_utils.h"
 #include "mooon/utils/tokener.h"
+#include <fstream>
 #include <iostream>
 
-// 被执行的命令，可为一条或多条命令，如：ls /&&whoami
-STRING_ARG_DEFINE(c, "", "command to execute remotely");
 // 逗号分隔的远程主机列表
 STRING_ARG_DEFINE(h, "", "remote hosts");
 // 远程主机的sshd端口号
@@ -37,6 +37,11 @@ INTEGER_ARG_DEFINE(uint16_t, p, 36000, 10, 65535, "remote hosts port");
 STRING_ARG_DEFINE(u, "root", "remote host user");
 // 密码
 STRING_ARG_DEFINE(P, "", "remote host password");
+
+// 被上传的文件路径
+STRING_ARG_DEFINE(s, "", "the source file uploaded");
+// 文件上传后存放的目录路径
+STRING_ARG_DEFINE(d, "", "the directory to store");
 
 // 连接超时，单位为秒
 INTEGER_ARG_DEFINE(uint16_t, t, 10, 1, 65535, "timeout seconds to remote host");
@@ -67,8 +72,6 @@ inline std::ostream& operator <<(std::ostream& out, const struct ResultInfo& res
     return out;
 }
 
-// 使用示例：
-// mooon_ssh -u=root -P=test -p=2016 -h="127.0.0.1,192.168.0.1" -c='ls /tmp&&ps aux|grep -c test'
 int main(int argc, char* argv[])
 {
     // 解析命令行参数
@@ -80,19 +83,28 @@ int main(int argc, char* argv[])
     }
 
     uint16_t port = mooon::argument::p->value();
-    std::string commands = mooon::argument::c->value();
+    std::string source = mooon::argument::s->value();
+    std::string directory = mooon::argument::d->value();
     std::string hosts = mooon::argument::h->value();
     std::string user = mooon::argument::u->value();
     std::string password = mooon::argument::P->value();
-    mooon::utils::CStringUtils::trim(commands);
+    mooon::utils::CStringUtils::trim(source);
+    mooon::utils::CStringUtils::trim(directory);
     mooon::utils::CStringUtils::trim(hosts);
     mooon::utils::CStringUtils::trim(user);
     mooon::utils::CStringUtils::trim(password);
 
-    // 检查参数（-c）
-    if (commands.empty())
+    // 检查参数（-s）
+    if (hosts.empty())
     {
-        fprintf(stderr, "parameter[-c]'s value not set\n");
+        fprintf(stderr, "parameter[-s]'s value not set\n");
+        exit(1);
+    }
+
+    // 检查参数（-d）
+    if (hosts.empty())
+    {
+        fprintf(stderr, "parameter[-d]'s value not set\n");
         exit(1);
     }
 
@@ -126,16 +138,14 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
+    std::string remote_filepath = directory + std::string("/") + mooon::utils::CStringUtils::extract_filename(source);
     std::vector<struct ResultInfo> results(num_remote_hosts_ip);
     for (int i=0; i<num_remote_hosts_ip; ++i)
     {
         bool color = true;
-        int num_bytes = 0;
-        int exitcode = 0;
-        std::string exitsignal;
-        std::string errmsg;
         const std::string& remote_host_ip = hosts_ip[i];
         results[i].ip = remote_host_ip;
+        results[i].success = false;
 
         fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"]\n", remote_host_ip.c_str());
         fprintf(stdout, PRINT_COLOR_GREEN);
@@ -143,30 +153,12 @@ int main(int argc, char* argv[])
         mooon::sys::CStopWatch stop_watch;
         try
         {
+            int file_size = 0;
             mooon::net::CLibssh2 libssh2(remote_host_ip, port, user, password, mooon::argument::t->value());
+            libssh2.upload(source, remote_filepath, &file_size);
 
-            libssh2.remotely_execute(commands, std::cout, &exitcode, &exitsignal, &errmsg, &num_bytes);
-            fprintf(stdout, PRINT_COLOR_NONE);
-            color = false; // color = true;
-
-            if ((0 == exitcode) && exitsignal.empty())
-            {
-                results[i].success = true;
-                fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"] SUCCESS\n", remote_host_ip.c_str());
-            }
-            else
-            {
-                results[i].success = false;
-
-                if (exitcode != 0)
-                {
-                    fprintf(stderr, "%d: %s\n", exitcode, errmsg.c_str());
-                }
-                else if (!exitsignal.empty())
-                {
-                    fprintf(stderr, "%s: %s\n", exitsignal.c_str(), errmsg.c_str());
-                }
-            }
+            fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"] SUCCESS\n", remote_host_ip.c_str());
+            results[i].success = true;
         }
         catch (mooon::sys::CSyscallException& ex)
         {
@@ -185,7 +177,7 @@ int main(int argc, char* argv[])
 
         results[i].seconds = stop_watch.get_elapsed_microseconds() / 1000000;
         std::cout << std::endl;
-    } // for
+    }
 
     // 输出总结
     std::cout << std::endl;

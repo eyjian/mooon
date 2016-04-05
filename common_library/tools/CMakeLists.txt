@@ -11,8 +11,12 @@ link_directories(../src/utils)
 add_executable(mooon_ssh mooon_ssh.cpp)
 target_link_libraries(mooon_ssh libmooon_net.a libmooon_sys.a libmooon_utils.a libssh2.a libcrypto.a)
 
+# 批量上传工具
+add_executable(mooon_upload mooon_upload.cpp)
+target_link_libraries(mooon_upload libmooon_net.a libmooon_sys.a libmooon_utils.a libssh2.a libcrypto.a)
+
 # CMAKE_INSTALL_PREFIX
 install(
-        TARGETS mooon_ssh
+        TARGETS mooon_ssh mooon_upload
         DESTINATION bin
        )
