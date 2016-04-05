@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
     std::vector<struct ResultInfo> results(num_remote_hosts_ip);
     for (int i=0; i<num_remote_hosts_ip; ++i)
     {
-        bool color = false;
+        bool color = true;
         int num_bytes = 0;
         int exitcode = 0;
         std::string exitsignal;
@@ -137,17 +137,15 @@ int main(int argc, char* argv[])
         const std::string& remote_host_ip = hosts_ip[i];
         results[i].ip = remote_host_ip;
 
+        fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"]\n", remote_host_ip.c_str());
+        fprintf(stdout, PRINT_COLOR_GREEN);
+
+        mooon::sys::CStopWatch stop_watch;
         try
         {
-            fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"]\n", remote_host_ip.c_str());
-            fprintf(stdout, PRINT_COLOR_GREEN);
-            color = true;
-
             mooon::net::CLibssh2 libssh2(remote_host_ip, port, user, password, mooon::argument::t->value());
-            mooon::sys::CStopWatch stop_watch;
 
             libssh2.remotely_execute(commands, std::cout, &exitcode, &exitsignal, &errmsg, &num_bytes);
-            results[i].seconds = stop_watch.get_elapsed_microseconds() / 1000000;
             fprintf(stdout, PRINT_COLOR_NONE);
             color = false; // color = true;
 
@@ -185,6 +183,7 @@ int main(int argc, char* argv[])
             fprintf(stderr, "["PRINT_COLOR_RED"%s"PRINT_COLOR_NONE"] failed: %s\n", remote_host_ip.c_str(), ex.str().c_str());
         }
 
+        results[i].seconds = stop_watch.get_elapsed_microseconds() / 1000000;
         std::cout << std::endl;
     } // for
 
