@@ -95,14 +95,14 @@ int main(int argc, char* argv[])
     mooon::utils::CStringUtils::trim(password);
 
     // 检查参数（-s）
-    if (hosts.empty())
+    if (source.empty())
     {
         fprintf(stderr, "parameter[-s]'s value not set\n");
         exit(1);
     }
 
     // 检查参数（-d）
-    if (hosts.empty())
+    if (directory.empty())
     {
         fprintf(stderr, "parameter[-d]'s value not set\n");
         exit(1);
