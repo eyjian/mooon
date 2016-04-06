@@ -111,8 +111,21 @@ int main(int argc, char* argv[])
     // 检查参数（-h）
     if (hosts.empty())
     {
-        fprintf(stderr, "parameter[-h]'s value not set\n");
-        exit(1);
+        // 尝试从环境变量取值
+        const char* hosts_ = getenv("HOSTS");
+        if (NULL == hosts_)
+        {
+            fprintf(stderr, "parameter[-h]'s value not set\n");
+            exit(1);
+        }
+
+        hosts= hosts_;
+        mooon::utils::CStringUtils::trim(hosts);
+        if (hosts.empty())
+        {
+            fprintf(stderr, "parameter[-h]'s value not set\n");
+            exit(1);
+        }
     }
 
     // 检查参数（-u）
