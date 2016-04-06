@@ -20,6 +20,7 @@
 // 使用示例（-p指定端口，-P指定密码）：
 // mooon_ssh -u=root -P=test -p=2016 -h="127.0.0.1,192.168.0.1" -c='ls /tmp&&ps aux|grep -c test'
 #include "mooon/net/libssh2.h" // 提供远程执行命令接口
+#include "mooon/sys/error.h"
 #include "mooon/sys/stop_watch.h"
 #include "mooon/utils/args_parser.h"
 #include "mooon/utils/print_color.h"
@@ -160,7 +161,7 @@ int main(int argc, char* argv[])
 
                 if (exitcode != 0)
                 {
-                    fprintf(stderr, "%d: %s\n", exitcode, errmsg.c_str());
+                    fprintf(stderr, "%d: %s\n", exitcode, mooon::sys::Error::to_string(exitcode).c_str());
                 }
                 else if (!exitsignal.empty())
                 {
