@@ -149,6 +149,27 @@ public:
     static bool string2int(const char* source, uint64_t& result, uint8_t converted_length=0, bool ignored_zero=false);
     static bool string2uint64(const char* source, uint64_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
 
+    // 当str为非有效的IntType类型整数值时，返回error_value指定的值
+    template <typename IntType>
+    static IntType string2int(const char* str, IntType error_value=0)
+    {
+        IntType m = 0;
+        if (!string2int(str, m))
+            m = error_value;
+
+        return m;
+    }
+
+    template <typename IntType>
+    static IntType string2int(const std::string& str, IntType error_value=0)
+    {
+        IntType m = 0;
+        if (!string2int(str.c_str(), m))
+            m = error_value;
+
+        return m;
+    }
+
     static std::string int_tostring(int16_t source);
     static std::string int16_tostring(int16_t source);    
 

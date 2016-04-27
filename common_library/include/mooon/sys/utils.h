@@ -20,6 +20,8 @@
 #define MOOON_SYS_UTILS_H
 #include "mooon/sys/error.h"
 #include "mooon/sys/syscall_exception.h"
+#include <stdlib.h> // srand
+#include <sys/time.h> // gettimeofday
 SYS_NAMESPACE_BEGIN
 
 /***
@@ -164,6 +166,20 @@ public:
 	  * @exception: 如果调用出错，则抛出CSyscallException异常
 	  */
     static void common_pipe_write(int fd, const char* buffer, int32_t buffer_size);
+
+    // 取随机数
+    template <typename T>
+    static T get_random_number(T max_number)
+    {
+        struct timeval tv;
+        struct timezone *tz = NULL;
+
+        gettimeofday(&tv, tz);
+        srandom(tv.tv_usec);
+
+        // RAND_MAX 类似于INT_MAX
+        return static_cast<T>(random() % max_number);
+    }
 };
 
 SYS_NAMESPACE_END
