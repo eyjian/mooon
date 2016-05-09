@@ -22,6 +22,7 @@
 #include "mooon/sys/syscall_exception.h"
 #include <stdlib.h> // srand
 #include <sys/time.h> // gettimeofday
+#include <vector>
 SYS_NAMESPACE_BEGIN
 
 /***
@@ -179,6 +180,25 @@ public:
 
         // RAND_MAX 类似于INT_MAX
         return static_cast<T>(random() % max_number);
+    }
+
+    // 将一个vector随机化
+    template <typename T>
+    void randomize_vector(std::vector<T>& vec)
+    {
+        std::vector<T> tmp;
+
+        while (!vec.empty())
+        {
+            typename std::vector<T>::size_type max_size = vec.size();
+            typename std::vector<T>::size_type i = mooon::sys::CUtils::get_random_number(max_size);
+
+            typename std::vector<T>::iterator iter = vec.begin() + i;
+            tmp.push_back(*iter);
+            vec.erase(iter);
+        }
+
+        vec.swap(tmp);
     }
 };
 
