@@ -184,7 +184,7 @@ public:
 
     // 将一个vector随机化
     template <typename T>
-    void randomize_vector(std::vector<T>& vec)
+    static void randomize_vector(std::vector<T>& vec)
     {
         std::vector<T> tmp;
 
