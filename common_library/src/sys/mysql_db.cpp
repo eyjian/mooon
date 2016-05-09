@@ -284,5 +284,5 @@ void CMySQLConnection::do_open() throw (CDBException)
     }
 }
 
-#endif // HAVE_MYSQL
 SYS_NAMESPACE_END
+#endif // HAVE_MYSQL
