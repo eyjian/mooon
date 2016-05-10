@@ -15,6 +15,10 @@ target_link_libraries(mooon_ssh libmooon_net.a libmooon_sys.a libmooon_utils.a l
 add_executable(mooon_upload mooon_upload.cpp)
 target_link_libraries(mooon_upload libmooon_net.a libmooon_sys.a libmooon_utils.a libssh2.a libcrypto.a)
 
+# 计算md5工具
+add_executable(md5 md5.cpp)
+target_link_libraries(md5 libmooon_utils.a)
+
 # CMAKE_INSTALL_PREFIX
 install(
         TARGETS mooon_ssh mooon_upload
