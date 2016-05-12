@@ -118,6 +118,9 @@ public:
 
     // 返回格式由参数format决定，默认为“HH:MM:SS”格式的日期时间
     static std::string to_time(time_t datetime, const char* format="%02d:%02d:%02d");
+
+    // 得到当前的微秒值
+    static int64_t get_current_microseconds();
 };
 
 // 取得格式化的当前日期时间，
