@@ -395,7 +395,7 @@ int64_t CDatetimeUtils::get_current_microseconds()
 {
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    return static_cast<int64_t>(tv.tv_sec * 1000000) + static_cast<int64_t>(tv.tv_usec);
+    return static_cast<int64_t>(tv.tv_sec) * 1000000 + static_cast<int64_t>(tv.tv_usec);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
