@@ -57,9 +57,10 @@ int CSqlLogger::open_sql_log(const std::string& current_filepath)
 {
     int fd = -1;
 
-    for (int i=0; i<2; ++i)
+    for (int i=0; i<3; ++i) // 试图打开时，其它线程可能正在滚动操作，所以稍后重试一次
     {
         fd = open(current_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
+
         if (fd != -1)
         {
             MYLOG_INFO("open %s ok\n", current_filepath.c_str());
@@ -72,7 +73,7 @@ int CSqlLogger::open_sql_log(const std::string& current_filepath)
             {
                 MYLOG_ERROR("open %s error: (%d)%s\n", current_filepath.c_str(), sys::Error::code(), sys::Error::to_string().c_str());
             }
-            else if (1 == i)
+            else if (2 == i)
             {
                 MYLOG_ERROR("open %s error: (%d)%s\n", current_filepath.c_str(), sys::Error::code(), sys::Error::to_string().c_str());
             }
