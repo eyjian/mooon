@@ -170,13 +170,13 @@ public:
 
     // 取随机数
     template <typename T>
-    static T get_random_number(T max_number)
+    static T get_random_number(unsigned int i, T max_number)
     {
         struct timeval tv;
         struct timezone *tz = NULL;
 
         gettimeofday(&tv, tz);
-        srandom(tv.tv_usec);
+        srandom(tv.tv_usec + i); // 加入i，以解决过快时tv_usec值相同
 
         // RAND_MAX 类似于INT_MAX
         return static_cast<T>(random() % max_number);
@@ -186,16 +186,18 @@ public:
     template <typename T>
     static void randomize_vector(std::vector<T>& vec)
     {
+        unsigned int j = 0;
         std::vector<T> tmp;
 
         while (!vec.empty())
         {
             typename std::vector<T>::size_type max_size = vec.size();
-            typename std::vector<T>::size_type i = mooon::sys::CUtils::get_random_number(max_size);
+            typename std::vector<T>::size_type random_number = mooon::sys::CUtils::get_random_number(j, max_size);
 
-            typename std::vector<T>::iterator iter = vec.begin() + i;
+            typename std::vector<T>::iterator iter = vec.begin() + random_number;
             tmp.push_back(*iter);
             vec.erase(iter);
+            ++j;
         }
 
         vec.swap(tmp);
