@@ -44,6 +44,9 @@ SYS_NAMESPACE_BEGIN
 // 6) 子进程不会继承父进程已挂起（可由sigwait取出）的信号
 // 7) 每个线程有自己独立的信号掩码，线程可调用pthread_sigmask来操控自己的信号掩码，但无线程的进程可使用sigprocmask
 // 8) 信号掩码显示当前哪些信号被阻塞了
+// 9) 如果一个信号已处于挂起状态未被处理状态，则后续发送的该信号被丢弃，可以简单的认为挂起的信号是一个不包含重复的信号集合
+//    比如调用了CSignalHandler::block_signal(SIGTERM)进程阻塞，则在未调用CSignalHandler::wait_signal()或CSignalHandler::handle()之前，
+//    则未处理的SIGTERM信号总是只有一个，后续的SIGTERM都被丢弃，直到已被处理。
 
 /***
  * Linux信号处理工具
