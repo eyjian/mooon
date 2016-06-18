@@ -28,15 +28,20 @@ CUdpSocket::CUdpSocket()
 
 void CUdpSocket::listen(uint16_t port) throw (sys::CSyscallException)
 {
-    struct sockaddr_in listen_addr;
+	listen("0.0.0.0", port);
+}
 
-    listen_addr.sin_family = AF_INET;
-    listen_addr.sin_port = htons(port);
-    listen_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    memset(listen_addr.sin_zero, 0, sizeof(listen_addr.sin_zero));
+void CUdpSocket::listen(const std::string& ip, uint16_t port) throw (sys::CSyscallException)
+{
+	struct sockaddr_in listen_addr;
 
-    if (-1 == bind(get_fd(), (struct sockaddr*)&listen_addr, sizeof(listen_addr)))
-        THROW_SYSCALL_EXCEPTION(NULL, errno, "bind");
+	listen_addr.sin_family = AF_INET;
+	listen_addr.sin_port = htons(port);
+	listen_addr.sin_addr.s_addr = inet_addr(ip.c_str()); // htonl(INADDR_ANY)
+	memset(listen_addr.sin_zero, 0, sizeof(listen_addr.sin_zero));
+
+	if (-1 == bind(get_fd(), (struct sockaddr*)&listen_addr, sizeof(listen_addr)))
+		THROW_SYSCALL_EXCEPTION(NULL, errno, "bind");
 }
 
 int CUdpSocket::send_to(const void* buffer, size_t buffer_size, uint32_t to_ip, uint16_t to_port) throw (sys::CSyscallException)
