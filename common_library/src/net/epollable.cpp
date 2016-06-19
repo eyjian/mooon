@@ -92,6 +92,16 @@ void set_socket_flags(int fd, bool yes, int flags) throw (sys::CSyscallException
 	    THROW_SYSCALL_EXCEPTION(NULL, errno, "fcntl");
 }
 
+void set_linger(int fd, bool onoff, int linger_interval) throw (sys::CSyscallException)
+{
+    struct linger linger;
+    linger.l_onoff = onoff? 1: 0;
+    linger.l_linger = linger_interval;
+
+    if (-1 == setsockopt(fd, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger)))
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "setsockopt");
+}
+
 void set_tcp_option(int fd, bool yes, int option) throw (sys::CSyscallException)
 {
     // TCP_CORK

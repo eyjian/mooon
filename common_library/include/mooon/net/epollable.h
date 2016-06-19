@@ -80,6 +80,8 @@ bool is_nodelay(int fd) throw (sys::CSyscallException);
   */
 void set_socket_flags(int fd, bool yes, int flags) throw (sys::CSyscallException);
 
+void set_linger(int fd, bool onoff, int linger_interval) throw (sys::CSyscallException);
+
 /***
   * 设置TCP选项（TCP_CORK，TCP_NODELAY）
   * @exception: 如果发生错误，则抛出CSyscallException异常
