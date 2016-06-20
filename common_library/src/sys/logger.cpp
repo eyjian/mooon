@@ -108,6 +108,14 @@ void set_log_level_by_env(ILogger* logger)
     }
 }
 
+void enable_screen_log_by_env(ILogger* logger)
+{
+    const char* c_log_screen = getenv("MOOON_LOG_SCREEN");
+
+    if ((c_log_screen != NULL) && (0 == strcmp(c_log_screen, "1")))
+        logger->enable_screen(true);
+}
+
 //////////////////////////////////////////////////////////////////////////
 // CLogProber
 CLogProber::CLogProber()

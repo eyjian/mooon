@@ -49,6 +49,7 @@ CSafeLogger* create_safe_logger(bool enable_program_path, uint16_t log_line_size
     CSafeLogger* logger = new CSafeLogger(log_dirpath.c_str(), log_filename.c_str(), log_line_size);
 
     set_log_level_by_env(logger);
+    enable_screen_log_by_env(logger);
     return logger;
 }
 

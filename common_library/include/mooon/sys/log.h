@@ -80,6 +80,9 @@ extern std::string get_log_filepath(bool enable_program_path=true);
 // 如果非这些值，则默认为INFO
 extern void set_log_level_by_env(ILogger* logger);
 
+// 根据环境变量名MOOON_LOG_SCREEN控制是否在屏幕上打印日志，只会值为1时才会屏幕上打印日志
+extern void enable_screen_log_by_env(ILogger* logger);
+
 /**
   * 日志器接口，提供常见的写日志功能
   */
