@@ -49,7 +49,7 @@ union UniqID
     {
         uint64_t user:6;   // 用户定义的前缀，默认为0，最大为63
         uint64_t label:8;  // 机器的唯一标识，最多支持255台机器
-        uint64_t year:7;   // 当前年份，支持到2143年
+        uint64_t year:7;   // 当前年份减去BASE_YEAR后的值，如果当前年份为2016则可支持到2143年
         uint64_t month:4;  // 当前月份
         uint64_t day:5;    // 当前月份的天
         uint64_t hour:4;   // 当前的小时数
