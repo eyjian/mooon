@@ -51,10 +51,12 @@ int main(int argc, char* argv[])
 	    catch (mooon::sys::CSyscallException& ex)
 	    {
 	        fprintf(stderr, "%s\n", ex.str().c_str());
+	        break;
 	    }
 	    catch (mooon::utils::CException& ex)
 	    {
 	        fprintf(stderr, "%s\n", ex.str().c_str());
+	        break;
 	    }
 	}
 
