@@ -228,7 +228,7 @@ bool CUniqAgent::run()
             else
             {
                 _message_head = reinterpret_cast<struct MessageHead*>(_request_buffer);
-                MYLOG_INFO("%s from %s", _message_head->str().c_str(), net::to_string(_from_addr).c_str());
+                MYLOG_DEBUG("%s from %s", _message_head->str().c_str(), net::to_string(_from_addr).c_str());
 
                 if (bytes_received != _message_head->len)
                 {
@@ -389,7 +389,9 @@ bool CUniqAgent::restore_sequence()
         else
         {
             _sequence_fd = ch.release();
-            _sequence_start = _seq_block.sequence + argument::steps->value();
+
+            // 多加一次steps，原因是store时未调用fsync
+            _sequence_start = _seq_block.sequence + argument::steps->value() + argument::steps->value();
             _seq_block.label = label;
             _seq_block.sequence = _sequence_start;
             return store_sequence();
@@ -399,7 +401,7 @@ bool CUniqAgent::restore_sequence()
 
 bool CUniqAgent::store_sequence()
 {
-    MYLOG_INFO("%s\n", _seq_block.str().c_str());
+    MYLOG_DEBUG("%s\n", _seq_block.str().c_str());
 
     _seq_block.version = SEQUENCE_BLOCK_VERSION;
     _seq_block.timestamp = _current_time;
@@ -413,6 +415,10 @@ bool CUniqAgent::store_sequence()
     }
     else
     {
+#if 1
+        return true;
+#else
+        // fsync严重影响性能
         if (-1 == fsync(_sequence_fd))
         {
             MYLOG_ERROR("fsync %s to %s failed: %s\n", _seq_block.str().c_str(), _sequence_path.c_str(), strerror(errno));
@@ -424,6 +430,7 @@ bool CUniqAgent::store_sequence()
             MYLOG_INFO("store %s to %s ok\n", _seq_block.str().c_str(), _sequence_path.c_str());
             return true;
         }
+#endif
     }
 }
 
