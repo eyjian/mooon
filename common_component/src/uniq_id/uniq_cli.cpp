@@ -46,7 +46,6 @@ int main(int argc, char* argv[])
 	        union mooon::UniqID uid_struct;
 	        uid_struct.value = uid;
 	        fprintf(stdout, "uid: %"PRIu64" => %s\n", uid, uid_struct.id.str().c_str());
-	        fprintf(stdout, "label: %s, sequence: %u\n", mooon::label2string(uid_struct.id.label).c_str(), (uint32_t)uid_struct.id.seq);
 	    }
 	    catch (mooon::sys::CSyscallException& ex)
 	    {
