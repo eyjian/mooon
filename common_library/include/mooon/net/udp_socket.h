@@ -27,7 +27,7 @@ NET_NAMESPACE_BEGIN
 class CUdpSocket: public CEpollable
 {
 public:
-    CUdpSocket();
+    CUdpSocket() throw (sys::CSyscallException);
     void listen(uint16_t port) throw (sys::CSyscallException);
     void listen(const std::string& ip, uint16_t port) throw (sys::CSyscallException);
 
@@ -41,6 +41,9 @@ public:
     // from_port 返回的源端口，为主机字节序
     int receive_from(void* buffer, size_t buffer_size, uint32_t* from_ip, uint16_t* from_port) throw (sys::CSyscallException);
     int receive_from(void* buffer, size_t buffer_size, struct sockaddr_in* from_addr) throw (sys::CSyscallException);
+
+    int timed_receive_from(void* buffer, size_t buffer_size, uint32_t* from_ip, uint16_t* from_port, uint32_t milliseconds) throw (sys::CSyscallException);
+    int timed_receive_from(void* buffer, size_t buffer_size, struct sockaddr_in* from_addr, uint32_t milliseconds) throw (sys::CSyscallException);
 };
 
 NET_NAMESPACE_END

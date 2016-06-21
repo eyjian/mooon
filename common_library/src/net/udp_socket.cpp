@@ -17,12 +17,16 @@
  * Author: jian yi, eyjian@qq.com or eyjian@gmail.com
  */
 #include "mooon/net/udp_socket.h"
+#include "mooon/net/utils.h"
 #include <unistd.h>
 NET_NAMESPACE_BEGIN
 
-CUdpSocket::CUdpSocket()
+CUdpSocket::CUdpSocket() throw (sys::CSyscallException)
 {
     int fd = ::socket(AF_INET, SOCK_DGRAM, 0);
+    if (-1 == fd)
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "socket");
+
     set_fd(fd);
 }
 
@@ -90,6 +94,24 @@ int CUdpSocket::receive_from(void* buffer, size_t buffer_size, struct sockaddr_i
         THROW_SYSCALL_EXCEPTION(NULL, errno, "recvfrom");
 
     return bytes;
+}
+
+// UDP无应用层发送缓存区，数据直接进入网卡输出队列，如果网卡输出队列已满，则设置errno值为ENOBUFS，
+// 但根据man 2 sendto说明，一般情况下，Linux不会出现ENOBUFS，一旦网卡输出队列满则直接丢弃数据。
+int CUdpSocket::timed_receive_from(void* buffer, size_t buffer_size, uint32_t* from_ip, uint16_t* from_port, uint32_t milliseconds) throw (sys::CSyscallException)
+{
+    if (!CUtils::timed_poll(get_fd(), POLLIN, milliseconds))
+        THROW_SYSCALL_EXCEPTION("receive timeout", ETIMEDOUT, "pool");
+
+    return receive_from(buffer, buffer_size, from_ip, from_port);
+}
+
+int CUdpSocket::timed_receive_from(void* buffer, size_t buffer_size, struct sockaddr_in* from_addr, uint32_t milliseconds) throw (sys::CSyscallException)
+{
+    if (!CUtils::timed_poll(get_fd(), POLLIN, milliseconds))
+        THROW_SYSCALL_EXCEPTION("receive timeout", ETIMEDOUT, "pool");
+
+    return receive_from(buffer, buffer_size, from_addr);
 }
 
 NET_NAMESPACE_END
