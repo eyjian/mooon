@@ -36,7 +36,7 @@ STRING_ARG_DEFINE(master, "", "master nodes, e.g., 192.168.31.66:2016,192.168.31
 STRING_ARG_DEFINE(ip, "0.0.0.0", "listen IP");
 INTEGER_ARG_DEFINE(uint16_t, port, 6200, 1000, 65535, "listen port");
 INTEGER_ARG_DEFINE(uint8_t, label, 0, 0, LABEL_MAX, "unique label of a machine");
-INTEGER_ARG_DEFINE(uint16_t, steps, 1000, 1, 65535, "steps to store");
+INTEGER_ARG_DEFINE(uint16_t, steps, 10000, 1, 65535, "steps to store");
 INTEGER_ARG_DEFINE(uint32_t, expire, LABEL_EXPIRED_SECONDS, 1, LABEL_EXPIRED_SECONDS*10, "label expired seconds");
 
 ////////////////////////////////////////////////////////////////////////////////
