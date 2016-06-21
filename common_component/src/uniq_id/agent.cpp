@@ -16,11 +16,13 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
+#include "mooon/uniq_id/uniq_id.h"
 #include "protocol.h"
-#include <uniq_id.h>
 #include <fcntl.h>
 #include <mooon/net/udp_socket.h>
 #include <mooon/net/utils.h>
+#include <mooon/sys/close_helper.h>
+#include <mooon/sys/datetime_utils.h>
 #include <mooon/sys/main_template.h>
 #include <mooon/sys/safe_logger.h>
 #include <mooon/sys/utils.h>
@@ -32,8 +34,10 @@
 
 STRING_ARG_DEFINE(master, "", "master nodes, e.g., 192.168.31.66:2016,192.168.31.88:2016");
 STRING_ARG_DEFINE(ip, "0.0.0.0", "listen IP");
-INTEGER_ARG_DEFINE(uint16_t, port, 201606, 1000, 5000, "listen port");
-INTEGER_ARG_DEFINE(uint16_t, label, 0, 0, 1023, "unique label of a machine");
+INTEGER_ARG_DEFINE(uint16_t, port, 6200, 1000, 65535, "listen port");
+INTEGER_ARG_DEFINE(uint16_t, label, 0, 0, LABEL_MAX, "unique label of a machine");
+INTEGER_ARG_DEFINE(uint16_t, steps, 1000, 1, 65535, "steps to store");
+INTEGER_ARG_DEFINE(uint32_t, expire, LABEL_EXPIRED_SECONDS, 1, LABEL_EXPIRED_SECONDS*10, "label expired seconds");
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace mooon {
@@ -41,7 +45,6 @@ namespace mooon {
 // 常量
 enum
 {
-    SEQUENCE_STEPS = 1000,
     SEQUENCE_BLOCK_VERSION = 1
 };
 
@@ -56,7 +59,7 @@ struct SeqBlock
 
     std::string str() const
     {
-        return utils::CStringUtils::format_string("block://%u/%u/%u/%"PRId64"/%"PRId64, version, label, sequence, timestamp, magic);
+        return utils::CStringUtils::format_string("block://%u/%u/%u/%s/%"PRId64, version, label, sequence, sys::CDatetimeUtils::to_datetime(timestamp).c_str(), magic);
     }
 
     void update_magic()
@@ -90,26 +93,39 @@ private:
 
 private:
     std::string get_sequence_path() const;
-    uint32_t get_label() const;
-    bool reselect_master_addr();
+    uint32_t get_label();
     bool restore_sequence();
     bool store_sequence();
     uint32_t inc_sequence();
-    uint64_t get_uniq_id(const struct GetUniqIdRequest* request);
+    uint64_t get_uniq_id(const struct MessageHead* request);
+    void rent_label();
+    bool label_expired() const;
 
 private:
-    bool prepare_response_get_label();
-    bool prepare_response_get_uniq_id();
-    bool prepare_response_get_uniq_seq();
-    bool prepare_response_get_label_and_seq();
+    void prepare_response_error(int errcode);
+    int prepare_response_get_label();
+    int prepare_response_get_uniq_id();
+    int prepare_response_get_uniq_seq();
+    int prepare_response_get_label_and_seq();
 
 private:
-    std::vector<struct sockaddr_in> _master_addr;
+    uint32_t _echo;
+    std::vector<struct sockaddr_in> _masters_addr;
     net::CUdpSocket* _udp_socket;
     uint32_t _sequence_start;
     struct SeqBlock _seq_block;
     std::string _sequence_path;
     int _sequence_fd;
+    time_t _last_rent_time; // 最近一次续租Lable的时间
+
+private:
+    // old系列变量用来解决seq用完问题，
+    // 一个小时内全部用完，则不能再提供服务，因为会导致重复的ID
+    uint32_t _old_seq;
+    int _old_hour;
+    int _old_day;
+    int _old_month;
+    int _old_year;
 
 private:
     struct sockaddr_in _from_addr;
@@ -126,7 +142,9 @@ extern "C" int main(int argc, char* argv[])
 }
 
 CUniqAgent::CUniqAgent()
-    : _udp_socket(NULL), _sequence_fd(-1), _message_head(NULL)
+    : _echo(0), _udp_socket(NULL), _sequence_fd(-1), _last_rent_time(0),
+      _old_seq(0), _old_hour(-1), _old_day(-1), _old_month(-1), _old_year(-1),
+      _message_head(NULL)
 {
     _sequence_start = 0;
     _sequence_path = get_sequence_path();
@@ -157,7 +175,7 @@ bool CUniqAgent::init(int argc, char* argv[])
     // Check parameters
     if (argument::master->value().empty() && (0 == argument::label->value()))
     {
-    	fprintf(stderr, "parameter[master] is empty and parameter[label] is 0.\n");
+    	fprintf(stderr, "parameter[master] is empty and parameter[label] is 0 at the same time.\n");
     	return false;
     }
 
@@ -166,11 +184,10 @@ bool CUniqAgent::init(int argc, char* argv[])
         sys::g_logger = sys::create_safe_logger();
         if (!restore_sequence())
             return false;
-        if (!reselect_master_addr())
-            return false;
 
         _udp_socket = new net::CUdpSocket;
         _udp_socket->listen(argument::ip->value(), argument::port->value());
+        MYLOG_INFO("listen on %s:%d\n", argument::ip->c_value(), argument::port->value());
         return true;
     }
     catch (sys::CSyscallException& ex)
@@ -182,6 +199,8 @@ bool CUniqAgent::init(int argc, char* argv[])
 
 bool CUniqAgent::run()
 {
+    time_t old_time = time(NULL);
+
     while (true)
     {
         int events_returned = 0;
@@ -190,12 +209,17 @@ bool CUniqAgent::run()
 
         if (!net::CUtils::timed_poll(_udp_socket->get_fd(), events_requested, milliseconds, &events_returned))
         {
-            // timeout
+            time_t now = time(NULL);
+            if (now - old_time > 600)
+            {
+                // 续租
+                rent_label();
+            }
         }
         else
         {
             int bytes_received = _udp_socket->receive_from(_request_buffer, sizeof(_request_buffer), &_from_addr);
-            if (bytes_received < sizeof(struct MessageHead))
+            if (bytes_received < static_cast<int>(sizeof(struct MessageHead)))
             {
                 MYLOG_ERROR("invalid size (%d) from %s: %s\n", bytes_received, net::to_string(_from_addr).c_str(), strerror(errno));
             }
@@ -210,40 +234,43 @@ bool CUniqAgent::run()
                 }
                 else
                 {
-                    bool prepare_ok = false;
+                    int result = 0;
+                    std::string errmsg;
 
-                    if (REQUEST_HOST == _message_head->type)
+                    if (REQUEST_LABEL == _message_head->type)
                     {
-                        prepare_response_get_host();
+                        result = prepare_response_get_label();
                     }
                     else if (REQUEST_UNIQ_ID == _message_head->type)
                     {
-                        prepare_response_get_uniq_id();
+                        result = prepare_response_get_uniq_id();
                     }
                     else if (REQUEST_UNIQ_SEQ == _message_head->type)
                     {
-                        prepare_response_get_uniq_seq();
+                        result = prepare_response_get_uniq_seq();
                     }
-                    else if (REQUEST_HOST_AND_SEQ == _message_head->type)
+                    else if (REQUEST_LABEL_AND_SEQ == _message_head->type)
                     {
-                        prepare_response_get_host_and_seq();
+                        result = prepare_response_get_label_and_seq();
                     }
                     else
                     {
+                        result = ERROR_INVALID_TYPE;
                         MYLOG_ERROR("invalid message type: %s\n", _message_head->str().c_str());
                     }
-
-                    if (prepare_ok)
+                    if (result != 0)
                     {
-                        try
-                        {
-                            _udp_socket->send_to(_response_buffer, _response_size, _from_addr);
-                            MYLOG_INFO("send to %s ok\n", net::to_string(_from_addr).c_str());
-                        }
-                        catch (sys::CSyscallException& ex)
-                        {
-                            MYLOG_ERROR("send to %s failed: %s\n", net::to_string(_from_addr).c_str(), ex.str().c_str());
-                        }
+                        prepare_response_error(result);
+                    }
+
+                    try
+                    {
+                        _udp_socket->send_to(_response_buffer, _response_size, _from_addr);
+                        MYLOG_INFO("send to %s ok\n", net::to_string(_from_addr).c_str());
+                    }
+                    catch (sys::CSyscallException& ex)
+                    {
+                        MYLOG_ERROR("send to %s failed: %s\n", net::to_string(_from_addr).c_str(), ex.str().c_str());
                     }
                 }
             }
@@ -261,7 +288,7 @@ std::string CUniqAgent::get_sequence_path() const
     return sys::CUtils::get_program_path() + std::string("/.uniq.seq");
 }
 
-uint32_t CUniqAgent::get_label() const
+uint32_t CUniqAgent::get_label()
 {
 	if (argument::master->value().empty())
 	{
@@ -270,59 +297,79 @@ uint32_t CUniqAgent::get_label() const
 	else
 	{
 		net::CUdpSocket master_socket;
-		struct MessageHead head;
-		head.len = sizeof(head);
-		head.type = REQUEST_LABEL;
+		struct sockaddr_in master_addr;
+		struct MessageHead response;
+		struct MessageHead request;
+		request.len = sizeof(request);
+		request.type = REQUEST_LABEL;
+		request.echo = _echo++;
+		request.value1 = _seq_block.label;
+		request.value2 = 0;
 
-		try
+		for (std::vector<struct sockaddr_in>::size_type i=0; i<_masters_addr.size(); ++i)
 		{
-			master_socket.send_to(&head, sizeof(head), _master_addr);
+            try
+            {
+                master_socket.send_to(reinterpret_cast<char*>(&request), sizeof(request), _masters_addr[i]);
+                master_socket.receive_from(&response, sizeof(response), &master_addr);
+
+                if ((RESPONSE_LABEL == response.type) && (response.echo == _echo-1))
+                {
+                    if (response.value1.to_int() > 0)
+                    {
+                        // 续成功
+                        _last_rent_time = time(NULL);
+                        return static_cast<uint32_t>(response.value1.to_int());
+                    }
+                    else
+                    {
+                        MYLOG_ERROR("invalid label[%d] from %s\n", (int)response.value1.to_int(), net::to_string(_masters_addr[i]).c_str());
+                    }
+                }
+                else
+                {
+                    MYLOG_ERROR("invalid response[%s] for request[%s] from %s\n", response.str().c_str(), request.str().c_str(), net::to_string(_masters_addr[i]).c_str());
+                }
+            }
+            catch (sys::CSyscallException& ex)
+            {
+                MYLOG_ERROR("rent lable from %s faield: %s\n", net::to_string(_masters_addr[i]).c_str(), ex.str().c_str());
+            }
 		}
-		catch (sys::CSyscallException& ex)
-		{
-			MYLOG_ERROR("%s\n", ex.str().c_str());
-		}
+
 		return 0;
 	}
 }
 
-bool CUniqAgent::reselect_master_addr()
-{
-    _master_addr.sin_addr.s_addr = inet_addr(argument::master_ip->c_value());
-    if (0 == _master_addr.sin_addr.s_addr)
-    {
-        MYLOG_ERROR("invalid IP: %s\n", argument::master_ip->c_value());
-        return false;
-    }
-    else
-    {
-        _master_addr.sin_port = htons(argument::master_port->value());
-        return true;
-    }
-}
-
 bool CUniqAgent::restore_sequence()
 {
-    uint64_t magic = 0;
+    uint32_t label = get_label();
+    if (0 == label)
+        return false;
 
-    int fd = open(_sequence_path.c_str(), O_RDONLY|O_WRONLY|O_CREAT);
+    int fd = open(_sequence_path.c_str(), O_RDWR|O_CREAT, FILE_DEFAULT_PERM);
     if (-1 == fd)
     {
         MYLOG_ERROR("open %s failed: %s\n", _sequence_path.c_str(), strerror(errno));
         return false;
     }
 
-    sys::CloseHelper ch(fd);
-    ssize_t bytes_read = read(fd, &_seq_block, sizeof(_seq_block));
+    sys::CloseHelper<int> ch(fd);
+    ssize_t bytes_read = pread(fd, &_seq_block, sizeof(_seq_block), 0);
     if (0 == bytes_read)
     {
         MYLOG_INFO("%s empty\n", _sequence_path.c_str());
 
         _sequence_fd = ch.release();
-        _sequence_start = 0;
-        _seq_block.label = get_label();
-        _seq_block.sequence = SEQUENCE_STEPS;
+        _sequence_start = argument::steps->value();
+        _seq_block.label = label;
+        _seq_block.sequence = _sequence_start;
         return store_sequence();
+    }
+    else if (-1 == bytes_read)
+    {
+        MYLOG_ERROR("read %s failed: %s\n", _sequence_path.c_str(), strerror(errno));
+        return false;
     }
     else if (bytes_read != sizeof(_seq_block))
     {
@@ -339,8 +386,8 @@ bool CUniqAgent::restore_sequence()
         else
         {
             _sequence_fd = ch.release();
-            _sequence_start = _seq_block.sequence + SEQUENCE_STEPS;
-            //_seq_block.label =
+            _sequence_start = _seq_block.sequence + argument::steps->value();
+            _seq_block.label = label;
             _seq_block.sequence = _sequence_start;
             return store_sequence();
         }
@@ -349,11 +396,13 @@ bool CUniqAgent::restore_sequence()
 
 bool CUniqAgent::store_sequence()
 {
+    MYLOG_INFO("%s\n", _seq_block.str().c_str());
+
     _seq_block.version = SEQUENCE_BLOCK_VERSION;
     _seq_block.timestamp = time(NULL);
     _seq_block.update_magic();
 
-    ssize_t byes_written = pwrite(_sequence_fd, _seq_block, sizeof(_seq_block), 0);
+    ssize_t byes_written = pwrite(_sequence_fd, &_seq_block, sizeof(_seq_block), 0);
     if (byes_written != sizeof(_seq_block))
     {
         MYLOG_ERROR("write %s to %s failed: %s\n", _seq_block.str().c_str(), _sequence_path.c_str(), strerror(errno));
@@ -361,91 +410,236 @@ bool CUniqAgent::store_sequence()
     }
     else
     {
-        MYLOG_INFO("store %s to %s ok\n", _seq_block.str().c_str(), _sequence_path.c_str());
-        return true;
+        if (-1 == fsync(_sequence_fd))
+        {
+            MYLOG_ERROR("fsync %s to %s failed: %s\n", _seq_block.str().c_str(), _sequence_path.c_str(), strerror(errno));
+            return false;
+        }
+        else
+        {
+            MYLOG_INFO("store %s to %s ok\n", _seq_block.str().c_str(), _sequence_path.c_str());
+            return true;
+        }
     }
 }
 
 uint32_t CUniqAgent::inc_sequence()
 {
+    bool stored = true;
 	uint32_t sequence = 0;
 
-	++_seq_block.sequence;
-	if (_seq_block.sequence - _sequence_start > SEQUENCE_STEPS)
+	if ((_seq_block.sequence < _sequence_start) ||
+	    (_seq_block.sequence - _sequence_start > argument::steps->value()))
 	{
-		if (store_sequence())
-			sequence = _seq_block.sequence;
+	    stored = store_sequence();
+	}
+	if (stored)
+	{
+	    while (0 == sequence)
+	        sequence = _seq_block.sequence++;
 	}
 
     return sequence;
 }
 
-uint64_t CUniqAgent::get_uniq_id(const struct GetUniqIdRequest* request)
+uint64_t CUniqAgent::get_uniq_id(const struct MessageHead* request)
 {
-    struct tm now;
-    time_t t = (0 == request->timestamp)? time(NULL): request->timestamp;
-    (void)localtime_r(&t, &now);
+    uint32_t seq = inc_sequence();
 
-    union UniqID uniq_id;
-    uniq_id.id.user = static_cast<uint8_t>(request->user);
-    uniq_id.id.label = static_cast<uint8_t>(_seq_block.label);
-    uniq_id.id.year = (now.tm_year+1900)-2016;
-    uniq_id.id.month = now.tm_mon+1;
-    uniq_id.id.day = now.tm_mday;
-    uniq_id.id.hour = now.tm_hour;
-    uniq_id.id.seq = inc_sequence();
+    if (0 == seq)
+    {
+        return 0; // store sequence block failed
+    }
+    else
+    {
+        struct tm now;
+        time_t t = static_cast<time_t>(request->value2.to_int());
+        if (0 == t)
+            t = time(NULL);
+        (void)localtime_r(&t, &now);
 
-    return uniq_id.value;
+        union UniqID uniq_id;
+        uniq_id.id.user = static_cast<uint8_t>(request->value1.to_int());
+        uniq_id.id.label = static_cast<uint8_t>(_seq_block.label);
+        uniq_id.id.year = (now.tm_year+1900) - BASE_YEAR;
+        uniq_id.id.month = now.tm_mon+1;
+        uniq_id.id.day = now.tm_mday;
+        uniq_id.id.hour = now.tm_hour;
+        uniq_id.id.seq = seq;
+
+        if ((_old_seq > seq) &&
+            (_old_hour == static_cast<int>(uniq_id.id.hour)) &&
+            (_old_day == static_cast<int>(uniq_id.id.day)) &&
+            (_old_month == static_cast<int>(uniq_id.id.month)) &&
+            (_old_year == static_cast<int>(uniq_id.id.year)))
+        {
+            return 1; // overflow
+        }
+        else
+        {
+            _old_hour = uniq_id.id.hour;
+            _old_day = uniq_id.id.day;
+            _old_month = uniq_id.id.month;
+            _old_year = uniq_id.id.year;
+            return uniq_id.value;
+        }
+    }
 }
 
-bool CUniqAgent::prepare_response_get_label()
+void CUniqAgent::rent_label()
 {
-    struct MessageHead response;
+    if (!argument::master->value().empty())
+    {
+        uint32_t label = get_label();
 
-    _response_size = sizeof(struct MessageHead);
-    response.len = sizeof(struct MessageHead);
-    response.type = RESPONSE_LABEL;
-    response.value1 = _seq_block.label;
-    return true;
+        if (label > 0)
+        {
+            if (label <= LABEL_MAX)
+            {
+                // 续成功
+                _seq_block.label = label;
+            }
+            else
+            {
+                MYLOG_ERROR("rent invalid lable[%u]\n", label);
+            }
+        }
+    }
 }
 
-bool CUniqAgent::prepare_response_get_uniq_id()
+bool CUniqAgent::label_expired() const
 {
-    struct GetUniqIdRequest* request = reinterpret_cast<struct GetUniqIdRequest*>(_request_buffer);
-    struct MessageHead* response = reinterpret_cast<struct _sequence*>(_response_buffer);
+    if (argument::master->value().empty())
+        return false;
+
+    time_t now = time(NULL);
+    return now - _last_rent_time > static_cast<time_t>(argument::expire->value());
+}
+
+void CUniqAgent::prepare_response_error(int errcode)
+{
+    struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
 
     _response_size = sizeof(struct MessageHead);
     response->len = sizeof(struct MessageHead);
-    response->type = RESPONSE_UNIQ_ID;
-    response->value1 = get_uniq_id(request);
-    response->value2 = 0;
-    return true;
+    response->type = RESPONSE_ERROR;
+    response->value1 = errcode;
+
+    MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
 }
 
-bool CUniqAgent::prepare_response_get_uniq_seq()
+int CUniqAgent::prepare_response_get_label()
 {
-    struct GetUniqIdRequest* request = reinterpret_cast<struct GetUniqIdRequest*>(_request_buffer);
-    struct MessageHead* response = reinterpret_cast<struct _sequence*>(_response_buffer);
+    if (label_expired())
+    {
+        return ERROR_LABEL_EXPIRED;
+    }
+    else
+    {
+        struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
 
-    _response_size = sizeof(struct MessageHead);
-    response->len = sizeof(struct MessageHead);
-    response->type = RESPONSE_UNIQ_SEQ;
-    response->value1 = inc_sequence();
-    response->value2 = 0;
-    return true;
+        _response_size = sizeof(struct MessageHead);
+        response->len = sizeof(struct MessageHead);
+        response->type = RESPONSE_LABEL;
+        response->value1 = _seq_block.label;
+
+        MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
+        return 0;
+    }
 }
 
-bool CUniqAgent::prepare_response_get_label_and_seq()
+int CUniqAgent::prepare_response_get_uniq_id()
 {
-    struct GetUniqIdRequest* request = reinterpret_cast<struct GetUniqIdRequest*>(_request_buffer);
-    struct MessageHead* response = reinterpret_cast<struct _sequence*>(_response_buffer);
+    if (label_expired())
+    {
+        return ERROR_LABEL_EXPIRED;
+    }
+    else
+    {
+        struct MessageHead* request = reinterpret_cast<struct MessageHead*>(_request_buffer);
+        struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
 
-    _response_size = sizeof(struct MessageHead);
-    response->len = sizeof(struct MessageHead);
-    response->type = RESPONSE_LABEL_AND_SEQ;
-    response->value1 = _seq_block.sequence;
-    response->value2 = _seq_block.label;
-    return true;
+        uint64_t uniq_id = get_uniq_id(request);
+        if (0 == uniq_id)
+        {
+            return ERROR_STORE_SEQ;
+        }
+        else if (1 == uniq_id)
+        {
+            return ERROR_OVERFLOW;
+        }
+        else
+        {
+            _response_size = sizeof(struct MessageHead);
+            response->len = sizeof(struct MessageHead);
+            response->type = RESPONSE_UNIQ_ID;
+            response->value1 = uniq_id;
+            response->value2 = 0;
+
+            MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
+            return 0;
+        }
+    }
+}
+
+int CUniqAgent::prepare_response_get_uniq_seq()
+{
+    if (label_expired())
+    {
+        return ERROR_LABEL_EXPIRED;
+    }
+    else
+    {
+        uint32_t seq = inc_sequence();
+
+        if (0 == seq)
+        {
+            return ERROR_STORE_SEQ;
+        }
+        else
+        {
+            struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
+
+            _response_size = sizeof(struct MessageHead);
+            response->len = sizeof(struct MessageHead);
+            response->type = RESPONSE_UNIQ_SEQ;
+            response->value1 = inc_sequence();
+            response->value2 = 0;
+
+            MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
+            return 0;
+        }
+    }
+}
+
+int CUniqAgent::prepare_response_get_label_and_seq()
+{
+    if (label_expired())
+    {
+        return ERROR_LABEL_EXPIRED;
+    }
+    else
+    {
+        uint32_t seq = inc_sequence();
+
+        if (0 == seq)
+        {
+            return ERROR_STORE_SEQ;
+        }
+        else
+        {
+            struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
+
+            _response_size = sizeof(struct MessageHead);
+            response->len = sizeof(struct MessageHead);
+            response->type = RESPONSE_LABEL_AND_SEQ;
+            response->value1 = seq;
+            response->value2 = _seq_block.label;
+
+            MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
+            return 0;
+        }
+    }
 }
 
 } // namespace mooon {

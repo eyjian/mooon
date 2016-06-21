@@ -16,35 +16,45 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-#include <mooon/net/udp_socket.h>
+#include <mooon/uniq_id/uniq_id.h>
 
 static void usage();
 
-// Usage1: uniq_cli agent_ip agent_port
-// Usage2: uniq_cli agent_ip agent_port times
+// Usage1: uniq_cli agent_nodes
+// Usage2: uniq_cli agent_nodes times
 int main(int argc, char* argv[])
 {
-	if ((argc != 3) || (argc != 4))
+	if ((argc != 2) && (argc != 3))
 	{
 		usage();
 		exit(1);
 	}
 
-	const char* agent_ip = argv[1];
-	int agent_port = atoi(argv[2]);
-	int times = 0;
-
-	if (4 == argc)
-		times = atoi(argv[3]);
-	if (times < 0)
-	{
-		usage();
-		exit(1);
-	}
+	int times = 1;
+	const char* agent_nodes = argv[1];
+	if (3 == argc)
+		times = atoi(argv[2]);
+	if (times < 1)
+	    times = 1;
 
 	for (int i=0; i<times; ++i)
 	{
-
+	    try
+	    {
+	        mooon::CUniqId uniq_id(agent_nodes);
+	        uint64_t uid = uniq_id.get_uniq_id();
+	        union mooon::UniqID uid_struct;
+	        uid_struct.value = uid;
+	        fprintf(stdout, "uid: %"PRIu64" => %s\n", uid, uid_struct.id.str().c_str());
+	    }
+	    catch (mooon::sys::CSyscallException& ex)
+	    {
+	        fprintf(stderr, "%s\n", ex.str().c_str());
+	    }
+	    catch (mooon::utils::CException& ex)
+	    {
+	        fprintf(stderr, "%s\n", ex.str().c_str());
+	    }
 	}
 
 	return 0;
@@ -52,6 +62,6 @@ int main(int argc, char* argv[])
 
 void usage()
 {
-	fprintf(stderr, "Usage1: uniq_cli uniq_agent_ip uniq_agent_port\n");
-	fprintf(stderr, "Usage2: uniq_cli uniq_agent_ip uniq_agent_port times\n");
+	fprintf(stderr, "Usage1: uniq_cli uniq_agent_nodes\n");
+	fprintf(stderr, "Usage2: uniq_cli uniq_agent_nodes times\n");
 }

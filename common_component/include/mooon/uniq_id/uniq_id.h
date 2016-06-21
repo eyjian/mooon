@@ -18,8 +18,27 @@
  */
 #ifndef MOOON_UNIQ_ID_H
 #define MOOON_UNIQ_ID_H
+#include <mooon/net/udp_socket.h>
 #include <mooon/utils/exception.h>
+#include <mooon/utils/string_utils.h>
+#include <stdint.h>
+#include <vector>
 namespace mooon {
+
+// 常量
+enum
+{
+    BASE_YEAR = 2016 // 基数年份，计时开始的年份
+};
+
+// 出错代码
+enum
+{
+    ERROR_INVALID_TYPE = -1001, // 无效的请求消息类型
+    ERROR_STORE_SEQ = -1002,    // 保存sequence失败
+    ERROR_OVERFLOW = -1003,     // Sequence被消耗完了
+    ERROR_LABEL_EXPIRED = -1004 // Label过期了
+};
 
 // 64位唯一ID结构
 union UniqID
@@ -35,12 +54,34 @@ union UniqID
         uint64_t day:5;    // 当前月份的天
         uint64_t hour:4;   // 当前的小时数
         uint64_t seq:28;   // 循环递增的序列号，最大为268435455
+
+        std::string str() const
+        {
+            return mooon::utils::CStringUtils::format_string("uniq://%d/%d/%d-%d-%d %d/%u", (int)user, (int)label, (int)year+BASE_YEAR, (int)month, (int)day, (int)hour, (unsigned int)seq);
+        }
     }id;
 };
 
-uint8_t get_label() throw (utils::CException);
-uint32_t get_unqi_seq() throw (utils::CException);
-uint64_t get_uniq_id(uint8_t user=0, uint64_t s=0) throw (utils::CException);
+class CUniqId
+{
+public:
+    CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds=1000) throw (utils::CException);
+    ~CUniqId();
+
+    uint8_t get_label() throw (utils::CException, sys::CSyscallException);
+    uint32_t get_unqi_seq() throw (utils::CException, sys::CSyscallException);
+    uint64_t get_uniq_id(uint8_t user=0, uint64_t s=0) throw (utils::CException, sys::CSyscallException);
+
+private:
+    const struct sockaddr_in& pick_agent() const;
+
+private:
+    uint32_t _echo;
+    const std::string& _agent_nodes;
+    uint32_t _timeout_milliseconds;
+    std::vector<struct sockaddr_in> agents_addr;
+    net::CUdpSocket* _udp_socket;
+};
 
 } // namespace mooon {
 #endif // MOOON_UNIQ_ID_H

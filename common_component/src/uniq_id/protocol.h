@@ -25,7 +25,9 @@ namespace mooon {
 // 常量
 enum
 {
-    SOCKET_BUFFER_SIZE = 1024
+    SOCKET_BUFFER_SIZE = 1024,
+    LABEL_MAX = 1023,                   // Label最大的取值，注意只能为1023，不能为更大的值
+    LABEL_EXPIRED_SECONDS = (3600*24*7) // Label多少小秒过期，默认7天
 };
 
 // 命令字
@@ -36,6 +38,7 @@ enum
     REQUEST_UNIQ_SEQ = 3,
     REQUEST_LABEL_AND_SEQ = 4,
 
+    RESPONSE_ERROR = 100,
     RESPONSE_LABEL = 101,
     RESPONSE_UNIQ_ID = 102,
     RESPONSE_UNIQ_SEQ = 103,
@@ -50,24 +53,13 @@ struct MessageHead
 {
     nuint16_t len;
     nuint16_t type;
+    nuint32_t echo; // 响应时回复相同的值
     nuint64_t value1;
     nuint64_t value2;
 
     std::string str() const
     {
-        return utils::CStringUtils::format_string("message://%d/%"PRIu64"/%"PRIu64, len.to_int(), type.to_int(), value1.to_int(), value1.to_int());
-    }
-};
-
-struct GetUniqIdRequest
-{
-    struct MessageHead head;
-    nuint32_t user;
-    nuint64_t timestamp;
-
-    std::string str() const
-    {
-        return utils::CStringUtils::format_string("get_uniq_id_request://%d/%d/%u/%"PRIu64, head.len.to_int(), head.type.to_int(), user.to_int(), timestamp.to_int());
+        return utils::CStringUtils::format_string("message://%d/%d/%u/%"PRIu64"/%"PRIu64, len.to_int(), type.to_int(), echo.to_int(), value1.to_int(), value2.to_int());
     }
 };
 
