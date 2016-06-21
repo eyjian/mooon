@@ -48,19 +48,22 @@ union UniqID
     struct ID
     {
         uint64_t user:6;   // 用户定义的前缀，默认为0，最大为63
-        uint64_t label:10; // 机器的唯一标识，最多支持1023台机器
+        uint64_t label:8;  // 机器的唯一标识，最多支持255台机器
         uint64_t year:7;   // 当前年份，支持到2143年
         uint64_t month:4;  // 当前月份
         uint64_t day:5;    // 当前月份的天
         uint64_t hour:4;   // 当前的小时数
-        uint64_t seq:28;   // 循环递增的序列号，最大为268435455
+        uint64_t seq:30;   // 循环递增的序列号，最大为1073741823
 
         std::string str() const
         {
-            return mooon::utils::CStringUtils::format_string("uniq://%d/%d/%d-%d-%d %d/%u", (int)user, (int)label, (int)year+BASE_YEAR, (int)month, (int)day, (int)hour, (unsigned int)seq);
+            return mooon::utils::CStringUtils::format_string("uniq://%d/%02X/%d-%d-%d_%d/%u", (int)user, (int)label, (int)year+BASE_YEAR, (int)month, (int)day, (int)hour, (unsigned int)seq);
         }
     }id;
 };
+
+const char* label2string(uint8_t label, char str[3], bool uppercase=true);
+std::string label2string(uint8_t label, bool uppercase=true);
 
 class CUniqId
 {

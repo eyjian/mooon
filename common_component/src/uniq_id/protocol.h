@@ -26,7 +26,7 @@ namespace mooon {
 enum
 {
     SOCKET_BUFFER_SIZE = 1024,
-    LABEL_MAX = 1023,                   // Label最大的取值，注意只能为1023，不能为更大的值
+    LABEL_MAX = 255,                    // Label最大的取值，注意只能为1023，不能为更大的值
     LABEL_EXPIRED_SECONDS = (3600*24*7) // Label多少小秒过期，默认7天
 };
 

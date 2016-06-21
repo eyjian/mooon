@@ -24,6 +24,22 @@
 #include <time.h>
 namespace mooon {
 
+const char* label2string(uint8_t label, char str[3], bool uppercase)
+{
+    if (uppercase)
+        snprintf(str, 3, "%02X", label);
+    else
+        snprintf(str, 3, "%02x", label);
+    return str;
+}
+
+std::string label2string(uint8_t label, bool uppercase)
+{
+    char str[3];
+    label2string(label, str, uppercase);
+    return str;
+}
+
 CUniqId::CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds) throw (utils::CException)
     : _echo(0), _agent_nodes(agent_nodes), _timeout_milliseconds(timeout_milliseconds), _udp_socket(NULL)
 {

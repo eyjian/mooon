@@ -35,7 +35,7 @@
 STRING_ARG_DEFINE(master, "", "master nodes, e.g., 192.168.31.66:2016,192.168.31.88:2016");
 STRING_ARG_DEFINE(ip, "0.0.0.0", "listen IP");
 INTEGER_ARG_DEFINE(uint16_t, port, 6200, 1000, 65535, "listen port");
-INTEGER_ARG_DEFINE(uint16_t, label, 0, 0, LABEL_MAX, "unique label of a machine");
+INTEGER_ARG_DEFINE(uint8_t, label, 0, 0, LABEL_MAX, "unique label of a machine");
 INTEGER_ARG_DEFINE(uint16_t, steps, 1000, 1, 65535, "steps to store");
 INTEGER_ARG_DEFINE(uint32_t, expire, LABEL_EXPIRED_SECONDS, 1, LABEL_EXPIRED_SECONDS*10, "label expired seconds");
 
@@ -93,7 +93,7 @@ private:
 
 private:
     std::string get_sequence_path() const;
-    uint32_t get_label();
+    uint8_t get_label();
     bool restore_sequence();
     bool store_sequence();
     uint32_t inc_sequence();
@@ -116,6 +116,7 @@ private:
     struct SeqBlock _seq_block;
     std::string _sequence_path;
     int _sequence_fd;
+    time_t _current_time; // 当前时间
     time_t _last_rent_time; // 最近一次续租Lable的时间
 
 private:
@@ -142,7 +143,7 @@ extern "C" int main(int argc, char* argv[])
 }
 
 CUniqAgent::CUniqAgent()
-    : _echo(0), _udp_socket(NULL), _sequence_fd(-1), _last_rent_time(0),
+    : _echo(0), _udp_socket(NULL), _sequence_fd(-1), _current_time(0), _last_rent_time(0),
       _old_seq(0), _old_hour(-1), _old_day(-1), _old_month(-1), _old_year(-1),
       _message_head(NULL)
 {
@@ -182,6 +183,7 @@ bool CUniqAgent::init(int argc, char* argv[])
     try
     {
         sys::g_logger = sys::create_safe_logger();
+        _current_time = time(NULL);
         if (!restore_sequence())
             return false;
 
@@ -209,8 +211,8 @@ bool CUniqAgent::run()
 
         if (!net::CUtils::timed_poll(_udp_socket->get_fd(), events_requested, milliseconds, &events_returned))
         {
-            time_t now = time(NULL);
-            if (now - old_time > 600)
+            _current_time = time(NULL);
+            if (_current_time - old_time > 600)
             {
                 // 续租
                 rent_label();
@@ -236,6 +238,7 @@ bool CUniqAgent::run()
                 {
                     int result = 0;
                     std::string errmsg;
+                    _last_rent_time = time(NULL);
 
                     if (REQUEST_LABEL == _message_head->type)
                     {
@@ -288,7 +291,7 @@ std::string CUniqAgent::get_sequence_path() const
     return sys::CUtils::get_program_path() + std::string("/.uniq.seq");
 }
 
-uint32_t CUniqAgent::get_label()
+uint8_t CUniqAgent::get_label()
 {
 	if (argument::master->value().empty())
 	{
@@ -318,8 +321,8 @@ uint32_t CUniqAgent::get_label()
                     if (response.value1.to_int() > 0)
                     {
                         // 续成功
-                        _last_rent_time = time(NULL);
-                        return static_cast<uint32_t>(response.value1.to_int());
+                        _last_rent_time = _current_time;
+                        return static_cast<uint8_t>(response.value1.to_int());
                     }
                     else
                     {
@@ -343,7 +346,7 @@ uint32_t CUniqAgent::get_label()
 
 bool CUniqAgent::restore_sequence()
 {
-    uint32_t label = get_label();
+    uint8_t label = get_label();
     if (0 == label)
         return false;
 
@@ -399,7 +402,7 @@ bool CUniqAgent::store_sequence()
     MYLOG_INFO("%s\n", _seq_block.str().c_str());
 
     _seq_block.version = SEQUENCE_BLOCK_VERSION;
-    _seq_block.timestamp = time(NULL);
+    _seq_block.timestamp = _current_time;
     _seq_block.update_magic();
 
     ssize_t byes_written = pwrite(_sequence_fd, &_seq_block, sizeof(_seq_block), 0);
@@ -417,6 +420,7 @@ bool CUniqAgent::store_sequence()
         }
         else
         {
+            _sequence_start = _seq_block.sequence;
             MYLOG_INFO("store %s to %s ok\n", _seq_block.str().c_str(), _sequence_path.c_str());
             return true;
         }
@@ -455,7 +459,7 @@ uint64_t CUniqAgent::get_uniq_id(const struct MessageHead* request)
         struct tm now;
         time_t t = static_cast<time_t>(request->value2.to_int());
         if (0 == t)
-            t = time(NULL);
+            t = _current_time;
         (void)localtime_r(&t, &now);
 
         union UniqID uniq_id;
@@ -473,6 +477,7 @@ uint64_t CUniqAgent::get_uniq_id(const struct MessageHead* request)
             (_old_month == static_cast<int>(uniq_id.id.month)) &&
             (_old_year == static_cast<int>(uniq_id.id.year)))
         {
+            MYLOG_ERROR("sequence overflow\n");
             return 1; // overflow
         }
         else
@@ -490,19 +495,11 @@ void CUniqAgent::rent_label()
 {
     if (!argument::master->value().empty())
     {
-        uint32_t label = get_label();
+        uint8_t label = get_label();
 
         if (label > 0)
         {
-            if (label <= LABEL_MAX)
-            {
-                // 续成功
-                _seq_block.label = label;
-            }
-            else
-            {
-                MYLOG_ERROR("rent invalid lable[%u]\n", label);
-            }
+            _seq_block.label = label;
         }
     }
 }
@@ -512,8 +509,7 @@ bool CUniqAgent::label_expired() const
     if (argument::master->value().empty())
         return false;
 
-    time_t now = time(NULL);
-    return now - _last_rent_time > static_cast<time_t>(argument::expire->value());
+    return _current_time - _last_rent_time > static_cast<time_t>(argument::expire->value());
 }
 
 void CUniqAgent::prepare_response_error(int errcode)
