@@ -18,6 +18,7 @@
  */
 #ifndef MOOON_UNIQ_ID_PROTOCOL_H
 #define MOOON_UNIQ_ID_PROTOCOL_H
+#include "mooon/uniq_id/uniq_id.h"
 #include <mooon/net/inttypes.h>
 #include <mooon/utils/string_utils.h>
 namespace mooon {
@@ -53,13 +54,20 @@ struct MessageHead
 {
     nuint16_t len;
     nuint16_t type;
-    nuint32_t echo; // 响应时回复相同的值
+    nuint16_t major_ver; // 主版本号
+    nuint16_t minor_ver; // 次版本号
+    nuint32_t echo;  // 响应时回复相同的值
     nuint64_t value1;
     nuint64_t value2;
 
+    MessageHead()
+        : major_ver(MAJOR_VERSION), minor_ver(MINOR_VERSION)
+    {
+    }
+
     std::string str() const
     {
-        return utils::CStringUtils::format_string("message://%d/%d/%u/%"PRIu64"/%"PRIu64, len.to_int(), type.to_int(), echo.to_int(), value1.to_int(), value2.to_int());
+        return utils::CStringUtils::format_string("message://%d.%d/%d/%d/%u/%"PRIu64"/%"PRIu64, (int)major_ver.to_int(), (int)minor_ver.to_int(), len.to_int(), type.to_int(), echo.to_int(), value1.to_int(), value2.to_int());
     }
 };
 

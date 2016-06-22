@@ -38,6 +38,7 @@ INTEGER_ARG_DEFINE(uint16_t, port, 6200, 1000, 65535, "listen port");
 INTEGER_ARG_DEFINE(uint8_t, label, 0, 0, LABEL_MAX, "unique label of a machine");
 INTEGER_ARG_DEFINE(uint16_t, steps, 10000, 1, 65535, "steps to store");
 INTEGER_ARG_DEFINE(uint32_t, expire, LABEL_EXPIRED_SECONDS, 1, LABEL_EXPIRED_SECONDS*10, "label expired seconds");
+INTEGER_ARG_DEFINE(uint32_t, rent_interval, 600, 1, 7200, "rent lable interval (seconds)");
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace mooon {
@@ -93,7 +94,7 @@ private:
 
 private:
     std::string get_sequence_path() const;
-    uint8_t get_label();
+    uint8_t get_label(bool asynchronous);
     bool restore_sequence();
     bool store_sequence();
     uint32_t inc_sequence();
@@ -107,6 +108,10 @@ private:
     int prepare_response_get_uniq_id();
     int prepare_response_get_uniq_seq();
     int prepare_response_get_label_and_seq();
+
+private:
+    int on_response_error();
+    int on_response_label();
 
 private:
     uint32_t _echo;
@@ -195,6 +200,10 @@ bool CUniqAgent::init(int argc, char* argv[])
     catch (sys::CSyscallException& ex)
     {
         fprintf(stderr, "%s\n", ex.str().c_str());
+        if (sys::g_logger != NULL)
+        {
+            MYLOG_ERROR("%s\n", ex.str().c_str());
+        }
         return false;
     }
 }
@@ -212,10 +221,11 @@ bool CUniqAgent::run()
         if (!net::CUtils::timed_poll(_udp_socket->get_fd(), events_requested, milliseconds, &events_returned))
         {
             _current_time = time(NULL);
-            if (_current_time - old_time > 600)
+            if (_current_time - _last_rent_time > static_cast<time_t>(argument::rent_interval->value()))
             {
                 // 续租
                 rent_label();
+                _last_rent_time = _current_time;
             }
         }
         else
@@ -236,44 +246,55 @@ bool CUniqAgent::run()
                 }
                 else
                 {
-                    int result = 0;
+                    int errcode = 0;
                     std::string errmsg;
-                    _last_rent_time = time(NULL);
+                    _current_time = time(NULL);
 
                     if (REQUEST_LABEL == _message_head->type)
                     {
-                        result = prepare_response_get_label();
+                        errcode = prepare_response_get_label();
                     }
                     else if (REQUEST_UNIQ_ID == _message_head->type)
                     {
-                        result = prepare_response_get_uniq_id();
+                        errcode = prepare_response_get_uniq_id();
                     }
                     else if (REQUEST_UNIQ_SEQ == _message_head->type)
                     {
-                        result = prepare_response_get_uniq_seq();
+                        errcode = prepare_response_get_uniq_seq();
                     }
                     else if (REQUEST_LABEL_AND_SEQ == _message_head->type)
                     {
-                        result = prepare_response_get_label_and_seq();
+                        errcode = prepare_response_get_label_and_seq();
+                    }
+                    else if (RESPONSE_ERROR == _message_head->type)
+                    {
+                        errcode = on_response_error();
+                    }
+                    else if (RESPONSE_LABEL == _message_head->type)
+                    {
+                        errcode = on_response_label();
                     }
                     else
                     {
-                        result = ERROR_INVALID_TYPE;
+                        errcode = ERROR_INVALID_TYPE;
                         MYLOG_ERROR("invalid message type: %s\n", _message_head->str().c_str());
                     }
-                    if (result != 0)
+                    if ((errcode != 0) && (errcode != -1))
                     {
-                        prepare_response_error(result);
+                        prepare_response_error(errcode);
                     }
 
-                    try
+                    if (errcode != -1)
                     {
-                        _udp_socket->send_to(_response_buffer, _response_size, _from_addr);
-                        MYLOG_INFO("send to %s ok\n", net::to_string(_from_addr).c_str());
-                    }
-                    catch (sys::CSyscallException& ex)
-                    {
-                        MYLOG_ERROR("send to %s failed: %s\n", net::to_string(_from_addr).c_str(), ex.str().c_str());
+                        try
+                        {
+                            _udp_socket->send_to(_response_buffer, _response_size, _from_addr);
+                            MYLOG_INFO("send to %s ok\n", net::to_string(_from_addr).c_str());
+                        }
+                        catch (sys::CSyscallException& ex)
+                        {
+                            MYLOG_ERROR("send to %s failed: %s\n", net::to_string(_from_addr).c_str(), ex.str().c_str());
+                        }
                     }
                 }
             }
@@ -291,7 +312,7 @@ std::string CUniqAgent::get_sequence_path() const
     return sys::CUtils::get_program_path() + std::string("/.uniq.seq");
 }
 
-uint8_t CUniqAgent::get_label()
+uint8_t CUniqAgent::get_label(bool asynchronous)
 {
 	if (argument::master->value().empty())
 	{
@@ -314,24 +335,28 @@ uint8_t CUniqAgent::get_label()
             try
             {
                 master_socket.send_to(reinterpret_cast<char*>(&request), sizeof(request), _masters_addr[i]);
-                master_socket.receive_from(&response, sizeof(response), &master_addr);
 
-                if ((RESPONSE_LABEL == response.type) && (response.echo == _echo-1))
+                if (!asynchronous)
                 {
-                    if (response.value1.to_int() > 0)
+                    master_socket.receive_from(&response, sizeof(response), &master_addr);
+
+                    if ((RESPONSE_LABEL == response.type) && (response.echo == _echo-1))
                     {
-                        // 续成功
-                        _last_rent_time = _current_time;
-                        return static_cast<uint8_t>(response.value1.to_int());
+                        if (response.value1.to_int() > 0)
+                        {
+                            // 续成功
+                            _last_rent_time = _current_time;
+                            return static_cast<uint8_t>(response.value1.to_int());
+                        }
+                        else
+                        {
+                            MYLOG_ERROR("invalid label[%d] from %s\n", (int)response.value1.to_int(), net::to_string(_masters_addr[i]).c_str());
+                        }
                     }
                     else
                     {
-                        MYLOG_ERROR("invalid label[%d] from %s\n", (int)response.value1.to_int(), net::to_string(_masters_addr[i]).c_str());
+                        MYLOG_ERROR("invalid response[%s] for request[%s] from %s\n", response.str().c_str(), request.str().c_str(), net::to_string(_masters_addr[i]).c_str());
                     }
-                }
-                else
-                {
-                    MYLOG_ERROR("invalid response[%s] for request[%s] from %s\n", response.str().c_str(), request.str().c_str(), net::to_string(_masters_addr[i]).c_str());
                 }
             }
             catch (sys::CSyscallException& ex)
@@ -346,7 +371,7 @@ uint8_t CUniqAgent::get_label()
 
 bool CUniqAgent::restore_sequence()
 {
-    uint8_t label = get_label();
+    uint8_t label = get_label(false);
     if (0 == label)
         return false;
 
@@ -502,7 +527,7 @@ void CUniqAgent::rent_label()
 {
     if (!argument::master->value().empty())
     {
-        uint8_t label = get_label();
+        uint8_t label = get_label(true);
 
         if (label > 0)
         {
@@ -521,12 +546,15 @@ bool CUniqAgent::label_expired() const
 
 void CUniqAgent::prepare_response_error(int errcode)
 {
+    struct MessageHead* request = reinterpret_cast<struct MessageHead*>(_request_buffer);
     struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
 
     _response_size = sizeof(struct MessageHead);
     response->len = sizeof(struct MessageHead);
     response->type = RESPONSE_ERROR;
+    response->echo = request->echo;
     response->value1 = errcode;
+    response->value2 = 0;
 
     MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
 }
@@ -539,12 +567,15 @@ int CUniqAgent::prepare_response_get_label()
     }
     else
     {
+        struct MessageHead* request = reinterpret_cast<struct MessageHead*>(_request_buffer);
         struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
 
         _response_size = sizeof(struct MessageHead);
         response->len = sizeof(struct MessageHead);
         response->type = RESPONSE_LABEL;
+        response->echo = request->echo;
         response->value1 = _seq_block.label;
+        response->value2 = 0;
 
         MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
         return 0;
@@ -576,6 +607,7 @@ int CUniqAgent::prepare_response_get_uniq_id()
             _response_size = sizeof(struct MessageHead);
             response->len = sizeof(struct MessageHead);
             response->type = RESPONSE_UNIQ_ID;
+            response->echo = request->echo;
             response->value1 = uniq_id;
             response->value2 = 0;
 
@@ -601,11 +633,13 @@ int CUniqAgent::prepare_response_get_uniq_seq()
         }
         else
         {
+            struct MessageHead* request = reinterpret_cast<struct MessageHead*>(_request_buffer);
             struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
 
             _response_size = sizeof(struct MessageHead);
             response->len = sizeof(struct MessageHead);
             response->type = RESPONSE_UNIQ_SEQ;
+            response->echo = request->echo;
             response->value1 = inc_sequence();
             response->value2 = 0;
 
@@ -631,11 +665,13 @@ int CUniqAgent::prepare_response_get_label_and_seq()
         }
         else
         {
+            struct MessageHead* request = reinterpret_cast<struct MessageHead*>(_request_buffer);
             struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
 
             _response_size = sizeof(struct MessageHead);
             response->len = sizeof(struct MessageHead);
             response->type = RESPONSE_LABEL_AND_SEQ;
+            response->echo = request->echo;
             response->value1 = seq;
             response->value2 = _seq_block.label;
 
@@ -643,6 +679,20 @@ int CUniqAgent::prepare_response_get_label_and_seq()
             return 0;
         }
     }
+}
+
+int CUniqAgent::on_response_error()
+{
+    struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
+    MYLOG_ERROR("%s from %s\n", response->str().c_str(), net::to_string(_from_addr).c_str());
+    return -1;
+}
+
+int CUniqAgent::on_response_label()
+{
+    struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
+    MYLOG_INFO("%s from %s\n", response->str().c_str(), net::to_string(_from_addr).c_str());
+    return -1;
 }
 
 } // namespace mooon {

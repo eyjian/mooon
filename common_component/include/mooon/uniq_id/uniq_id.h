@@ -28,16 +28,22 @@ namespace mooon {
 // 常量
 enum
 {
-    BASE_YEAR = 2016 // 基数年份，计时开始的年份
+    BASE_YEAR = 2016,  // 基数年份，计时开始的年份
+    MAJOR_VERSION = 0, // 主版本号
+    MINOR_VERSION = 1  // 次版本号
 };
 
 // 出错代码
 enum
 {
-    ERROR_INVALID_TYPE = -1001, // 无效的请求消息类型
-    ERROR_STORE_SEQ = -1002,    // 保存sequence失败
-    ERROR_OVERFLOW = -1003,     // Sequence被消耗完了
-    ERROR_LABEL_EXPIRED = -1004 // Label过期了
+    ERROR_INVALID_TYPE = 201600001,   // 无效的请求消息类型
+    ERROR_STORE_SEQ = 201600002,      // 保存sequence失败
+    ERROR_OVERFLOW = 201600003,       // Sequence被消耗完了
+    ERROR_LABEL_EXPIRED = 201600004,  // Label过期了
+    ERROR_INVALID_LABEL = 201600005,  // 无效的Label，比如值过大或为0或为负
+    ERROR_NO_LABEL = 201600006,       // Label被租光了
+    ERROR_LABEL_NOT_HOLD = 201600007, // Label被其它租用着
+    ERROR_DATABASE = 201600008        // DB错误
 };
 
 // 64位唯一ID结构
