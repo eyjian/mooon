@@ -168,7 +168,7 @@ void CMySQLConnection::ping() throw (CDBException)
 
 void CMySQLConnection::commit() throw (CDBException)
 {
-    MYSQL* mysql_handler = static_cast<MYSQL*>(mysql_handler);
+    MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
 
     if (mysql_commit(mysql_handler) != 0)
         THROW_DB_EXCEPTION(NULL, mysql_error(mysql_handler), mysql_errno(mysql_handler));
