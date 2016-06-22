@@ -80,6 +80,7 @@ public:
     uint8_t get_label() throw (utils::CException, sys::CSyscallException);
     uint32_t get_unqi_seq() throw (utils::CException, sys::CSyscallException);
     uint64_t get_uniq_id(uint8_t user=0, uint64_t s=0) throw (utils::CException, sys::CSyscallException);
+    void get_label_and_seq(uint8_t* label, uint32_t* seq) throw (utils::CException, sys::CSyscallException);
 
 private:
     const struct sockaddr_in& pick_agent() const;

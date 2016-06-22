@@ -155,12 +155,40 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t s) throw (utils::CException
     return 0;
 }
 
+void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq) throw (utils::CException, sys::CSyscallException)
+{
+    uint32_t echo = _echo++;
+    struct MessageHead response;
+    struct MessageHead request;
+    request.len = sizeof(request);
+    request.type = REQUEST_LABEL_AND_SEQ;
+    request.echo = echo;
+    request.value1 = 0;
+    request.value2 = 0;
+
+    struct sockaddr_in from_addr;
+    const struct sockaddr_in& agent_addr = pick_agent();
+    int bytes = _udp_socket->send_to(&request, sizeof(request), agent_addr);
+    if (bytes != sizeof(request))
+        THROW_SYSCALL_EXCEPTION("invalid size", bytes, "send_to");
+
+    bytes = _udp_socket->timed_receive_from(&response, sizeof(response), &from_addr, _timeout_milliseconds);
+    if (bytes != sizeof(response))
+        THROW_SYSCALL_EXCEPTION("invalid size", bytes, "receive_from");
+
+    if (response.echo.to_int() == echo)
+    {
+        *label = static_cast<uint8_t>(response.value1.to_int());
+        *seq = static_cast<uint32_t>(response.value2.to_int());
+    }
+}
+
 const struct sockaddr_in& CUniqId::pick_agent() const
 {
     MOOON_ASSERT(!agents_addr.empty());
 
     static uint64_t i = 0;
-    return agents_addr[i % static_cast<uint64_t>(agents_addr.size())];
+    return agents_addr[i++ % static_cast<uint64_t>(agents_addr.size())];
 }
 
 } // namespace mooon {

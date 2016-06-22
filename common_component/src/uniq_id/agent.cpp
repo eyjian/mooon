@@ -28,17 +28,18 @@
 #include <mooon/sys/utils.h>
 #include <mooon/utils/args_parser.h>
 #include <mooon/utils/string_utils.h>
+#include <mooon/utils/tokener.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <vector>
 
-STRING_ARG_DEFINE(master, "", "master nodes, e.g., 192.168.31.66:2016,192.168.31.88:2016");
+STRING_ARG_DEFINE(master_nodes, "", "master nodes, e.g., 192.168.31.66:2016,192.168.31.88:2016");
 STRING_ARG_DEFINE(ip, "0.0.0.0", "listen IP");
 INTEGER_ARG_DEFINE(uint16_t, port, 6200, 1000, 65535, "listen port");
 INTEGER_ARG_DEFINE(uint8_t, label, 0, 0, LABEL_MAX, "unique label of a machine");
 INTEGER_ARG_DEFINE(uint16_t, steps, 10000, 1, 65535, "steps to store");
 INTEGER_ARG_DEFINE(uint32_t, expire, LABEL_EXPIRED_SECONDS, 1, LABEL_EXPIRED_SECONDS*10, "label expired seconds");
-INTEGER_ARG_DEFINE(uint32_t, rent_interval, 600, 1, 7200, "rent lable interval (seconds)");
+INTEGER_ARG_DEFINE(uint32_t, rent_interval, 600, 1, 7200, "rent label interval (seconds)");
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace mooon {
@@ -94,7 +95,8 @@ private:
 
 private:
     std::string get_sequence_path() const;
-    uint8_t get_label(bool asynchronous);
+    int get_label(bool asynchronous);
+    bool parse_master_nodes();
     bool restore_sequence();
     bool store_sequence();
     uint32_t inc_sequence();
@@ -179,22 +181,28 @@ bool CUniqAgent::init(int argc, char* argv[])
     }
 
     // Check parameters
-    if (argument::master->value().empty() && (0 == argument::label->value()))
+    if (argument::master_nodes->value().empty() && (0 == argument::label->value()))
     {
     	fprintf(stderr, "parameter[master] is empty and parameter[label] is 0 at the same time.\n");
     	return false;
+    }
+
+    if (!parse_master_nodes())
+    {
+        return false;
     }
 
     try
     {
         sys::g_logger = sys::create_safe_logger();
         _current_time = time(NULL);
-        if (!restore_sequence())
-            return false;
 
         _udp_socket = new net::CUdpSocket;
         _udp_socket->listen(argument::ip->value(), argument::port->value());
         MYLOG_INFO("listen on %s:%d\n", argument::ip->c_value(), argument::port->value());
+
+        if (!restore_sequence())
+            return false;
         return true;
     }
     catch (sys::CSyscallException& ex)
@@ -210,8 +218,6 @@ bool CUniqAgent::init(int argc, char* argv[])
 
 bool CUniqAgent::run()
 {
-    time_t old_time = time(NULL);
-
     while (true)
     {
         int events_returned = 0;
@@ -289,7 +295,7 @@ bool CUniqAgent::run()
                         try
                         {
                             _udp_socket->send_to(_response_buffer, _response_size, _from_addr);
-                            MYLOG_INFO("send to %s ok\n", net::to_string(_from_addr).c_str());
+                            MYLOG_DEBUG("send to %s ok\n", net::to_string(_from_addr).c_str());
                         }
                         catch (sys::CSyscallException& ex)
                         {
@@ -312,15 +318,14 @@ std::string CUniqAgent::get_sequence_path() const
     return sys::CUtils::get_program_path() + std::string("/.uniq.seq");
 }
 
-uint8_t CUniqAgent::get_label(bool asynchronous)
+int CUniqAgent::get_label(bool asynchronous)
 {
-	if (argument::master->value().empty())
+	if (argument::master_nodes->value().empty())
 	{
 		return argument::label->value();
 	}
 	else
 	{
-		net::CUdpSocket master_socket;
 		struct sockaddr_in master_addr;
 		struct MessageHead response;
 		struct MessageHead request;
@@ -334,11 +339,15 @@ uint8_t CUniqAgent::get_label(bool asynchronous)
 		{
             try
             {
-                master_socket.send_to(reinterpret_cast<char*>(&request), sizeof(request), _masters_addr[i]);
+                _udp_socket->send_to(reinterpret_cast<char*>(&request), sizeof(request), _masters_addr[i]);
 
-                if (!asynchronous)
+                if (asynchronous)
                 {
-                    master_socket.receive_from(&response, sizeof(response), &master_addr);
+                    return 0;
+                }
+                else
+                {
+                    _udp_socket->timed_receive_from(&response, sizeof(response), &master_addr, 2000);
 
                     if ((RESPONSE_LABEL == response.type) && (response.echo == _echo-1))
                     {
@@ -346,7 +355,9 @@ uint8_t CUniqAgent::get_label(bool asynchronous)
                         {
                             // 续成功
                             _last_rent_time = _current_time;
-                            return static_cast<uint8_t>(response.value1.to_int());
+                            int label = static_cast<int>(response.value1.to_int());
+                            MYLOG_INFO("rent label[%d] ok\n", label);
+                            return label;
                         }
                         else
                         {
@@ -361,20 +372,53 @@ uint8_t CUniqAgent::get_label(bool asynchronous)
             }
             catch (sys::CSyscallException& ex)
             {
-                MYLOG_ERROR("rent lable from %s faield: %s\n", net::to_string(_masters_addr[i]).c_str(), ex.str().c_str());
+                MYLOG_ERROR("rent label from %s faield: %s\n", net::to_string(_masters_addr[i]).c_str(), ex.str().c_str());
             }
 		}
 
-		return 0;
+		return -1;
 	}
+}
+
+bool CUniqAgent::parse_master_nodes()
+{
+    const std::string& master_nodes = argument::master_nodes->value();
+    utils::CEnhancedTokener tokener;
+
+    tokener.parse(master_nodes, ",", ':');
+    const std::map<std::string, std::string>& tokens = tokener.tokens();
+    for (std::map<std::string, std::string>::const_iterator iter=tokens.begin(); iter!=tokens.end(); ++iter)
+    {
+        const std::string& ip_str = iter->first;
+        const std::string& port_str = iter->second;
+
+        uint32_t ip = net::string2ipv4(ip_str);
+        if (0 == ip)
+        {
+            fprintf(stderr, "parameter[master_nodes] error: %s\n", master_nodes.c_str());
+            return false;
+        }
+
+        int port = atoi(port_str.c_str());
+        if ((port < 1000) || (port > 65535))
+        {
+            fprintf(stderr, "parameter[master_nodes] error: %s\n", master_nodes.c_str());
+            return false;
+        }
+
+        struct sockaddr_in master_addr;
+        master_addr.sin_family = AF_INET;
+        master_addr.sin_addr.s_addr = ip;
+        master_addr.sin_port = net::CUtils::host2net(static_cast<uint16_t>(port));
+        memset(master_addr.sin_zero, 0, sizeof(master_addr.sin_zero));
+        _masters_addr.push_back(master_addr);
+    }
+
+    return true;
 }
 
 bool CUniqAgent::restore_sequence()
 {
-    uint8_t label = get_label(false);
-    if (0 == label)
-        return false;
-
     int fd = open(_sequence_path.c_str(), O_RDWR|O_CREAT, FILE_DEFAULT_PERM);
     if (-1 == fd)
     {
@@ -387,6 +431,13 @@ bool CUniqAgent::restore_sequence()
     if (0 == bytes_read)
     {
         MYLOG_INFO("%s empty\n", _sequence_path.c_str());
+
+        int label = get_label(false);
+        if ((label < 1) || (label > LABEL_MAX))
+        {
+            MYLOG_ERROR("invalid label[%d]\n", label);
+            return false;
+        }
 
         _sequence_fd = ch.release();
         _sequence_start = argument::steps->value();
@@ -417,7 +468,6 @@ bool CUniqAgent::restore_sequence()
 
             // 多加一次steps，原因是store时未调用fsync
             _sequence_start = _seq_block.sequence + argument::steps->value() + argument::steps->value();
-            _seq_block.label = label;
             _seq_block.sequence = _sequence_start;
             return store_sequence();
         }
@@ -426,8 +476,6 @@ bool CUniqAgent::restore_sequence()
 
 bool CUniqAgent::store_sequence()
 {
-    MYLOG_DEBUG("%s\n", _seq_block.str().c_str());
-
     _seq_block.version = SEQUENCE_BLOCK_VERSION;
     _seq_block.timestamp = _current_time;
     _seq_block.update_magic();
@@ -435,11 +483,12 @@ bool CUniqAgent::store_sequence()
     ssize_t byes_written = pwrite(_sequence_fd, &_seq_block, sizeof(_seq_block), 0);
     if (byes_written != sizeof(_seq_block))
     {
-        MYLOG_ERROR("write %s to %s failed: %s\n", _seq_block.str().c_str(), _sequence_path.c_str(), strerror(errno));
+        MYLOG_ERROR("store %s to %s failed: %s\n", _seq_block.str().c_str(), _sequence_path.c_str(), strerror(errno));
         return false;
     }
     else
     {
+        MYLOG_INFO("store %s ok\n", _seq_block.str().c_str());
 #if 1
         return true;
 #else
@@ -525,9 +574,9 @@ uint64_t CUniqAgent::get_uniq_id(const struct MessageHead* request)
 
 void CUniqAgent::rent_label()
 {
-    if (!argument::master->value().empty())
+    if (!argument::master_nodes->value().empty())
     {
-        uint8_t label = get_label(true);
+        int label = get_label(true);
 
         if (label > 0)
         {
@@ -538,7 +587,7 @@ void CUniqAgent::rent_label()
 
 bool CUniqAgent::label_expired() const
 {
-    if (argument::master->value().empty())
+    if (argument::master_nodes->value().empty())
         return false;
 
     return _current_time - _last_rent_time > static_cast<time_t>(argument::expire->value());
@@ -672,8 +721,8 @@ int CUniqAgent::prepare_response_get_label_and_seq()
             response->len = sizeof(struct MessageHead);
             response->type = RESPONSE_LABEL_AND_SEQ;
             response->echo = request->echo;
-            response->value1 = seq;
-            response->value2 = _seq_block.label;
+            response->value1 = _seq_block.label;
+            response->value2 = seq;
 
             MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
             return 0;

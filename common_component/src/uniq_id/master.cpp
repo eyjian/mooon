@@ -377,7 +377,7 @@ int CUniqMaster::alloc_label()
             }
         }
 
-        MYLOG_ERROR("no lable available for %s\n", net::to_string(_from_addr).c_str());
+        MYLOG_ERROR("no label available for %s\n", net::to_string(_from_addr).c_str());
         return label;
     }
     catch (sys::CDBException& ex)
@@ -392,7 +392,7 @@ int CUniqMaster::get_label() const
     try
     {
         const std::string str = _mysql->query("SELECT f_label FROM t_label_online WHERE f_ip=\"%s\"", net::to_string(_from_addr.sin_addr).c_str());
-        MYLOG_INFO("%s hold lable[%s]\n", net::to_string(_from_addr.sin_addr).c_str(), str.c_str());
+        MYLOG_INFO("%s hold label[%s]\n", net::to_string(_from_addr.sin_addr).c_str(), str.c_str());
         if (str.empty())
             return 0;
         return atoi(str.c_str());
@@ -410,7 +410,7 @@ bool CUniqMaster::hold_label(uint8_t label) const
 
     if (str.empty())
     {
-        MYLOG_ERROR("%s not hold lable[%d]\n", net::to_string(_from_addr).c_str(), (int)label);
+        MYLOG_ERROR("%s not hold label[%d]\n", net::to_string(_from_addr).c_str(), (int)label);
         return false;
     }
     else
@@ -445,7 +445,7 @@ void CUniqMaster::on_timeout()
         _mysql->query(db_table, "SELECT f_ip,f_label,f_time FROM t_label_online WHERE f_time<\"%s\"", sys::CDatetimeUtils::to_datetime(timeout_time).c_str());
         if (db_table.empty())
         {
-            MYLOG_INFO("no lable timeout\n");
+            MYLOG_INFO("no label timeout\n");
         }
         else
         {
