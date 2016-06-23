@@ -26,9 +26,10 @@ namespace mooon {
 // 常量
 enum
 {
-    SOCKET_BUFFER_SIZE = 1024,
-    LABEL_MAX = 255,                     // Label最大的取值，注意只能为1023，不能为更大的值
-    LABEL_EXPIRED_SECONDS = (3600*24*15) // Label多少小秒过期，默认15天
+    // 多数设备以太网链路层MTU（最大传输单元）大小为1500（但标准为576），IP包头为20，TCP包头为20，UDP包头8
+    SOCKET_BUFFER_SIZE = 1024,          // 对于UDP来说，足够大了
+    LABEL_MAX = 255,                    // Label最大的取值（不包含0，从1开始），注意只能为255，不能为更大的值
+    LABEL_EXPIRED_SECONDS = (3600*24*7) // Label多少小秒过期，默认7天
 };
 
 // 命令字
@@ -67,7 +68,7 @@ struct MessageHead
 
     std::string str() const
     {
-        return utils::CStringUtils::format_string("message://%d.%d/%d/%d/%u/%"PRIu64"/%"PRIu64, (int)major_ver.to_int(), (int)minor_ver.to_int(), len.to_int(), type.to_int(), echo.to_int(), value1.to_int(), value2.to_int());
+        return utils::CStringUtils::format_string("message://%d.%d/%d/%d/%u/%"PRIu64"/%"PRIu64, (int)major_ver.to_int(), (int)minor_ver.to_int(), (int)len.to_int(), (int)type.to_int(), (unsigned int)echo.to_int(), value1.to_int(), value2.to_int());
     }
 };
 

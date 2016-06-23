@@ -43,7 +43,9 @@ STRING_ARG_DEFINE(db_user, "root", "MySQL user");
 STRING_ARG_DEFINE(db_pass, "", "MySQL password");
 STRING_ARG_DEFINE(db_name, "", "MySQL database name");
 
-INTEGER_ARG_DEFINE(uint32_t, expire, LABEL_EXPIRED_SECONDS, 1, LABEL_EXPIRED_SECONDS*10, "label expired seconds");
+// Label过期时长，所有节点的expire值必须保持相同，包括master节点和所有agent节点
+INTEGER_ARG_DEFINE(uint32_t, expire, LABEL_EXPIRED_SECONDS, 1, 4294967295U, "label expired seconds");
+// 多长间隔做一次超时处理
 INTEGER_ARG_DEFINE(uint32_t, timeout, 3600, 1, 36000, "timeout seconds");
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -217,7 +219,7 @@ bool CUniqMaster::init(int argc, char* argv[])
 
 bool CUniqMaster::run()
 {
-    time_t old_time = time(NULL);
+    time_t old_time = 0;
 
     while (true)
     {
@@ -347,46 +349,42 @@ bool CUniqMaster::generate_labels()
     }
 }
 
+// 返回-1表示DB错误
+// 返回0表示无可用的Label
+// 返回大于0的值表示分配Label成功
 int CUniqMaster::alloc_label()
 {
-    try
+    const std::string label_str = _mysql->query("SELECT f_label FROM t_label_pool WHERE f_label<=%d AND f_label>0 LIMIT 1", LABEL_MAX);
+    if (label_str.empty())
     {
-        int label = 0;
-
-        while (true)
-        {
-            const std::string label_str = _mysql->query("SELECT f_label FROM t_label_pool WHERE f_label<=%d AND f_label>0 LIMIT 1", LABEL_MAX);
-            if (label_str.empty())
-                break;
-
-            // 被其它master抢走时，返回值为0
-            int n = _mysql->update("DELETE FROM t_label_pool WHERE f_label=%s", label_str.c_str());
-            if (1 == n)
-            {
-                n = _mysql->update("INSERT INTO t_label_online (f_ip,f_label,f_time) VALUES (\"%s\",%s,\"%s\")", net::CUtils::ipv4_tostring(_from_addr.sin_addr.s_addr).c_str(), label_str.c_str(), sys::CDatetimeUtils::to_datetime(_current_time).c_str());
-                if (n != 1)
-                {
-                    _mysql->rollback();
-                }
-                else
-                {
-                    _mysql->commit();
-                    label = static_cast<int>(atoi(label_str.c_str()));
-                    break;
-                }
-            }
-        }
-
         MYLOG_ERROR("no label available for %s\n", net::to_string(_from_addr).c_str());
-        return label;
-    }
-    catch (sys::CDBException& ex)
-    {
-        MYLOG_ERROR("[%s][%s]=>%s", net::to_string(_from_addr.sin_addr).c_str(), ex.sql(), ex.str().c_str());
         return 0;
+    }
+
+    // 被其它master抢走时，返回值为0
+    int n = _mysql->update("DELETE FROM t_label_pool WHERE f_label=%s", label_str.c_str());
+    if (n != 1)
+    {
+        return -1;
+    }
+    else
+    {
+        n = _mysql->update("INSERT INTO t_label_online (f_ip,f_label,f_time) VALUES (\"%s\",%s,\"%s\")", net::CUtils::ipv4_tostring(_from_addr.sin_addr.s_addr).c_str(), label_str.c_str(), sys::CDatetimeUtils::to_datetime(_current_time).c_str());
+        if (n != 1)
+        {
+            return -1;
+        }
+        else
+        {
+            return static_cast<int>(atoi(label_str.c_str()));
+        }
     }
 }
 
+// 根据IP取它的Label
+// 成功返回Lable
+// 没找到则返回0
+// DB错误返回-1
 int CUniqMaster::get_label() const
 {
     try
@@ -421,7 +419,7 @@ bool CUniqMaster::hold_label(uint8_t label) const
 
 void CUniqMaster::on_timeout()
 {
-    // 更新续租
+    // 需先更新续租
     for (std::map<uint8_t, struct LabelInfo>::iterator iter=_label_info_map.begin(); iter!=_label_info_map.end(); ++iter)
     {
         const struct LabelInfo& label_info = iter->second;
@@ -436,7 +434,7 @@ void CUniqMaster::on_timeout()
         }
     }
 
-    // 清理超时未续租的
+    // 再清理超时未续租的，否则可能冲突
     try
     {
         time_t timeout_time = _current_time - argument::expire->value();
@@ -461,7 +459,7 @@ void CUniqMaster::on_timeout()
                 MYLOG_INFO("[%d] Label[%s] expired for %s with %s\n", num_rows, label_str.c_str(), ip_str.c_str(), time_str.c_str());
 
                 // 回收
-                num_rows = _mysql->update("INSERT INTO t_label (f_label) VALUES (%s)", label_str.c_str());
+                num_rows = _mysql->update("INSERT INTO t_label_pool (f_label) VALUES (%s)", label_str.c_str());
                 MYLOG_INFO("Label[%s] recycled from %s\n", label_str.c_str(), ip_str.c_str());
 
                 _mysql->commit();
@@ -511,40 +509,75 @@ int CUniqMaster::prepare_response_get_label()
     }
     else
     {
-        if (label > 0)
+        try
         {
-            // 续租
-            if (!hold_label(label))
-                return ERROR_LABEL_NOT_HOLD;
-        }
-        else
-        {
-            label = get_label();
-            if (-1 == label)
+            bool first; // 如果是首次租赁，则需要立即写DB，否则延后写DB
+
+            if (label > 0)
             {
-                return ERROR_DATABASE;
+                first = false;
+
+                // 续租，agent应当重新租赁
+                if (!hold_label(label))
+                    return ERROR_LABEL_NOT_HOLD;
             }
-            else if (0 == label)
+            else
             {
-                // 新租
-                label = alloc_label();
-                if (0 == label)
+                first = true;
+
+                label = get_label();
+                if (-1 == label)
                 {
-                    return ERROR_NO_LABEL;
+                    return ERROR_DATABASE;
+                }
+                else if (0 == label)
+                {
+                    // 新租
+                    label = alloc_label();
+                    if (0 == label)
+                    {
+                        return ERROR_NO_LABEL;
+                    }
+                    else if (-1 == label)
+                    {
+                        _mysql->commit();
+                        return ERROR_DATABASE;
+                    }
                 }
             }
+
+            _response_size = sizeof(struct MessageHead);
+            response->len = sizeof(struct MessageHead);
+            response->type = RESPONSE_LABEL;
+            response->echo = request->echo;
+            response->value1 = label;
+            response->value2 = 0;
+            MYLOG_INFO("%s => %s\n", response->str().c_str(), net::to_string(_from_addr).c_str());
+
+            struct LabelInfo label_info(label, _from_addr.sin_addr.s_addr, _current_time);
+            if (!first)
+            {
+                _label_info_map.insert(std::make_pair(label, label_info));
+            }
+            else
+            {
+                _mysql->update("INSERT INTO t_label_online (f_label,f_ip,f_time) VALUES (%d,\"%s\",\"%s\")", (int)label_info.label, net::ip2string(label_info.ip).c_str(), sys::CDatetimeUtils::to_datetime(label_info.lease_time).c_str());
+                _mysql->commit();
+            }
         }
+        catch (sys::CDBException& ex)
+        {
+            try
+            {
+                _mysql->rollback();
+            }
+            catch (sys::CDBException& ex)
+            {
+                MYLOG_ERROR("rollback failed: %s\n", ex.str().c_str());
+            }
 
-        _response_size = sizeof(struct MessageHead);
-        response->len = sizeof(struct MessageHead);
-        response->type = RESPONSE_LABEL;
-        response->echo = request->echo;
-        response->value1 = label;
-        response->value2 = 0;
-        MYLOG_INFO("%s => %s\n", response->str().c_str(), net::to_string(_from_addr).c_str());
-
-        struct LabelInfo label_info(label, _from_addr.sin_addr.s_addr, _current_time);
-        _label_info_map.insert(std::make_pair(label, label_info));
+            return ERROR_DATABASE;
+        }
     }
 
     return 0;

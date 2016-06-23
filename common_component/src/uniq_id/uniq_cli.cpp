@@ -17,6 +17,7 @@
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
 #include <mooon/uniq_id/uniq_id.h>
+#include <mooon/sys/stop_watch.h>
 
 static void usage();
 
@@ -37,6 +38,7 @@ int main(int argc, char* argv[])
 	if (times < 1)
 	    times = 1;
 
+	mooon::sys::CStopWatch stop_watch;
 	for (int i=0; i<times; ++i)
 	{
 	    try
@@ -45,7 +47,9 @@ int main(int argc, char* argv[])
 	        uint64_t uid = uniq_id.get_uniq_id();
 	        union mooon::UniqID uid_struct;
 	        uid_struct.value = uid;
-	        fprintf(stdout, "uid: %"PRIu64" => %s\n", uid, uid_struct.id.str().c_str());
+
+	        if ((0 == i) || (0 == i%100000) || (i == times-1))
+	            fprintf(stdout, "uid: %"PRIu64" => %s\n", uid, uid_struct.id.str().c_str());
 	    }
 	    catch (mooon::sys::CSyscallException& ex)
 	    {
@@ -58,6 +62,8 @@ int main(int argc, char* argv[])
 	        break;
 	    }
 	}
+	unsigned int microseconds = stop_watch.get_total_elapsed_microseconds();
+	fprintf(stdout, "%.2fus, %0.2fs\n", (double)microseconds/1000, microseconds/(1000*times));
 
 	return 0;
 }
