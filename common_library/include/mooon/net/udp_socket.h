@@ -24,6 +24,7 @@ NET_NAMESPACE_BEGIN
 // UDP不分服务端和客户端，
 // 但如果仅做服务端或即做服务端又做客户端时，都必须调用listen()，
 // 仅做客户端使用时，可不必调用listen()
+// 多数设备以太网链路层MTU（最大传输单元）大小为1500（但标准为576），IP包头为20，TCP包头为20，UDP包头8
 class CUdpSocket: public CEpollable
 {
 public:
