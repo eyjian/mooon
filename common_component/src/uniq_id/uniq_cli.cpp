@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
         thread_pool.clear();
 
         unsigned int microseconds = stop_watch.get_total_elapsed_microseconds();
-        fprintf(stdout, "%.2fus, %0.2fs\n", (double)microseconds/1000, (double)microseconds/(1000*times*concurrency));
+        fprintf(stdout, "%.2fus, %0.2fms\n", (double)microseconds/1000, (double)microseconds/(1000*times*concurrency));
     }
     catch (mooon::sys::CSyscallException& ex)
     {
