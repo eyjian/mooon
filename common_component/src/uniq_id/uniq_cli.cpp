@@ -19,11 +19,12 @@
 #include <mooon/uniq_id/uniq_id.h>
 #include <mooon/sys/stop_watch.h>
 #include <mooon/sys/thread_engine.h>
+#include <mooon/utils/string_utils.h>
 #include <time.h>
 #include <vector>
 
 static void usage();
-static void thread_proc(int times, const char* agent_nodes);
+static void thread_proc(uint64_t times, const char* agent_nodes);
 
 // 生成带日期的交易流水号示例
 static void print_transaction_id(const char* agent_nodes);
@@ -39,25 +40,27 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
-	int times = 1;
-	int concurrency = 1;
+	uint64_t times = 1;
+	uint64_t concurrency = 1;
 	const char* agent_nodes = argv[1];
 	if (argc >= 3)
-		times = atoi(argv[2]);
+	{
+	    if (!mooon::utils::CStringUtils::string2int(argv[2], times))
+	        times = 1;
+	}
 	if (argc >= 4)
-	    concurrency = atoi(argv[3]);
-	if (times < 1)
-	    times = 1;
-    if (concurrency < 1)
-        concurrency = 1;
+	{
+        if (!mooon::utils::CStringUtils::string2int(argv[3], concurrency))
+            concurrency = 1;
+	}
 
     print_transaction_id(agent_nodes);
     fprintf(stdout, "agent_nodes: %s\n", agent_nodes);
-    fprintf(stdout, "times: %d, concurrency: %d\n", times, concurrency);
+    fprintf(stdout, "times: %"PRIu64", concurrency: %"PRIu64"\n", times, concurrency);
 
     try
     {
-        int i = 0;
+        uint64_t i = 0;
         mooon::sys::CThreadEngine* thread_engine;
         std::vector<mooon::sys::CThreadEngine*> thread_pool(concurrency);
         mooon::sys::CStopWatch stop_watch;
@@ -74,8 +77,8 @@ int main(int argc, char* argv[])
         }
         thread_pool.clear();
 
-        unsigned int microseconds = stop_watch.get_total_elapsed_microseconds();
-        fprintf(stdout, "%.2fus, %0.2fms\n", (double)microseconds/1000, (double)microseconds/(1000*times*concurrency));
+        unsigned int total_microseconds = stop_watch.get_total_elapsed_microseconds();
+        fprintf(stdout, "%.2fms, %0.2fms, %.2f/s\n", (double)total_microseconds/1000, (double)total_microseconds/(1000*times*concurrency), (double)(times*concurrency*1000000)/total_microseconds);
     }
     catch (mooon::sys::CSyscallException& ex)
     {
@@ -93,9 +96,9 @@ void usage()
 	fprintf(stderr, "Usage3: uniq_cli agent_nodes times concurrency\n");
 }
 
-void thread_proc(int times, const char* agent_nodes)
+void thread_proc(uint64_t times, const char* agent_nodes)
 {
-    for (int i=0; i<times; ++i)
+    for (uint64_t i=0; i<times; ++i)
     {
         try
         {
