@@ -526,7 +526,7 @@ bool CUniqAgent::restore_sequence()
 
             _sequence_fd = ch.release();
             // 多加一次steps，原因是store时未调用fsync
-            _sequence_start = _seq_block.sequence + argument::steps->value() + argument::steps->value();
+            _sequence_start = _seq_block.sequence + (2 * argument::steps->value());
             _seq_block.sequence = _sequence_start;
             _seq_block.label = label;
 

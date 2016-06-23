@@ -19,3 +19,15 @@ uniq_id各组成均为单进程无线程，成员间通讯采用UDP协议，以�
 可通过设置环境变量MOOON_LOG_LEVEL和MOOON_LOG_SCREEN来控制日志级别和是否在屏幕上输出日志
 1) MOOON_LOG_LEVEL可以取值debug,info,error,warn,fatal
 2) MOOON_LOG_SCREEN取值为1表示在屏幕输出日志，其它则表示不输出
+
+工具说明：
+1) uniq_cli可用于测试uniq_agent，并可作为性能测试工具
+2) master_cli可用于测试master，对于master来说不需要考虑性能
+
+参数设置建议：
+1) Label过期参数expire的值建议以天为单位进行设置，比如至少1天，建议为1周或更大，以便机器故障时，快乐休假
+2) 请注意保持master和agent上的Label过期参数expire的值相同！！！
+3) agent的参数interval值，建议至少为1分钟，建议为10分钟或更大一点，要和expire的值保持合理关系，
+     由于UDP不可靠，所以在一个expire周期内，最好保持10次以上的interval，也就是expire的值最好是interval的10倍或更大
+4) master的timeout值要小于agent的interval值，以便及时的将值更新到DB中，比如可以为interval值的一半，或6/10等
+5) agent的steps值最好不小于10000，设置为10万会更佳，每重启一次agent进程，最多会浪费steps两倍的sequence，因此太大也不好。
