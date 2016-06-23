@@ -19,10 +19,14 @@
 #include <mooon/uniq_id/uniq_id.h>
 #include <mooon/sys/stop_watch.h>
 #include <mooon/sys/thread_engine.h>
+#include <time.h>
 #include <vector>
 
 static void usage();
 static void thread_proc(int times, const char* agent_nodes);
+
+// 生成带日期的交易流水号示例
+static void print_transaction_id(const char* agent_nodes);
 
 // Usage1: uniq_cli agent_nodes
 // Usage2: uniq_cli agent_nodes times
@@ -46,6 +50,8 @@ int main(int argc, char* argv[])
 	    times = 1;
     if (concurrency < 1)
         concurrency = 1;
+
+    print_transaction_id(agent_nodes);
     fprintf(stdout, "agent_nodes: %s\n", agent_nodes);
     fprintf(stdout, "times: %d, concurrency: %d\n", times, concurrency);
 
@@ -111,5 +117,36 @@ void thread_proc(int times, const char* agent_nodes)
             fprintf(stderr, "%s\n", ex.str().c_str());
             break;
         }
+    }
+}
+
+void print_transaction_id(const char* agent_nodes)
+{
+    try
+    {
+        time_t now = time(NULL);
+        struct tm* tm = localtime(&now);
+        mooon::CUniqId uniq_id(agent_nodes);
+
+        for (int i=0; i<2; ++i)
+        {
+            uint8_t label = 0;
+            uint32_t seq = 0; // 12345678
+            uniq_id.get_label_and_seq(&label, &seq);
+
+            // label转成十六进制字符，
+            // 如果30位的seq（10亿，最大值为1073741823）在一天内消耗不完，则时间取到天即可，
+            // 如果30位的seq在一天内会被消耗完，则时间应当取到小时，
+            // 如果30位的seq在一小时内会被消耗完，则时间应当取到分钟。。。
+            fprintf(stdout, "[%d]NO.: %02X%04d%02d%02d%02d%09u\n", i, (int)label, tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, seq);
+        }
+    }
+    catch (mooon::sys::CSyscallException& ex)
+    {
+        fprintf(stderr, "%s\n", ex.str().c_str());
+    }
+    catch (mooon::utils::CException& ex)
+    {
+        fprintf(stderr, "%s\n", ex.str().c_str());
     }
 }
