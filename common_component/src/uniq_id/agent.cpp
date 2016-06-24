@@ -597,19 +597,18 @@ uint64_t CUniqAgent::get_uniq_id(const struct MessageHead* request)
     }
     else
     {
-        struct tm now;
-        time_t t = static_cast<time_t>(request->value2.to_int());
-        if (0 == t)
-            t = _current_time;
-        (void)localtime_r(&t, &now);
+        time_t current_time = static_cast<time_t>(request->value2.to_int());
+        if (0 == current_time)
+            current_time = _current_time;
+        const struct tm* now = localtime(&current_time);
 
         union UniqID uniq_id;
         uniq_id.id.user = static_cast<uint8_t>(request->value1.to_int());
         uniq_id.id.label = static_cast<uint8_t>(_seq_block.label);
-        uniq_id.id.year = (now.tm_year+1900) - BASE_YEAR;
-        uniq_id.id.month = now.tm_mon+1;
-        uniq_id.id.day = now.tm_mday;
-        uniq_id.id.hour = now.tm_hour;
+        uniq_id.id.year = (now->tm_year+1900) - BASE_YEAR;
+        uniq_id.id.month = now->tm_mon+1;
+        uniq_id.id.day = now->tm_mday;
+        uniq_id.id.hour = now->tm_hour;
         uniq_id.id.seq = seq;
 
         if ((_old_seq > seq) &&

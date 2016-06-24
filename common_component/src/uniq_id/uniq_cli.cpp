@@ -103,7 +103,11 @@ void thread_proc(uint64_t times, const char* agent_nodes)
         try
         {
             mooon::CUniqId uniq_id(agent_nodes);
+#if 1
             uint64_t uid = uniq_id.get_uniq_id();
+#else
+            uint64_t uid = uniq_id.get_local_uniq_id();
+#endif
             union mooon::UniqID uid_struct;
             uid_struct.value = uid;
 

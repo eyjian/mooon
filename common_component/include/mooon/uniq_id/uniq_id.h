@@ -74,7 +74,10 @@ std::string label2string(uint8_t label, bool uppercase=true);
 class CUniqId
 {
 public:
-    CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds=1000) throw (utils::CException);
+    // agent_nodes 以逗号分隔的agent节点字符串，如：192.168.31.21:6200,192.168.31.22:6200,192.168.31.23:6200
+    // timeout_milliseconds 接收agent返回超时值
+    // retry_times 从一个agent取失败时，改从多少其它agent取
+    CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds=1000, uint8_t retry_times=5) throw (utils::CException);
     ~CUniqId();
 
     // 取得机器Label（标签），用于唯一区分机器，同一时间两台机器不会出现相同的Label
@@ -84,10 +87,13 @@ public:
     uint32_t get_unqi_seq() throw (utils::CException, sys::CSyscallException);
 
     // 取得一个唯一的无符号8字节的整数，可用来唯一标识一个消息等
-    // s 通常为time(NULL)的返回值，user可以为用户定义的值，但最大只能为63
-    //   函数实现会取s的年份、月份、天和小时，具体可以参考UniqID的定义。
+    // current_seconds 通常为time(NULL)的返回值，user可以为用户定义的值，但最大只能为63
+    //                 函数实现会取s的年份、月份、天和小时，具体可以参考UniqID的定义。
     // 由于seq一小时内只有10亿的容量，如果不够用，则可以将分钟设置到user参数，这样就扩容1分钟10亿的容量。
-    uint64_t get_uniq_id(uint8_t user=0, uint64_t s=0) throw (utils::CException, sys::CSyscallException);
+    uint64_t get_uniq_id(uint8_t user=0, uint64_t current_seconds=0) throw (utils::CException, sys::CSyscallException);
+
+    // 和get_uniq_id的区别在于，get_local_uniq_id只从agent取得Label和Seq，组装是在本地完成的，相当于分担了agent的部分工作。
+    uint64_t get_local_uniq_id(uint8_t user=0, uint64_t current_seconds=0) throw (utils::CException, sys::CSyscallException);
 
     // 同时取得机器Label和seq值，可用这两者来组装交易流水号等
     void get_label_and_seq(uint8_t* label, uint32_t* seq) throw (utils::CException, sys::CSyscallException);
@@ -99,6 +105,7 @@ private:
     uint32_t _echo;
     const std::string& _agent_nodes;
     uint32_t _timeout_milliseconds;
+    uint8_t _retry_times;
     std::vector<struct sockaddr_in> agents_addr;
     net::CUdpSocket* _udp_socket;
 };
