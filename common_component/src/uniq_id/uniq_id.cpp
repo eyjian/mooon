@@ -47,6 +47,7 @@ std::string label2string(uint8_t label, bool uppercase)
 CUniqId::CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds, uint8_t retry_times) throw (utils::CException)
     : _echo(0), _agent_nodes(agent_nodes), _timeout_milliseconds(timeout_milliseconds), _retry_times(retry_times), _udp_socket(NULL)
 {
+    _echo = sys::CUtils::get_random_number(0, 100000U); // 初始化一个随机值，这样不同实例不同
     _udp_socket = new net::CUdpSocket;
 
     utils::CEnhancedTokener tokener;
