@@ -111,7 +111,7 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
         catch (sys::CSyscallException&)
         {
             // 在重试之前不抛出异常
-            if (retry == _retry_times-1)
+            if ((retry == _retry_times-1) || (0 == _retry_times))
                 throw;
         }
     }
@@ -151,7 +151,7 @@ uint32_t CUniqId::get_unqi_seq() throw (utils::CException, sys::CSyscallExceptio
         }
         catch (sys::CSyscallException&)
         {
-            if (retry == _retry_times-1)
+            if ((retry == _retry_times-1) || (0 == _retry_times))
                 throw;
         }
     }
@@ -192,7 +192,7 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (uti
         }
         catch (sys::CSyscallException&)
         {
-            if (retry == _retry_times-1)
+            if ((retry == _retry_times-1) || (0 == _retry_times))
                 throw;
         }
     }
@@ -261,7 +261,7 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq) throw (utils::CEx
         }
         catch (sys::CSyscallException&)
         {
-            if (retry == _retry_times-1)
+            if ((retry == _retry_times-1) || (0 == _retry_times))
                 throw;
         }
     }
