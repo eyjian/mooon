@@ -92,7 +92,7 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
     request.value1 = 0;
     request.value2 = 0;
 
-    for (uint8_t retry=0; retry<_retry_times; ++retry)
+    for (uint8_t retry=0; retry<_retry_times+1; ++retry)
     {
         try
         {
@@ -130,7 +130,7 @@ uint32_t CUniqId::get_unqi_seq() throw (utils::CException, sys::CSyscallExceptio
     request.value1 = 0;
     request.value2 = 0;
 
-    for (uint8_t retry=0; retry<_retry_times; ++retry)
+    for (uint8_t retry=0; retry<_retry_times+1; ++retry)
     {
         try
         {
@@ -170,7 +170,7 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (uti
     request.value1 = user;
     request.value2 = current_seconds;
 
-    for (uint8_t retry=0; retry<_retry_times; ++retry)
+    for (uint8_t retry=0; retry<_retry_times+1; ++retry)
     {
         try
         {
@@ -233,7 +233,7 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq) throw (utils::CEx
     request.value1 = 0;
     request.value2 = 0;
 
-    for (uint8_t retry=0; retry<_retry_times; ++retry)
+    for (uint8_t retry=0; retry<_retry_times+1; ++retry)
     {
         try
         {
