@@ -108,7 +108,7 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
 
             return static_cast<uint8_t>(response.value1.to_int());
         }
-        catch (sys::CSyscallException&)
+        catch (utils::CException&)
         {
             // 在重试之前不抛出异常
             if ((retry == _retry_times-1) || (0 == _retry_times))
@@ -149,7 +149,7 @@ uint32_t CUniqId::get_unqi_seq() throw (utils::CException, sys::CSyscallExceptio
             else
                 THROW_EXCEPTION("mismatch response", ERROR_MISMATCH);
         }
-        catch (sys::CSyscallException&)
+        catch (utils::CException&)
         {
             if ((retry == _retry_times-1) || (0 == _retry_times))
                 throw;
@@ -190,7 +190,7 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (uti
             else
                 THROW_EXCEPTION("mismatch response", ERROR_MISMATCH);
         }
-        catch (sys::CSyscallException&)
+        catch (utils::CException&)
         {
             if ((retry == _retry_times-1) || (0 == _retry_times))
                 throw;
@@ -259,7 +259,7 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq) throw (utils::CEx
                 THROW_EXCEPTION("mismatch response", ERROR_MISMATCH);
             }
         }
-        catch (sys::CSyscallException&)
+        catch (utils::CException&)
         {
             if ((retry == _retry_times-1) || (0 == _retry_times))
                 throw;
