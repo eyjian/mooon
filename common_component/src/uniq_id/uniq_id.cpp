@@ -59,14 +59,14 @@ CUniqId::CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds, 
         uint16_t agent_port;
         if (!utils::CStringUtils::string2int(iter->second.c_str(), agent_port))
         {
-            THROW_EXCEPTION("invalid port", -1);
+            THROW_EXCEPTION("invalid port parameter", ERROR_PARAMETER);
         }
 
         struct sockaddr_in agent_addr;
         agent_addr.sin_addr.s_addr = inet_addr(iter->first.c_str());
         if (INADDR_NONE == agent_addr.sin_addr.s_addr)
         {
-            THROW_EXCEPTION("invalid IP", -1);
+            THROW_EXCEPTION("invalid IP parameter", ERROR_PARAMETER);
         }
 
         agent_addr.sin_family = AF_INET;
