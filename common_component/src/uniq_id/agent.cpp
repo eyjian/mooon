@@ -118,6 +118,7 @@ private:
     void rent_label();
     bool label_expired() const;
     bool io_error() const { return _io_error; }
+    const struct sockaddr_in& get_master_addr() const;
 
 private:
     void prepare_response_error(int errcode);
@@ -351,74 +352,72 @@ int CUniqAgent::get_label(bool asynchronous)
 	{
 		struct MessageHead* request = reinterpret_cast<struct MessageHead*>(_request_buffer);
 		struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
+		const struct sockaddr_in& master_addr = get_master_addr();
 
-		for (std::vector<struct sockaddr_in>::size_type i=0; i<_masters_addr.size(); ++i)
-		{
-		    // 遇到错误ERROR_LABEL_NOT_HOLD时，需要重试一次
-		    for (int k=0; k<3; ++k)
-		    {
-                try
+        // 遇到错误ERROR_LABEL_NOT_HOLD时，需要重试一次
+        for (int k=0; k<2; ++k)
+        {
+            try
+            {
+                request->len = sizeof(struct MessageHead);
+                request->type = REQUEST_LABEL;
+                request->echo = _echo++;
+                request->value1 = _seq_block.label;
+                request->value2 = 0;
+                _udp_socket->send_to(_request_buffer, sizeof(struct MessageHead), master_addr);
+
+                if (asynchronous)
                 {
-                    request->len = sizeof(struct MessageHead);
-                    request->type = REQUEST_LABEL;
-                    request->echo = _echo++;
-                    request->value1 = _seq_block.label;
-                    request->value2 = 0;
-                    _udp_socket->send_to(_request_buffer, sizeof(struct MessageHead), _masters_addr[i]);
-
-                    if (asynchronous)
+                    return 0;
+                }
+                else
+                {
+                    int bytes = _udp_socket->timed_receive_from(_response_buffer, sizeof(struct MessageHead), &_from_addr, 2000);
+                    if (bytes != sizeof(struct MessageHead))
                     {
-                        return 0;
+                        MYLOG_ERROR("timed_receive_from return %d(%d)\n", bytes, static_cast<int>(sizeof(struct MessageHead)));
+                        break;
                     }
-                    else
+
+                    if (RESPONSE_ERROR == response->type)
                     {
-                        int bytes = _udp_socket->timed_receive_from(_response_buffer, sizeof(struct MessageHead), &_from_addr, 2000);
-                        if (bytes != sizeof(struct MessageHead))
-                        {
-                            MYLOG_ERROR("timed_receive_from return %d(%d)\n", bytes, static_cast<int>(sizeof(struct MessageHead)));
+                        MYLOG_ERROR("(%d)get label[%u] error: %s\n", k, _seq_block.label, response->str().c_str());
+                        if (response->value1.to_int() != ERROR_LABEL_NOT_HOLD)
                             break;
-                        }
 
-                        if (RESPONSE_ERROR == response->type)
+                        // 需要重新租赁Label，故重置
+                        _seq_block.label = 0;
+                        continue;
+                    }
+                    else if ((RESPONSE_LABEL == response->type) && (response->echo == _echo-1))
+                    {
+                        if (response->value1.to_int() > 0)
                         {
-                            MYLOG_ERROR("(%d)get label[%u] error: %s\n", k, _seq_block.label, response->str().c_str());
-                            if (response->value1.to_int() != ERROR_LABEL_NOT_HOLD)
-                                break;
-
-                            // 需要重新租赁Label，故重置
-                            _seq_block.label = 0;
-                            continue;
-                        }
-                        else if ((RESPONSE_LABEL == response->type) && (response->echo == _echo-1))
-                        {
-                            if (response->value1.to_int() > 0)
-                            {
-                                // 续成功
-                                _seq_block.timestamp = static_cast<uint64_t>(_current_time);
-                                int label = static_cast<int>(response->value1.to_int());
-                                MYLOG_INFO("rent label[%d] ok\n", label);
-                                return label;
-                            }
-                            else
-                            {
-                                MYLOG_ERROR("invalid label[%d] from %s\n", (int)response->value1.to_int(), net::to_string(_from_addr).c_str());
-                                break;
-                            }
+                            // 续成功
+                            _seq_block.timestamp = static_cast<uint64_t>(_current_time);
+                            int label = static_cast<int>(response->value1.to_int());
+                            MYLOG_INFO("rent label[%d] ok\n", label);
+                            return label;
                         }
                         else
                         {
-                            MYLOG_ERROR("invalid response[%s] for request[%s] from %s\n", response->str().c_str(), request->str().c_str(), net::to_string(_from_addr).c_str());
+                            MYLOG_ERROR("invalid label[%d] from %s\n", (int)response->value1.to_int(), net::to_string(_from_addr).c_str());
                             break;
                         }
                     }
+                    else
+                    {
+                        MYLOG_ERROR("invalid response[%s] for request[%s] from %s\n", response->str().c_str(), request->str().c_str(), net::to_string(_from_addr).c_str());
+                        break;
+                    }
                 }
-                catch (sys::CSyscallException& ex)
-                {
-                    MYLOG_ERROR("rent label from %s faield: %s\n", net::to_string(_from_addr).c_str(), ex.str().c_str());
-                    break;
-                }
-		    } // for
-		} // for
+            }
+            catch (sys::CSyscallException& ex)
+            {
+                MYLOG_ERROR("rent label from %s faield: %s\n", net::to_string(_from_addr).c_str(), ex.str().c_str());
+                break;
+            }
+        } // for
 
 		return -1;
 	}
@@ -657,6 +656,13 @@ bool CUniqAgent::label_expired() const
         MYLOG_ERROR("Label[%u] expired(%u): %s\n", _seq_block.label, argument::expire->value(), sys::CDatetimeUtils::to_datetime(static_cast<time_t>(_seq_block.timestamp)).c_str());
     }
     return expired;
+}
+
+// 轮询方式
+const struct sockaddr_in& CUniqAgent::get_master_addr() const
+{
+    static uint32_t i = 0;
+    return _masters_addr[i++ % _masters_addr.size()];
 }
 
 void CUniqAgent::prepare_response_error(int errcode)
