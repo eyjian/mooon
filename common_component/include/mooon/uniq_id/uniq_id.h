@@ -113,8 +113,8 @@ public:
     //   %s 字符串
     //   %X 十六进制，可指定宽度，但总是以0填充
     //
-    // 注意，只有%S、%d和%X有宽度参数，如：%4S%d，并且不足时统一填充0，不能指定填充数字，
-    // 使用示例：%9S, %2d, %5X，不能为%09S、%02d和%05X等
+    // 注意，只有%S、%d和%X有宽度参数，如：%4S%d，并且不足时统一填充0，不能指定填充数字，而且宽长参数不能超过9
+    // 使用示例：%9S, %2d, %5X，不能为%09S、%02d和%05X等，%10S等超过9的宽度是无效的。
     std::string get_transaction_id(const char* format, ...) throw (utils::CException, sys::CSyscallException);
 
 private:
