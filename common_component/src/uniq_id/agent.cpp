@@ -548,7 +548,7 @@ bool CUniqAgent::store_sequence()
     }
     else
     {
-        MYLOG_INFO("store %s ok\n", _seq_block.str().c_str());
+        MYLOG_DEBUG("store %s ok\n", _seq_block.str().c_str());
 #if 1
         return true;
 #else
