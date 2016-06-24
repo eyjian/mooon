@@ -77,7 +77,7 @@ public:
     // agent_nodes 以逗号分隔的agent节点字符串，如：192.168.31.21:6200,192.168.31.22:6200,192.168.31.23:6200
     // timeout_milliseconds 接收agent返回超时值
     // retry_times 从一个agent取失败时，改从多少其它agent取
-    CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds=1000, uint8_t retry_times=5) throw (utils::CException);
+    CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds=200, uint8_t retry_times=5) throw (utils::CException);
     ~CUniqId();
 
     // 取得机器Label（标签），用于唯一区分机器，同一时间两台机器不会出现相同的Label
