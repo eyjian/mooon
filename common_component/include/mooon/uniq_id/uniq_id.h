@@ -77,9 +77,18 @@ public:
     CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds=1000) throw (utils::CException);
     ~CUniqId();
 
+    // 取得机器Label（标签），用于唯一区分机器，同一时间两台机器不会出现相同的Label
     uint8_t get_label() throw (utils::CException, sys::CSyscallException);
+
+    // 返回的seq值最大为4294967295，即无符号4字节整数的最大值，最小值为0。当达到最值后，会循环从0开始。
     uint32_t get_unqi_seq() throw (utils::CException, sys::CSyscallException);
+
+    // 取得一个唯一的无符号8字节的整数，可用来唯一标识一个消息等
+    // s 通常为time(NULL)的返回值，user可以为用户定义的值，但最大只能为63
+    //   函数实现会取s的年份、月份、天和小时，具体可以参考UniqID的定义。
     uint64_t get_uniq_id(uint8_t user=0, uint64_t s=0) throw (utils::CException, sys::CSyscallException);
+
+    // 同时取得机器Label和seq值，可用这两者来组装交易流水号等
     void get_label_and_seq(uint8_t* label, uint32_t* seq) throw (utils::CException, sys::CSyscallException);
 
 private:
