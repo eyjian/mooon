@@ -21,6 +21,8 @@
 #include <mooon/net/udp_socket.h>
 #include <mooon/utils/tokener.h>
 #include <mooon/utils/string_utils.h>
+#include <mooon/sys/utils.h>
+#include <sys/time.h>
 #include <time.h>
 namespace mooon {
 
@@ -257,8 +259,9 @@ const struct sockaddr_in& CUniqId::pick_agent() const
 {
     MOOON_ASSERT(!agents_addr.empty());
 
-    static uint64_t i = 0;
-    return agents_addr[i++ % static_cast<uint64_t>(agents_addr.size())];
+    static unsigned int i = 0;
+    std::vector<struct sockaddr_in>::size_type index = sys::CUtils::get_random_number(i++, agents_addr.size());
+    return agents_addr[index];
 }
 
 } // namespace mooon {
