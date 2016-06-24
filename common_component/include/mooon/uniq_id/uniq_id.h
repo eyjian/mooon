@@ -86,6 +86,7 @@ public:
     // 取得一个唯一的无符号8字节的整数，可用来唯一标识一个消息等
     // s 通常为time(NULL)的返回值，user可以为用户定义的值，但最大只能为63
     //   函数实现会取s的年份、月份、天和小时，具体可以参考UniqID的定义。
+    // 由于seq一小时内只有10亿的容量，如果不够用，则可以将分钟设置到user参数，这样就扩容1分钟10亿的容量。
     uint64_t get_uniq_id(uint8_t user=0, uint64_t s=0) throw (utils::CException, sys::CSyscallException);
 
     // 同时取得机器Label和seq值，可用这两者来组装交易流水号等
