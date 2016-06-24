@@ -43,7 +43,9 @@ enum
     ERROR_INVALID_LABEL = 201600005,  // 无效的Label，比如值过大或为0或为负
     ERROR_NO_LABEL = 201600006,       // Label被租光了
     ERROR_LABEL_NOT_HOLD = 201600007, // Label被其它租用着
-    ERROR_DATABASE = 201600008        // DB错误
+    ERROR_DATABASE = 201600008,       // DB错误
+    ERROR_PARAMETER = 201600009,      // 参数错误
+    ERROR_MISMATCH = 201600010        // 不匹配的响应
 };
 
 // 64位唯一ID结构
@@ -63,7 +65,7 @@ union UniqID
 
         std::string str() const
         {
-            return mooon::utils::CStringUtils::format_string("uniq://%d/%02X/%d-%d-%d_%d/%u", (int)user, (int)label, (int)year+BASE_YEAR, (int)month, (int)day, (int)hour, (unsigned int)seq);
+            return mooon::utils::CStringUtils::format_string("uniq://U%d/L%02X/%d-%d-%d_%d/S%u", (int)user, (int)label, (int)year+BASE_YEAR, (int)month, (int)day, (int)hour, (unsigned int)seq);
         }
     }id;
 };
@@ -97,6 +99,23 @@ public:
 
     // 同时取得机器Label和seq值，可用这两者来组装交易流水号等
     void get_label_and_seq(uint8_t* label, uint32_t* seq) throw (utils::CException, sys::CSyscallException);
+
+    // 取流水号、交易号等便利函数
+    // format 取值：
+    //   %Y 年份 4位数字，如：2016
+    //   %M 月份 2位数字，以0填充，如：11月为11，9月为09
+    //   %D 日期 2位数字，以0填充
+    //   %H 小时 2位数字，以0填充
+    //   %m 分钟 2位数字，以0填充
+    //   %S Sequence，一个4字节无符号整数值，可指定宽度，但总是以0填充
+    //   %L Label 机器标签，输出为2个十六进制字符
+    //   %d 4字节十进制整数，可指定宽度，但总是以0填充
+    //   %s 字符串
+    //   %X 十六进制，可指定宽度，但总是以0填充
+    //
+    // 注意，只有%S、%d和%X有宽度参数，如：%4S%d，并且不足时统一填充0，不能指定填充数字，
+    // 使用示例：%9S, %2d, %5X，不能为%09S、%02d和%05X等
+    std::string get_transaction_id(const char* format, ...) throw (utils::CException, sys::CSyscallException);
 
 private:
     const struct sockaddr_in& pick_agent() const;

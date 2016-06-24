@@ -135,6 +135,15 @@ void print_transaction_id(const char* agent_nodes)
         struct tm* tm = localtime(&now);
         mooon::CUniqId uniq_id(agent_nodes);
 
+        std::string str;
+
+        str = uniq_id.get_transaction_id("02%L%Y%M%D%m%S");
+        fprintf(stdout, "[A]NO.: %s\n", str.c_str());
+        str = uniq_id.get_transaction_id("%3d%L%Y%M%D%H%S", 9);
+        fprintf(stdout, "[B]NO.: %s\n", str.c_str());
+        str = uniq_id.get_transaction_id("%2d%L%Y%M%D%H%m%S%s", 9, "XX");
+        fprintf(stdout, "[C]NO.: %s\n", str.c_str());
+
         for (int i=0; i<2; ++i)
         {
             uint8_t label = 0;

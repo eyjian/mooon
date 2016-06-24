@@ -18,10 +18,12 @@
  */
 #include "mooon/uniq_id/uniq_id.h"
 #include "protocol.h"
+#include <iomanip>
 #include <mooon/net/udp_socket.h>
 #include <mooon/utils/tokener.h>
 #include <mooon/utils/string_utils.h>
 #include <mooon/sys/utils.h>
+#include <sstream>
 #include <sys/time.h>
 #include <time.h>
 namespace mooon {
@@ -103,8 +105,7 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
             if (bytes != sizeof(response))
                 THROW_SYSCALL_EXCEPTION("invalid size", bytes, "receive_from");
 
-            if (response.echo.to_int() == echo)
-                return response.value1;
+            return static_cast<uint8_t>(response.value1.to_int());
         }
         catch (sys::CSyscallException&)
         {
@@ -143,7 +144,9 @@ uint32_t CUniqId::get_unqi_seq() throw (utils::CException, sys::CSyscallExceptio
                 THROW_SYSCALL_EXCEPTION("invalid size", bytes, "receive_from");
 
             if (response.echo.to_int() == echo)
-                return response.value1;
+                return static_cast<uint32_t>(response.value1.to_int());
+            else
+                THROW_EXCEPTION("mismatch response", ERROR_MISMATCH);
         }
         catch (sys::CSyscallException&)
         {
@@ -182,7 +185,9 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (uti
             else if (RESPONSE_ERROR == response.type)
                 THROW_EXCEPTION("store sequence block error", static_cast<int>(response.value1.to_int()));
             else if (response.echo.to_int() == echo)
-                return response.value1;
+                return response.value1.to_int();
+            else
+                THROW_EXCEPTION("mismatch response", ERROR_MISMATCH);
         }
         catch (sys::CSyscallException&)
         {
@@ -239,12 +244,18 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq) throw (utils::CEx
 
             bytes = _udp_socket->timed_receive_from(&response, sizeof(response), &from_addr, _timeout_milliseconds);
             if (bytes != sizeof(response))
+            {
                 THROW_SYSCALL_EXCEPTION("invalid size", bytes, "receive_from");
-
-            if (response.echo.to_int() == echo)
+            }
+            else if (response.echo.to_int() == echo)
             {
                 *label = static_cast<uint8_t>(response.value1.to_int());
                 *seq = static_cast<uint32_t>(response.value2.to_int());
+                break;
+            }
+            else
+            {
+                THROW_EXCEPTION("mismatch response", ERROR_MISMATCH);
             }
         }
         catch (sys::CSyscallException&)
@@ -254,6 +265,129 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq) throw (utils::CEx
         }
     }
 }
+
+// %Y 年份 %M 月份 %D 日期 %H 小时 %m 分钟 %S Sequence %L Label %d 4字节十进制整数 %s 字符串 %X 十六进制
+// 只有%S和%d有宽度参数，如：%4S%d，并且不足时统一填充0，不能指定填充数字
+std::string CUniqId::get_transaction_id(const char* format, ...) throw (utils::CException, sys::CSyscallException)
+{
+    char *s;
+    int m, width;
+    uint8_t label;
+    uint32_t seq;
+    get_label_and_seq(&label, &seq);
+
+    std::stringstream result;
+    va_list ap;
+    va_start(ap, format);
+    struct tm now;
+    time_t current_time = time(NULL);
+    localtime_r(&current_time, &now);
+
+    try
+    {
+        while (*format != '\0')
+        {
+            if (*format != '%')
+            {
+                result << *format++;
+            }
+            else
+            {
+                ++format; // 跳过'%'
+
+                if ('\0' == *format)
+                {
+                    // format error
+                    THROW_EXCEPTION("invalid `format` parameter", ERROR_PARAMETER);
+                }
+                else
+                {
+                    if ((*format >= '0') && (*format <= '9'))
+                    {
+                        width = *format - '0';
+                        ++format; // 跳过width
+
+                        if ('S' == *format) // Sequence
+                        {
+                            result << std::setw(width) << std::setfill('0') << seq;
+                        }
+                        else if ('d' == *format) // integer
+                        {
+                            m = va_arg(ap, int);
+                            result << std::dec << std::setw(width) << std::setfill('0') << m;
+                        }
+                        else if ('X' == *format)
+                        {
+                            m = va_arg(ap, int);
+                            result << std::hex << std::setw(width) << std::setfill('0') << std::uppercase << m;
+                        }
+                        else
+                        {
+                            // format error
+                            THROW_EXCEPTION("invalid `format` parameter", ERROR_PARAMETER);
+                        }
+
+                        ++format;
+                    }
+                    else
+                    {
+                        switch (*format)
+                        {
+                        case 'd': // integer
+                            m = va_arg(ap, int);
+                            result << std::dec << m;
+                            break;
+                        case 'X': // integer
+                            m = va_arg(ap, int);
+                            result << std::hex << std::uppercase << m;
+                            break;
+                        case 's': // string
+                            s = va_arg(ap, char *);
+                            result << s;
+                            break;
+                        case 'S': // Sequence
+                            result << seq;
+                            break;
+                        case 'L': // Label
+                            result << std::hex << std::setw(2) << std::setfill('0') << std::uppercase << (int)label;
+                            break;
+                        case 'Y': // 年
+                            result << std::dec << std::setw(4) << std::setfill('0') << now.tm_year+1900;
+                            break;
+                        case 'M': // 月
+                            result << std::dec << std::setw(2) << std::setfill('0') << now.tm_mon+1;
+                            break;
+                        case 'D': // 天
+                            result << std::dec << std::setw(2) << std::setfill('0') << now.tm_mday;
+                            break;
+                        case 'H': // 小时
+                            result << std::dec << std::setw(2) << std::setfill('0') << now.tm_hour;
+                            break;
+                        case 'm': // 分钟
+                            result << std::dec << std::setw(2) << std::setfill('0') << now.tm_min;
+                            break;
+                        default:
+                            // format error
+                            THROW_EXCEPTION("invalid `format` parameter", ERROR_PARAMETER);
+                            break;
+                        }
+
+                        ++format;
+                    }
+                }
+            }
+        }
+
+        va_end(ap);
+        return result.str();
+    }
+    catch (...)
+    {
+        va_end(ap);
+        throw;
+    }
+}
+
 
 const struct sockaddr_in& CUniqId::pick_agent() const
 {

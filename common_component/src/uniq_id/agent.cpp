@@ -78,6 +78,12 @@ struct SeqBlock
         return utils::CStringUtils::format_string("block://V%u/L%u/S%u/D%s/M%"PRId64, version, label, sequence, sys::CDatetimeUtils::to_datetime(timestamp).c_str(), magic);
     }
 
+    void update_label(uint32_t label_)
+    {
+        MYLOG_DEBUG("%s => %u\n", str().c_str(), label_);
+        label = label_;
+    }
+
     void update_magic()
     {
         if (timestamp >= sequence+label+version)
@@ -386,7 +392,7 @@ int CUniqAgent::get_label(bool asynchronous)
                             break;
 
                         // 需要重新租赁Label，故重置
-                        _seq_block.label = 0;
+                        _seq_block.update_label(0);
                         continue;
                     }
                     else if ((RESPONSE_LABEL == response->type) && (response->echo == _echo-1))
@@ -486,8 +492,8 @@ bool CUniqAgent::restore_sequence()
 
         _sequence_fd = ch.release();
         _sequence_start = argument::steps->value();
-        _seq_block.label = label;
         _seq_block.sequence = _sequence_start;
+        _seq_block.update_label(static_cast<uint32_t>(label));
         return store_sequence();
     }
     else if (-1 == bytes_read)
@@ -512,9 +518,14 @@ bool CUniqAgent::restore_sequence()
         }
         else
         {
-            // 如果已过期，则需要重新租赁一个
-            if (label_expired())
+            if (argument::master_nodes->value().empty())
             {
+                // 本地模式
+                label = argument::label->value();
+            }
+            else if (label_expired())
+            {
+                // 如果已过期，则需要重新租赁一个
                 label = get_label(false);
                 if ((label < 1) || (label > LABEL_MAX))
                 {
@@ -527,7 +538,7 @@ bool CUniqAgent::restore_sequence()
             // 多加一次steps，原因是store时未调用fsync
             _sequence_start = _seq_block.sequence + (2 * argument::steps->value());
             _seq_block.sequence = _sequence_start;
-            _seq_block.label = label;
+            _seq_block.update_label(static_cast<uint32_t>(label));
 
             return store_sequence();
         }
@@ -639,7 +650,7 @@ void CUniqAgent::rent_label()
 
         if (label > 0)
         {
-            _seq_block.label = label;
+            _seq_block.update_label(label);
         }
     }
 }
@@ -825,7 +836,7 @@ int CUniqAgent::on_response_error()
     if (ERROR_LABEL_NOT_HOLD == response->value1.to_int())
     {
         // 需要重新租赁Label，故重置
-        _seq_block.label = 0;
+        _seq_block.update_label(0);
         get_label(true);
     }
 
@@ -838,7 +849,7 @@ int CUniqAgent::on_response_label()
     MYLOG_INFO("%s from %s\n", response->str().c_str(), net::to_string(_from_addr).c_str());
 
     uint32_t old_label = _seq_block.label;
-    _seq_block.label = static_cast<uint32_t>(response->value1.to_int());
+    _seq_block.update_label(static_cast<uint32_t>(response->value1.to_int()));
     _seq_block.timestamp = static_cast<uint64_t>(_current_time);
 
     // Lable发生变化时，立即保存
