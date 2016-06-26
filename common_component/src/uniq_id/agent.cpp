@@ -19,6 +19,7 @@
 #include "mooon/uniq_id/uniq_id.h"
 #include "protocol.h"
 #include <fcntl.h>
+#include <mooon/net/epoller.h>
 #include <mooon/net/udp_socket.h>
 #include <mooon/net/utils.h>
 #include <mooon/sys/close_helper.h>
@@ -42,7 +43,7 @@ STRING_ARG_DEFINE(master_nodes, "", "master nodes, e.g., 192.168.31.66:2016,192.
 STRING_ARG_DEFINE(ip, "0.0.0.0", "listen IP");
 INTEGER_ARG_DEFINE(uint16_t, port, 6200, 1000, 65535, "listen port");
 INTEGER_ARG_DEFINE(uint8_t, label, 0, 0, LABEL_MAX, "unique label of a machine");
-INTEGER_ARG_DEFINE(uint32_t, steps, 10000, 1, 1000000, "steps to store");
+INTEGER_ARG_DEFINE(uint32_t, steps, 100000, 1, 1000000, "steps to store");
 
 // Label过期时长，所有节点的expire值必须保持相同，包括master节点和所有agent节点
 // expire值必须大于interval的两倍，且必须大10
@@ -140,6 +141,7 @@ private:
 private:
     uint32_t _echo;
     std::vector<struct sockaddr_in> _masters_addr;
+    net::CEpoller _epoller;
     net::CUdpSocket* _udp_socket;
     uint32_t _sequence_start;
     struct SeqBlock _seq_block;
@@ -225,9 +227,11 @@ bool CUniqAgent::init(int argc, char* argv[])
         sys::g_logger = sys::create_safe_logger();
         _current_time = time(NULL);
 
+        _epoller.create(10);
         _udp_socket = new net::CUdpSocket;
         _udp_socket->listen(argument::ip->value(), argument::port->value());
         MYLOG_INFO("listen on %s:%d\n", argument::ip->c_value(), argument::port->value());
+        _epoller.set_events(_udp_socket, EPOLLIN);
 
         if (!restore_sequence())
             return false;
@@ -248,11 +252,10 @@ bool CUniqAgent::run()
 {
     while (true)
     {
-        int events_returned = 0;
-        int events_requested = POLLIN | POLLERR; // POLLIN | POLLOUT | POLLERR;
-        int milliseconds = 10000;
+        const int milliseconds = 10000;
+        int n = _epoller.timed_wait(milliseconds);
 
-        if (!net::CUtils::timed_poll(_udp_socket->get_fd(), events_requested, milliseconds, &events_returned))
+        if (0 == n)
         {
             _current_time = time(NULL);
             if (_current_time - _last_rent_time > static_cast<time_t>(argument::interval->value()))
@@ -611,7 +614,6 @@ uint64_t CUniqAgent::get_uniq_id(const struct MessageHead* request)
     	static struct tm old_tm;
     	static time_t old_time = 0;
 
-    	struct tm tm;
     	struct tm* now = &old_tm;
         time_t current_time = static_cast<time_t>(request->value2.to_int());
         if (0 == current_time)
