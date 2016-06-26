@@ -620,7 +620,7 @@ uint64_t CUniqAgent::get_uniq_id(const struct MessageHead* request)
         {
         	current_time = _current_time;
         }
-        if (current_time - old_time > 50) // current_time != old_time
+        if (current_time - old_time > 30) // current_time != old_time
         {
         	// 由于只取小时，因此理论上每小时调用一次localtime即可
         	now = localtime(&current_time); // localtime和localtime_r开销较大
