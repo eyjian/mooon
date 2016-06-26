@@ -608,10 +608,22 @@ uint64_t CUniqAgent::get_uniq_id(const struct MessageHead* request)
     }
     else
     {
+    	static struct tm old_tm;
+    	static time_t old_time = 0;
+
+    	struct tm tm;
+    	struct tm* now = &old_tm;
         time_t current_time = static_cast<time_t>(request->value2.to_int());
         if (0 == current_time)
-            current_time = _current_time;
-        const struct tm* now = localtime(&current_time);
+        {
+        	current_time = _current_time;
+        }
+        if (current_time != old_time)
+        {
+        	now = localtime(&current_time); // localtime和localtime_r开销较大
+        	old_tm = *now; // Rember
+        	old_time = current_time; // Rember
+        }
 
         union UniqID uniq_id;
         uniq_id.id.user = static_cast<uint8_t>(request->value1.to_int());
