@@ -39,7 +39,7 @@ STRING_ARG_DEFINE(u, "root", "remote host user");
 STRING_ARG_DEFINE(P, "", "remote host password");
 
 // 被上传的文件路径
-STRING_ARG_DEFINE(s, "", "the source file uploaded");
+STRING_ARG_DEFINE(s, "", "the source files uploaded, separated by comma");
 // 文件上传后存放的目录路径
 STRING_ARG_DEFINE(d, "", "the directory to store");
 
@@ -51,6 +51,7 @@ struct ResultInfo
 {
     bool success; // 为true表示执行成功
     std::string ip; // 远程host的IP地址
+    std::string source; // 被上传的文件
     uint32_t seconds; // 运行花费的时长，精确到秒
 
     ResultInfo()
@@ -61,14 +62,14 @@ struct ResultInfo
     std::string str() const
     {
         std::string tag = success? "SUCCESS": "FAILURE";
-        return mooon::utils::CStringUtils::format_string("[%s %s]: %u seconds", ip.c_str(), tag.c_str(), seconds);
+        return mooon::utils::CStringUtils::format_string("[%s %s]: %u seconds (%s)", ip.c_str(), tag.c_str(), seconds, source.c_str());
     }
 };
 
 inline std::ostream& operator <<(std::ostream& out, const struct ResultInfo& result)
 {
     std::string tag = result.success? "SUCCESS": "FAILURE";
-    out << "["PRINT_COLOR_YELLOW << result.ip << PRINT_COLOR_NONE" " << tag << "] " << result.seconds << " seconds";
+    out << "["PRINT_COLOR_YELLOW << result.ip << PRINT_COLOR_NONE" " << tag << "] " << result.seconds << " seconds (" << result.source << ")";
     return out;
 }
 
@@ -83,19 +84,19 @@ int main(int argc, char* argv[])
     }
 
     uint16_t port = mooon::argument::p->value();
-    std::string source = mooon::argument::s->value();
+    std::string sources = mooon::argument::s->value();
     std::string directory = mooon::argument::d->value();
     std::string hosts = mooon::argument::h->value();
     std::string user = mooon::argument::u->value();
     std::string password = mooon::argument::P->value();
-    mooon::utils::CStringUtils::trim(source);
+    mooon::utils::CStringUtils::trim(sources);
     mooon::utils::CStringUtils::trim(directory);
     mooon::utils::CStringUtils::trim(hosts);
     mooon::utils::CStringUtils::trim(user);
     mooon::utils::CStringUtils::trim(password);
 
     // 检查参数（-s）
-    if (source.empty())
+    if (sources.empty())
     {
         fprintf(stderr, "parameter[-s]'s value not set\n");
         exit(1);
@@ -142,6 +143,9 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
+    std::vector<std::string> source_files;
+    int num_source_files = mooon::utils::CTokener::split(&source_files, sources, ",", true);
+
     std::vector<std::string> hosts_ip;
     const std::string& remote_hosts_ip = hosts;
     int num_remote_hosts_ip = mooon::utils::CTokener::split(&hosts_ip, remote_hosts_ip, ",", true);
@@ -151,45 +155,51 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    std::string remote_filepath = directory + std::string("/") + mooon::utils::CStringUtils::extract_filename(source);
-    std::vector<struct ResultInfo> results(num_remote_hosts_ip);
-    for (int i=0; i<num_remote_hosts_ip; ++i)
+    std::vector<struct ResultInfo> results(num_remote_hosts_ip * num_source_files);
+    for (int i=0, k=0; i<num_remote_hosts_ip; ++i)
     {
-        bool color = true;
-        const std::string& remote_host_ip = hosts_ip[i];
-        results[i].ip = remote_host_ip;
-        results[i].success = false;
+    	for (int j=0; j<num_source_files; ++j)
+    	{
+			bool color = true;
 
-        fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"]\n", remote_host_ip.c_str());
-        fprintf(stdout, PRINT_COLOR_GREEN);
+			std::string remote_filepath = directory + std::string("/") + mooon::utils::CStringUtils::extract_filename(source_files[j]);
+			const std::string& remote_host_ip = hosts_ip[i];
+			results[k].ip = remote_host_ip;
+			results[k].source = source_files[j];
+			results[k].success = false;
 
-        mooon::sys::CStopWatch stop_watch;
-        try
-        {
-            int file_size = 0;
-            mooon::net::CLibssh2 libssh2(remote_host_ip, port, user, password, mooon::argument::t->value());
-            libssh2.upload(source, remote_filepath, &file_size);
+			fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"]\n", remote_host_ip.c_str());
+			fprintf(stdout, PRINT_COLOR_GREEN);
 
-            fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"] SUCCESS: %d bytes\n", remote_host_ip.c_str(), file_size);
-            results[i].success = true;
-        }
-        catch (mooon::sys::CSyscallException& ex)
-        {
-            if (color)
-                fprintf(stdout, PRINT_COLOR_NONE); // color = true;
+			mooon::sys::CStopWatch stop_watch;
+			try
+			{
+				int file_size = 0;
+				mooon::net::CLibssh2 libssh2(remote_host_ip, port, user, password, mooon::argument::t->value());
+				libssh2.upload(source_files[j], remote_filepath, &file_size);
 
-            fprintf(stderr, "["PRINT_COLOR_RED"%s"PRINT_COLOR_NONE"] failed: %s\n", remote_host_ip.c_str(), ex.str().c_str());
-        }
-        catch (mooon::utils::CException& ex)
-        {
-            if (color)
-                fprintf(stdout, PRINT_COLOR_NONE); // color = true;
+				fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"] SUCCESS: %d bytes (%s)\n", remote_host_ip.c_str(), file_size, source_files[j].c_str());
+				results[k].success = true;
+			}
+			catch (mooon::sys::CSyscallException& ex)
+			{
+				if (color)
+					fprintf(stdout, PRINT_COLOR_NONE); // color = true;
 
-            fprintf(stderr, "["PRINT_COLOR_RED"%s"PRINT_COLOR_NONE"] failed: %s\n", remote_host_ip.c_str(), ex.str().c_str());
-        }
+				fprintf(stderr, "["PRINT_COLOR_RED"%s"PRINT_COLOR_NONE"] failed: %s (%s)\n", remote_host_ip.c_str(), ex.str().c_str(), source_files[j].c_str());
+			}
+			catch (mooon::utils::CException& ex)
+			{
+				if (color)
+					fprintf(stdout, PRINT_COLOR_NONE); // color = true;
 
-        results[i].seconds = stop_watch.get_elapsed_microseconds() / 1000000;
-        std::cout << std::endl;
+				fprintf(stderr, "["PRINT_COLOR_RED"%s"PRINT_COLOR_NONE"] failed: %s (%s)\n", remote_host_ip.c_str(), ex.str().c_str(), source_files[j].c_str());
+			}
+
+			std::cout << std::endl;
+			results[k].seconds = stop_watch.get_elapsed_microseconds() / 1000000;
+			++k;
+    	}
     }
 
     // 输出总结
