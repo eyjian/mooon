@@ -619,6 +619,7 @@ uint32_t CUniqAgent::inc_sequence()
 	if ((_seq_block.sequence < _sequence_start) ||
 	    (_seq_block.sequence - _sequence_start > argument::steps->value()))
 	{
+	    MYLOG_DEBUG("seq_block.sequence=%u, sequence_start=%u, steps=%u\n", _seq_block.sequence, _sequence_start, argument::steps->value());
 	    stored = store_sequence();
 	}
 	if (stored)
@@ -899,7 +900,11 @@ int CUniqAgent::on_response_label()
 
     // Lable发生变化时，立即保存
     if (old_label != _seq_block.label)
+    {
+        MYLOG_DEBUG("Label change from %u to %u\n", old_label, _seq_block.label);
         (void)store_sequence();
+    }
+
     return -1;
 }
 

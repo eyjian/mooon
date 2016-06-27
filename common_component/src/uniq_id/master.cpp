@@ -137,7 +137,7 @@ struct LabelInfo
     {
         struct in_addr in;
         in.s_addr = ip;
-        return mooon::utils::CStringUtils::format_string("label://%d/%s/%s", (int)label, inet_ntoa(in), sys::CDatetimeUtils::to_datetime(lease_time).c_str());
+        return mooon::utils::CStringUtils::format_string("label://L%d/%s/%s", (int)label, inet_ntoa(in), sys::CDatetimeUtils::to_datetime(lease_time).c_str());
     }
 };
 
