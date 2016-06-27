@@ -96,13 +96,11 @@ CREATE TABLE t_label_log (
     f_label TINYINT UNSIGNED NOT NULL,
     f_ip CHAR(16) NOT NULL,
     f_event TINYINT NOT NULL,
-    f_rent_time DATETIME NOT NULL,
-    f_recycle_time DATETIME NULL,
+    f_time DATETIME NOT NULL,
     KEY idx_label(f_label),
     KEY idx_ip(f_ip),
     KEY idx_event(f_event),
-    KEY idx_rent_time(f_rent_time),
-    KEY idx_recycle_time(f_recycle_time)
+    KEY idx_time(f_time)
 );
 */
 
@@ -408,7 +406,7 @@ int CUniqMaster::alloc_label()
             }
             else
             {
-                _mysql->update("INSERT INTO t_label_log(f_label,f_ip,f_event,f_rent_time) VALUES (%s,\"%s\",%d,\"%s\")", label_str.c_str(), ip_str.c_str(), LABEL_RENTED, time_str.c_str());
+                _mysql->update("INSERT INTO t_label_log(f_label,f_ip,f_event,f_time) VALUES (%s,\"%s\",%d,\"%s\")", label_str.c_str(), ip_str.c_str(), LABEL_RENTED, time_str.c_str());
 
                 MYLOG_DEBUG("Label[%s] return %d\n", label_str.c_str(), n);
                 _mysql->commit();
@@ -547,7 +545,7 @@ void CUniqMaster::on_timeout()
                 // 回收
                 num_rows = _mysql->update("INSERT INTO t_label_pool (f_label) VALUES (%s)", label_str.c_str());
                 // 日志
-                _mysql->update("INSERT INTO t_label_log(f_label,f_ip,idx_event,f_recycle_time) VALUES (%s,\"%s\",%d,\"%s\")", label_str.c_str(), ip_str.c_str(), LABEL_RECYCLED, sys::CDatetimeUtils::to_datetime(_current_time).c_str());
+                _mysql->update("INSERT INTO t_label_log(f_label,f_ip,f_event,f_time) VALUES (%s,\"%s\",%d,\"%s\")", label_str.c_str(), ip_str.c_str(), LABEL_RECYCLED, sys::CDatetimeUtils::to_datetime(_current_time).c_str());
                 MYLOG_INFO("Label[%s] recycled from %s, expired at %s\n", label_str.c_str(), ip_str.c_str(), time_str.c_str());
 
                 _mysql->commit();
