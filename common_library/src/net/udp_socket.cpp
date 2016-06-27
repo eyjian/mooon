@@ -30,12 +30,12 @@ CUdpSocket::CUdpSocket() throw (sys::CSyscallException)
     set_fd(fd);
 }
 
-void CUdpSocket::listen(uint16_t port) throw (sys::CSyscallException)
+void CUdpSocket::listen(uint16_t port, bool nonblock) throw (sys::CSyscallException)
 {
-	listen("0.0.0.0", port);
+	listen("0.0.0.0", port, nonblock);
 }
 
-void CUdpSocket::listen(const std::string& ip, uint16_t port) throw (sys::CSyscallException)
+void CUdpSocket::listen(const std::string& ip, uint16_t port, bool nonblock) throw (sys::CSyscallException)
 {
 	struct sockaddr_in listen_addr;
 
@@ -46,6 +46,9 @@ void CUdpSocket::listen(const std::string& ip, uint16_t port) throw (sys::CSysca
 
 	if (-1 == bind(get_fd(), (struct sockaddr*)&listen_addr, sizeof(listen_addr)))
 		THROW_SYSCALL_EXCEPTION(NULL, errno, "bind");
+
+	if (nonblock)
+	    set_nonblock(true);
 }
 
 int CUdpSocket::send_to(const void* buffer, size_t buffer_size, uint32_t to_ip, uint16_t to_port) throw (sys::CSyscallException)
@@ -69,7 +72,10 @@ int CUdpSocket::send_to(const void* buffer, size_t buffer_size, const struct soc
 {
     int bytes = ::sendto(get_fd(), buffer, buffer_size, 0, (struct sockaddr*)&to_addr, sizeof(struct sockaddr_in));
     if (-1 == bytes)
-        THROW_SYSCALL_EXCEPTION(NULL, errno, "sendto");
+    {
+        if ((errno != EAGAIN) && (errno != EWOULDBLOCK))
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "sendto");
+    }
 
     return bytes;
 }
@@ -79,8 +85,11 @@ int CUdpSocket::receive_from(void* buffer, size_t buffer_size, uint32_t* from_ip
     struct sockaddr_in from_addr;
 
     int bytes = receive_from(buffer, buffer_size, &from_addr);
-    *from_ip = from_addr.sin_addr.s_addr;
-    *from_port = ntohs(from_addr.sin_port);
+    if (bytes != -1)
+    {
+        *from_ip = from_addr.sin_addr.s_addr;
+        *from_port = ntohs(from_addr.sin_port);
+    }
 
     return bytes;
 }
@@ -91,7 +100,10 @@ int CUdpSocket::receive_from(void* buffer, size_t buffer_size, struct sockaddr_i
 
     int bytes = recvfrom(get_fd(), buffer, buffer_size, 0, (struct sockaddr*)from_addr, &address_len);
     if (-1 == bytes)
-        THROW_SYSCALL_EXCEPTION(NULL, errno, "recvfrom");
+    {
+        if ((errno != EAGAIN) && (errno != EWOULDBLOCK))
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "recvfrom");
+    }
 
     return bytes;
 }

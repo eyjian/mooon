@@ -29,8 +29,8 @@ class CUdpSocket: public CEpollable
 {
 public:
     CUdpSocket() throw (sys::CSyscallException);
-    void listen(uint16_t port) throw (sys::CSyscallException);
-    void listen(const std::string& ip, uint16_t port) throw (sys::CSyscallException);
+    void listen(uint16_t port, bool nonblock=false) throw (sys::CSyscallException);
+    void listen(const std::string& ip, uint16_t port, bool nonblock=false) throw (sys::CSyscallException);
 
     // to_ip 目标IP，要求为网络字节序
     // to_port 目标端口，同样要求为主机字节序
@@ -40,6 +40,7 @@ public:
 
     // from_ip 返回的源IP，为网络字节序
     // from_port 返回的源端口，为主机字节序
+    // 出错抛出异常，成功返回接收的字节数，如果返回-1表示为非阻塞模式没有数据可接收
     int receive_from(void* buffer, size_t buffer_size, uint32_t* from_ip, uint16_t* from_port) throw (sys::CSyscallException);
     int receive_from(void* buffer, size_t buffer_size, struct sockaddr_in* from_addr) throw (sys::CSyscallException);
 
