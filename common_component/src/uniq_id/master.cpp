@@ -48,9 +48,18 @@ STRING_ARG_DEFINE(db_user, "root", "MySQL user");
 STRING_ARG_DEFINE(db_pass, "", "MySQL password");
 STRING_ARG_DEFINE(db_name, "", "MySQL database name");
 
-// Label过期时长，所有节点的expire值必须保持相同，包括master节点和所有agent节点
+// Label过期时长参数，所有节点的expire值必须保持相同，包括master节点和所有agent节点
+//
+// expire用来控制Label的回收重利用，取值应当越大越好，比如可以30天则取30天，可以取7天则7天等，
+// 但是过期后并不会立即被回收，而是有一个冻结期，冻结期的时间长短和expire的值相关。
+//
+// 当一个Label在expire指定的时间内都没有续租赁过，则会进入一段冻结期，冻结期内该Label不会被回收，但也不能被租赁，
+// 在冻结期之后，该Label则会被回收进入f_label_pool表中。
 INTEGER_ARG_DEFINE(uint32_t, expire, LABEL_EXPIRED_SECONDS, 1, 4294967295U, "label expired seconds");
-// 多长间隔做一次超时检测，处理超时的Labels，其值应当要小于agent的interval值，比如可以小一半
+// 多长间隔做一次Label过期检测和处理过冻结期的Labels，参数取值应当要小于agent的interval值，比如可以小一半
+// 如果expire的值为1天，则timeout的值可以取10分钟，
+// 如果expire的值为7天，则timeout的值可以取1小时，
+// 如果expire的值为30天，则timeout的值可以取12小时
 INTEGER_ARG_DEFINE(uint32_t, timeout, 3600, 1, 36000, "timeout seconds");
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,33 +76,42 @@ CREATE TABLE t_label_pool (
 
 /*
  * Label在线表
+ * f_label为主键，保证同一时间不可能有两个IP租赁同一个Label，
+ * 但一个IP可能同时持有一个或多个过期的Label，和一个当前有效的Label
 DROP TABLE IF EXISTS t_label_online;
 CREATE TABLE t_label_online (
-    f_ip CHAR(16) NOT NULL,
     f_label TINYINT UNSIGNED NOT NULL,
+    f_ip CHAR(16) NOT NULL,
     f_time DATETIME NOT NULL,
-    PRIMARY KEY (f_ip),
-    UNIQUE KEY idx_label(f_label),
+    PRIMARY KEY (f_label),
+    KEY idx_ip(f_ip),
     KEY idx_time(f_time)
 );
 */
 
 /*
- * Label状态表
-DROP TABLE IF EXISTS t_label_state;
-CREATE TABLE t_label_state (
-    f_ip CHAR(16) NOT NULL,
+ * Label日志表
+DROP TABLE IF EXISTS t_label_log;
+CREATE TABLE t_label_log (
     f_label TINYINT UNSIGNED NOT NULL,
-    f_first_time DATETIME NOT NULL,
-    f_last_time DATETIME NOT NULL,
-    f_state TINYINT NOT NULL,
-    PRIMARY KEY (f_ip),
+    f_ip CHAR(16) NOT NULL,
+    f_event TINYINT NOT NULL,
+    f_rent_time DATETIME NOT NULL,
+    f_recycle_time DATETIME NULL,
     KEY idx_label(f_label),
-    KEY idx_state(f_state),
-    KEY idx_first_time(f_first_time),
-    KEY idx_last_time(f_last_time)
+    KEY idx_ip(f_ip),
+    KEY idx_event(f_event),
+    KEY idx_rent_time(f_rent_time),
+    KEY idx_recycle_time(f_recycle_time)
 );
 */
+
+// 常量
+enum
+{
+    LABEL_RENTED = 1,  // Label被租赁
+    LABEL_RECYCLED = 2 // Label被回收
+};
 
 // 标签
 struct LabelInfo
@@ -143,10 +161,11 @@ private:
     bool load_labels();
     int alloc_label();
     int get_label() const;
-    bool hold_label(uint8_t label) const;
+    bool hold_valid_label(uint8_t label) const;
 
 private:
     void on_timeout();
+    time_t get_expire_time() const;
     void prepare_response_error(int errcode);
     int prepare_response_get_label();
 
@@ -377,7 +396,10 @@ int CUniqMaster::alloc_label()
         }
         else
         {
-            n = _mysql->update("INSERT INTO t_label_online (f_ip,f_label,f_time) VALUES (\"%s\",%s,\"%s\")", net::CUtils::ipv4_tostring(_from_addr.sin_addr.s_addr).c_str(), label_str.c_str(), sys::CDatetimeUtils::to_datetime(_current_time).c_str());
+            const std::string ip_str = net::CUtils::ipv4_tostring(_from_addr.sin_addr.s_addr);
+            const std::string time_str = sys::CDatetimeUtils::to_datetime(_current_time);
+
+            n = _mysql->update("INSERT INTO t_label_online (f_label,f_ip,f_time) VALUES (%s,\"%s\",\"%s\")", label_str.c_str(), ip_str.c_str(), time_str.c_str());
             if (n != 1)
             {
                 MYLOG_ERROR("Label[%s] return %d\n", label_str.c_str(), n);
@@ -386,6 +408,8 @@ int CUniqMaster::alloc_label()
             }
             else
             {
+                _mysql->update("INSERT INTO t_label_log(f_label,f_ip,f_event,f_rent_time) VALUES (%s,\"%s\",%d,\"%s\")", label_str.c_str(), ip_str.c_str(), LABEL_RENTED, time_str.c_str());
+
                 MYLOG_DEBUG("Label[%s] return %d\n", label_str.c_str(), n);
                 _mysql->commit();
                 return static_cast<int>(atoi(label_str.c_str()));
@@ -404,23 +428,30 @@ int CUniqMaster::alloc_label()
         {
             MYLOG_ERROR("rollback failed: %s\n", ex.str().c_str());
         }
+
         return -1;
     }
 }
 
-// 根据IP取它的Label
-// 成功返回Lable
-// 没找到则返回0
-// DB错误返回-1
+// 根据IP取它的未过期的Label
+// 成功返回Lable， 没找到则返回0，DB错误返回-1
 int CUniqMaster::get_label() const
 {
     try
     {
-        const std::string str = _mysql->query("SELECT f_label FROM t_label_online WHERE f_ip=\"%s\"", net::to_string(_from_addr.sin_addr).c_str());
-        MYLOG_INFO("%s hold label[%s]\n", net::to_string(_from_addr.sin_addr).c_str(), str.c_str());
+        time_t expire_time = _current_time - argument::expire->value();
+        const std::string str = _mysql->query("SELECT f_label FROM t_label_online WHERE f_ip=\"%s\" AND f_time>=\"%s\"", net::to_string(_from_addr.sin_addr).c_str(), sys::CDatetimeUtils::to_datetime(expire_time).c_str());
+
         if (str.empty())
+        {
+            MYLOG_INFO("%s not hold valid label\n", net::to_string(_from_addr.sin_addr).c_str());
             return 0;
-        return atoi(str.c_str());
+        }
+        else
+        {
+            MYLOG_INFO("%s hold label[%s]\n", net::to_string(_from_addr.sin_addr).c_str(), str.c_str());
+            return atoi(str.c_str());
+        }
     }
     catch (sys::CDBException& ex)
     {
@@ -429,18 +460,20 @@ int CUniqMaster::get_label() const
     }
 }
 
-bool CUniqMaster::hold_label(uint8_t label) const
+// 判断是否持有指定的Label，而且需要在有效期内
+bool CUniqMaster::hold_valid_label(uint8_t label) const
 {
-    const std::string str = _mysql->query("SELECT f_ip FROM t_label_online WHERE f_label=%d", (int)label);
+    time_t expire_time = _current_time - argument::expire->value();
+    const std::string str = _mysql->query("SELECT f_ip FROM t_label_online WHERE f_label=%d AND f_time>=\"%s\"", (int)label, sys::CDatetimeUtils::to_datetime(expire_time).c_str());
 
-    if (str.empty())
+    if (!str.empty())
     {
-        MYLOG_ERROR("%s not hold label[%d]\n", net::to_string(_from_addr).c_str(), (int)label);
-        return false;
+        return str == net::to_string(_from_addr.sin_addr);
     }
     else
     {
-        return str == net::to_string(_from_addr.sin_addr);
+        MYLOG_ERROR("%s not hold label[%d] or label expired\n", net::to_string(_from_addr).c_str(), (int)label);
+        return false;
     }
 }
 
@@ -454,11 +487,13 @@ void CUniqMaster::on_timeout()
         // 需先更新续租
         for (std::map<uint8_t, struct LabelInfo>::iterator iter=_label_info_map.begin(); iter!=_label_info_map.end(); ++iter)
         {
-            const struct LabelInfo& label_info = iter->second;
-
             try
             {
-                num_rows = _mysql->update("UPDATE t_label_online SET f_time=\"%s\" WHERE f_label=%d AND f_ip=\"%s\"", sys::CDatetimeUtils::to_datetime(label_info.lease_time).c_str(), (int)label_info.label, net::ip2string(label_info.ip).c_str());
+                const struct LabelInfo& label_info = iter->second;
+                const std::string ip_str = net::ip2string(label_info.ip);
+                const std::string time_str = sys::CDatetimeUtils::to_datetime(label_info.lease_time);
+
+                num_rows = _mysql->update("UPDATE t_label_online SET f_time=\"%s\" WHERE f_label=%d AND f_ip=\"%s\" AND f_time<\"%s\"", time_str.c_str(), (int)label_info.label, ip_str.c_str(), time_str.c_str());
                 MYLOG_DEBUG("update t_label_online ok: (%d)%s\n", num_rows, label_info.str().c_str());
                 need_commit = true;
             }
@@ -483,10 +518,10 @@ void CUniqMaster::on_timeout()
     try
     {
         static uint64_t timeout_count = 0; // 控制重复日志量
-        time_t timeout_time = _current_time - argument::expire->value();
+        time_t expire_time = get_expire_time();
 
         sys::DBTable db_table;
-        _mysql->query(db_table, "SELECT f_ip,f_label,f_time FROM t_label_online WHERE f_time<\"%s\"", sys::CDatetimeUtils::to_datetime(timeout_time).c_str());
+        _mysql->query(db_table, "SELECT f_ip,f_label,f_time FROM t_label_online WHERE f_time<\"%s\"", sys::CDatetimeUtils::to_datetime(expire_time).c_str());
         if (db_table.empty())
         {
             if (0 == timeout_count++ % 10000)
@@ -511,7 +546,9 @@ void CUniqMaster::on_timeout()
 
                 // 回收
                 num_rows = _mysql->update("INSERT INTO t_label_pool (f_label) VALUES (%s)", label_str.c_str());
-                MYLOG_INFO("Label[%s] recycled from %s\n", label_str.c_str(), ip_str.c_str());
+                // 日志
+                _mysql->update("INSERT INTO t_label_log(f_label,f_ip,idx_event,f_recycle_time) VALUES (%s,\"%s\",%d,\"%s\")", label_str.c_str(), ip_str.c_str(), LABEL_RECYCLED, sys::CDatetimeUtils::to_datetime(_current_time).c_str());
+                MYLOG_INFO("Label[%s] recycled from %s, expired at %s\n", label_str.c_str(), ip_str.c_str(), time_str.c_str());
 
                 _mysql->commit();
                 need_commit = false;
@@ -534,6 +571,40 @@ void CUniqMaster::on_timeout()
             }
         }
     }
+}
+
+// 一个Label过期未续租时，不是立即回收，
+// 而是在过期后仍然冻结一段时间，以保证回收的足够安全，这有点类似于TCP的TIME_WAIT状态
+time_t CUniqMaster::get_expire_time() const
+{
+    time_t  expire_time;
+
+    if (argument::expire->value() < 3600) // 小于1小时，则冻结时间为过期时间的2倍
+    {
+        expire_time = _current_time - (2 * argument::expire->value());
+    }
+    else if (argument::expire->value() < 3600*24) // 小于一天，则冻结时间为过期时间加1小时
+    {
+        expire_time = _current_time - (3600 + argument::expire->value());
+    }
+    else if (argument::expire->value() < 3600*24*7) // 小于一周，则冻结时间为过期时间加上1天
+    {
+        expire_time = _current_time - ((3600*24) + argument::expire->value());
+    }
+    else if (argument::expire->value() < 3600*24*30) // 过期时间小于1个月，则冻结时间加上2天
+    {
+        expire_time = _current_time - ((3600*24*2) + argument::expire->value());
+    }
+    else if (argument::expire->value() < 3600*24*90) // 过期时间小于1个月，则冻结时间加上2天
+    {
+        expire_time = _current_time - ((3600*24*3) + argument::expire->value());
+    }
+    else
+    {
+        expire_time = _current_time - ((3600*24*7) + argument::expire->value());
+    }
+
+    return expire_time;
 }
 
 void CUniqMaster::prepare_response_error(int errcode)
@@ -564,20 +635,16 @@ int CUniqMaster::prepare_response_get_label()
     }
     else
     {
-        bool first; // 如果是首次租赁，则需要立即写DB，否则延后写DB
-
         if (label > 0)
         {
-            first = false;
-
-            // 续租，agent应当重新租赁
-            if (!hold_label(label))
+            // 续租，如果agent不持有该label，则应当重新租赁
+            if (!hold_valid_label(label))
                 return ERROR_LABEL_NOT_HOLD;
         }
         else
         {
-            first = true;
-
+            // 新租赁Label，
+            // 先查看是否已持有Label
             label = get_label();
             if (-1 == label)
             {
@@ -585,7 +652,7 @@ int CUniqMaster::prepare_response_get_label()
             }
             else if (0 == label)
             {
-                // 新租
+                // 新租赁
                 label = alloc_label();
                 if (0 == label)
                 {

@@ -45,7 +45,13 @@ INTEGER_ARG_DEFINE(uint16_t, port, 6200, 1000, 65535, "listen port");
 INTEGER_ARG_DEFINE(uint8_t, label, 0, 0, LABEL_MAX, "unique label of a machine");
 INTEGER_ARG_DEFINE(uint32_t, steps, 100000, 1, 1000000, "steps to store");
 
-// Label过期时长，所有节点的expire值必须保持相同，包括master节点和所有agent节点
+// Label过期时长参数，所有节点的expire值必须保持相同，包括master节点和所有agent节点
+//
+// expire用来控制Label的回收重利用，取值应当越大越好，比如可以30天则取30天，可以取7天则7天等，
+// 但是过期后并不会立即被回收，而是有一个冻结期，冻结期的时间长短和expire的值相关。
+//
+// 当一个Label在expire指定的时间内都没有续租赁过，则会进入一段冻结期，
+// 冻结期内该Label不会被回收，但也不能被租赁，在冻结期之后，该Label则会被回收
 // expire值必须大于interval的两倍，且必须大10
 INTEGER_ARG_DEFINE(uint32_t, expire, LABEL_EXPIRED_SECONDS, 10, 4294967295U, "label expired seconds");
 // 多长间隔向master发一次租赁Lable请求
@@ -583,7 +589,9 @@ bool CUniqAgent::store_sequence()
     else
     {
         MYLOG_DEBUG("store %s ok\n", _seq_block.str().c_str());
+
 #if 1
+        _sequence_start = _seq_block.sequence;
         return true;
 #else
         // fsync严重影响性能

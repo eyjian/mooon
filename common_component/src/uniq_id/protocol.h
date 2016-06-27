@@ -57,7 +57,8 @@ struct MessageHead
     nuint16_t type;
     nuint16_t major_ver; // 主版本号
     nuint16_t minor_ver; // 次版本号
-    nuint32_t echo;  // 响应时回复相同的值
+    nuint32_t magic;     // 有来校验包
+    nuint32_t echo;      // 响应时回复相同的值
     nuint64_t value1;
     nuint64_t value2;
 
@@ -68,7 +69,7 @@ struct MessageHead
 
     std::string str() const
     {
-        return utils::CStringUtils::format_string("message://V%d.%d/L%d/T%d/E%u/%"PRIu64"/%"PRIu64, (int)major_ver.to_int(), (int)minor_ver.to_int(), (int)len.to_int(), (int)type.to_int(), (unsigned int)echo.to_int(), value1.to_int(), value2.to_int());
+        return utils::CStringUtils::format_string("message://V%d.%d/L%d/T%d/E%u/M%u%"PRIu64"/%"PRIu64, (int)major_ver.to_int(), (int)minor_ver.to_int(), (int)len.to_int(), (int)type.to_int(), echo.to_int(), magic.to_int(), value1.to_int(), value2.to_int());
     }
 };
 
