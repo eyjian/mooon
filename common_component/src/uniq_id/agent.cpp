@@ -229,7 +229,7 @@ bool CUniqAgent::init(int argc, char* argv[])
 
         _epoller.create(10);
         _udp_socket = new net::CUdpSocket;
-        _udp_socket->listen(argument::ip->value(), argument::port->value());
+        _udp_socket->listen(argument::ip->value(), argument::port->value(), true);
         MYLOG_INFO("listen on %s:%d\n", argument::ip->c_value(), argument::port->value());
         _epoller.set_events(_udp_socket, EPOLLIN);
 
@@ -255,90 +255,111 @@ bool CUniqAgent::run()
         const int milliseconds = 10000;
         int n = _epoller.timed_wait(milliseconds);
 
+        // 不需要那么精确的时间
+        _current_time = time(NULL);
+        if (_current_time - _last_rent_time > static_cast<time_t>(argument::interval->value()))
+        {
+            // 间隔的向master发一个续租请求
+            rent_label();
+            _last_rent_time = _current_time;
+        }
+
         if (0 == n)
         {
-            _current_time = time(NULL);
-            if (_current_time - _last_rent_time > static_cast<time_t>(argument::interval->value()))
-            {
-                // 续租
-                rent_label();
-                _last_rent_time = _current_time;
-            }
+            // timeout, do nothing
         }
         else
         {
-            int bytes_received = _udp_socket->receive_from(_request_buffer, sizeof(_request_buffer), &_from_addr);
-            if (bytes_received < static_cast<int>(sizeof(struct MessageHead)))
+            // 循环，可以减少对CEpoller::timed_wait的调用
+            for (int i=0; i<10000; ++i)
             {
-                MYLOG_ERROR("invalid size (%d) from %s: %s\n", bytes_received, net::to_string(_from_addr).c_str(), strerror(errno));
-            }
-            else
-            {
-                _message_head = reinterpret_cast<struct MessageHead*>(_request_buffer);
-                MYLOG_DEBUG("%s from %s", _message_head->str().c_str(), net::to_string(_from_addr).c_str());
-
-                if (bytes_received != _message_head->len)
+                try
                 {
-                    MYLOG_ERROR("invalid size (%d/%d) from %s: %s\n", bytes_received, _message_head->len.to_int(), net::to_string(_from_addr).c_str(), strerror(errno));
-                }
-                else
-                {
-                    int errcode = 0;
-                    std::string errmsg;
-                    _current_time = time(NULL);
-
-                    // Request from client
-                    if (REQUEST_LABEL == _message_head->type)
+                    // recvmmsg
+                    int bytes_received = _udp_socket->receive_from(_request_buffer, sizeof(_request_buffer), &_from_addr);
+                    if (-1 == bytes_received)
                     {
-                        errcode = prepare_response_get_label();
+                        // WOULDBLOCK
+                        break;
                     }
-                    else if (REQUEST_UNIQ_ID == _message_head->type)
+                    else if (bytes_received < static_cast<int>(sizeof(struct MessageHead)))
                     {
-                        errcode = prepare_response_get_uniq_id();
-                    }
-                    else if (REQUEST_UNIQ_SEQ == _message_head->type)
-                    {
-                        errcode = prepare_response_get_uniq_seq();
-                    }
-                    else if (REQUEST_LABEL_AND_SEQ == _message_head->type)
-                    {
-                        errcode = prepare_response_get_label_and_seq();
-                    }
-                    // Response from master
-                    else if (RESPONSE_ERROR == _message_head->type)
-                    {
-                        errcode = on_response_error();
-                    }
-                    else if (RESPONSE_LABEL == _message_head->type)
-                    {
-                        errcode = on_response_label();
+                        MYLOG_ERROR("invalid size (%d) from %s: %s\n", bytes_received, net::to_string(_from_addr).c_str(), strerror(errno));
                     }
                     else
                     {
-                        errcode = ERROR_INVALID_TYPE;
-                        MYLOG_ERROR("invalid message type: %s\n", _message_head->str().c_str());
-                    }
-                    if ((errcode != 0) && (errcode != -1))
-                    {
-                        prepare_response_error(errcode);
-                    }
+                        _message_head = reinterpret_cast<struct MessageHead*>(_request_buffer);
+                        MYLOG_DEBUG("%s from %s", _message_head->str().c_str(), net::to_string(_from_addr).c_str());
 
-                    if (errcode != -1)
-                    {
-                        try
+                        if (bytes_received != _message_head->len)
                         {
-                            _udp_socket->send_to(_response_buffer, _response_size, _from_addr);
-                            MYLOG_DEBUG("send to %s ok\n", net::to_string(_from_addr).c_str());
+                            MYLOG_ERROR("invalid size (%d/%d) from %s: %s\n", bytes_received, _message_head->len.to_int(), net::to_string(_from_addr).c_str(), strerror(errno));
                         }
-                        catch (sys::CSyscallException& ex)
+                        else
                         {
-                            MYLOG_ERROR("send to %s failed: %s\n", net::to_string(_from_addr).c_str(), ex.str().c_str());
+                            int errcode = 0;
+                            std::string errmsg;
+
+                            // Request from client
+                            if (REQUEST_LABEL == _message_head->type)
+                            {
+                                errcode = prepare_response_get_label();
+                            }
+                            else if (REQUEST_UNIQ_ID == _message_head->type)
+                            {
+                                errcode = prepare_response_get_uniq_id();
+                            }
+                            else if (REQUEST_UNIQ_SEQ == _message_head->type)
+                            {
+                                errcode = prepare_response_get_uniq_seq();
+                            }
+                            else if (REQUEST_LABEL_AND_SEQ == _message_head->type)
+                            {
+                                errcode = prepare_response_get_label_and_seq();
+                            }
+                            // Response from master
+                            else if (RESPONSE_ERROR == _message_head->type)
+                            {
+                                errcode = on_response_error();
+                            }
+                            else if (RESPONSE_LABEL == _message_head->type)
+                            {
+                                errcode = on_response_label();
+                            }
+                            else
+                            {
+                                errcode = ERROR_INVALID_TYPE;
+                                MYLOG_ERROR("invalid message type: %s\n", _message_head->str().c_str());
+                            }
+                            if ((errcode != 0) && (errcode != -1))
+                            {
+                                prepare_response_error(errcode);
+                            }
+
+                            if (errcode != -1)
+                            {
+                                try
+                                {
+                                    _udp_socket->send_to(_response_buffer, _response_size, _from_addr);
+                                    MYLOG_DEBUG("send to %s ok\n", net::to_string(_from_addr).c_str());
+                                }
+                                catch (sys::CSyscallException& ex)
+                                {
+                                    MYLOG_ERROR("send to %s failed: %s\n", net::to_string(_from_addr).c_str(), ex.str().c_str());
+                                }
+                            }
                         }
                     }
                 }
-            }
-        }
-    }
+                catch (sys::CSyscallException& ex)
+                {
+                    MYLOG_ERROR("receive_from failed: %s\n", ex.str().c_str());
+                    break;
+                }
+            } // while (true)
+        } // if (0 == n)
+    } // while (true)
+
     return true;
 }
 
