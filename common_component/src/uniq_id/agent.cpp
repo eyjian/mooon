@@ -669,6 +669,7 @@ uint64_t CUniqAgent::get_uniq_id(const struct MessageHead* request)
         }
         else
         {
+            _old_seq = seq;
             _old_hour = uniq_id.id.hour;
             _old_day = uniq_id.id.day;
             _old_month = uniq_id.id.month;
