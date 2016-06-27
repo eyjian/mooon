@@ -509,7 +509,7 @@ void CUniqMaster::on_timeout()
     }
     catch (sys::CDBException& ex)
     {
-        MYLOG_ERROR("%s", ex.str().c_str());
+        MYLOG_ERROR("commit failed: %s", ex.str().c_str());
     }
 
     // 再清理超时未续租的，否则可能冲突
