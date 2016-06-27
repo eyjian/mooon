@@ -281,8 +281,17 @@ bool CUniqAgent::run()
             {
                 try
                 {
-                    // recvmmsg
+                    // Linux 2.6.33开始支持recvmsg
+                    // glibc 2.12开始支持recvmmsg
+//#if __GLIBC__ == 2 && __GLIBC_MINOR__ == 12
+//                    int k;
+//                    const unsigned int vlen = 100;
+//                    char bufs[vlen][SOCKET_BUFFER_SIZE];
+//                    struct mmsghdr msgs[vlen];
+//                    int n = recvmmsg(_udp_socket->get_fd(), msgs, vlen, MSG_DONTWAIT, NULL);
+//#else
                     int bytes_received = _udp_socket->receive_from(_request_buffer, sizeof(_request_buffer), &_from_addr);
+//#endif
                     if (-1 == bytes_received)
                     {
                         // WOULDBLOCK
