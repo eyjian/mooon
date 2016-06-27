@@ -93,10 +93,12 @@ CREATE TABLE t_label_online (
  * Label日志表
 DROP TABLE IF EXISTS t_label_log;
 CREATE TABLE t_label_log (
+    f_id BIGINT NOT NULL AUTO_INCREMENT,
     f_label TINYINT UNSIGNED NOT NULL,
     f_ip CHAR(16) NOT NULL,
     f_event TINYINT NOT NULL,
     f_time DATETIME NOT NULL,
+    PRIMARY KEY (f_id),
     KEY idx_label(f_label),
     KEY idx_ip(f_ip),
     KEY idx_event(f_event),
@@ -505,6 +507,7 @@ void CUniqMaster::on_timeout()
         {
             _mysql->commit();
             need_commit = false;
+            _label_info_map.clear();
         }
     }
     catch (sys::CDBException& ex)
