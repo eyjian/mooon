@@ -11,9 +11,11 @@ add_library(mooon_uniq STATIC uniq_id.cpp)
 add_executable(uniq_agent agent.cpp)
 target_link_libraries(uniq_agent libmooon.a)
 
-# uniq_master
-add_executable(uniq_master master.cpp)
-target_link_libraries(uniq_master libmooon.a libmysqlclient.a)
+if (HAVE_MYSQL)
+	# uniq_master
+	add_executable(uniq_master master.cpp)
+	target_link_libraries(uniq_master libmooon.a libmysqlclient.a)
+endif ()
 
 # uniq_cli
 add_executable(uniq_cli uniq_cli.cpp)
