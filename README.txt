@@ -8,3 +8,8 @@ cmake -DCMAKE_INSTALL_PREFIX=/usr/local/thirdparty/mooon .
 
 如果以debug方式编译，指定参数：-DCMAKE_BUILD_TYPE=Debug
 如果以Release方式编译，指定参数：-DCMAKE_BUILD_TYPE=Release
+
+子目录说明：
+common_library MOOON的基础类库，封装了字符串操作、常见的系统调用如锁、以及网络相关的
+common_component 公共组件的实现，依赖common_library
+applications 一些应用的实现，如唯一ID服务，依赖common_library
