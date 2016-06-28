@@ -1,9 +1,10 @@
 UniqId是一个每秒可产生千万级唯一ID的服务，基于租约的思想，架构和实现均十分简单。
 UniqAgent和UniqMaster均为单进程无线程结构，UniqAgent提供ID服务，UniqMaster维护Label，
-通过Label来唯一区别机器，Label为1字节数，共支持255台机器，值为0的Label内部使用。
+通过Label来唯一区别机器，Label为1字节数，最大支持255台机器同时提供服务，值为0的Label内部使用。
 
 UniqId弱主从架构，具备高可用性，包含master在内的任意节点挂掉，均不影响服务。
-单个UniqAgent提供超过20万/秒（CPU）取8字节无符号整数ID的能力。
+单个UniqAgent提供超过20万/秒（CPU）取8字节无符号整数ID的能力，
+100台机器可以提供2000多万/秒的服务，只占单个CPU，无缓存低内存需求（单个UDP包大小为28字节，加上IP和UDP头为56字节）。
 
 应用场景：
 1）8字节整数的唯一ID，可用于订单号等
