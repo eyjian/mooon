@@ -32,12 +32,14 @@ void CHttpPostData::add_content(const std::string& name, const std::string& cont
 
     if (content_type.empty())
     {
+        // TODO warning: dereferencing type-punned pointer will break strict-aliasing rules
         errcode = curl_formadd((struct curl_httppost**)&_post, (struct curl_httppost**)&_last,
             CURLFORM_COPYNAME, name.c_str(),
             CURLFORM_COPYCONTENTS, contents.c_str(), CURLFORM_END);
     }
     else
     {
+        // TODO warning: dereferencing type-punned pointer will break strict-aliasing rules
         errcode = curl_formadd((struct curl_httppost**)&_post, (struct curl_httppost**)&_last,
             CURLFORM_COPYNAME, name.c_str(),
             CURLFORM_COPYCONTENTS, contents.c_str(),
@@ -54,12 +56,14 @@ void CHttpPostData::add_file(const std::string& name, const std::string& filepat
 
     if (content_type.empty())
     {
+        // TODO warning: dereferencing type-punned pointer will break strict-aliasing rules
         errcode = curl_formadd((struct curl_httppost**)&_post, (struct curl_httppost**)&_last,
             CURLFORM_COPYNAME, name.c_str(),
             CURLFORM_FILE, filepath.c_str(), CURLFORM_END);
     }
     else
     {
+        // TODO warning: dereferencing type-punned pointer will break strict-aliasing rules
         errcode = curl_formadd((struct curl_httppost**)&_post, (struct curl_httppost**)&_last,
             CURLFORM_COPYNAME, name.c_str(),
             CURLFORM_FILE, filepath.c_str(),

@@ -75,6 +75,7 @@ inline std::ostream& operator <<(std::ostream& out, const struct ResultInfo& res
 
 int main(int argc, char* argv[])
 {
+#if HAVE_LIBSSH2 == 1
     // 解析命令行参数
     std::string errmsg;
     if (!mooon::utils::parse_arguments(argc, argv, &errmsg))
@@ -218,6 +219,7 @@ int main(int argc, char* argv[])
             ++num_failure;
     }
     std::cout << "SUCCESS: " << num_success << ", FAILURE: " << num_failure << std::endl;
+#endif // HAVE_LIBSSH2 == 1
 
     return 0;
 }
