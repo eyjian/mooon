@@ -78,8 +78,8 @@ class CUniqId
 public:
     // agent_nodes 以逗号分隔的agent节点字符串，如：192.168.31.21:6200,192.168.31.22:6200,192.168.31.23:6200
     // timeout_milliseconds 接收agent返回超时值
-    // retry_times 从一个agent取失败时，改从多少其它agent取
-    CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds=200, uint8_t retry_times=5) throw (utils::CException);
+    // retry_times 从一个agent取失败时，改从多少其它agent取，如果值为0表示不重试
+    CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds=200, uint8_t retry_times=5, bool polling=true) throw (utils::CException);
     ~CUniqId();
 
     // 取得机器Label（标签），用于唯一区分机器，同一时间两台机器不会出现相同的Label
@@ -125,7 +125,8 @@ private:
     const std::string& _agent_nodes;
     uint32_t _timeout_milliseconds;
     uint8_t _retry_times;
-    std::vector<struct sockaddr_in> agents_addr;
+    bool _polling; // 是否轮询选择UniqAgent，否则随机方式，轮询方式选择开销小
+    std::vector<struct sockaddr_in> _agents_addr;
     net::CUdpSocket* _udp_socket;
 };
 

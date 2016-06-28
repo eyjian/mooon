@@ -544,7 +544,7 @@ bool CUniqAgent::restore_sequence()
     else if (bytes_read != sizeof(_seq_block))
     {
         // invalid block
-        MYLOG_ERROR("read %s failed: (%d/%zd)%s\n", _sequence_path.c_str(), bytes_read, sizeof(_seq_block), strerror(errno));
+        MYLOG_ERROR("read %s failed: (%d/%d)%s\n", _sequence_path.c_str(), bytes_read, (int)sizeof(_seq_block), strerror(errno));
         return false;
     }
     else

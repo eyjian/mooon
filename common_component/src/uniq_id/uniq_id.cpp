@@ -44,8 +44,8 @@ std::string label2string(uint8_t label, bool uppercase)
     return str;
 }
 
-CUniqId::CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds, uint8_t retry_times) throw (utils::CException)
-    : _echo(0), _agent_nodes(agent_nodes), _timeout_milliseconds(timeout_milliseconds), _retry_times(retry_times), _udp_socket(NULL)
+CUniqId::CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds, uint8_t retry_times, bool polling) throw (utils::CException)
+    : _echo(0), _agent_nodes(agent_nodes), _timeout_milliseconds(timeout_milliseconds), _retry_times(retry_times), _polling(polling), _udp_socket(NULL)
 {
     _echo = sys::CUtils::get_random_number(0, 100000U); // 初始化一个随机值，这样不同实例不同
     _udp_socket = new net::CUdpSocket;
@@ -72,7 +72,7 @@ CUniqId::CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds, 
         agent_addr.sin_family = AF_INET;
         agent_addr.sin_port = htons(agent_port);
         memset(agent_addr.sin_zero, 0, sizeof(agent_addr.sin_zero));
-        agents_addr.push_back(agent_addr);
+        _agents_addr.push_back(agent_addr);
     }
 }
 
@@ -111,7 +111,7 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
         catch (utils::CException&)
         {
             // 在重试之前不抛出异常
-            if ((retry == _retry_times-1) || (0 == _retry_times))
+            if ((retry == _retry_times) || (0 == _retry_times))
                 throw;
         }
     }
@@ -151,7 +151,7 @@ uint32_t CUniqId::get_unqi_seq() throw (utils::CException, sys::CSyscallExceptio
         }
         catch (utils::CException&)
         {
-            if ((retry == _retry_times-1) || (0 == _retry_times))
+            if ((retry == _retry_times) || (0 == _retry_times))
                 throw;
         }
     }
@@ -192,7 +192,7 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (uti
         }
         catch (utils::CException&)
         {
-            if ((retry == _retry_times-1) || (0 == _retry_times))
+            if ((retry == _retry_times) || (0 == _retry_times))
                 throw;
         }
     }
@@ -261,7 +261,7 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq) throw (utils::CEx
         }
         catch (utils::CException&)
         {
-            if ((retry == _retry_times-1) || (0 == _retry_times))
+            if ((retry == _retry_times) || (0 == _retry_times))
                 throw;
         }
     }
@@ -392,11 +392,24 @@ std::string CUniqId::get_transaction_id(const char* format, ...) throw (utils::C
 
 const struct sockaddr_in& CUniqId::pick_agent() const
 {
-    MOOON_ASSERT(!agents_addr.empty());
+    MOOON_ASSERT(!_agents_addr.empty());
 
-    static unsigned int i = 0;
-    std::vector<struct sockaddr_in>::size_type index = sys::CUtils::get_random_number(i++, agents_addr.size());
-    return agents_addr[index];
+    if (1 == _agents_addr.size())
+    {
+        return _agents_addr[0];
+    }
+    else if (_polling)
+    {
+        static uint32_t factor = 0;
+        register uint32_t index = factor++;
+        return _agents_addr[index % _agents_addr.size()];
+    }
+    else
+    {
+        static unsigned int i = 0;
+        register std::vector<struct sockaddr_in>::size_type index = sys::CUtils::get_random_number(i++, _agents_addr.size());
+        return _agents_addr[index];
+    }
 }
 
 } // namespace mooon {
