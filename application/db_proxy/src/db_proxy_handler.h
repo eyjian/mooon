@@ -1,7 +1,7 @@
 // Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 #ifndef MOOON_DB_PROXY_HANDLER_H
 #define MOOON_DB_PROXY_HANDLER_H
-#include "rpc/DbProxyService.h" // 执行cmake或make rpc时生成的文件
+#include "DbProxyService.h" // 执行cmake或make rpc时生成的文件
 #include <mooon/observer/observable.h>
 namespace mooon { namespace db_proxy {
 

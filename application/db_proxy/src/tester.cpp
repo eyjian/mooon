@@ -1,5 +1,5 @@
 // Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
-#include "rpc/DbProxyService.h"
+#include "DbProxyService.h"
 #include <iostream>
 #include <mooon/net/thrift_helper.h>
 

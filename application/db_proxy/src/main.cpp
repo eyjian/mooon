@@ -2,7 +2,7 @@
 #include "config_loader.h"
 #include "db_proxy_handler.h"
 #include "sql_logger.h"
-#include "rpc/DbProxyService.h" // 执行cmake或make rpc时生成的文件
+#include "DbProxyService.h" // 执行cmake或make db_proxy_rpc时生成的文件
 #include <mooon/net/thrift_helper.h>
 #include <mooon/observer/observer_manager.h>
 #include <mooon/sys/main_template.h>

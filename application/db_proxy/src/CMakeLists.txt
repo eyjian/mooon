@@ -1,15 +1,20 @@
 # Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 
+# 依赖thrift，必须存在
+if (NOT HAVE_THRIFT)
+    message("${Yellow}please set `-DTHIRFT_HOME=` value${ColourReset}")
+    return ()
+endif ()
+
 include_directories(.)
 include_directories(../..)
 link_libraries(libmooon_observer.a libmooon.a)
 
 # 执行cmake时，就编译好thrift文件
-exec_program(mkdir ARGS -p ${CMAKE_CURRENT_SOURCE_DIR}/rpc)
-exec_program(${THRIFT_HOME}/bin/thrift ARGS --gen cpp -r -out ${CMAKE_CURRENT_SOURCE_DIR}/rpc ${CMAKE_CURRENT_SOURCE_DIR}/db_proxy.thrift)
+exec_program(${THRIFT_HOME}/bin/thrift ARGS --gen cpp -r -out ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/db_proxy.thrift)
 
 #aux_source_directory(sql_writer SQL_WRITER_SRC)
-set(RPC rpc/DbProxyService.cpp rpc/db_proxy_constants.cpp rpc/db_proxy_types.cpp)
+set(RPC DbProxyService.cpp db_proxy_constants.cpp db_proxy_types.cpp)
 add_executable(db_proxy main.cpp db_proxy_handler.cpp config_loader.cpp sql_logger.cpp ${RPC})
 target_link_libraries(db_proxy libjsoncpp.a libmysqlclient_r.a libthriftnb.a libthrift.a libevent.a)
 
@@ -31,9 +36,8 @@ add_custom_target(
                  )
 add_custom_command(
                    TARGET db_proxy_rpc
-                   PRE_BUILD
-                   COMMAND mkdir -p ./rpc
-                   COMMAND thrift --gen cpp -r -out ./rpc db_proxy.thrift
+                   PRE_BUILD                   
+                   COMMAND thrift --gen cpp -r -out ${CMAKE_CURRENT_SOURCE_DIR} db_proxy.thrift
                   )
 
 # CMAKE_INSTALL_PREFIX
@@ -47,6 +51,6 @@ install(
         DESTINATION include/mooon/db_proxy
        )
 install(
-        FILES rpc/DbProxyService.h rpc/db_proxy_types.h rpc/db_proxy_constants.h
-        DESTINATION include/mooon/db_proxy/rpc
+        FILES DbProxyService.h db_proxy_types.h db_proxy_constants.h
+        DESTINATION include/mooon/db_proxy
        )
