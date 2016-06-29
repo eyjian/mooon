@@ -1,14 +1,14 @@
 #!/bin/sh
 # Writed by JianYi On 2008-5-20
 
-# ±äÁ¿¶¨Òå
-log_filename= # ÈÕÖ¾ÎÄ¼þÃû
-log_bakeup_nubmer=10 # ÈÕÖ¾±¸·Ý¸öÊý
-log_rotate_bytes=102400000 # ÈÕÖ¾¹ö¶¯×Ö½ÚÊý
+# å˜é‡å®šä¹‰
+log_filename= # æ—¥å¿—æ–‡ä»¶å
+log_bakeup_nubmer=10 # æ—¥å¿—å¤‡ä»½ä¸ªæ•°
+log_rotate_bytes=102400000 # æ—¥å¿—æ»šåŠ¨å­—èŠ‚æ•°
 
-# ÓÃÍ¾£ºµÃµ½ÎÄ¼þ´óÐ¡
-# ²ÎÊý£ºÎÄ¼þÃû
-# ·µ»ØÖµ£ºÈç¹ûÊ§°Ü·µ»Ø0£¬·ñÔò·µ»ØÎÄ¼þ´óÐ¡
+# ç”¨é€”ï¼šå¾—åˆ°æ–‡ä»¶å¤§å°
+# å‚æ•°ï¼šæ–‡ä»¶å
+# è¿”å›žå€¼ï¼šå¦‚æžœå¤±è´¥è¿”å›ž0ï¼Œå¦åˆ™è¿”å›žæ–‡ä»¶å¤§å°
 get_file_size()
 {
 	file_size=`ls --time-style=long-iso -l $1 2>/dev/null|cut -d" " -f5`
@@ -19,9 +19,9 @@ get_file_size()
 	fi
 }
 
-# ÓÃÍ¾£ºµÃµ½ÈÕÖ¾ÎÄ¼þË÷Òý
-# ²ÎÊý£ºÈÕÖ¾ÎÄ¼þÃûµÄ»ùÃû£¬¼´²»°üÀ¨Ë÷Òý²¿·ÖµÄÃû×Ö£¬Èç£ºtest.log£¬¶ø²»ÊÇtest.log.1
-# ·µ»ØÖµ£º³É¹¦·µ»ØË÷ÒýÖµ£¬Ê§°Ü·µ»Ø-1
+# ç”¨é€”ï¼šå¾—åˆ°æ—¥å¿—æ–‡ä»¶ç´¢å¼•
+# å‚æ•°ï¼šæ—¥å¿—æ–‡ä»¶åçš„åŸºåï¼Œå³ä¸åŒ…æ‹¬ç´¢å¼•éƒ¨åˆ†çš„åå­—ï¼Œå¦‚ï¼štest.logï¼Œè€Œä¸æ˜¯test.log.1
+# è¿”å›žå€¼ï¼šæˆåŠŸè¿”å›žç´¢å¼•å€¼ï¼Œå¤±è´¥è¿”å›ž-1
 get_log_file_index()
 {
     log_file_basename=$1
@@ -33,8 +33,8 @@ get_log_file_index()
     fi
 }
 
-# ÓÃÍ¾£º¹ö¶¯ÈÕÖ¾ÎÄ¼þ
-# ²ÎÊý£ºÈÕÖ¾ÎÄ¼þÃû
+# ç”¨é€”ï¼šæ»šåŠ¨æ—¥å¿—æ–‡ä»¶
+# å‚æ•°ï¼šæ—¥å¿—æ–‡ä»¶å
 rotate_log_file()
 {
 	log_file_basename=$1
@@ -46,7 +46,7 @@ rotate_log_file()
         index=$log_file_roll_num
 	fi
 	
-	# Ñ­»·¹ö¶¯ÎÄ¼þ, Ë÷ÒýºÅÔ½´óÎÄ¼þÄÚÈÝÔ½¾É
+	# å¾ªçŽ¯æ»šåŠ¨æ–‡ä»¶, ç´¢å¼•å·è¶Šå¤§æ–‡ä»¶å†…å®¹è¶Šæ—§
     while true
     do
         let index_next=$index+1
@@ -55,30 +55,30 @@ rotate_log_file()
         fi
         
         if test $index -eq 0; then
-            # ½áÊøÑ­»·
+            # ç»“æŸå¾ªçŽ¯
             if test -f $log_file_basename; then
                 mv $log_file_basename $log_file_basename.0
             fi
             return
         else
-            # ¼ÆÊýÆ÷ÔöÒ»
+            # è®¡æ•°å™¨å¢žä¸€
             let index=$index-1
         fi                
     done
 }
 
-# ÓÃÍ¾£ºÐ´ÈÕÖ¾º¯Êý
-# ²ÎÊý£ºÈÕÖ¾ÄÚÈÝ×Ö·û´®
+# ç”¨é€”ï¼šå†™æ—¥å¿—å‡½æ•°
+# å‚æ•°ï¼šæ—¥å¿—å†…å®¹å­—ç¬¦ä¸²
 log_write()
 {
-	# µÃµ½ÈÕÖ¾ÎÄ¼þ´óÐ¡
+	# å¾—åˆ°æ—¥å¿—æ–‡ä»¶å¤§å°
 	log_size=`get_file_size $log_filename`
 	
-	# Èç¹û´óÓÚ¹ö¶¯´óÐ¡
+	# å¦‚æžœå¤§äºŽæ»šåŠ¨å¤§å°
 	if test $log_size -gt $log_roll_bytes; then
 		roll_log_file $log_filename
 	else
-		# µÃµ½µ±Ç°Ê±¼ä
+		# å¾—åˆ°å½“å‰æ—¶é—´
 		now="`date +'%Y-%m-%d/%H:%M:%S'`"
 		echo "[$now]$1" >> $log_filename
 	fi
