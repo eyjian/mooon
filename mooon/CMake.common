@@ -52,9 +52,8 @@ endif ()
 #
 # 也可以通过cmake参数指定，比如：“cmake -DMYSQL_HOME=/home/mike/mysql .”这种形式
 function(discover_library uppername dirname)
-    if (EXISTS ${uppername}_HOME)
-        set(HAVE_${uppername} 1 PARENT_SCOPE CACHE INTERNAL HAVE_${uppername})
-        set(${uppername}_HOME $ENV{HOME}/${dirname} CACHE INTERNAL ${uppername}_HOME)
+    if (${uppername}_HOME)
+        set(HAVE_${uppername} 1 CACHE INTERNAL HAVE_${uppername})
     elseif (EXISTS /usr/local/thirdparty/${dirname})
         # 如果使用PARENT_SCOPE，则函数内不能识别，但函数外可以
         #set(HAVE_${uppername} 1 PARENT_SCOPE)
