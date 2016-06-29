@@ -175,7 +175,14 @@ int main(int argc, char* argv[])
 
                 if (exitcode != 0)
                 {
-                    fprintf(stderr, "%d: %s\n", exitcode, mooon::sys::Error::to_string(exitcode).c_str());
+                    if (126 == exitcode)
+                        fprintf(stderr, "%d: command not executable\n", exitcode);
+                    else if (127 == exitcode)
+                        fprintf(stderr, "%d: command not found\n", exitcode);
+                    else if (255 == exitcode)
+                        fprintf(stderr, "%d: command not found\n", 127);
+                    else
+                        fprintf(stderr, "%d: %s\n", exitcode, mooon::sys::Error::to_string(exitcode).c_str());
                 }
                 else if (!exitsignal.empty())
                 {
