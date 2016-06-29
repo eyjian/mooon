@@ -1,8 +1,12 @@
 cmake安装方法：
 cmake -DCMAKE_INSTALL_PREFIX=<installation directory> .
 
-“-DCMAKE_INSTALL_PREFIX=”后跟安装目录，如/usr/local/thirdparty/mooon：
-cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local/thirdparty/mooon .
+对于依赖的第三方库，可以使用-D指定，
+如：-DMYSQL_HOME=/home/mike/mysql，
+默认在/usr/local等目录下寻找第三方库。
+
+“-DCMAKE_INSTALL_PREFIX=”后跟安装目录，如/usr/local/mooon：
+cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local/mooon .
 
 如果以debug方式编译，指定参数：-DCMAKE_BUILD_TYPE=Debug
 如果以Release方式编译，指定参数：-DCMAKE_BUILD_TYPE=Release
