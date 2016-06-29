@@ -35,7 +35,7 @@ install(
         DESTINATION lib
        )
 install(
-        DIRECTORY ../../include/mooon/uniq_id       
+        DIRECTORY ../include/mooon/uniq_id       
         DESTINATION include/mooon
         PATTERN "uniq_id.h"
        )
