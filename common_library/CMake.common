@@ -79,6 +79,11 @@ endfunction ()
 # MySQL
 discover_library(MYSQL mysql)
 #link_libraries(libmysqlclient_r.a)
+if (HAVE_MYSQL)    
+    if (EXISTS ${MYSQL_HOME}/lib/mysql/libmysqlclient_r.a)        
+        link_directories(${MYSQL_HOME}/lib/mysql)
+    endif ()
+endif ()
 
 # 可控制是否使用SQLite3，默认是不使用的
 # SQLite3
