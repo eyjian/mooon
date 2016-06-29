@@ -25,4 +25,10 @@ if (HAVE_LIBSSH2)
 	        TARGETS mooon_ssh mooon_upload
 	        DESTINATION bin
 	       )
- endif ()
+endif ()
+
+# CMAKE_INSTALL_PREFIX
+install(
+        TARGETS md5
+        DESTINATION bin
+       )
