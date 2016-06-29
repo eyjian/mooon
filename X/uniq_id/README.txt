@@ -1,3 +1,13 @@
+cmake安装方法：
+cmake -DCMAKE_INSTALL_PREFIX=<installation directory> .
+
+“-DCMAKE_INSTALL_PREFIX=”后跟安装目录，如/usr/local/mooon：
+cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local/mooon .
+
+如果以debug方式编译，指定参数：-DCMAKE_BUILD_TYPE=Debug
+如果以Release方式编译，指定参数：-DCMAKE_BUILD_TYPE=Release
+如果机器上没有cmake工具，则需要先安装好。对于可连接外网，并有yum的机器，只需要执行：yum install cmake即可安装cmake。
+
 MOOON-UniqId是一个每秒可产生千万级唯一ID的服务，基于租约的思想，架构和实现均十分简单。
 UniqAgent和UniqMaster均为单进程无线程结构，UniqAgent提供ID服务，UniqMaster维护Label，
 通过Label来唯一区别机器，Label为1字节数，最大支持255台机器同时提供服务，值为0的Label内部使用。
