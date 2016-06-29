@@ -28,8 +28,9 @@ enum
 {
     // 多数设备以太网链路层MTU（最大传输单元）大小为1500（但标准为576），IP包头为20，TCP包头为20，UDP包头8
     SOCKET_BUFFER_SIZE = 128,
-    LABEL_MAX = 255,                    // Label最大的取值（不包含0，从1开始），注意只能为255，不能为更大的值
-    LABEL_EXPIRED_SECONDS = (3600*24*7) // Label多少小秒过期，默认7天
+    LABEL_MAX = 255,                     // Label最大的取值（不包含0，从1开始），注意只能为255，不能为更大的值
+    LABEL_EXPIRED_SECONDS = (3600*24*7), // Label多少小秒过期，默认7天
+	NUM_SEQ = 100                        // 一次最多取连续的seq个数
 };
 
 // 命令字
@@ -59,8 +60,8 @@ struct MessageHead
     nuint16_t minor_ver; // 次版本号
     nuint32_t magic;     // 有来校验包
     nuint32_t echo;      // 响应时回复相同的值
-    nuint64_t value1;
-    nuint64_t value2;
+    nuint64_t value1;    // 当type值为RESPONSE_UNIQ_SEQ时，value1表示连续取多少个seq
+    nuint64_t value2;    // 当type值为RESPONSE_UNIQ_SEQ时，value2，表示从value1开始连续多少个seq，但0为无效的seq
 
     MessageHead()
         : major_ver(MAJOR_VERSION), minor_ver(MINOR_VERSION)

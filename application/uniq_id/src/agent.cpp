@@ -126,7 +126,7 @@ private:
     bool parse_master_nodes();
     bool restore_sequence();
     bool store_sequence();
-    uint32_t inc_sequence();
+    uint32_t inc_sequence(uint32_t deta=1);
     uint64_t get_uniq_id(const struct MessageHead* request);
     void rent_label();
     bool label_expired() const;
@@ -620,7 +620,7 @@ bool CUniqAgent::store_sequence()
     }
 }
 
-uint32_t CUniqAgent::inc_sequence()
+uint32_t CUniqAgent::inc_sequence(uint32_t deta)
 {
     bool stored = true;
 	uint32_t sequence = 0;
@@ -635,6 +635,9 @@ uint32_t CUniqAgent::inc_sequence()
 	{
 	    while (0 == sequence)
 	        sequence = _seq_block.sequence++;
+
+	    if (deta > 1)
+	    	_seq_block.sequence += deta;
 	}
 
     return sequence;
@@ -833,13 +836,16 @@ int CUniqAgent::prepare_response_get_uniq_seq()
         {
             struct MessageHead* request = reinterpret_cast<struct MessageHead*>(_request_buffer);
             struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
+            uint32_t deta = static_cast<uint32_t>(request->value1.to_int());
+            if (deta > NUM_SEQ) // 限制数目
+            	deta = NUM_SEQ;
 
             _response_size = sizeof(struct MessageHead);
             response->len = sizeof(struct MessageHead);
             response->type = RESPONSE_UNIQ_SEQ;
             response->echo = request->echo;
-            response->value1 = inc_sequence();
-            response->value2 = 0;
+            response->value1 = inc_sequence(deta);
+            response->value2 = deta;
 
             MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
             return 0;
