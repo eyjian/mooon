@@ -21,13 +21,18 @@
 
 int main(int argc, char* argv[])
 {
+	std::string md5£»
+
     if (argc < 2)
     {
         fprintf(stderr, "usage: md5 string\n");
         exit(1);
     }
 
-    std::string md5 = mooon::utils::CMd5Helper::lowercase_md5("%s", argv[1]);
+	md5 = mooon::utils::CMd5Helper::lowercase_md5("%s", argv[1]);
     printf("%s\n", md5.c_str());
+
+    md5 = mooon::utils::CMd5Helper::uppercase_md5("%s", argv[1]);
+	printf("%s\n", md5.c_str());
     return 0;
 }
