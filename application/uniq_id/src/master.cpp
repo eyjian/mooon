@@ -580,29 +580,29 @@ time_t CUniqMaster::get_expire_time() const
 {
     time_t  expire_time;
 
-    if (argument::expire->value() < 3600) // 小于1小时，则冻结时间为过期时间的2倍
+    if (argument::expire->value() < 3600) // 小于1小时，则冻结时间为过期时间的2倍，此种情况主要用于测试
     {
         expire_time = _current_time - (2 * argument::expire->value());
     }
-    else if (argument::expire->value() < 3600*24) // 小于一天，则冻结时间为过期时间加2小时
+    else if (argument::expire->value() < 3600*24) // 小于一天，则冻结时间为过期时间加2小时，此种情况主要用于测试
     {
         expire_time = _current_time - (3600*2 + argument::expire->value());
     }
-    else if (argument::expire->value() < 3600*24*7) // 小于一周，则冻结时间为过期时间加上1天
-    {
-        expire_time = _current_time - ((3600*24*1) + argument::expire->value());
-    }
-    else if (argument::expire->value() < 3600*24*30) // 过期时间小于1个月，则冻结时间加上2天
+    else if (argument::expire->value() < 3600*24*7) // 小于一周，则冻结时间为过期时间加上2天
     {
         expire_time = _current_time - ((3600*24*2) + argument::expire->value());
     }
-    else if (argument::expire->value() < 3600*24*90) // 过期时间小于1个月，则冻结时间加上3天
+    else if (argument::expire->value() < 3600*24*30) // 过期时间小于1个月，则冻结时间加上3天
     {
         expire_time = _current_time - ((3600*24*3) + argument::expire->value());
     }
-    else // 冻结时间加上7天
+    else if (argument::expire->value() < 3600*24*90) // 过期时间小于3个月，则冻结时间加上5天
     {
-        expire_time = _current_time - ((3600*24*7) + argument::expire->value());
+        expire_time = _current_time - ((3600*24*5) + argument::expire->value());
+    }
+    else // 冻结时间加上10天
+    {
+        expire_time = _current_time - ((3600*24*10) + argument::expire->value());
     }
 
     return expire_time;
