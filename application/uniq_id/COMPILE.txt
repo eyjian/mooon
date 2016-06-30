@@ -1,0 +1,12 @@
+How to compile？如果编译？
+
+1) 先编译和安装好依赖的mooon（可使用git下载mooon源码：git clone https://github.com/eyjian/mooon/tree/master/mooon）
+2) 然后即可编译UniqId，cmake编译方式，可以通过cmake参数-DMOOON_HOME来指定mooon的安装目录，如果mooon是安装在/usr/local/mooon目录则不用指定。
+3) 编译成功后会生成库文件libmooon_uniq.a，make install后会将库文件和头文件uniq_id.h安装到指定目录下
+4) 可以参照uniq_cli.cpp来使用UniqId
+
+步骤（steps）：
+1) 编译和安装mooon（compile and install mooon）
+2) cmake生成Makefile文件
+3) make编译，可以通过参数-DCMAKE_INSTALL_PREFIX指定安装目录（install directory）
+4) make install安装
