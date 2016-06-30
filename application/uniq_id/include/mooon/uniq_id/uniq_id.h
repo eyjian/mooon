@@ -85,8 +85,13 @@ public:
     // 取得机器Label（标签），用于唯一区分机器，同一时间两台机器不会出现相同的Label
     uint8_t get_label() throw (utils::CException, sys::CSyscallException);
 
+    // 获取seq，
+    // 参数用来指定获取连续的num个，返回值为起始的seq，
+    // 由于达到uint32_t的最大值后，会溢出从0开始，因此连续的并不表示总是递增
+    // 参数num值为0或1均表示只取一个，否则取num指定的个数
+    //
     // 返回的seq值最大为4294967295，即无符号4字节整数的最大值，最小值为0。当达到最值后，会循环从0开始。
-    uint32_t get_unqi_seq() throw (utils::CException, sys::CSyscallException);
+    uint32_t get_unqi_seq(uint16_t num=1) throw (utils::CException, sys::CSyscallException);
 
     // 取得一个唯一的无符号8字节的整数，可用来唯一标识一个消息等
     // current_seconds 通常为time(NULL)的返回值，user可以为用户定义的值，但最大只能为63
@@ -96,9 +101,10 @@ public:
 
     // 和get_uniq_id的区别在于，get_local_uniq_id只从agent取得Label和Seq，组装是在本地完成的，相当于分担了agent的部分工作。
     uint64_t get_local_uniq_id(uint8_t user=0, uint64_t current_seconds=0) throw (utils::CException, sys::CSyscallException);
+    void get_local_uniq_id(uint16_t num, std::vector<uint64_t>* id_vec, uint8_t user=0, uint64_t current_seconds=0) throw (utils::CException, sys::CSyscallException);
 
     // 同时取得机器Label和seq值，可用这两者来组装交易流水号等
-    void get_label_and_seq(uint8_t* label, uint32_t* seq) throw (utils::CException, sys::CSyscallException);
+    void get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num=1) throw (utils::CException, sys::CSyscallException);
 
     // 取流水号、交易号等便利函数
     // format 取值：
@@ -116,6 +122,7 @@ public:
     // 注意，只有%S、%d和%X有宽度参数，如：%4S%d，并且不足时统一填充0，不能指定填充数字，而且宽长参数不能超过9
     // 使用示例：%9S, %2d, %5X，不能为%09S、%02d和%05X等，%10S等超过9的宽度是无效的。
     std::string get_transaction_id(const char* format, ...) throw (utils::CException, sys::CSyscallException);
+    void get_transaction_id(uint16_t num, std::vector<std::string>* id_vec, const char* format, ...) throw (utils::CException, sys::CSyscallException);
 
 private:
     const struct sockaddr_in& pick_agent() const;

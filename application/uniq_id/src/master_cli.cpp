@@ -60,9 +60,9 @@ int main(int argc, char* argv[])
         fprintf(stdout, "%s\n", response.str().c_str());
 
         if (mooon::RESPONSE_ERROR == response.type)
-            fprintf(stderr, "ERROR: %"PRIu64"\n", response.value1.to_int());
+            fprintf(stderr, "ERROR: %u\n", response.value1.to_int());
         else if (mooon::RESPONSE_LABEL == response.type)
-            fprintf(stdout, "label: %"PRIu64"(%s)\n", response.value1.to_int(), mooon::label2string(response.value1.to_int()).c_str());
+            fprintf(stdout, "label: %u(%s)\n", response.value1.to_int(), mooon::label2string(response.value1.to_int()).c_str());
         else
             fprintf(stderr, "UNKNOWN\n");
     }

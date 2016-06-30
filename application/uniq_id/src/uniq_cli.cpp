@@ -131,18 +131,46 @@ void print_transaction_id(const char* agent_nodes)
 {
     try
     {
+        uint16_t num = 3;
+        std::string str;
+
         time_t now = time(NULL);
         struct tm* tm = localtime(&now);
         mooon::CUniqId uniq_id(agent_nodes);
-
-        std::string str;
 
         str = uniq_id.get_transaction_id("02%L%Y%M%D%m%S");
         fprintf(stdout, "[A]NO.: %s\n", str.c_str());
         str = uniq_id.get_transaction_id("%3d%L%Y%M%D%H%S", 9);
         fprintf(stdout, "[B]NO.: %s\n", str.c_str());
         str = uniq_id.get_transaction_id("%2d%L%Y%M%D%H%m%S%s", 9, "XX");
-        fprintf(stdout, "[C]NO.: %s\n", str.c_str());
+        fprintf(stdout, "[C]NO.: %s\n\n", str.c_str());
+
+        // 批量取流水号
+        std::vector<std::string> str_id_vec;
+        uniq_id.get_transaction_id(num, &str_id_vec, "%3d%L%Y%M%D%H%S", 9);
+        for (uint16_t i=0; i<num; ++i)
+            fprintf(stdout, "[%d] %s\n", i, str_id_vec[i].c_str());
+        fprintf(stdout, "\n");
+
+        // 批量取4字节Seq
+        uint32_t seq = uniq_id.get_unqi_seq(3);
+        for (uint16_t i=0; i<num; ++i, ++seq)
+            fprintf(stdout, "seq: %u\n", seq);
+        seq = uniq_id.get_unqi_seq();
+        fprintf(stdout, "seq: %u\n", seq);
+        fprintf(stdout, "\n");
+
+        // 批量取8字节ID
+        std::vector<uint64_t> int_id_vec;
+        uniq_id.get_local_uniq_id(num, &int_id_vec);
+        for (uint16_t i=0; i<num; ++i)
+        {
+            uint64_t id64 = int_id_vec[i];
+            union mooon::UniqID uid;
+            uid.value = id64;
+            fprintf(stdout, "id: %"PRIu64" => %s\n", id64, uid.id.str().c_str());
+        }
+        fprintf(stdout, "\n");
 
         for (int i=0; i<2; ++i)
         {
@@ -156,6 +184,7 @@ void print_transaction_id(const char* agent_nodes)
             // 如果30位的seq在一小时内会被消耗完，则时间应当取到分钟。。。
             fprintf(stdout, "[%d]NO.: %02X%04d%02d%02d%02d%09u\n", i, (int)label, tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, seq);
         }
+        fprintf(stdout, "\n");
     }
     catch (mooon::sys::CSyscallException& ex)
     {

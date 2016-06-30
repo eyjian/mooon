@@ -91,6 +91,7 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
     request.echo = echo;
     request.value1 = 0;
     request.value2 = 0;
+    request.value3 = 0;
 
     for (uint8_t retry=0; retry<_retry_times+1; ++retry)
     {
@@ -104,9 +105,25 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
 
             bytes = _udp_socket->timed_receive_from(&response, sizeof(response), &from_addr, _timeout_milliseconds);
             if (bytes != sizeof(response))
+            {
                 THROW_SYSCALL_EXCEPTION("invalid size", bytes, "receive_from");
-
-            return static_cast<uint8_t>(response.value1.to_int());
+            }
+            else if (RESPONSE_ERROR == response.type)
+            {
+                THROW_EXCEPTION("store sequence block error", static_cast<int>(response.value1.to_int()));
+            }
+            else if (response.type != RESPONSE_LABEL)
+            {
+                THROW_EXCEPTION("error response label", response.type.to_int());
+            }
+            else if (response.echo.to_int() != echo)
+            {
+                THROW_EXCEPTION("mismatch response label", ERROR_MISMATCH);
+            }
+            else
+            {
+                return static_cast<uint8_t>(response.value1.to_int());
+            }
         }
         catch (utils::CException&)
         {
@@ -119,7 +136,7 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
     return 0;
 }
 
-uint32_t CUniqId::get_unqi_seq() throw (utils::CException, sys::CSyscallException)
+uint32_t CUniqId::get_unqi_seq(uint16_t num) throw (utils::CException, sys::CSyscallException)
 {
     uint32_t echo = _echo++;
     struct MessageHead response;
@@ -127,8 +144,9 @@ uint32_t CUniqId::get_unqi_seq() throw (utils::CException, sys::CSyscallExceptio
     request.len = sizeof(request);
     request.type = REQUEST_UNIQ_SEQ;
     request.echo = echo;
-    request.value1 = 0;
+    request.value1 = num;
     request.value2 = 0;
+    request.value3 = 0;
 
     for (uint8_t retry=0; retry<_retry_times+1; ++retry)
     {
@@ -142,12 +160,25 @@ uint32_t CUniqId::get_unqi_seq() throw (utils::CException, sys::CSyscallExceptio
 
             bytes = _udp_socket->timed_receive_from(&response, sizeof(response), &from_addr, _timeout_milliseconds);
             if (bytes != sizeof(response))
+            {
                 THROW_SYSCALL_EXCEPTION("invalid size", bytes, "receive_from");
-
-            if (response.echo.to_int() == echo)
-                return static_cast<uint32_t>(response.value1.to_int());
+            }
+            else if (RESPONSE_ERROR == response.type)
+            {
+                THROW_EXCEPTION("store sequence block error", static_cast<int>(response.value1.to_int()));
+            }
+            else if (response.type != RESPONSE_UNIQ_SEQ)
+            {
+                THROW_EXCEPTION("error response sequence", response.type.to_int());
+            }
+            else if (response.echo.to_int() != echo)
+            {
+                THROW_EXCEPTION("mismatch response sequence", ERROR_MISMATCH);
+            }
             else
-                THROW_EXCEPTION("mismatch response", ERROR_MISMATCH);
+            {
+                return static_cast<uint32_t>(response.value1.to_int());
+            }
         }
         catch (utils::CException&)
         {
@@ -168,7 +199,8 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (uti
     request.type = REQUEST_UNIQ_ID;
     request.echo = echo;
     request.value1 = user;
-    request.value2 = current_seconds;
+    request.value1 = 0;
+    request.value3 = current_seconds;
 
     for (uint8_t retry=0; retry<_retry_times+1; ++retry)
     {
@@ -182,13 +214,25 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (uti
 
             bytes = _udp_socket->timed_receive_from(&response, sizeof(response), &from_addr, _timeout_milliseconds);
             if (bytes != sizeof(response))
+            {
                 THROW_SYSCALL_EXCEPTION("invalid size", bytes, "receive_from");
+            }
             else if (RESPONSE_ERROR == response.type)
+            {
                 THROW_EXCEPTION("store sequence block error", static_cast<int>(response.value1.to_int()));
-            else if (response.echo.to_int() == echo)
-                return response.value1.to_int();
+            }
+            else if (response.type != RESPONSE_UNIQ_ID)
+            {
+                THROW_EXCEPTION("error response id", response.type.to_int());
+            }
+            else if (response.echo.to_int() != echo)
+            {
+                THROW_EXCEPTION("mismatch response id", ERROR_MISMATCH);
+            }
             else
-                THROW_EXCEPTION("mismatch response", ERROR_MISMATCH);
+            {
+                return response.value1.to_int();
+            }
         }
         catch (utils::CException&)
         {
@@ -222,7 +266,32 @@ uint64_t CUniqId::get_local_uniq_id(uint8_t user, uint64_t current_seconds) thro
     return uniq_id.value;
 }
 
-void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq) throw (utils::CException, sys::CSyscallException)
+void CUniqId::get_local_uniq_id(uint16_t num, std::vector<uint64_t>* id_vec, uint8_t user, uint64_t current_seconds) throw (utils::CException, sys::CSyscallException)
+{
+    uint8_t label = 0;
+    uint32_t seq = 0;
+    get_label_and_seq(&label, &seq, num);
+
+    struct tm now;
+    time_t current_time = (0 == current_seconds)? time(NULL): current_seconds;
+    localtime_r(&current_time, &now);
+
+    union UniqID uniq_id;
+    uniq_id.id.user = user;
+    uniq_id.id.label = label;
+    uniq_id.id.year = (now.tm_year+1900) - BASE_YEAR;
+    uniq_id.id.month = now.tm_mon+1;
+    uniq_id.id.day = now.tm_mday;
+    uniq_id.id.hour = now.tm_hour;
+
+    for (uint16_t i=0; i<num; ++i)
+    {
+        uniq_id.id.seq = seq++;
+        id_vec->push_back(uniq_id.value);
+    }
+}
+
+void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num) throw (utils::CException, sys::CSyscallException)
 {
     uint32_t echo = _echo++;
     struct MessageHead response;
@@ -230,8 +299,9 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq) throw (utils::CEx
     request.len = sizeof(request);
     request.type = REQUEST_LABEL_AND_SEQ;
     request.echo = echo;
-    request.value1 = 0;
+    request.value1 = num;
     request.value2 = 0;
+    request.value3 = 0;
 
     for (uint8_t retry=0; retry<_retry_times+1; ++retry)
     {
@@ -248,15 +318,23 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq) throw (utils::CEx
             {
                 THROW_SYSCALL_EXCEPTION("invalid size", bytes, "receive_from");
             }
-            else if (response.echo.to_int() == echo)
+            else if (RESPONSE_ERROR == response.type)
+            {
+                THROW_EXCEPTION("store sequence block error", static_cast<int>(response.value1.to_int()));
+            }
+            else if (response.type != RESPONSE_LABEL_AND_SEQ)
+            {
+                THROW_EXCEPTION("error response label and sequence", response.type.to_int());
+            }
+            else if (response.echo.to_int() != echo)
+            {
+                THROW_EXCEPTION("mismatch response label and sequence", ERROR_MISMATCH);
+            }
+            else
             {
                 *label = static_cast<uint8_t>(response.value1.to_int());
                 *seq = static_cast<uint32_t>(response.value2.to_int());
                 break;
-            }
-            else
-            {
-                THROW_EXCEPTION("mismatch response", ERROR_MISMATCH);
             }
         }
         catch (utils::CException&)
@@ -277,15 +355,18 @@ std::string CUniqId::get_transaction_id(const char* format, ...) throw (utils::C
     uint32_t seq;
     get_label_and_seq(&label, &seq);
 
-    std::stringstream result;
-    va_list ap;
-    va_start(ap, format);
     struct tm now;
     time_t current_time = time(NULL);
     localtime_r(&current_time, &now);
 
+    std::stringstream result;
+    const char* format_p = format;
+    va_list ap;
+    va_start(ap, format);
+
     try
     {
+        format = format_p;
         while (*format != '\0')
         {
             if (*format != '%')
@@ -389,6 +470,131 @@ std::string CUniqId::get_transaction_id(const char* format, ...) throw (utils::C
     }
 }
 
+void CUniqId::get_transaction_id(uint16_t num, std::vector<std::string>* id_vec, const char* format, ...) throw (utils::CException, sys::CSyscallException)
+{
+    char *s;
+    int m, width;
+    uint8_t label;
+    uint32_t seq;
+    get_label_and_seq(&label, &seq, num);
+
+    struct tm now;
+    time_t current_time = time(NULL);
+    localtime_r(&current_time, &now);
+
+    const char* format_p = format;
+    for (uint16_t i=0; i<num; ++i, ++seq)
+    {
+        std::stringstream result;
+        va_list ap;
+        format = format_p;
+        va_start(ap, format);
+
+        try
+        {
+            while (*format != '\0')
+            {
+                if (*format != '%')
+                {
+                    result << *format++;
+                }
+                else
+                {
+                    ++format; // 跳过'%'
+
+                    if ('\0' == *format)
+                    {
+                        // format error
+                        THROW_EXCEPTION("invalid `format` parameter", ERROR_PARAMETER);
+                    }
+                    else
+                    {
+                        if ((*format >= '0') && (*format <= '9'))
+                        {
+                            width = *format - '0';
+                            ++format; // 跳过width
+
+                            if ('S' == *format) // Sequence
+                            {
+                                result << std::setw(width) << std::setfill('0') << seq;
+                            }
+                            else if ('d' == *format) // integer
+                            {
+                                m = va_arg(ap, int);
+                                result << std::dec << std::setw(width) << std::setfill('0') << m;
+                            }
+                            else if ('X' == *format)
+                            {
+                                m = va_arg(ap, int);
+                                result << std::hex << std::setw(width) << std::setfill('0') << std::uppercase << m;
+                            }
+                            else
+                            {
+                                // format error
+                                THROW_EXCEPTION("invalid `format` parameter", ERROR_PARAMETER);
+                            }
+
+                            ++format;
+                        }
+                        else
+                        {
+                            switch (*format)
+                            {
+                            case 'd': // integer
+                                m = va_arg(ap, int);
+                                result << std::dec << m;
+                                break;
+                            case 'X': // integer
+                                m = va_arg(ap, int);
+                                result << std::hex << std::uppercase << m;
+                                break;
+                            case 's': // string
+                                s = va_arg(ap, char *);
+                                result << s;
+                                break;
+                            case 'S': // Sequence
+                                result << seq;
+                                break;
+                            case 'L': // Label
+                                result << std::hex << std::setw(2) << std::setfill('0') << std::uppercase << (int)label;
+                                break;
+                            case 'Y': // 年
+                                result << std::dec << std::setw(4) << std::setfill('0') << now.tm_year+1900;
+                                break;
+                            case 'M': // 月
+                                result << std::dec << std::setw(2) << std::setfill('0') << now.tm_mon+1;
+                                break;
+                            case 'D': // 天
+                                result << std::dec << std::setw(2) << std::setfill('0') << now.tm_mday;
+                                break;
+                            case 'H': // 小时
+                                result << std::dec << std::setw(2) << std::setfill('0') << now.tm_hour;
+                                break;
+                            case 'm': // 分钟
+                                result << std::dec << std::setw(2) << std::setfill('0') << now.tm_min;
+                                break;
+                            default:
+                                // format error
+                                THROW_EXCEPTION("invalid `format` parameter", ERROR_PARAMETER);
+                                break;
+                            }
+
+                            ++format;
+                        }
+                    }
+                }
+            }
+
+            va_end(ap);
+            id_vec->push_back(result.str());
+        }
+        catch (...)
+        {
+            va_end(ap);
+            throw;
+        }
+    }
+}
 
 const struct sockaddr_in& CUniqId::pick_agent() const
 {

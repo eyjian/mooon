@@ -126,7 +126,7 @@ private:
     bool parse_master_nodes();
     bool restore_sequence();
     bool store_sequence();
-    uint32_t inc_sequence(uint32_t deta=1);
+    uint32_t inc_sequence(uint16_t deta=1);
     uint64_t get_uniq_id(const struct MessageHead* request);
     void rent_label();
     bool label_expired() const;
@@ -620,7 +620,7 @@ bool CUniqAgent::store_sequence()
     }
 }
 
-uint32_t CUniqAgent::inc_sequence(uint32_t deta)
+uint32_t CUniqAgent::inc_sequence(uint16_t deta)
 {
     bool stored = true;
 	uint32_t sequence = 0;
@@ -637,7 +637,7 @@ uint32_t CUniqAgent::inc_sequence(uint32_t deta)
 	        sequence = _seq_block.sequence++;
 
 	    if (deta > 1)
-	    	_seq_block.sequence += deta;
+	    	_seq_block.sequence += (deta - 1);
 	}
 
     return sequence;
@@ -657,7 +657,7 @@ uint64_t CUniqAgent::get_uniq_id(const struct MessageHead* request)
     	static time_t old_time = 0;
 
     	struct tm* now = &old_tm;
-        time_t current_time = static_cast<time_t>(request->value2.to_int());
+        time_t current_time = static_cast<time_t>(request->value3.to_int());
         if (0 == current_time)
         {
         	current_time = _current_time;
@@ -744,6 +744,7 @@ void CUniqAgent::prepare_response_error(int errcode)
     response->echo = request->echo;
     response->value1 = errcode;
     response->value2 = 0;
+    response->value3 = 0;
 
     MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
 }
@@ -769,6 +770,7 @@ int CUniqAgent::prepare_response_get_label()
         response->echo = request->echo;
         response->value1 = _seq_block.label;
         response->value2 = 0;
+        response->value3 = 0;
 
         MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
         return 0;
@@ -807,6 +809,7 @@ int CUniqAgent::prepare_response_get_uniq_id()
             response->echo = request->echo;
             response->value1 = uniq_id;
             response->value2 = 0;
+            response->value3 = 0;
 
             MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
             return 0;
@@ -826,7 +829,10 @@ int CUniqAgent::prepare_response_get_uniq_seq()
     }
     else
     {
-        uint32_t seq = inc_sequence();
+        struct MessageHead* request = reinterpret_cast<struct MessageHead*>(_request_buffer);
+        struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
+        uint16_t deta = static_cast<uint16_t>(request->value1.to_int());
+        uint32_t seq = inc_sequence(deta);
 
         if (0 == seq)
         {
@@ -834,18 +840,13 @@ int CUniqAgent::prepare_response_get_uniq_seq()
         }
         else
         {
-            struct MessageHead* request = reinterpret_cast<struct MessageHead*>(_request_buffer);
-            struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
-            uint32_t deta = static_cast<uint32_t>(request->value1.to_int());
-            if (deta > NUM_SEQ) // 限制数目
-            	deta = NUM_SEQ;
-
             _response_size = sizeof(struct MessageHead);
             response->len = sizeof(struct MessageHead);
             response->type = RESPONSE_UNIQ_SEQ;
             response->echo = request->echo;
-            response->value1 = inc_sequence(deta);
-            response->value2 = deta;
+            response->value1 = seq;
+            response->value2 = 0;
+            response->value3 = 0;
 
             MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
             return 0;
@@ -865,7 +866,10 @@ int CUniqAgent::prepare_response_get_label_and_seq()
     }
     else
     {
-        uint32_t seq = inc_sequence();
+        struct MessageHead* request = reinterpret_cast<struct MessageHead*>(_request_buffer);
+        struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
+        uint16_t deta = static_cast<uint16_t>(request->value1.to_int());
+        uint32_t seq = inc_sequence(deta);
 
         if (0 == seq)
         {
@@ -873,15 +877,13 @@ int CUniqAgent::prepare_response_get_label_and_seq()
         }
         else
         {
-            struct MessageHead* request = reinterpret_cast<struct MessageHead*>(_request_buffer);
-            struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
-
             _response_size = sizeof(struct MessageHead);
             response->len = sizeof(struct MessageHead);
             response->type = RESPONSE_LABEL_AND_SEQ;
             response->echo = request->echo;
             response->value1 = _seq_block.label;
             response->value2 = seq;
+            response->value3 = 0;
 
             MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
             return 0;
