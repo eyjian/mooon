@@ -29,6 +29,12 @@ private:
 
 // libcurl包装类
 // 如果需要访问https，则在编译curl时需要指定configure的参数--with-ssl的值，值为openssl的安装目录
+//
+// 编译openssl-1.0.2h：
+// 1) ./config --prefix=/usr/local/openssl-1.0.2h shared threads
+// 2) make depend # openssl-1.0.2h之前的版本并不需要这一步
+// 3) make
+// 4) make install
 class CCurlWrapper
 {
 public:
