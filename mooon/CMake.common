@@ -53,7 +53,7 @@ endif ()
 # 也可以通过cmake参数指定，比如：“cmake -DMYSQL_HOME=/home/mike/mysql .”这种形式
 function(discover_library uppername dirname)
     if (${uppername}_HOME)
-    	if (EXISTS ${uppername}_HOME)
+    	if (EXISTS ${${uppername}_HOME})
         	set(HAVE_${uppername} 1 CACHE INTERNAL HAVE_${uppername})
        	else ()
        		set(HAVE_${uppername} 0 CACHE INTERNAL HAVE_${uppername})
