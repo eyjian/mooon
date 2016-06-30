@@ -28,6 +28,7 @@ private:
 };
 
 // libcurl包装类
+// 如果需要访问https，则在编译curl时需要指定configure的参数--with-ssl的值，值为openssl的安装目录
 class CCurlWrapper
 {
 public:
