@@ -1,3 +1,5 @@
+agent中的center依赖MOOON-server，所以编译之前得先安装好MOOON-server
+
 cmake安装方法：
 cmake -DCMAKE_INSTALL_PREFIX=<installation directory> .
 

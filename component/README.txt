@@ -5,6 +5,8 @@ server 服务端框架库
 agent 代理框架
 observer 用来数据统计的观察者
 
+各组件均依赖libmooon.a，所以编译之前得先安装好libmooon.a
+
 cmake安装方法：
 cmake -DCMAKE_INSTALL_PREFIX=<installation directory> .
 
