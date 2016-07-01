@@ -1,9 +1,7 @@
 # Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 
 cmake_minimum_required(VERSION 3.2)
-project(mooon-component)
+project(mooon-observer)
 
-include(CMake.common)
-
+include(${CMAKE_CURRENT_SOURCE_DIR}/CMake.common)
 add_subdirectory(src)
-add_subdirectory(example)

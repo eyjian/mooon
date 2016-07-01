@@ -11,7 +11,7 @@ install(
         DESTINATION lib
        )
 install(
-        DIRECTORY ../../include/mooon/http_parser        
+        DIRECTORY ../include/mooon/http_parser        
         DESTINATION include/mooon
         PATTERN "*.h"
        )
