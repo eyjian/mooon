@@ -102,6 +102,15 @@ endif ()
 # SQLite3
 discover_library(SQLITE3 sqlite3)
 #link_libraries(libsqlite3.a)
+# SQLite3安装后的include目录结构不标准，调整成标准结构
+if (HAVE_SQLITE3)
+    if (NOT EXISTS ${SQLITE3_HOME}/include/sqlite3)
+        message("${Red}SQLITE3 directory nonstandard${ColourReset}")
+        exec_program(mkdir ARGS ${SQLITE3_HOME}/include/sqlite3)
+        exec_program(cp ARGS ${SQLITE3_HOME}/include/sqlite3.h ${SQLITE3_HOME}/include/sqlite3/)
+        exec_program(cp ARGS ${SQLITE3_HOME}/include/sqlite3ext.h ${SQLITE3_HOME}/include/sqlite3/)
+    endif ()
+endif ()
 
 # Curl
 discover_library(CURL curl)
