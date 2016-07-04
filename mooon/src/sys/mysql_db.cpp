@@ -251,7 +251,7 @@ void CMySQLConnection::do_query(DBTable& db_table, const char* sql, int sql_leng
 
 void CMySQLConnection::do_open() throw (CDBException)
 {
-    MOOON_ASSERT(_mysql_handler != NULL);
+    MOOON_ASSERT(NULL == _mysql_handler);
 
     // 低版本不支持MYSQL_OPT_RECONNECT
     // 指示是否自动重连接
