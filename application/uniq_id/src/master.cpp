@@ -34,6 +34,9 @@
 #include <sys/types.h>
 #include <vector>
 
+// 允许两个master同时运行，
+// 通过MySQL的事务、表锁和唯一键保证数据的安全和一致性。
+
 // 日志控制：
 // 可通过设置环境变量MOOON_LOG_LEVEL和MOOON_LOG_SCREEN来控制日志级别和是否在屏幕上输出日志
 // 1) MOOON_LOG_LEVEL可以取值debug,info,error,warn,fatal
@@ -326,13 +329,12 @@ bool CUniqMaster::init_mysql()
     _mysql->set_user(argument::db_user->value(), argument::db_pass->value());
     //_mysql->set_charset();
     _mysql->enable_auto_reconnect();
-    _mysql->enable_autocommit(false);
 
     try
     {
         _mysql->open();
         MYLOG_INFO("connect %s ok\n", _mysql->str().c_str());
-        _mysql->enable_autocommit(false);
+        _mysql->enable_autocommit(false); // 为false表示开启事务
         return true;
     }
     catch (sys::CDBException& ex)
@@ -344,14 +346,21 @@ bool CUniqMaster::init_mysql()
 
 bool CUniqMaster::generate_labels()
 {
+    bool need_rollback = false;
+
     try
     {
         std::string str = _mysql->query("SELECT count(1) FROM t_label_pool");
         if (str == "0")
         {
             for (int label=0; label<=LABEL_MAX; ++label)
+            {
                 _mysql->update("INSERT INTO t_label_pool (f_label) VALUES (%d)", label);
+                need_rollback = true;
+            }
+
             _mysql->commit();
+            need_rollback = false;
             MYLOG_INFO("generate labels ok\n");
         }
 
@@ -361,13 +370,16 @@ bool CUniqMaster::generate_labels()
     {
         MYLOG_ERROR("generate labels failed: %s\n", ex.str().c_str());
 
-        try
+        if (need_rollback)
         {
-            _mysql->rollback();
-        }
-        catch (sys::CDBException& ex)
-        {
-            MYLOG_ERROR("rollback failed: %s\n", ex.str().c_str());
+            try
+            {
+                _mysql->rollback();
+            }
+            catch (sys::CDBException& ex)
+            {
+                MYLOG_ERROR("rollback failed: %s\n", ex.str().c_str());
+            }
         }
 
         return false;
@@ -490,7 +502,7 @@ void CUniqMaster::on_timeout()
 {
     int num_rows = 0;
     bool need_commit = false;
-    bool need_rollback = false;
+    bool need_rollback = false; // 是否需要回滚
 
     try
     {
@@ -544,6 +556,11 @@ void CUniqMaster::on_timeout()
         {
             timeout_count = 0;
 
+            // 锁住表: LOCK TABLES t_label_online WRITE;
+            // 开始事务: START TRANSACTION;
+            // 事务包含了锁操作
+            //_mysql->update("%s", "LOCK TABLES t_label_online WRITE");
+
             for (sys::DBTable::size_type row=0; row<db_table.size(); ++row)
             {
                 const sys::DBRow& db_row = db_table[row];
@@ -551,15 +568,18 @@ void CUniqMaster::on_timeout()
                 const std::string& label_str = db_row[1];
                 const std::string& time_str = db_row[2];
 
+                // 如果另一连接进入了事务，则update会被阻塞
+                // 如果一个连接已完成了DELETE，则调用后返回值为0
                 num_rows = _mysql->update("DELETE FROM t_label_online WHERE f_label=%s", label_str.c_str());
-                MYLOG_INFO("[%d] Label[%s] expired(%u) for %s with %s\n", num_rows, label_str.c_str(), argument::expire->value(), ip_str.c_str(), time_str.c_str());
                 if (0 == num_rows)
                 {
                     need_rollback = false;
+                    MYLOG_WARN("Label[%s] not exist in `t_label_online`\n", label_str.c_str());
                 }
                 else
                 {
                     need_rollback = true;
+                    MYLOG_INFO("[%d] Label[%s] expired(%u) for %s with %s\n", num_rows, label_str.c_str(), argument::expire->value(), ip_str.c_str(), time_str.c_str());
 
                     // 回收
                     num_rows = _mysql->update("INSERT INTO t_label_pool (f_label) VALUES (%s)", label_str.c_str());
@@ -569,13 +589,14 @@ void CUniqMaster::on_timeout()
 
                     _mysql->commit();
                 }
-            }
+            } // for
         }
     }
     catch (sys::CDBException& ex)
     {
         MYLOG_ERROR("[%s]=>%s", ex.sql(), ex.str().c_str());
 
+        // 回滚
         if (need_rollback)
         {
             try
