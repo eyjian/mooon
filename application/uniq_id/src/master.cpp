@@ -326,6 +326,7 @@ bool CUniqMaster::init_mysql()
     _mysql->set_user(argument::db_user->value(), argument::db_pass->value());
     //_mysql->set_charset();
     _mysql->enable_auto_reconnect();
+    _mysql->enable_autocommit(false);
 
     try
     {
@@ -378,6 +379,8 @@ bool CUniqMaster::generate_labels()
 // 返回大于0的值表示分配Label成功
 int CUniqMaster::alloc_label()
 {
+    bool need_rollback = false;
+
     try
     {
         const std::string label_str = _mysql->query("SELECT f_label FROM t_label_pool WHERE f_label<=%d AND f_label>0 LIMIT 1", LABEL_MAX);
@@ -392,6 +395,8 @@ int CUniqMaster::alloc_label()
         if (n != 1)
         {
             MYLOG_ERROR("Label[%s] return %d\n", label_str.c_str(), n);
+            if (n > 0)
+                _mysql->rollback();
             return -1;
         }
         else
@@ -399,6 +404,7 @@ int CUniqMaster::alloc_label()
             const std::string ip_str = net::CUtils::ipv4_tostring(_from_addr.sin_addr.s_addr);
             const std::string time_str = sys::CDatetimeUtils::to_datetime(_current_time);
 
+            need_rollback = true;
             n = _mysql->update("INSERT INTO t_label_online (f_label,f_ip,f_time) VALUES (%s,\"%s\",\"%s\")", label_str.c_str(), ip_str.c_str(), time_str.c_str());
             if (n != 1)
             {
@@ -420,13 +426,16 @@ int CUniqMaster::alloc_label()
     {
         MYLOG_ERROR("%s\n", ex.str().c_str());
 
-        try
+        if (need_rollback)
         {
-            _mysql->rollback();
-        }
-        catch (sys::CDBException& ex)
-        {
-            MYLOG_ERROR("rollback failed: %s\n", ex.str().c_str());
+            try
+            {
+                _mysql->rollback();
+            }
+            catch (sys::CDBException& ex)
+            {
+                MYLOG_ERROR("rollback failed: %s\n", ex.str().c_str());
+            }
         }
 
         return -1;
@@ -543,16 +552,23 @@ void CUniqMaster::on_timeout()
 
                 num_rows = _mysql->update("DELETE FROM t_label_online WHERE f_label=%s", label_str.c_str());
                 MYLOG_INFO("[%d] Label[%s] expired(%u) for %s with %s\n", num_rows, label_str.c_str(), argument::expire->value(), ip_str.c_str(), time_str.c_str());
-                need_commit = true;
+                if (0 == num_rows)
+                {
+                    need_commit = false;
+                }
+                else
+                {
+                    need_commit = true;
 
-                // 回收
-                num_rows = _mysql->update("INSERT INTO t_label_pool (f_label) VALUES (%s)", label_str.c_str());
-                // 日志
-                _mysql->update("INSERT INTO t_label_log(f_label,f_ip,f_event,f_time) VALUES (%s,\"%s\",%d,\"%s\")", label_str.c_str(), ip_str.c_str(), LABEL_RECYCLED, sys::CDatetimeUtils::to_datetime(_current_time).c_str());
-                MYLOG_INFO("Label[%s] recycled from %s, expired at %s\n", label_str.c_str(), ip_str.c_str(), time_str.c_str());
+                    // 回收
+                    num_rows = _mysql->update("INSERT INTO t_label_pool (f_label) VALUES (%s)", label_str.c_str());
+                    // 日志
+                    _mysql->update("INSERT INTO t_label_log(f_label,f_ip,f_event,f_time) VALUES (%s,\"%s\",%d,\"%s\")", label_str.c_str(), ip_str.c_str(), LABEL_RECYCLED, sys::CDatetimeUtils::to_datetime(_current_time).c_str());
+                    MYLOG_INFO("Label[%s] recycled from %s, expired at %s\n", label_str.c_str(), ip_str.c_str(), time_str.c_str());
 
-                _mysql->commit();
-                need_commit = false;
+                    _mysql->commit();
+                    need_commit = false;
+                }
             }
         }
     }
