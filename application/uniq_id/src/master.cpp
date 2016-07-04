@@ -490,6 +490,7 @@ void CUniqMaster::on_timeout()
 {
     int num_rows = 0;
     bool need_commit = false;
+    bool need_rollback = false;
 
     try
     {
@@ -554,11 +555,11 @@ void CUniqMaster::on_timeout()
                 MYLOG_INFO("[%d] Label[%s] expired(%u) for %s with %s\n", num_rows, label_str.c_str(), argument::expire->value(), ip_str.c_str(), time_str.c_str());
                 if (0 == num_rows)
                 {
-                    need_commit = false;
+                    need_rollback = false;
                 }
                 else
                 {
-                    need_commit = true;
+                    need_rollback = true;
 
                     // 回收
                     num_rows = _mysql->update("INSERT INTO t_label_pool (f_label) VALUES (%s)", label_str.c_str());
@@ -567,7 +568,6 @@ void CUniqMaster::on_timeout()
                     MYLOG_INFO("Label[%s] recycled from %s, expired at %s\n", label_str.c_str(), ip_str.c_str(), time_str.c_str());
 
                     _mysql->commit();
-                    need_commit = false;
                 }
             }
         }
@@ -576,7 +576,7 @@ void CUniqMaster::on_timeout()
     {
         MYLOG_ERROR("[%s]=>%s", ex.sql(), ex.str().c_str());
 
-        if (need_commit)
+        if (need_rollback)
         {
             try
             {
