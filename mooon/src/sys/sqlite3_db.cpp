@@ -87,6 +87,8 @@ void CSQLite3Connection::reopen() throw (CDBException)
 
 int CSQLite3Connection::update(const char* format, ...) throw (CDBException)
 {
+    MOOON_ASSERT(_sqlite != NULL);
+
     sqlite3* sqlite = static_cast<sqlite3*>(_sqlite);
     char *errmsg = NULL;
     int excepted = 0; // sql_length
@@ -134,6 +136,8 @@ std::string CSQLite3Connection::str() throw ()
 
 void CSQLite3Connection::do_query(DBTable& db_table, const char* sql, int sql_length) throw (CDBException)
 {
+    MOOON_ASSERT(_sqlite != NULL);
+
     sqlite3* sqlite = static_cast<sqlite3*>(_sqlite);
     char *errmsg = NULL;
     char **table = NULL;

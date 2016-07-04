@@ -72,6 +72,8 @@ bool CMySQLConnection::is_disconnected_exception(CDBException& db_error) const
 
 std::string CMySQLConnection::escape_string(const std::string& str) const
 {
+    MOOON_ASSERT(_mysql_handler != NULL);
+
     MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
     int escaped_string_length = 0;
     std::string escaped_string(str.size()*2+1, '\0');
@@ -118,6 +120,8 @@ void CMySQLConnection::reopen() throw (CDBException)
 
 int CMySQLConnection::update(const char* format, ...) throw (CDBException)
 {
+    MOOON_ASSERT(_mysql_handler != NULL);
+
     MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
     int excepted = 0;
     size_t sql_size = _sql_size;
@@ -160,6 +164,7 @@ std::string CMySQLConnection::str() throw ()
 
 void CMySQLConnection::ping() throw (CDBException)
 {
+    MOOON_ASSERT(_mysql_handler != NULL);
     MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
 
     if (mysql_ping(mysql_handler) != 0)
@@ -168,6 +173,7 @@ void CMySQLConnection::ping() throw (CDBException)
 
 void CMySQLConnection::commit() throw (CDBException)
 {
+    MOOON_ASSERT(_mysql_handler != NULL);
     MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
 
     if (mysql_commit(mysql_handler) != 0)
@@ -176,6 +182,7 @@ void CMySQLConnection::commit() throw (CDBException)
 
 void CMySQLConnection::rollback() throw (CDBException)
 {
+    MOOON_ASSERT(_mysql_handler != NULL);
     MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
 
     if (mysql_rollback(mysql_handler) != 0)
@@ -184,6 +191,7 @@ void CMySQLConnection::rollback() throw (CDBException)
 
 void CMySQLConnection::enable_autocommit(bool enabled) throw (CDBException)
 {
+    MOOON_ASSERT(_mysql_handler != NULL);
     MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
 
     my_bool auto_mode = enabled? 1: 0;
@@ -193,6 +201,7 @@ void CMySQLConnection::enable_autocommit(bool enabled) throw (CDBException)
 
 void CMySQLConnection::do_query(DBTable& db_table, const char* sql, int sql_length) throw (CDBException)
 {
+    MOOON_ASSERT(_mysql_handler != NULL);
     MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
 
     // 如果查询成功，返回0。如果出现错误，返回非0值
@@ -242,6 +251,8 @@ void CMySQLConnection::do_query(DBTable& db_table, const char* sql, int sql_leng
 
 void CMySQLConnection::do_open() throw (CDBException)
 {
+    MOOON_ASSERT(_mysql_handler != NULL);
+
     // 低版本不支持MYSQL_OPT_RECONNECT
     // 指示是否自动重连接
     my_bool reconnect = _auto_reconnect? 1: 0;
