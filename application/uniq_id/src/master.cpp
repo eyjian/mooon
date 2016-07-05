@@ -68,6 +68,8 @@ INTEGER_ARG_DEFINE(uint32_t, timeout, 3600, 1, 36000, "timeout seconds");
 ////////////////////////////////////////////////////////////////////////////////
 namespace mooon {
 
+// CREATE DATABASE IF NOT EXISTS uniq_id DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+
 /*
  * Label资源池表
 DROP TABLE IF EXISTS t_label_pool;
