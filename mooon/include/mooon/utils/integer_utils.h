@@ -49,7 +49,7 @@ public:
         // __UINT64_C(999999999)
         MOOON_ASSERT(width > 0 && width < 10 && m >= 0);
 	    static uint64_t dec_width_table[] = { 0, 9, 99, 999, 9999, 99999, 999999, 9999999, 99999999, 999999999 };
-	    static_cast<IntType>(m % dec_width_table[width]);
+	    return static_cast<IntType>(m % dec_width_table[width]);
     }
 
     template <typename IntType>
