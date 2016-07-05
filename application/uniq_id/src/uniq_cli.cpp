@@ -24,7 +24,7 @@
 #include <vector>
 
 static void usage();
-static void thread_proc(uint64_t times, const char* agent_nodes);
+static void thread_proc(uint64_t times, const char* agent_nodes, bool polling);
 
 // 生成带日期的交易流水号示例
 static void print_transaction_id(const char* agent_nodes);
@@ -32,14 +32,16 @@ static void print_transaction_id(const char* agent_nodes);
 // Usage1: uniq_cli agent_nodes
 // Usage2: uniq_cli agent_nodes times
 // Usage3: uniq_cli agent_nodes times concurrency
+// Usage4: uniq_cli agent_nodes times concurrency poll
 int main(int argc, char* argv[])
 {
-	if ((argc != 2) && (argc != 3) && (argc != 4))
+	if ((argc != 2) && (argc != 3) && (argc != 4) && (argc != 5))
 	{
 		usage();
 		exit(1);
 	}
 
+	bool polling = false;
 	uint64_t times = 1;
 	uint64_t concurrency = 1;
 	const char* agent_nodes = argv[1];
@@ -53,6 +55,10 @@ int main(int argc, char* argv[])
         if (!mooon::utils::CStringUtils::string2int(argv[3], concurrency))
             concurrency = 1;
 	}
+    if (argc >= 5)
+    {
+        polling = true;
+    }
 
     print_transaction_id(agent_nodes);
     fprintf(stdout, "agent_nodes: %s\n", agent_nodes);
@@ -66,7 +72,7 @@ int main(int argc, char* argv[])
         mooon::sys::CStopWatch stop_watch;
         for (i=0; i<concurrency; ++i)
         {
-            thread_engine = new mooon::sys::CThreadEngine(mooon::sys::bind(&thread_proc, times, agent_nodes));
+            thread_engine = new mooon::sys::CThreadEngine(mooon::sys::bind(&thread_proc, times, agent_nodes, polling));
             thread_pool[i] = thread_engine;
         }
         for (i=0; i<concurrency; ++i)
@@ -94,15 +100,19 @@ void usage()
 	fprintf(stderr, "Usage1: uniq_cli agent_nodes\n");
 	fprintf(stderr, "Usage2: uniq_cli agent_nodes times\n");
 	fprintf(stderr, "Usage3: uniq_cli agent_nodes times concurrency\n");
+	fprintf(stderr, "Usage4: uniq_cli agent_nodes times concurrency poll\n");
 }
 
-void thread_proc(uint64_t times, const char* agent_nodes)
+void thread_proc(uint64_t times, const char* agent_nodes, bool polling)
 {
+    uint32_t timeout_milliseconds = 200;
+    uint8_t retry_times = 5;
+
     for (uint64_t i=0; i<times; ++i)
     {
         try
         {
-            mooon::CUniqId uniq_id(agent_nodes);
+            mooon::CUniqId uniq_id(agent_nodes, timeout_milliseconds, retry_times, polling);
 #if 1
             uint64_t uid = uniq_id.get_uniq_id();
 #else
