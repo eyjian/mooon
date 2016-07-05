@@ -28,19 +28,28 @@ UTILS_NAMESPACE_BEGIN
 class CIntegerUtils
 {
 public:	
-	template <typename DataType>
-	static bool is_prime_number(DataType x)
+    template <typename DataType>
+    static bool is_prime_number(DataType x)
+    {
+        if (x < 2)
+            return false;
+
+        DataType k = (DataType)sqrt(x);
+        for (DataType m=2; m<=k; ++m)
+            if (0 == x % m)
+                return false;
+
+        return true;
+    }
+
+    /** 返回不超过指定宽度的整数，如果超过则溢出从0开始  */
+	template <typename IntType>
+    IntType with_width(IntType m, int width)
 	{
-		if (x < 2)
-			return false;
-
-		DataType k = (DataType)sqrt(x);
-		for (DataType m=2; m<=k; ++m)
-			if (0 == x % m)
-				return false;
-
-		return true;
-	}
+        MOOON_ASSERT(width > 0 && width < 10 && m >= 0);
+	    static IntType width_table[] = { 0, 9, 99, 999, 9999, 99999, 999999, 9999999, 99999999, 999999999 };
+	    return m % width_table[width];
+    }
 
     /** 判断一个数字是否可为int16_t数字 */
     static bool is_int16(int32_t num);
