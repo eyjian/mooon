@@ -44,20 +44,20 @@ public:
 
     /** 返回不超过指定宽度的整数，如果超过则溢出从0开始  */
 	template <typename IntType>
-    IntType with_width(IntType m, int width)
+    IntType dec_with_width(IntType m, int width)
 	{
         MOOON_ASSERT(width > 0 && width < 10 && m >= 0);
-	    static IntType width_table[] = { 0, 9, 99, 999, 9999, 99999, 999999, 9999999, 99999999, 999999999 };
-	    return m % width_table[width];
+	    static IntType dec_width_table[] = { 0, 9, 99, 999, 9999, 99999, 999999, 9999999, 99999999, 999999999 };
+	    return m % dec_width_table[width];
     }
 
     template <typename IntType>
-    IntType with_width_hex(IntType m, int width)
+    IntType hex_with_width(IntType m, int width)
     {
         // 0x999999999 == 41231686041
         MOOON_ASSERT(width > 0 && width < 10 && m >= 0);
-        static uint64_t width_table[] = { 0x0, 0x9, 0x99, 0x999, 0x9999, 0x99999, 0x999999, 0x9999999, 0x99999999, 0x999999999 };
-        return static_cast<IntType>(m % width_table[width]);
+        static uint64_t hex_width_table[] = { 0x0, 0x9, 0x99, 0x999, 0x9999, 0x99999, 0x999999, 0x9999999, 0x99999999, 0x999999999 };
+        return static_cast<IntType>(m % hex_width_table[width]);
     }
 
     /** 判断一个数字是否可为int16_t数字 */
