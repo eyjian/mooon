@@ -43,13 +43,13 @@ public:
     }
 
     /** 返回不超过指定宽度的整数，如果超过则溢出从0开始  */
-	template <typename IntType>
-	static IntType dec_with_width(IntType m, int width)
-	{
+    template <typename IntType>
+    static IntType dec_with_width(IntType m, int width)
+    {
         // __UINT64_C(999999999)
         MOOON_ASSERT(width > 0 && width < 10 && m >= 0);
-	    static uint64_t dec_width_table[] = { 0, 9, 99, 999, 9999, 99999, 999999, 9999999, 99999999, 999999999 };
-	    return static_cast<IntType>(m % dec_width_table[width]);
+        static uint64_t dec_width_table[] = { 0, 9, 99, 999, 9999, 99999, 999999, 9999999, 99999999, 999999999 };
+        return static_cast<IntType>(m % dec_width_table[width]);
     }
 
     template <typename IntType>
