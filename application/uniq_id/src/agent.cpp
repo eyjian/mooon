@@ -807,9 +807,9 @@ int CUniqAgent::prepare_response_get_uniq_id()
             response->len = sizeof(struct MessageHead);
             response->type = RESPONSE_UNIQ_ID;
             response->echo = request->echo;
-            response->value1 = uniq_id;
+            response->value1 = 0;
             response->value2 = 0;
-            response->value3 = 0;
+            response->value3 = uniq_id; // value1和value2均为uint32_t类型，存不下uniq_id
 
             MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
             return 0;

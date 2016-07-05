@@ -231,7 +231,7 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (uti
             }
             else
             {
-                return response.value1.to_int();
+                return response.value3.to_int();
             }
         }
         catch (utils::CException&)
