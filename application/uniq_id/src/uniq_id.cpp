@@ -420,7 +420,7 @@ void CUniqId::get_transaction_id(uint16_t num, std::vector<std::string>* id_vec,
 
                         if ('S' == *format_p) // Sequence
                         {
-                            result << std::setw(width) << std::setfill('0') << seq;
+                            result << std::dec << std::setw(width) << std::setfill('0') << seq;
                         }
                         else if ('d' == *format_p) // integer
                         {

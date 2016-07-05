@@ -631,13 +631,34 @@ uint32_t CUniqAgent::inc_sequence(uint16_t deta)
 	    MYLOG_DEBUG("seq_block.sequence=%u, sequence_start=%u, steps=%u\n", _seq_block.sequence, _sequence_start, argument::steps->value());
 	    stored = store_sequence();
 	}
+
 	if (stored)
 	{
-	    while (0 == sequence)
-	        sequence = _seq_block.sequence++;
-
-	    if (deta > 1)
-	    	_seq_block.sequence += (deta - 1);
+	    if (deta <= 1)
+	    {
+	        // 单个时
+            sequence = _seq_block.sequence++;
+            if (0 == sequence)
+            {
+                MYLOG_INFO("sequence overflow: %u->%u\n", sequence, _seq_block.sequence);
+                sequence = _seq_block.sequence++; // 排除0，原因是返回0时被当作出错
+            }
+	    }
+	    else
+	    {
+	        // 批量时
+	    	if (_seq_block.sequence < _seq_block.sequence+deta)
+	    	{
+	    	    sequence = _seq_block.sequence;
+	    	    _seq_block.sequence += deta;
+	    	}
+	    	else
+	    	{
+	    	    sequence = 1;
+	    	    _seq_block.sequence = sequence + deta;
+	    	    MYLOG_INFO("sequence overflow: %u->%u(%d)\n", sequence, _seq_block.sequence, (int)deta);
+	    	}
+	    }
 	}
 
     return sequence;
