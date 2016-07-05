@@ -39,3 +39,21 @@ install(
         DESTINATION include/mooon
         PATTERN "uniq_id.h"
        )
+install(
+        TARGETS uniq_agent
+        DESTINATION bin
+       )
+if (HAVE_MYSQL)
+    install(
+            TARGETS uniq_master
+            DESTINATION bin
+           )
+endif ()
+install(
+        TARGETS uniq_cli
+        DESTINATION bin
+       )
+install(
+        TARGETS master_cli
+        DESTINATION bin
+       )
