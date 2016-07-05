@@ -51,6 +51,15 @@ public:
 	    return m % width_table[width];
     }
 
+    template <typename IntType>
+    IntType with_width_hex(IntType m, int width)
+    {
+        // 0x999999999 == 41231686041
+        MOOON_ASSERT(width > 0 && width < 10 && m >= 0);
+        static uint64_t width_table[] = { 0x0, 0x9, 0x99, 0x999, 0x9999, 0x99999, 0x999999, 0x9999999, 0x99999999, 0x999999999 };
+        return static_cast<IntType>(m % width_table[width]);
+    }
+
     /** 判断一个数字是否可为int16_t数字 */
     static bool is_int16(int32_t num);
 
