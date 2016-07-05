@@ -349,56 +349,85 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num) thr
 // 只有%S和%d有宽度参数，如：%4S%d，并且不足时统一填充0，不能指定填充数字
 std::string CUniqId::get_transaction_id(const char* format, ...) throw (utils::CException, sys::CSyscallException)
 {
+    va_list ap;
+    va_start(ap, format);
+    utils::VaListHelper vlh(ap);
+
+    return get_transaction_id(format, ap);
+}
+
+std::string CUniqId::get_transaction_id(const char* format, va_list& va) throw (utils::CException, sys::CSyscallException)
+{
+    std::vector<std::string> id_vec;
+    get_transaction_id(1, &id_vec, format, va);
+
+    if (!id_vec.empty())
+        return id_vec[0];
+    else
+        return std::string("");
+}
+
+void CUniqId::get_transaction_id(uint16_t num, std::vector<std::string>* id_vec, const char* format, ...) throw (utils::CException, sys::CSyscallException)
+{
+    va_list ap;
+    va_start(ap, format);
+    utils::VaListHelper vlh(ap);
+
+    get_transaction_id(num, id_vec, format, ap);
+}
+
+void CUniqId::get_transaction_id(uint16_t num, std::vector<std::string>* id_vec, const char* format, va_list& va) throw (utils::CException, sys::CSyscallException)
+{
     char *s;
     int m, width;
     uint8_t label;
     uint32_t seq;
-    get_label_and_seq(&label, &seq);
+    get_label_and_seq(&label, &seq, num);
 
     struct tm now;
     time_t current_time = time(NULL);
     localtime_r(&current_time, &now);
 
-    std::stringstream result;
-    const char* format_p = format;
-    va_list ap;
-    va_start(ap, format);
-
-    try
+    for (uint16_t i=0; i<num; ++i, ++seq)
     {
-        format = format_p;
-        while (*format != '\0')
+        std::stringstream result;
+        va_list ap;
+        va_copy(ap, va);
+        utils::VaListHelper vlh(ap);
+
+        const char* format_p = format;
+        while (*format_p != '\0')
         {
-            if (*format != '%')
+            if (*format_p != '%')
             {
-                result << *format++;
+                result << *format_p++;
             }
             else
             {
-                ++format; // 跳过'%'
+                ++format_p; // 跳过'%'
 
-                if ('\0' == *format)
+                if ('\0' == *format_p)
                 {
                     // format error
                     THROW_EXCEPTION("invalid `format` parameter", ERROR_PARAMETER);
                 }
                 else
                 {
-                    if ((*format >= '0') && (*format <= '9'))
+                    if ((*format_p >= '0') && (*format_p <= '9'))
                     {
-                        width = *format - '0';
-                        ++format; // 跳过width
+                        width = *format_p - '0';
+                        ++format_p; // 跳过width
 
-                        if ('S' == *format) // Sequence
+                        if ('S' == *format_p) // Sequence
                         {
                             result << std::setw(width) << std::setfill('0') << seq;
                         }
-                        else if ('d' == *format) // integer
+                        else if ('d' == *format_p) // integer
                         {
                             m = va_arg(ap, int);
                             result << std::dec << std::setw(width) << std::setfill('0') << m;
                         }
-                        else if ('X' == *format)
+                        else if ('X' == *format_p)
                         {
                             m = va_arg(ap, int);
                             result << std::hex << std::setw(width) << std::setfill('0') << std::uppercase << m;
@@ -409,11 +438,11 @@ std::string CUniqId::get_transaction_id(const char* format, ...) throw (utils::C
                             THROW_EXCEPTION("invalid `format` parameter", ERROR_PARAMETER);
                         }
 
-                        ++format;
+                        ++format_p;
                     }
                     else
                     {
-                        switch (*format)
+                        switch (*format_p)
                         {
                         case 'd': // integer
                             m = va_arg(ap, int);
@@ -452,148 +481,16 @@ std::string CUniqId::get_transaction_id(const char* format, ...) throw (utils::C
                             // format error
                             THROW_EXCEPTION("invalid `format` parameter", ERROR_PARAMETER);
                             break;
-                        }
+                        } // switch
 
-                        ++format;
-                    }
-                }
-            }
-        }
+                        ++format_p;
+                    } // if ((*format_p >= '0') && (*format_p <= '9'))
+                } // if ('\0' == *format_p)
+            } // if (*format_p != '%')
+        } // while
 
-        va_end(ap);
-        return result.str();
-    }
-    catch (...)
-    {
-        va_end(ap);
-        throw;
-    }
-}
-
-void CUniqId::get_transaction_id(uint16_t num, std::vector<std::string>* id_vec, const char* format, ...) throw (utils::CException, sys::CSyscallException)
-{
-    char *s;
-    int m, width;
-    uint8_t label;
-    uint32_t seq;
-    get_label_and_seq(&label, &seq, num);
-
-    struct tm now;
-    time_t current_time = time(NULL);
-    localtime_r(&current_time, &now);
-
-    const char* format_p = format;
-    for (uint16_t i=0; i<num; ++i, ++seq)
-    {
-        std::stringstream result;
-        va_list ap;
-        format = format_p;
-        va_start(ap, format);
-
-        try
-        {
-            while (*format != '\0')
-            {
-                if (*format != '%')
-                {
-                    result << *format++;
-                }
-                else
-                {
-                    ++format; // 跳过'%'
-
-                    if ('\0' == *format)
-                    {
-                        // format error
-                        THROW_EXCEPTION("invalid `format` parameter", ERROR_PARAMETER);
-                    }
-                    else
-                    {
-                        if ((*format >= '0') && (*format <= '9'))
-                        {
-                            width = *format - '0';
-                            ++format; // 跳过width
-
-                            if ('S' == *format) // Sequence
-                            {
-                                result << std::setw(width) << std::setfill('0') << seq;
-                            }
-                            else if ('d' == *format) // integer
-                            {
-                                m = va_arg(ap, int);
-                                result << std::dec << std::setw(width) << std::setfill('0') << m;
-                            }
-                            else if ('X' == *format)
-                            {
-                                m = va_arg(ap, int);
-                                result << std::hex << std::setw(width) << std::setfill('0') << std::uppercase << m;
-                            }
-                            else
-                            {
-                                // format error
-                                THROW_EXCEPTION("invalid `format` parameter", ERROR_PARAMETER);
-                            }
-
-                            ++format;
-                        }
-                        else
-                        {
-                            switch (*format)
-                            {
-                            case 'd': // integer
-                                m = va_arg(ap, int);
-                                result << std::dec << m;
-                                break;
-                            case 'X': // integer
-                                m = va_arg(ap, int);
-                                result << std::hex << std::uppercase << m;
-                                break;
-                            case 's': // string
-                                s = va_arg(ap, char *);
-                                result << s;
-                                break;
-                            case 'S': // Sequence
-                                result << seq;
-                                break;
-                            case 'L': // Label
-                                result << std::hex << std::setw(2) << std::setfill('0') << std::uppercase << (int)label;
-                                break;
-                            case 'Y': // 年
-                                result << std::dec << std::setw(4) << std::setfill('0') << now.tm_year+1900;
-                                break;
-                            case 'M': // 月
-                                result << std::dec << std::setw(2) << std::setfill('0') << now.tm_mon+1;
-                                break;
-                            case 'D': // 天
-                                result << std::dec << std::setw(2) << std::setfill('0') << now.tm_mday;
-                                break;
-                            case 'H': // 小时
-                                result << std::dec << std::setw(2) << std::setfill('0') << now.tm_hour;
-                                break;
-                            case 'm': // 分钟
-                                result << std::dec << std::setw(2) << std::setfill('0') << now.tm_min;
-                                break;
-                            default:
-                                // format error
-                                THROW_EXCEPTION("invalid `format` parameter", ERROR_PARAMETER);
-                                break;
-                            }
-
-                            ++format;
-                        }
-                    }
-                }
-            }
-
-            va_end(ap);
-            id_vec->push_back(result.str());
-        }
-        catch (...)
-        {
-            va_end(ap);
-            throw;
-        }
-    }
+        id_vec->push_back(result.str());
+    } // for
 }
 
 const struct sockaddr_in& CUniqId::pick_agent() const

@@ -126,8 +126,11 @@ public:
     // 注意，只有%S、%d和%X有宽度参数，如：%4S%d，并且不足时统一填充0，不能指定填充数字，而且宽长参数不能超过9
     // 使用示例：%9S, %2d, %5X，不能为%09S、%02d和%05X等，%10S等超过9的宽度是无效的。
     std::string get_transaction_id(const char* format, ...) throw (utils::CException, sys::CSyscallException);
+    std::string get_transaction_id(const char* format, va_list& va) throw (utils::CException, sys::CSyscallException);
+
     // UniqAgent的steps参数值不能比num值小，最好是num的10倍或以上
     void get_transaction_id(uint16_t num, std::vector<std::string>* id_vec, const char* format, ...) throw (utils::CException, sys::CSyscallException);
+    void get_transaction_id(uint16_t num, std::vector<std::string>* id_vec, const char* format, va_list& va) throw (utils::CException, sys::CSyscallException);
 
 private:
     const struct sockaddr_in& pick_agent() const;
