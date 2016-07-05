@@ -43,7 +43,7 @@ STRING_ARG_DEFINE(master_nodes, "", "master nodes, e.g., 192.168.31.66:2016,192.
 STRING_ARG_DEFINE(ip, "0.0.0.0", "listen IP");
 INTEGER_ARG_DEFINE(uint16_t, port, 6200, 1000, 65535, "listen port");
 INTEGER_ARG_DEFINE(uint8_t, label, 0, 0, LABEL_MAX, "unique label of a machine");
-INTEGER_ARG_DEFINE(uint32_t, steps, 100000, 1, 1000000, "steps to store");
+INTEGER_ARG_DEFINE(uint32_t, steps, 100000, 1, 100000000, "steps to store");
 
 // Label过期时长参数，所有节点的expire值必须保持相同，包括master节点和所有agent节点
 //
