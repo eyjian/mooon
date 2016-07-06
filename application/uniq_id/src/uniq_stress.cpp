@@ -23,16 +23,15 @@
 #include <time.h>
 #include <vector>
 
+// UniqId压力测试工具
+
 static void usage();
 static void thread_proc(uint64_t times, const char* agent_nodes, bool polling);
 
-// 生成带日期的交易流水号示例
-static void print_transaction_id(const char* agent_nodes);
-
-// Usage1: uniq_cli agent_nodes
-// Usage2: uniq_cli agent_nodes times
-// Usage3: uniq_cli agent_nodes times concurrency
-// Usage4: uniq_cli agent_nodes times concurrency poll
+// Usage1: uniq_stress agent_nodes
+// Usage2: uniq_stress agent_nodes times
+// Usage3: uniq_stress agent_nodes times concurrency
+// Usage4: uniq_stress agent_nodes times concurrency poll
 int main(int argc, char* argv[])
 {
 	if ((argc != 2) && (argc != 3) && (argc != 4) && (argc != 5))
@@ -60,7 +59,6 @@ int main(int argc, char* argv[])
         polling = true;
     }
 
-    print_transaction_id(agent_nodes);
     fprintf(stdout, "agent_nodes: %s\n", agent_nodes);
     fprintf(stdout, "times: %"PRIu64", concurrency: %"PRIu64"\n", times, concurrency);
 
@@ -97,10 +95,10 @@ int main(int argc, char* argv[])
 
 void usage()
 {
-	fprintf(stderr, "Usage1: uniq_cli agent_nodes\n");
-	fprintf(stderr, "Usage2: uniq_cli agent_nodes times\n");
-	fprintf(stderr, "Usage3: uniq_cli agent_nodes times concurrency\n");
-	fprintf(stderr, "Usage4: uniq_cli agent_nodes times concurrency poll\n");
+	fprintf(stderr, "Usage1: uniq_stress agent_nodes\n");
+	fprintf(stderr, "Usage2: uniq_stress agent_nodes times\n");
+	fprintf(stderr, "Usage3: uniq_stress agent_nodes times concurrency\n");
+	fprintf(stderr, "Usage4: uniq_stress agent_nodes times concurrency poll\n");
 }
 
 void thread_proc(uint64_t times, const char* agent_nodes, bool polling)
@@ -134,84 +132,5 @@ void thread_proc(uint64_t times, const char* agent_nodes, bool polling)
             fprintf(stderr, "%s\n", ex.str().c_str());
             break;
         }
-    }
-}
-
-void print_transaction_id(const char* agent_nodes)
-{
-    try
-    {
-        uint16_t num = 3;
-        std::string str;
-
-        time_t now = time(NULL);
-        struct tm* tm = localtime(&now);
-        mooon::CUniqId uniq_id(agent_nodes);
-
-        str = uniq_id.get_transaction_id("02%L%Y%M%D%m%5S");
-        fprintf(stdout, "[A1]NO.: %s\n", str.c_str());
-        str = uniq_id.get_transaction_id("02%L%Y%M%D%m%7S");
-        fprintf(stdout, "[A2]NO.: %s\n", str.c_str());
-        str = uniq_id.get_transaction_id("02%L%Y%M%D%m%9S");
-        fprintf(stdout, "[A3]NO.: %s\n\n", str.c_str());
-
-        str = uniq_id.get_transaction_id("02%L%Y%M%D%m%8S%s", "##");
-        fprintf(stdout, "[B1]NO.: %s\n", str.c_str());
-        str = uniq_id.get_transaction_id("%s02%L%Y%M%D%m%8S", "##");
-        fprintf(stdout, "[B2]NO.: %s\n\n", str.c_str());
-
-        str = uniq_id.get_transaction_id("02%L%Y%M%D%m%8S%2X", 31);
-        fprintf(stdout, "[C1]NO.: %s\n", str.c_str());
-        str = uniq_id.get_transaction_id("02%L%Y%M%D%m%8S%2X", 1000);
-        fprintf(stdout, "[C2]NO.: %s\n\n", str.c_str());
-
-        // 批量取流水号
-        std::vector<std::string> str_id_vec;
-        uniq_id.get_transaction_id(num, &str_id_vec, "%3d%L%Y%M%D%H%S", 9);
-        for (uint16_t i=0; i<num; ++i)
-            fprintf(stdout, "[%d] %s\n", i, str_id_vec[i].c_str());
-        fprintf(stdout, "\n");
-
-        // 批量取4字节Seq
-        uint32_t seq = uniq_id.get_unqi_seq(3);
-        for (uint16_t i=0; i<num; ++i, ++seq)
-            fprintf(stdout, "seq: %u\n", seq);
-        seq = uniq_id.get_unqi_seq();
-        fprintf(stdout, "seq: %u\n", seq);
-        fprintf(stdout, "\n");
-
-        // 批量取8字节ID
-        std::vector<uint64_t> int_id_vec;
-        uniq_id.get_local_uniq_id(num, &int_id_vec);
-        for (uint16_t i=0; i<num; ++i)
-        {
-            uint64_t id64 = int_id_vec[i];
-            union mooon::UniqID uid;
-            uid.value = id64;
-            fprintf(stdout, "id: %"PRIu64" => %s\n", id64, uid.id.str().c_str());
-        }
-        fprintf(stdout, "\n");
-
-        for (int i=0; i<2; ++i)
-        {
-            uint8_t label = 0;
-            uint32_t seq = 0; // 12345678
-            uniq_id.get_label_and_seq(&label, &seq);
-
-            // label转成十六进制字符，
-            // 如果30位的seq（10亿，最大值为1073741823）在一天内消耗不完，则时间取到天即可，
-            // 如果30位的seq在一天内会被消耗完，则时间应当取到小时，
-            // 如果30位的seq在一小时内会被消耗完，则时间应当取到分钟。。。
-            fprintf(stdout, "[%d]NO.: %02X%04d%02d%02d%02d%09u\n", i, (int)label, tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, seq);
-        }
-        fprintf(stdout, "\n");
-    }
-    catch (mooon::sys::CSyscallException& ex)
-    {
-        fprintf(stderr, "%s\n", ex.str().c_str());
-    }
-    catch (mooon::utils::CException& ex)
-    {
-        fprintf(stderr, "%s\n", ex.str().c_str());
     }
 }

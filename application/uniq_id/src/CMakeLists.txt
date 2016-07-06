@@ -17,17 +17,22 @@ if (HAVE_MYSQL)
 	target_link_libraries(uniq_master libmooon.a libmysqlclient.a)
 endif ()
 
-# uniq_cli
-add_executable(uniq_cli uniq_cli.cpp)
-target_link_libraries(uniq_cli libmooon_uniq.a libmooon.a)
+# uniq_stress
+add_executable(uniq_stress uniq_stress.cpp)
+target_link_libraries(uniq_stress libmooon_uniq.a libmooon.a)
+
+# uniq_test
+add_executable(uniq_test uniq_test.cpp)
+target_link_libraries(uniq_test libmooon_uniq.a libmooon.a)
 
 # master_cli
 add_executable(master_cli master_cli.cpp)
 target_link_libraries(master_cli libmooon_uniq.a libmooon.a)
 
 # 设置依赖关系
-ADD_DEPENDENCIES(uniq_cli mooon_uniq)
+ADD_DEPENDENCIES(uniq_stress mooon_uniq)
 ADD_DEPENDENCIES(master_cli mooon_uniq)
+ADD_DEPENDENCIES(uniq_test mooon_uniq)
 
 # CMAKE_INSTALL_PREFIX
 install(
@@ -39,10 +44,6 @@ install(
         DESTINATION include/mooon
         PATTERN "uniq_id.h"
        )
-install(
-        TARGETS uniq_agent
-        DESTINATION bin
-       )
 if (HAVE_MYSQL)
     install(
             TARGETS uniq_master
@@ -50,10 +51,6 @@ if (HAVE_MYSQL)
            )
 endif ()
 install(
-        TARGETS uniq_cli
-        DESTINATION bin
-       )
-install(
-        TARGETS master_cli
+        TARGETS uniq_agent uniq_stress uniq_test master_cli
         DESTINATION bin
        )
