@@ -47,8 +47,9 @@ public:
     static IntType dec_with_width(IntType m, int width)
     {
         // __UINT64_C(999999999)
+        // 使用宏__UINT64_C，编译时需要定义__STDC_LIMIT_MACROS
         MOOON_ASSERT(width > 0 && width < 10 && m >= 0);
-        static uint64_t dec_width_table[] = { 0, 9, 99, 999, 9999, 99999, 999999, 9999999, 99999999, 999999999 };
+        static uint64_t dec_width_table[] = { (__UINT64_C(0)), (__UINT64_C(9)), (__UINT64_C(99)), (__UINT64_C(999)), (__UINT64_C(9999)), (__UINT64_C(99999)), (__UINT64_C(999999)), (__UINT64_C(9999999)), (__UINT64_C(99999999)), (__UINT64_C(999999999)) };
         return static_cast<IntType>(m % dec_width_table[width]);
     }
 
@@ -57,7 +58,7 @@ public:
     {
         // 0x999999999 == 41231686041
         MOOON_ASSERT(width > 0 && width < 10 && m >= 0);
-        static uint64_t hex_width_table[] = { 0x0, 0x9, 0x99, 0x999, 0x9999, 0x99999, 0x999999, 0x9999999, 0x99999999, 0x999999999 };
+        static uint64_t hex_width_table[] = { (__UINT64_C(0x0)), (__UINT64_C(0x9)), (__UINT64_C(0x99)), (__UINT64_C(0x999)), (__UINT64_C(0x9999)), (__UINT64_C(0x99999)), (__UINT64_C(0x999999)), (__UINT64_C(0x9999999)), (__UINT64_C(0x99999999)), (__UINT64_C(0x999999999)) };
         return static_cast<IntType>(m % hex_width_table[width]);
     }
 
