@@ -148,12 +148,22 @@ void print_transaction_id(const char* agent_nodes)
         struct tm* tm = localtime(&now);
         mooon::CUniqId uniq_id(agent_nodes);
 
-        str = uniq_id.get_transaction_id("02%L%Y%M%D%m%S");
-        fprintf(stdout, "[A]NO.: %s\n", str.c_str());
-        str = uniq_id.get_transaction_id("%3d%L%Y%M%D%H%S", 9);
-        fprintf(stdout, "[B]NO.: %s\n", str.c_str());
-        str = uniq_id.get_transaction_id("%2d%L%Y%M%D%H%m%S%s", 9, "XX");
-        fprintf(stdout, "[C]NO.: %s\n\n", str.c_str());
+        str = uniq_id.get_transaction_id("02%L%Y%M%D%m%5S");
+        fprintf(stdout, "[A1]NO.: %s\n", str.c_str());
+        str = uniq_id.get_transaction_id("02%L%Y%M%D%m%7S");
+        fprintf(stdout, "[A2]NO.: %s\n", str.c_str());
+        str = uniq_id.get_transaction_id("02%L%Y%M%D%m%9S");
+        fprintf(stdout, "[A3]NO.: %s\n\n", str.c_str());
+
+        str = uniq_id.get_transaction_id("02%L%Y%M%D%m%8S%s", "##");
+        fprintf(stdout, "[B1]NO.: %s\n", str.c_str());
+        str = uniq_id.get_transaction_id("%s02%L%Y%M%D%m%8S", "##");
+        fprintf(stdout, "[B2]NO.: %s\n\n", str.c_str());
+
+        str = uniq_id.get_transaction_id("02%L%Y%M%D%m%8S%2X", 31);
+        fprintf(stdout, "[C1]NO.: %s\n", str.c_str());
+        str = uniq_id.get_transaction_id("02%L%Y%M%D%m%8S%2X", 1000);
+        fprintf(stdout, "[C2]NO.: %s\n\n", str.c_str());
 
         // 批量取流水号
         std::vector<std::string> str_id_vec;

@@ -426,12 +426,12 @@ void CUniqId::get_transaction_id(uint16_t num, std::vector<std::string>* id_vec,
                         else if ('d' == *format_p) // integer
                         {
                             m = va_arg(ap, int);
-                            result << std::dec << std::setw(width) << std::setfill('0') << utils::CIntegerUtils::hex_with_width(m, width);
+                            result << std::dec << std::setw(width) << std::setfill('0') << utils::CIntegerUtils::dec_with_width(m, width);
                         }
                         else if ('X' == *format_p)
                         {
                             m = va_arg(ap, int);
-                            result << std::hex << std::setw(width) << std::setfill('0') << std::uppercase << m;
+                            result << std::hex << std::setw(width) << std::setfill('0') << std::uppercase << utils::CIntegerUtils::hex_with_width(m, width);
                         }
                         else
                         {
