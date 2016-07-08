@@ -123,6 +123,13 @@ public:
     static int64_t get_current_microseconds();
 };
 
+// 返回今天
+extern std::string today(const char* format="%04d-%02d-%02d");
+// 返回昨天
+extern std::string yesterday(const char* format="%04d-%02d-%02d");
+// 返回明天
+extern std::string tomorrow(const char* format="%04d-%02d-%02d");
+
 // 取得格式化的当前日期时间，
 // 如果with_milliseconds为true，则返回格式为：YYYY-MM-DD hh:mm:ss/ms，其中ms最长为10位数字；
 // 如果with_milliseconds为false，则返回格式为：YYYY-MM-DD hh:mm:ss。

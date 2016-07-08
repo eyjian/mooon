@@ -399,6 +399,23 @@ int64_t CDatetimeUtils::get_current_microseconds()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+std::string today(const char* format="%04d-%02d-%02d")
+{
+    return CDatetimeUtils::get_current_date(format);
+}
+
+std::string yesterday(const char* format="%04d-%02d-%02d")
+{
+    time_t now = time(NULL);
+    return CDatetimeUtils::to_date(now-(3600*24), format);
+}
+
+std::string tomorrow(const char* format="%04d-%02d-%02d")
+{
+    time_t now = time(NULL);
+    return CDatetimeUtils::to_date(now+(3600*24), format);
+}
+
 void get_formatted_current_datetime(char* datetime_buffer, size_t datetime_buffer_size, bool with_milliseconds)
 {
     struct timeval current;
