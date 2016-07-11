@@ -52,6 +52,8 @@ public:
     virtual void ping() throw (CDBException);
     virtual void commit() throw (CDBException);
     virtual void rollback() throw (CDBException);
+
+    /** 是否允许自动提交事务，注意只有open()或reopen()成功之后，才可以调用 */
     virtual void enable_autocommit(bool enabled) throw (CDBException);
 
 private:
