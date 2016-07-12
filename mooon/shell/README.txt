@@ -9,3 +9,6 @@ process_monitor.sh
 
 process_stopper.sh
 精准停止指定进程脚本，详情请参见文件头说明
+
+mem.sh
+可用于间隔统计指定进程内存，可用于分析某程序是否存在内存泄漏
