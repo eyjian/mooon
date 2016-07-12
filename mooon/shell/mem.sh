@@ -30,7 +30,7 @@ do
 	virt=0
 	res=0
     eval $(cat /proc/$pid/statm 2>/dev/null| awk '{ printf("virt=%d\nres=%d", $1*4096/1024/1024,$2*4096/1024/1024); }')
-	if test $virt -eq 0 -a $res=0; then
+	if test $virt -eq 0 -a $res -eq 0; then
 		break
 	fi
     echo "[`date '+%Y-%m-%d %H:%M:%S'`] ${virt}m ${res}m" | tee -a /tmp/$file
