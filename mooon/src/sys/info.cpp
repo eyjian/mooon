@@ -198,8 +198,14 @@ bool CInfo::get_kernel_version(kernel_version_t& kernel_version)
 
 bool CInfo::get_process_info(process_info_t& process_info)
 {
+    pid_t pid = getpid();
+    return get_process_info(process_info, pid);
+}
+
+bool CInfo::get_process_info(process_info_t& process_info, pid_t pid)
+{
     char filename[FILENAME_MAX];
-    snprintf(filename, sizeof(filename)-1, "/proc/%u/stat", getpid());
+    snprintf(filename, sizeof(filename), "/proc/%u/stat", pid);
 
     FILE* fp = fopen(filename, "r");
     if (NULL == fp) return false;
@@ -261,8 +267,14 @@ bool CInfo::get_process_info(process_info_t& process_info)
 
 bool CInfo::get_process_page_info(process_page_info_t& process_page_info)
 {
+    pid_t pid = getpid();
+    return get_process_page_info(process_page_info, pid);
+}
+
+bool CInfo::get_process_page_info(process_page_info_t& process_page_info, pid_t pid)
+{
     char filename[FILENAME_MAX];
-    snprintf(filename, sizeof(filename)-1, "/proc/%u/statm", getpid());
+    snprintf(filename, sizeof(filename), "/proc/%u/statm", pid);
 
     FILE* fp = fopen(filename, "r");
     if (NULL == fp) return false;

@@ -181,6 +181,8 @@ public:
 
     /***
       * 进程页信息结构
+      * 一页大小通常为4k，
+      * 具体可以调用mooon::sys::CUtils::get_page_size()取得
       */
     typedef struct
     {
@@ -209,9 +211,11 @@ public:
     static bool get_kernel_version(kernel_version_t& kernel_version);
 
     /** 获取进程信息，具体请参考process_info_t的描述 */
+    static bool get_process_info(process_info_t& process_info, pid_t pid);
     static bool get_process_info(process_info_t& process_info);
 
     /** 获取进程页信息，具体请参考process_page_info_t的描述 */
+    static bool get_process_page_info(process_page_info_t& process_page_info, pid_t pid);
     static bool get_process_page_info(process_page_info_t& process_page_info);
 
     /** 获取进程运行时间数据，具体请参考process_time_t的描述 */
