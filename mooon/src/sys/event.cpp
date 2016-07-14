@@ -54,14 +54,14 @@ bool CEvent::timed_wait(CLock& lock, uint32_t millisecond) throw (CSyscallExcept
 
 #if _POSIX_C_SOURCE >= 199309L
         if (-1 == clock_gettime(CLOCK_REALTIME, &abstime))
-            THROW_SYSCALL_EXCEPTION(NULL, errcode, "clock_gettime");
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "clock_gettime");
 
         abstime.tv_sec  += millisecond / 1000;
         abstime.tv_nsec += (millisecond % 1000) * 1000000;
 #else
         struct timeval tv;
         if (-1 == gettimeofday(&tv, NULL))
-            throw CSyscallException(errno, __FILE__, __LINE__);
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "gettimeofday");
 
         abstime.tv_sec = tv.tv_sec;
         abstime.tv_nsec = tv.tv_usec * 1000;
