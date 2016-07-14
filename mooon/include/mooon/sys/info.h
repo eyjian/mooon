@@ -24,6 +24,30 @@ SYS_NAMESPACE_BEGIN
 
 /***
   * 用来获取系统、内核和进程的各类实时信息，如CPU和内存数据
+  *
+  * 硬件给内核提供一个系统定时器用以计算和管理时间，
+  * 内核通过编程预设系统定时器的频率，即节拍率（tick rate），
+  * 每一个周期称作一个tick（节拍），Linux内核从2.5版内核开始把频率从100调高到1000，
+  * 如果为1000即系统时钟中断执行粒度为1ms，意味着系统中周期事情最快为1ms执行一次，
+  * 而不可能有更高的精度，具体100还是1000由宏HZ决定。
+  * tick也是HZ的倒数，意即timer interrupt每发生一次中断的时间，如HZ为250时则tick为4毫秒（millisecond）。
+  *
+  * Linux用全局变量jiffies用来记录自系统启动以来产生的节拍的总数，
+  * 启动时内核将该变量初始化为0，此后每次时钟中断处理程序都会增加该变量的值。
+  * 一秒内时钟中断的次数等于Hz，所以jiffies一秒内增加的值也就是Hz。
+  * 系统运行时间以秒为单位，等于jiffies/Hz。
+  *
+  * Linux内核使用四个宏解决jiffies溢出：time_after(a,b)，time_before(a,b) ，time_after_eq(a,b)，time_before_eq(a,b)
+  * 注意，jiffies类型为无符号长整型(unsigned long)，其他任何类型存放它都不正确。
+  *
+  * 将以秒为单位的时间转化为jiffies：seconds * Hz
+  * 将jiffies转化为以秒为单位的时间：jiffies / Hz
+  *
+  * jiffies定义于文件<linux/Jiffies.h>中，
+  * HZ值定义在param.h，如：#define HZ 100
+  *
+  * 除系统定时器外，还有一个硬件时钟：实时时钟（RTC），用来持久存放系统时间，
+  * 系统关闭后靠主板上的微型电池保持计时，相应的全局变量为timeval类型的xtime。
   */
 class CInfo
 {
@@ -117,38 +141,38 @@ public:
         /** 04 */ pid_t ppid;                    /** 父进程号 */
         /** 05 */ pid_t pgrp;                    /** 进程组号 */
         /** 06 */ pid_t session;                 /** 进程会话号 */
-        /** 07 */ int tty_nr;                    /** The tty the process uses */
-        /** 08 */ pid_t tpgid;                   /** The tty the process uses */
-        /** 09 */ unsigned int flags;            /** The kernel flags word of the process (%lu before Linux 2.6.22) */
-        /** 10 */ unsigned long minflt;          /** The number of minor faults the process has made which have not required loading a memory page from disk */
-        /** 11 */ unsigned long cminflt;         /** The number of minor faults that the process's waited-for children have made */
-        /** 12 */ unsigned long majflt;          /** The number of major faults the process has made which have required loading a memory page from disk */
-        /** 13 */ unsigned long cmajflt;         /** The number of major faults that the process's waited-for children have made */
-        /** 14 */ unsigned long utime;           /** The number of jiffies that this process has been scheduled in user mode */
-        /** 15 */ unsigned long stime;           /** The number of jiffies that this process has been scheduled in kernel mode */
-        /** 16 */ long cutime;                   /** The  number  of  jiffies that this process's waited-for children have been scheduled in user mode */
-        /** 17 */ long cstime;                   /** The number of jiffies that this process's waited-for children have been scheduled in kernel mode */
-        /** 18 */ long priority;                 /** The standard nice value, plus fifteen.  The value is never negative in the kernel */
-        /** 19 */ long nice;                     /** The nice value ranges from 19 (nicest) to -19 (not nice to others) */
-        /** 20 */ long num_threads;              /** Number of threads in this process (since Linux 2.6).  Before kernel 2.6, this field was hard coded to 0 as a placeholder */
-        /** 21 */ long itrealvalue;              /** The  time  in  jiffies before the next SIGALRM is sent to the process due to an interval timer.2.6.17, this field is no longer maintained, and is hard coded as 0 */
-        /** 22 */ long long starttime;           /** The time in jiffies the process started after system boot */
-        /** 23 */ unsigned long vsize;           /** Virtual memory size in bytes */
-        /** 24 */ long rss;                      /** Resident Set Size: number of pages the process has in real memory, minus 3 for administrative purposes */
-        /** 25 */ unsigned long rlim;            /** Current limit in bytes on the rss of the process (usually 4294967295 on i386) */
-        /** 26 */ unsigned long startcode;       /** The address above which program text can run */
-        /** 27 */ unsigned long endcode;         /** The address below which program text can run */
-        /** 28 */ unsigned long startstack;      /** The address of the start of the stack */
-        /** 29 */ unsigned long kstkesp;         /** The current value of esp (stack pointer), as found in the kernel stack page for the process */
-        /** 30 */ unsigned long kstkeip;         /** The current EIP (instruction pointer) */
-        /** 31 */ unsigned long signal;          /** The bitmap of pending signals */
-        /** 32 */ unsigned long blocked;         /** The bitmap of blocked signals */
-        /** 33 */ unsigned long sigignore;       /** The bitmap of ignored signals */
-        /** 34 */ unsigned long sigcatch;        /** The bitmap of caught signals */
-        /** 35 */ unsigned long nswap;           /** Number of pages swapped (not maintained). */
-        /** 36 */ unsigned long cnswap;          /** Cumulative nswap for child processes (not maintained) */
-        /** 37 */ int exit_signal;               /** Signal to be sent to parent when we die (since Linux 2.1.22) */
-        /** 38 */ int processor;                 /** CPU number last executed on (since Linux 2.2.8) */
+        /** 07 */ int tty_nr;                    /** tty终端的设备号（The tty the process uses） */
+        /** 08 */ pid_t tpgid;                   /** 终端的进程组号（The tty the process uses） */
+        /** 09 */ unsigned int flags;            /** 进程标志位（The kernel flags word of the process (%lu before Linux 2.6.22)） */
+        /** 10 */ unsigned long minflt;          /** 不需要从硬盘拷数据而发生的缺页的次数（The number of minor faults the process has made which have not required loading a memory page from disk） */
+        /** 11 */ unsigned long cminflt;         /** 累计的该任务的所有的waited-for进程曾经发生的次缺页的次数目（The number of minor faults that the process's waited-for children have made） */
+        /** 12 */ unsigned long majflt;          /** 该任务需要从硬盘拷数据而发生的缺页（主缺页）的次数（The number of major faults the process has made which have required loading a memory page from disk） */
+        /** 13 */ unsigned long cmajflt;         /** 累计的该任务的所有的waited-for进程曾经发生的主缺页的次数目（The number of major faults that the process's waited-for children have made） */
+        /** 14 */ unsigned long utime;           /** 用户态运行的时间，单位为jiffies（The number of jiffies that this process has been scheduled in user mode） */
+        /** 15 */ unsigned long stime;           /** 核心态运行的时间，单位为jiffies（The number of jiffies that this process has been scheduled in kernel mode） */
+        /** 16 */ long cutime;                   /** 累计的该进程的所有的waited-for进程曾经在用户态运行的时间，单位为jiffies（The number of jiffies that this process's waited-for children have been scheduled in user mode） */
+        /** 17 */ long cstime;                   /** 累计的该进程的所有的waited-for进程曾经在核心态运行的时间，单位为jiffies（The number of jiffies that this process's waited-for children have been scheduled in kernel mode） */
+        /** 18 */ long priority;                 /** 动态优先级（The standard nice value, plus fifteen. The value is never negative in the kernel） */
+        /** 19 */ long nice;                     /** 静态优先级（The nice value ranges from 19 (nicest) to -19 (not nice to others)） */
+        /** 20 */ long num_threads;              /** 线程数（Number of threads in this process (since Linux 2.6).  Before kernel 2.6, this field was hard coded to 0 as a placeholder） */
+        /** 21 */ long itrealvalue;              /** 由于计时间隔导致的下一个 SIGALRM 发送进程的时延，以jiffies为单位（The time in jiffies before the next SIGALRM is sent to the process due to an interval timer.2.6.17, this field is no longer maintained, and is hard coded as 0） */
+        /** 22 */ long long starttime;           /** 启动的时间，单位为jiffies（The time in jiffies the process started after system boot） */
+        /** 23 */ unsigned long vsize;           /** 当前占用的虚拟内存大小，以字节为单位（Virtual memory size in bytes） */
+        /** 24 */ long rss;                      /** 当前占用的物理内存大小，以页为单位（Resident Set Size: number of pages the process has in real memory, minus 3 for administrative purposes） */
+        /** 25 */ unsigned long rlim;            /** 能驻留物理地址空间的最大值，以字节为单位（Current limit in bytes on the rss of the process (usually 4294967295 on i386)） */
+        /** 26 */ unsigned long startcode;       /** 在虚拟地址空间的代码段的起始地址（The address above which program text can run） */
+        /** 27 */ unsigned long endcode;         /** 在虚拟地址空间的代码段的结束地址The address below which program text can run） */
+        /** 28 */ unsigned long startstack;      /** 在虚拟地址空间的栈的开始地址（The address of the start of the stack） */
+        /** 29 */ unsigned long kstkesp;         /** ESP当前值（堆栈指针）（The current value of esp (stack pointer), as found in the kernel stack page for the process） */
+        /** 30 */ unsigned long kstkeip;         /** 指向将要执行的指令的指针（The current EIP (instruction pointer)） */
+        /** 31 */ unsigned long signal;          /** 待处理信号的位图（ The bitmap of pending signals） */
+        /** 32 */ unsigned long blocked;         /** 被阻塞信号的位图（The bitmap of blocked signals） */
+        /** 33 */ unsigned long sigignore;       /** 忽略的信号的位图（The bitmap of ignored signals） */
+        /** 34 */ unsigned long sigcatch;        /** 被俘获的信号的位图（The bitmap of caught signals） */
+        /** 35 */ unsigned long nswap;           /** 被swapped的页数，当前未用（Number of pages swapped (not maintained)） */
+        /** 36 */ unsigned long cnswap;          /** 所有子进程被swapped的页数的和，当前未用（Cumulative nswap for child processes (not maintained)） */
+        /** 37 */ int exit_signal;               /** 结束时向父进程所发送的信号（Signal to be sent to parent when we die (since Linux 2.1.22)） */
+        /** 38 */ int processor;                 /** 运行在哪个CPU上（CPU number last executed on (since Linux 2.2.8)） */
     }process_info_t;
 
     /***
