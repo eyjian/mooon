@@ -87,7 +87,7 @@ public:
     }
 };
 
-// 解析如下形式的字符串：
+// 解析如下形式的字符串（如果name重复，则后面的值会覆盖前面相同name的值）：
 // name1=value2|name2=value3|name3=value3...
 class CEnhancedTokener
 {
@@ -182,6 +182,51 @@ int main()
     return 0;
 }
 */
+
+// 解析如下形式的字符串（name可以相同，且不会互覆盖）：
+// name1=value2|name2=value3|name3=value3...
+class CEnhancedTokenerEx
+{
+public:
+    const std::multimap<std::string, std::string>& tokens() const
+    {
+        return _name_value_pair_multimap;
+    }
+
+    bool exist(const std::string& name) const
+    {
+        return _name_value_pair_multimap.count(name) > 0;
+    }
+
+    void parse(const std::string& source, const std::string& token_sep, char name_value_sep='=')
+    {
+        std::vector<std::string> tokens;
+        int num_tokens = CTokener::split(&tokens, source, token_sep);
+
+        for (int i=0; i<num_tokens; ++i)
+        {
+            const std::string& token = tokens[i];
+            std::string::size_type pos = token.find(name_value_sep);
+
+            std::string name;
+            std::string value;
+            if (pos == std::string::npos)
+            {
+                name = token;
+            }
+            else
+            {
+                name = token.substr(0, pos);
+                value = token.substr(pos + 1);
+            }
+
+            _name_value_pair_multimap.insert(std::make_pair(name, value));
+        }
+    }
+
+private:
+    std::multimap<std::string, std::string> _name_value_pair_multimap;
+};
 
 // 解析如下形式的字符串：
 // ip1:port1#password1,ip2:port2#password2...
