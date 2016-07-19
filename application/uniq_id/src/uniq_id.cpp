@@ -51,11 +51,11 @@ CUniqId::CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds, 
     _echo = sys::CUtils::get_random_number(0, 100000U); // 初始化一个随机值，这样不同实例不同
     _udp_socket = new net::CUdpSocket;
 
-    utils::CEnhancedTokener tokener;
+    utils::CEnhancedTokenerEx tokener;
     tokener.parse(agent_nodes, ",", ':');
 
-    const std::map<std::string, std::string>& tokens = tokener.tokens();
-    for (std::map<std::string, std::string>::const_iterator iter=tokens.begin(); iter!=tokens.end(); ++iter)
+    const std::multimap<std::string, std::string>& tokens = tokener.tokens();
+    for (std::multimap<std::string, std::string>::const_iterator iter=tokens.begin(); iter!=tokens.end(); ++iter)
     {
         uint16_t agent_port;
         if (!utils::CStringUtils::string2int(iter->second.c_str(), agent_port))
