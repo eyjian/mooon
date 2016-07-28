@@ -18,6 +18,8 @@
  */
 #include "sys/datetime_utils.h"
 #include <pthread.h> // localtime_r
+#include <string.h>
+#include <strings.h>
 #include <sys/time.h>
 #include <utils/string_utils.h>
 SYS_NAMESPACE_BEGIN
@@ -47,6 +49,25 @@ uint32_t CDatetimeUtils::time2date(time_t t)
 
     // 20160114
     return (result.tm_year+1900)*10000 + (result.tm_mon+1)*100 + result.tm_mday;
+}
+
+std::string CDatetimeUtils::extract_date(const char* datetime)
+{
+    const char* s = strchr(datetime, ' ');
+    return (NULL == s)? std::string(""): std::string(datetime, s-datetime);
+}
+
+std::string CDatetimeUtils::extract_date(const std::string& datetime)
+{
+    std::string::size_type pos = datetime.find(' ');
+    if (pos == std::string::npos)
+    {
+        return std::string("");
+    }
+    else
+    {
+        return datetime.substr(0, pos);
+    }
 }
 
 void CDatetimeUtils::get_current_datetime(char* datetime_buffer, size_t datetime_buffer_size, const char* format)
