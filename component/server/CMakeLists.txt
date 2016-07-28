@@ -1,6 +1,7 @@
 # Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 
-cmake_minimum_required(VERSION 3.2)
+# 3.2
+cmake_minimum_required(VERSION 2.8.11)
 project(mooon-server)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/CMake.common)
