@@ -29,7 +29,7 @@ class CRegexHelper
 {
 public:
     // cflags可选值：REG_EXTENDED, REG_ICASE, REG_NOSUB, REG_NEWLINE，可多个按位组合
-    CRegexHelper(const char* pattern, int cflags=REG_EXTENDED);
+    CRegexHelper(const char* pattern, int cflags=REG_EXTENDED) throw (CException);
     ~CRegexHelper();
     std::string get_error_message(int errcode);
 
@@ -40,9 +40,11 @@ private:
     regex_t _regex;
 };
 
-CRegexHelper::CRegexHelper(const char* pattern, int cflags)
+CRegexHelper::CRegexHelper(const char* pattern, int cflags) throw (CException)
 {
     int errcode = regcomp(&_regex, pattern, cflags);
+	if (errcode != 0)
+		THROW_EXCEPTION(get_error_message(errcode), errcode);
 }
 
 CRegexHelper::~CRegexHelper()
