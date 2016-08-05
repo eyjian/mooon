@@ -347,6 +347,10 @@ void CLibssh2::set_known_hosts()
             fingerprint, len, LIBSSH2_KNOWNHOST_TYPE_PLAIN|LIBSSH2_KNOWNHOST_KEYENC_RAW, &known_host);
     #endif // LIBSSH2_VERSION_NUM
 
+        if (check <= LIBSSH2_KNOWNHOST_CHECK_MISMATCH)
+        {
+            // At this point, we could verify that 'check' tells us the key is fine or bail out.
+        }
         libssh2_knownhost_free(known_hosts);
     }
     catch (...)

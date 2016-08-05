@@ -201,6 +201,12 @@ bool CSafeLogger::enabled_raw()
     return _raw_log_enabled;
 }
 
+void CSafeLogger::log_detail(const char* filename, int lineno, const char* module_name, const char* format, va_list& args)
+{
+    if (enabled_detail())
+        do_log(LOG_LEVEL_DETAIL, filename, lineno, module_name, format, args);
+}
+
 void CSafeLogger::log_detail(const char* filename, int lineno, const char* module_name, const char* format, ...)
 {
     if (enabled_detail())
@@ -211,6 +217,12 @@ void CSafeLogger::log_detail(const char* filename, int lineno, const char* modul
 
         do_log(LOG_LEVEL_DETAIL, filename, lineno, module_name, format, args);
     }
+}
+
+void CSafeLogger::log_debug(const char* filename, int lineno, const char* module_name, const char* format, va_list& args)
+{
+    if (enabled_detail())
+        do_log(LOG_LEVEL_DEBUG, filename, lineno, module_name, format, args);
 }
 
 void CSafeLogger::log_debug(const char* filename, int lineno, const char* module_name, const char* format, ...)
@@ -225,6 +237,12 @@ void CSafeLogger::log_debug(const char* filename, int lineno, const char* module
     }
 }
 
+void CSafeLogger::log_info(const char* filename, int lineno, const char* module_name, const char* format, va_list& args)
+{
+    if (enabled_info())
+        do_log(LOG_LEVEL_INFO, filename, lineno, module_name, format, args);
+}
+
 void CSafeLogger::log_info(const char* filename, int lineno, const char* module_name, const char* format, ...)
 {
     if (enabled_info())
@@ -235,6 +253,12 @@ void CSafeLogger::log_info(const char* filename, int lineno, const char* module_
 
         do_log(LOG_LEVEL_INFO, filename, lineno, module_name, format, args);
     }
+}
+
+void CSafeLogger::log_warn(const char* filename, int lineno, const char* module_name, const char* format, va_list& args)
+{
+    if (enabled_warn())
+        do_log(LOG_LEVEL_WARN, filename, lineno, module_name, format, args);
 }
 
 void CSafeLogger::log_warn(const char* filename, int lineno, const char* module_name, const char* format, ...)
@@ -249,6 +273,12 @@ void CSafeLogger::log_warn(const char* filename, int lineno, const char* module_
     }
 }
 
+void CSafeLogger::log_error(const char* filename, int lineno, const char* module_name, const char* format, va_list& args)
+{
+    if (enabled_error())
+        do_log(LOG_LEVEL_ERROR, filename, lineno, module_name, format, args);
+}
+
 void CSafeLogger::log_error(const char* filename, int lineno, const char* module_name, const char* format, ...)
 {
     if (enabled_error())
@@ -259,6 +289,12 @@ void CSafeLogger::log_error(const char* filename, int lineno, const char* module
 
         do_log(LOG_LEVEL_ERROR, filename, lineno, module_name, format, args);
     }
+}
+
+void CSafeLogger::log_fatal(const char* filename, int lineno, const char* module_name, const char* format, va_list& args)
+{
+    if (enabled_fatal())
+        do_log(LOG_LEVEL_FATAL, filename, lineno, module_name, format, args);
 }
 
 void CSafeLogger::log_fatal(const char* filename, int lineno, const char* module_name, const char* format, ...)
@@ -273,6 +309,12 @@ void CSafeLogger::log_fatal(const char* filename, int lineno, const char* module
     }
 }
 
+void CSafeLogger::log_state(const char* filename, int lineno, const char* module_name, const char* format, va_list& args)
+{
+    if (enabled_state())
+        do_log(LOG_LEVEL_STATE, filename, lineno, module_name, format, args);
+}
+
 void CSafeLogger::log_state(const char* filename, int lineno, const char* module_name, const char* format, ...)
 {
     if (enabled_state())
@@ -285,6 +327,12 @@ void CSafeLogger::log_state(const char* filename, int lineno, const char* module
     }
 }
 
+void CSafeLogger::log_trace(const char* filename, int lineno, const char* module_name, const char* format, va_list& args)
+{
+    if (enabled_trace())
+        do_log(LOG_LEVEL_TRACE, filename, lineno, module_name, format, args);
+}
+
 void CSafeLogger::log_trace(const char* filename, int lineno, const char* module_name, const char* format, ...)
 {
     if (enabled_trace())
@@ -295,6 +343,12 @@ void CSafeLogger::log_trace(const char* filename, int lineno, const char* module
 
         do_log(LOG_LEVEL_TRACE, filename, lineno, module_name, format, args);
     }
+}
+
+void CSafeLogger::log_raw(const char* format, va_list& args)
+{
+    if (enabled_raw())
+        do_log(LOG_LEVEL_RAW, NULL, -1, NULL, format, args);
 }
 
 void CSafeLogger::log_raw(const char* format, ...)
