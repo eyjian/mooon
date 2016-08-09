@@ -420,7 +420,8 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
                    << "[" << get_log_level_name(log_level) << "]";
         if (module_name != NULL)
             log_header << "[" << module_name << "]";
-        log_header << "[" << utils::CStringUtils::extract_filename(filename) << ":" << lineno << "]";
+        if (filename != NULL)
+            log_header << "[" << utils::CStringUtils::extract_filename(filename) << ":" << lineno << "]";
 
         int m, n;
         // 注意fix_snprintf()的返回值大小包含了结尾符
