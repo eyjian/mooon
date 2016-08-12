@@ -36,9 +36,20 @@ public:
     /** 将time_t值转换成类似于20160114这样的整数 */
     static uint32_t time2date(time_t t);
 
-    // 输入YYYY-MM-DD hh:mm:ss，返回YYYY-MM-DD
+    // 输入YYYY-MM-DD hh:mm:ss，返回YYYY-MM-DD，如输入"2016-09-07 09:58:12"，返回"2016-09-07"
+    // 需要使用者确保输入符合格式YYYY-MM-DD hh:mm:ss，函数内部不做检查
     static std::string extract_date(const char* datetime);
     static std::string extract_date(const std::string& datetime);
+
+    // 输入YYYY-MM-DD hh:mm:ss，返回hh:mm:ss，如输入"2016-09-07 09:58:12"，返回"09:58:12"
+    // 需要使用者确保输入符合格式YYYY-MM-DD hh:mm:ss，函数内部不做检查
+    static std::string extract_time(const char* datetime);
+    static std::string extract_time(const std::string& datetime);
+
+    // 输入YYYY-MM-DD hh:mm:ss，参数date将存放YYYY-MM-DD，而time参数存放hh:mm:ss
+    // 需要使用者确保输入符合格式YYYY-MM-DD hh:mm:ss，函数内部不做检查
+    static void extract_datetime(const char* datetime, std::string* date, std::string* time);
+    static void extract_datetime(const std::string& datetime, std::string* date, std::string* time);
 
     /** 得到当前日期和时间，返回格式由参数format决定，默认为: YYYY-MM-DD HH:SS:MM
       * @datetime_buffer: 用来存储当前日期和时间的缓冲区

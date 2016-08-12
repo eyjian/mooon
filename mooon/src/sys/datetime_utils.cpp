@@ -70,6 +70,48 @@ std::string CDatetimeUtils::extract_date(const std::string& datetime)
     }
 }
 
+std::string CDatetimeUtils::extract_time(const char* datetime)
+{
+    const char* s = strchr(datetime, ' ');
+    if (NULL == s)
+        return std::string("");
+
+    return s + 1;
+}
+
+std::string CDatetimeUtils::extract_time(const std::string& datetime)
+{
+    std::string::size_type pos = datetime.find(' ');
+    if (pos == std::string::npos)
+    {
+        return std::string("");
+    }
+    else
+    {
+        return datetime.substr(pos+1);
+    }
+}
+
+void CDatetimeUtils::extract_datetime(const char* datetime, std::string* date, std::string* time)
+{
+    const char* s = strchr(datetime, ' ');
+    if (s != NULL)
+    {
+        date->assign(datetime, s-datetime);
+        *time = s + 1;
+    }
+}
+
+void CDatetimeUtils::extract_datetime(const std::string& datetime, std::string* date, std::string* time)
+{
+    std::string::size_type pos = datetime.find(' ');
+    if (pos != std::string::npos)
+    {
+        *date = datetime.substr(0, pos);
+        *time = datetime.substr(pos + 1);
+    }
+}
+
 void CDatetimeUtils::get_current_datetime(char* datetime_buffer, size_t datetime_buffer_size, const char* format)
 {
     struct tm result;
