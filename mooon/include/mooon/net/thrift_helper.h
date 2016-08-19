@@ -100,10 +100,19 @@ public:
                         int send_timeout_milliseconds=2000);
 
     // 支持指定多个servers，运行时随机选择一个，当一个异常时自动选择其它
+    // num_retries 重试次数
+    // retry_interval 重试间隔，单位为秒
+    // max_consecutive_failures 单个Server最大连续失败次数
+    // randomize_ 是否随机选择一个Server
+    // always_try_last 是否总是重试最后一个Server
     CThriftClientHelper(const std::vector<std::pair<std::string, int> >& servers,
                         int connect_timeout_milliseconds=2000,
                         int receive_timeout_milliseconds=2000,
-                        int send_timeout_milliseconds=2000);
+                        int send_timeout_milliseconds=2000,
+                        int num_retries=1, int retry_interval=60,
+                        int max_consecutive_failures=1,
+                        bool randomize=true, bool always_try_last=true
+                        );
     ~CThriftClientHelper();
 
     // 连接thrift服务端
@@ -123,6 +132,8 @@ public:
     // apache::thrift::TException
     void close();
 
+    apache::thrift::transport::TSocket* get_socket() { return _socket.get(); }
+    const apache::thrift::transport::TSocket get_socket() const { return _socket.get(); }
     ThriftClient* get() { return _client.get(); }
     ThriftClient* get() const { return _client.get(); }
     ThriftClient* operator ->() { return get(); }
@@ -279,13 +290,23 @@ CThriftClientHelper<ThriftClient, Protocol, Transport>::CThriftClientHelper(
         const std::vector<std::pair<std::string, int> >& servers,
         int connect_timeout_milliseconds,
         int receive_timeout_milliseconds,
-        int send_timeout_milliseconds)
+        int send_timeout_milliseconds,
+        int num_retries, int retry_interval,
+        int max_consecutive_failures,
+        bool randomize, bool always_try_last)
         : _connect_timeout_milliseconds(connect_timeout_milliseconds),
           _receive_timeout_milliseconds(receive_timeout_milliseconds),
           _send_timeout_milliseconds(send_timeout_milliseconds)
 {
     set_thrift_debug_log_function();
-    _socket.reset(new apache::thrift::transport::TSocketPool(servers));
+
+    apache::thrift::transport::TSocketPool* socket_pool = new apache::thrift::transport::TSocketPool(servers);
+    socket_pool->setNumRetries(num_retries);
+    socket_pool->setRetryInterval(retry_interval);
+    socket_pool->setMaxConsecutiveFailures(max_consecutive_failures);
+    socket_pool->setRandomize(randomize);
+    socket_pool->setAlwaysTryLast(always_try_last);
+    _socket.reset(socket_pool);
     init();
 }
 
