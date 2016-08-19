@@ -32,6 +32,7 @@
 #include <thrift/server/TNonblockingServer.h>
 #include <thrift/transport/TSocketPool.h>
 #include <thrift/transport/TTransportException.h>
+#include <vector>
 NET_NAMESPACE_BEGIN
 
 // 用来判断thrift是否已经连接，包括两种情况：
@@ -97,6 +98,12 @@ public:
                         int connect_timeout_milliseconds=2000,
                         int receive_timeout_milliseconds=2000,
                         int send_timeout_milliseconds=2000);
+
+    // 支持指定多个servers，运行时随机选择一个，当一个异常时自动选择其它
+    CThriftClientHelper(const std::vector<std::pair<std::string, int> >& servers,
+                        int connect_timeout_milliseconds=2000,
+                        int receive_timeout_milliseconds=2000,
+                        int send_timeout_milliseconds=2000);
     ~CThriftClientHelper();
 
     // 连接thrift服务端
@@ -122,21 +129,25 @@ public:
     ThriftClient* operator ->() const { return get(); }
 
     // 取thrift服务端的IP地址
-    const std::string& get_host() const { return _host; }
+    const std::string& get_host() const;
     // 取thrift服务端的端口号
-    uint16_t get_port() const { return _port; }
+    uint16_t get_port() const;
 
     // 返回可读的标识，常用于记录日志
     std::string str() const
     {
-        return utils::CStringUtils::format_string("thrift://%s:%u", _host.c_str(), _port);
+        return utils::CStringUtils::format_string("thrift://%s:%u", get_host().c_str(), get_port());
     }
 
 private:
-    std::string _host;
-    uint16_t _port;
-    //boost::shared_ptr<apache::thrift::transport::TSocketPool> _sock_pool;
-    boost::shared_ptr<apache::thrift::transport::TSocket> _sock;
+    void init();
+
+private:
+    int _connect_timeout_milliseconds;
+    int _receive_timeout_milliseconds;
+    int _send_timeout_milliseconds;
+    //boost::shared_ptr<apache::thrift::transport::TSocket> // 只支持一个server
+    boost::shared_ptr<apache::thrift::transport::TSocketPool> _sock_pool; // 支持指定多个server，运行时随机选择一个
     boost::shared_ptr<apache::thrift::transport::TTransport> _socket;
     boost::shared_ptr<apache::thrift::transport::TFramedTransport> _transport;
     boost::shared_ptr<apache::thrift::protocol::TProtocol> _protocol;
@@ -253,26 +264,38 @@ template <class ThriftClient, class Protocol, class Transport>
 CThriftClientHelper<ThriftClient, Protocol, Transport>::CThriftClientHelper(
         const std::string &host, uint16_t port,
         int connect_timeout_milliseconds, int receive_timeout_milliseconds, int send_timeout_milliseconds)
-        : _host(host)
-        , _port(port)
+        : _connect_timeout_milliseconds(connect_timeout_milliseconds),
+          _receive_timeout_milliseconds(receive_timeout_milliseconds),
+          _send_timeout_milliseconds(send_timeout_milliseconds)
 {
     set_thrift_debug_log_function();
+    _sock_pool.reset(new apache::thrift::transport::TSocketPool(host, port));
+    init();
+}
 
-#if 0
-    _sock_pool.reset(new apache::thrift::transport::TSocketPool());
-    _sock_pool->addServer(host, (int)port);
-    _sock_pool->setConnTimeout(connect_timeout_milliseconds);
-    _sock_pool->setRecvTimeout(receive_timeout_milliseconds);
-    _sock_pool->setSendTimeout(send_timeout_milliseconds);
+template <class ThriftClient, class Protocol, class Transport>
+CThriftClientHelper<ThriftClient, Protocol, Transport>::CThriftClientHelper(
+        const std::vector<std::pair<std::string, int> >& servers,
+        int connect_timeout_milliseconds,
+        int receive_timeout_milliseconds,
+        int send_timeout_milliseconds)
+        : _connect_timeout_milliseconds(connect_timeout_milliseconds),
+          _receive_timeout_milliseconds(receive_timeout_milliseconds),
+          _send_timeout_milliseconds(send_timeout_milliseconds)
+{
+    set_thrift_debug_log_function();
+    _sock_pool.reset(new apache::thrift::transport::TSocketPool(servers));
+    init();
+}
+
+template <class ThriftClient, class Protocol, class Transport>
+void CThriftClientHelper<ThriftClient, Protocol, Transport>::init()
+{
+    _sock_pool->setConnTimeout(_connect_timeout_milliseconds);
+    _sock_pool->setRecvTimeout(_receive_timeout_milliseconds);
+    _sock_pool->setSendTimeout(_send_timeout_milliseconds);
+
     _socket = _sock_pool;
-#else
-    _sock.reset(new apache::thrift::transport::TSocket(host, port));
-    _sock->setConnTimeout(connect_timeout_milliseconds);
-    _sock->setRecvTimeout(receive_timeout_milliseconds);
-    _sock->setSendTimeout(send_timeout_milliseconds);
-    _socket = _sock;
-#endif
-
     // Transport默认为apache::thrift::transport::TFramedTransport
     _transport.reset(new Transport(_socket));
     // Protocol默认为apache::thrift::protocol::TBinaryProtocol
@@ -312,6 +335,18 @@ void CThriftClientHelper<ThriftClient, Protocol, Transport>::close()
     {
         _transport->close();
     }
+}
+
+template <class ThriftClient, class Protocol, class Transport>
+const std::string& CThriftClientHelper<ThriftClient, Protocol, Transport>::get_host() const
+{
+    return _sock_pool->getHost();
+}
+
+template <class ThriftClient, class Protocol, class Transport>
+uint16_t CThriftClientHelper<ThriftClient, Protocol, Transport>::get_port() const
+{
+    return static_cast<uint16_t>(_sock_pool->getPort());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
