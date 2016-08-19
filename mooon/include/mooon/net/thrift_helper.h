@@ -135,7 +135,8 @@ public:
 private:
     std::string _host;
     uint16_t _port;
-    boost::shared_ptr<apache::thrift::transport::TSocketPool> _sock_pool;
+    //boost::shared_ptr<apache::thrift::transport::TSocketPool> _sock_pool;
+    boost::shared_ptr<apache::thrift::transport::TSocket> _sock;
     boost::shared_ptr<apache::thrift::transport::TTransport> _socket;
     boost::shared_ptr<apache::thrift::transport::TFramedTransport> _transport;
     boost::shared_ptr<apache::thrift::protocol::TProtocol> _protocol;
@@ -257,13 +258,21 @@ CThriftClientHelper<ThriftClient, Protocol, Transport>::CThriftClientHelper(
 {
     set_thrift_debug_log_function();
 
+#if 0
     _sock_pool.reset(new apache::thrift::transport::TSocketPool());
     _sock_pool->addServer(host, (int)port);
     _sock_pool->setConnTimeout(connect_timeout_milliseconds);
     _sock_pool->setRecvTimeout(receive_timeout_milliseconds);
     _sock_pool->setSendTimeout(send_timeout_milliseconds);
-
     _socket = _sock_pool;
+#else
+    _sock.reset(new apache::thrift::transport::TSocket(host, port));
+    _sock->setConnTimeout(connect_timeout_milliseconds);
+    _sock->setRecvTimeout(receive_timeout_milliseconds);
+    _sock->setSendTimeout(send_timeout_milliseconds);
+    _socket = _sock;
+#endif
+
     // Transport默认为apache::thrift::transport::TFramedTransport
     _transport.reset(new Transport(_socket));
     // Protocol默认为apache::thrift::protocol::TBinaryProtocol
@@ -283,7 +292,10 @@ void CThriftClientHelper<ThriftClient, Protocol, Transport>::connect()
 {
     if (!_transport->isOpen())
     {
+        // 如果Transport为TFramedTransport，则实际调用：TFramedTransport::open -> TSocketPool::open
         _transport->open();
+        // 当"TSocketPool::open: all connections failed"时，
+        // TSocketPool::open就抛出异常TTransportException，异常类型为TTransportException::NOT_OPEN
     }
 }
 
