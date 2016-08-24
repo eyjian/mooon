@@ -140,7 +140,7 @@ public:
     ThriftClient* operator ->() const { return get(); }
 
     // 取thrift服务端的IP地址
-    const std::string& get_host() const;
+    std::string get_host() const;
     // 取thrift服务端的端口号
     uint16_t get_port() const;
 
@@ -359,7 +359,7 @@ void CThriftClientHelper<ThriftClient, Protocol, Transport>::close()
 }
 
 template <class ThriftClient, class Protocol, class Transport>
-const std::string& CThriftClientHelper<ThriftClient, Protocol, Transport>::get_host() const
+std::string CThriftClientHelper<ThriftClient, Protocol, Transport>::get_host() const
 {
     return _socket->getHost();
 }
