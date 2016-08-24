@@ -121,11 +121,10 @@ do { \
     } \
 } while(false)
     
-enum
-{
-    // 默认的文件模式
-    FILE_DEFAULT_PERM = (S_IRUSR|S_IWUSR | S_IRGRP | S_IROTH)
-};
+// 默认的文件模式
+#ifndef FILE_DEFAULT_PERM
+#define FILE_DEFAULT_PERM (S_IRUSR|S_IWUSR | S_IRGRP | S_IROTH)
+#endif // FILE_DEFAULT_PERM
 
 /***
  * 支持按文件大小滚动日志记录器，支持多进程写同一个日志文件
