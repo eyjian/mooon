@@ -179,10 +179,12 @@ do { \
 	} \
 } while(false)
 
+// C++11要求PRINT_COLOR_NONE前和PRINT_COLOR_DARY_GRAY后保留一个空格，否则编译报警：
+// invalid suffix on literal; C++11 requires a space between literal and identifier [-Wliteral-suffix]
 #define __MYLOG_DEBUG(logger, module_name, format, ...) \
 do { \
 	if (NULL == logger) { \
-	    printf(PRINT_COLOR_DARY_GRAY"[DEBUG][%s:%d]"PRINT_COLOR_NONE, __FILE__, __LINE__); \
+	    printf(PRINT_COLOR_DARY_GRAY "[DEBUG][%s:%d]" PRINT_COLOR_NONE, __FILE__, __LINE__); \
 		printf(format, ##__VA_ARGS__); \
 	} \
 	else if (logger->enabled_debug()) { \
@@ -204,7 +206,7 @@ do { \
 #define __MYLOG_WARN(logger, module_name, format, ...) \
 do { \
 	if (NULL == logger) { \
-	    printf(PRINT_COLOR_YELLOW"[WARN][%s:%d]"PRINT_COLOR_NONE, __FILE__, __LINE__); \
+	    printf(PRINT_COLOR_YELLOW "[WARN][%s:%d]" PRINT_COLOR_NONE, __FILE__, __LINE__); \
 		printf(format, ##__VA_ARGS__); \
 	} \
 	else if (logger->enabled_warn()) { \
@@ -215,7 +217,7 @@ do { \
 #define __MYLOG_ERROR(logger, module_name, format, ...) \
 do { \
 	if (NULL == logger) { \
-	    printf(PRINT_COLOR_RED"[ERROR][%s:%d]"PRINT_COLOR_NONE, __FILE__, __LINE__); \
+	    printf(PRINT_COLOR_RED "[ERROR][%s:%d]" PRINT_COLOR_NONE, __FILE__, __LINE__); \
 		printf(format, ##__VA_ARGS__); \
 	} \
 	else if (logger->enabled_error()) { \
@@ -226,7 +228,7 @@ do { \
 #define __MYLOG_FATAL(logger, module_name, format, ...) \
 do { \
 	if (NULL == logger) { \
-	    printf(PRINT_COLOR_BROWN"[FATAL][%s:%d]"PRINT_COLOR_NONE, __FILE__, __LINE__); \
+	    printf(PRINT_COLOR_BROWN "[FATAL][%s:%d]" PRINT_COLOR_NONE, __FILE__, __LINE__); \
 		printf(format, ##__VA_ARGS__); \
 	} \
 	else if (logger->enabled_fatal()) { \
