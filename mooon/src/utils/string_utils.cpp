@@ -423,7 +423,7 @@ std::string CStringUtils::int64_tostring(int64_t source)
 std::string CStringUtils::int_tostring(int64_t source)
 {
     char str[sizeof("018446744073709551615")]; // 0xFFFFFFFFFFFFFFFF
-    snprintf(str, sizeof(str), "%"PRId64, source);
+    snprintf(str, sizeof(str), "%" PRId64, source);
 //#if __WORDSIZE==64
 //    snprintf(str, sizeof(str), "%ld", source);
 //#else

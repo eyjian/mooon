@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     }
 
     fprintf(stdout, "agent_nodes: %s\n", agent_nodes);
-    fprintf(stdout, "times: %"PRIu64", concurrency: %"PRIu64"\n", times, concurrency);
+    fprintf(stdout, "times: %" PRIu64", concurrency: %" PRIu64"\n", times, concurrency);
 
     try
     {
@@ -120,7 +120,7 @@ void thread_proc(uint64_t times, const char* agent_nodes, bool polling)
             uid_struct.value = uid;
 
             if ((0 == i) || (0 == i%100000) || (i == times-1))
-                fprintf(stdout, "[%"PRIu64"]uid: %"PRIu64" => %s\n", mooon::sys::CThreadEngine::get_current_thread_id(), uid, uid_struct.id.str().c_str());
+                fprintf(stdout, "[%" PRIu64"]uid: %" PRIu64" => %s\n", mooon::sys::CThreadEngine::get_current_thread_id(), uid, uid_struct.id.str().c_str());
         }
         catch (mooon::sys::CSyscallException& ex)
         {

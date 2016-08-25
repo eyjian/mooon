@@ -82,7 +82,7 @@ struct SeqBlock
 
     std::string str() const
     {
-        return utils::CStringUtils::format_string("block://V%u/L%u/S%u/D%s/M%"PRId64, version, label, sequence, sys::CDatetimeUtils::to_datetime(timestamp).c_str(), magic);
+        return utils::CStringUtils::format_string("block://V%u/L%u/S%u/D%s/M%" PRId64, version, label, sequence, sys::CDatetimeUtils::to_datetime(timestamp).c_str(), magic);
     }
 
     void update_label(uint32_t label_)

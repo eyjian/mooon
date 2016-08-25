@@ -113,7 +113,7 @@ void print_transaction_id(const char* agent_nodes, bool polling)
             uint64_t id64 = int_id_vec[i];
             union mooon::UniqID uid;
             uid.value = id64;
-            fprintf(stdout, "id: %"PRIu64" => %s\n", id64, uid.id.str().c_str());
+            fprintf(stdout, "id: %" PRIu64" => %s\n", id64, uid.id.str().c_str());
         }
         fprintf(stdout, "\n");
 
