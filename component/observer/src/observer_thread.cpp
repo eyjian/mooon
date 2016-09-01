@@ -17,19 +17,27 @@
  * Author: JianYi, eyjian@qq.com or eyjian@gmail.com
  */
 #include <mooon/sys/utils.h>
+#include <mooon/utils/string_utils.h>
 #include "observer_thread.h"
 #include "observer_context.h"
 OBSERVER_NAMESPACE_BEGIN
 
-CObserverThread::CObserverThread(CObserverContext* observer_context)
+CObserverThread::CObserverThread(CObserverContext* observer_context, const char* thread_name_prefix)
 	:_observer_context(observer_context)
 {
+    if (thread_name_prefix != NULL)
+        _thread_name_prefix = thread_name_prefix;
 }
 
 void CObserverThread::run()
 {
-#if ENABLE_SET_OBSERVER_THREAD_NAME==1 
-    sys::CUtils::set_process_name("ob-thread");
+#if ENABLE_SET_OBSERVER_THREAD_NAME==1
+    std::string thread_name;
+    if (_thread_name_prefix.empty())
+        thread_name = "obthread";
+    else
+        thread_name = _thread_name_prefix + std::string("-obthread");
+    sys::CUtils::set_process_name(thread_name.c_str());
 #endif // ENABLE_SET_OBSERVER_THREAD_NAME
 
     uint16_t report_frequency_seconds = _observer_context->get_report_frequency_seconds();

@@ -27,7 +27,7 @@ OBSERVER_NAMESPACE_BEGIN
 class CObserverContext: public IObserverManager
 {
 public:
-	CObserverContext(IDataReporter* data_reporter, uint16_t report_frequency_seconds);
+	CObserverContext(IDataReporter* data_reporter, uint16_t report_frequency_seconds, const char* thread_name_prefix=NULL);
 	
 	bool create();
 	void destroy();

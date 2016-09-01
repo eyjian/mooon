@@ -61,8 +61,9 @@ extern IObserverManager* get();
   * @logger: 日志器
   * @data_reporter: 数据上报器
   * @report_frequency_seconds: 数据上报频率(单位: 秒)
+  * @thread_name_prefix: 用于指定观察者线程名前缀，如果值为NULL则观察者线程名为obthread
   */
-extern IObserverManager* create(IDataReporter* data_reporter, uint16_t report_frequency_seconds);
+extern IObserverManager* create(IDataReporter* data_reporter, uint16_t report_frequency_seconds, const char* thread_name_prefix=NULL);
 
 /***
  * 取得数据目录，用来存放observer收集到的数据

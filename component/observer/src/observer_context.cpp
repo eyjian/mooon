@@ -21,11 +21,11 @@
 #include <mooon/sys/utils.h>
 OBSERVER_NAMESPACE_BEGIN
 
-CObserverContext::CObserverContext(IDataReporter* data_reporter, uint16_t report_frequency_seconds)
+CObserverContext::CObserverContext(IDataReporter* data_reporter, uint16_t report_frequency_seconds, const char* thread_name_prefix)
 	:_data_reporter(data_reporter)
 	,_report_frequency_seconds(report_frequency_seconds)
 {
-	_observer_thread = new CObserverThread(this);
+	_observer_thread = new CObserverThread(this, thread_name_prefix);
     _observer_thread->inc_refcount();
 }
 
@@ -93,11 +93,11 @@ IObserverManager* get()
     return g_observer_context;
 }
 
-IObserverManager* create(IDataReporter* data_reporter, uint16_t report_frequency_seconds)
+IObserverManager* create(IDataReporter* data_reporter, uint16_t report_frequency_seconds, const char* threadname_prefix)
 {    
     if (NULL == g_observer_context) 
     {
-        g_observer_context = new CObserverContext(data_reporter, report_frequency_seconds);
+        g_observer_context = new CObserverContext(data_reporter, report_frequency_seconds, threadname_prefix);
         if (!g_observer_context->create())
         {
             destroy();

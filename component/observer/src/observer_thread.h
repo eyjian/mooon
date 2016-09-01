@@ -26,13 +26,14 @@ class CObserverContext;
 class CObserverThread: public sys::CThread
 {
 public:
-	CObserverThread(CObserverContext* observer_manager);
+	CObserverThread(CObserverContext* observer_manager, const char* thread_name_prefix);
 
 private: // override
 	virtual void run();
 
 private:
 	CObserverContext* _observer_context;
+	std::string _thread_name_prefix;
 };
 
 OBSERVER_NAMESPACE_END
