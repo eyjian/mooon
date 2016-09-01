@@ -36,6 +36,22 @@ public:
     /** 将time_t值转换成类似于20160114这样的整数 */
     static uint32_t time2date(time_t t);
 
+    /*
+     * 求和datetime相隔的日期，比如days为1时表示date的后一天，days为-1表示date的前一天等
+     * 调用者需要确保date格式为有效的日期，并满足格式YYYY-MM-DD hh:mm:ss，否则返回false
+     */
+    static bool neighbor_date_bytime(const std::string& datetime, int days, std::string* neighbor_date);
+    /** 如果date为无效日期则返回空 */
+    static std::string neighbor_date_bytime(const std::string& datetime, int days);
+
+    /*
+     * 求和date相隔的日期，比如days为1时表示date的后一天，days为-1表示date的前一天等
+     * 调用者需要确保date格式为有效的日期，并满足格式YYYY-MM-DD，否则返回false
+     */
+    static bool neighbor_date_bydate(const std::string& date, int days, std::string* neighbor_date);
+    /** 如果date为无效日期则返回空 */
+    static std::string neighbor_date_bydate(const std::string& date, int days);
+
     // 输入YYYY-MM-DD hh:mm:ss，返回YYYY-MM-DD，如输入"2016-09-07 09:58:12"，返回"2016-09-07"
     // 需要使用者确保输入符合格式YYYY-MM-DD hh:mm:ss，函数内部不做检查
     static std::string extract_date(const char* datetime);

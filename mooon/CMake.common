@@ -183,3 +183,19 @@ if (CMAKE_SIZEOF_VOID_P EQUAL 4)
 endif ()
 
 link_libraries(dl pthread rt z)
+
+# 为指定的源文件添加编译属性，示例：
+# set_source_files_properties(example1.cpp example2.cpp COMPILE_FLAGS -DXXXX=1234)
+# set_source_files_properties(example1.cpp example2.cpp PROPERTIES COMPILE_FLAGS -DXXXX=1234)
+
+# 为指定的目标设置属性，示例：
+# set_target_properties(target1 target2 PROPERTIES LINK_FLAGS -lrt)
+# 示例2：
+# set_target_properties(test PROPERTIES COMPILE_FLAGS -DXXXX=1234)
+#
+# 设置前缀后缀，如果没有下面这一句，则生成的文件名为libtest.fcgi.so
+# set_target_properties(test.fcgi PROPERTIES PREFIX "" SUFFIX "")
+# 设置目录属性
+# set_directory_properties
+# 在给定的作用域内设置一个命名的属性  
+# set_property

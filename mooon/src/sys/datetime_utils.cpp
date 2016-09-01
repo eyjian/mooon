@@ -51,6 +51,37 @@ uint32_t CDatetimeUtils::time2date(time_t t)
     return (result.tm_year+1900)*10000 + (result.tm_mon+1)*100 + result.tm_mday;
 }
 
+bool CDatetimeUtils::neighbor_date_bytime(const std::string& datetime, int days, std::string* neighbor_date)
+{
+    time_t t;
+    if (datetime_struct_from_string(datetime.c_str(), &t))
+        return false;
+
+    time_t z = t + (days * 24 * 3600);
+    *neighbor_date = to_date(z);
+    return true;
+}
+
+std::string CDatetimeUtils::neighbor_date_bytime(const std::string& datetime, int days)
+{
+    std::string neighbor_date;
+    (void)neighbor_date_bytime(datetime, days, &neighbor_date);
+    return neighbor_date;
+}
+
+bool CDatetimeUtils::neighbor_date_bydate(const std::string& date, int days, std::string* neighbor_date)
+{
+    const std::string datetime = date + std::string(" 00:00:00");
+    return neighbor_date_bytime(date, days, neighbor_date);
+}
+
+std::string CDatetimeUtils::neighbor_date_bydate(const std::string& date, int days)
+{
+    std::string neighbor_date;
+    (void)neighbor_date_bydate(date, days, &neighbor_date);
+    return neighbor_date;
+}
+
 std::string CDatetimeUtils::extract_date(const char* datetime)
 {
     const char* s = strchr(datetime, ' ');
