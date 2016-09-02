@@ -72,7 +72,7 @@ std::string CDatetimeUtils::neighbor_date_bytime(const std::string& datetime, in
 bool CDatetimeUtils::neighbor_date_bydate(const std::string& date, int days, std::string* neighbor_date)
 {
     const std::string datetime = date + std::string(" 00:00:00");
-    return neighbor_date_bytime(date, days, neighbor_date);
+    return neighbor_date_bytime(datetime, days, neighbor_date);
 }
 
 std::string CDatetimeUtils::neighbor_date_bydate(const std::string& date, int days)
