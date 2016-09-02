@@ -54,7 +54,7 @@ uint32_t CDatetimeUtils::time2date(time_t t)
 bool CDatetimeUtils::neighbor_date_bytime(const std::string& datetime, int days, std::string* neighbor_date)
 {
     time_t t;
-    if (datetime_struct_from_string(datetime.c_str(), &t))
+    if (!datetime_struct_from_string(datetime.c_str(), &t))
         return false;
 
     time_t z = t + (days * 24 * 3600);
