@@ -206,6 +206,13 @@ public:
 
     // 要求ThriftHandler类有方法attach(void*)
     void serve(uint16_t port, void* attached, uint8_t num_worker_threads=1, uint8_t num_io_threads=1);
+    
+    // 对于TNonblockingServer调用stop时是停止所有的IO线程，做法是设置一个结束循环标志：
+    // for (uint32_t i = 0; i < ioThreads_.size(); ++i) ioThreads_[i]->stop();
+    // void TNonblockingIOThread::stop() {
+    //     // 调用了event_base_loopbreak()
+    //     breakLoop(false); // This should cause the thread to fall out of its event loop ASAP.
+    // }
     void stop();
 
     ThriftHandler* get()
