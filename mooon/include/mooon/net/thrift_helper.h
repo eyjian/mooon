@@ -392,6 +392,7 @@ void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serv
     // 这里也可直接调用serve()，但推荐run()
     // !!!注意调用run()的进程或线程会被阻塞
     _server->run();
+    _thread_manager->join();
 }
 
 template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
@@ -406,6 +407,7 @@ void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serv
     // 这里也可直接调用serve()，但推荐run()
     // !!!注意调用run()的进程或线程会被阻塞
     _server->run();
+    _thread_manager->join();
 }
 
 template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
@@ -420,12 +422,14 @@ void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serv
     // 这里也可直接调用serve()，但推荐run()
     // !!!注意调用run()的进程或线程会被阻塞
     _server->run();
+    _thread_manager->join();
 }
 
 template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
 void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::stop()
 {
     _server->stop();
+    _thread_manager->stop();
 }
 
 template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
