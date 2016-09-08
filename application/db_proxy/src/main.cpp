@@ -44,6 +44,7 @@ private:
     virtual bool init(int argc, char* argv[]);
     virtual bool run();
     virtual void fini();
+    virtual std::string get_restart_env_name() const { return std::string("DB_PROXY_AUTO_RESTART"); }
 
 private:
     mooon::utils::ScopedPtr<mooon::sys::CSafeLogger> _data_logger;
