@@ -181,13 +181,26 @@ bool CConfigLoader::load(const std::string& filepath)
     return true;
 }
 
+void CConfigLoader::release_db_connection(int index)
+{
+    if ((index >= 0) || (index < MAX_DB_CONNECTION))
+    {
+        delete g_db_connection[index];
+        g_db_connection[index] = NULL;
+    }
+}
+
 sys::DBConnection* CConfigLoader::get_db_connection(int index) const
 {
     if ((index < 0) || (index >= MAX_DB_CONNECTION))
+    {
+        MYLOG_ERROR("invalid database index: %d\n", index);
         return NULL;
-
+    }
     if (NULL == g_db_connection[index])
+    {
         g_db_connection[index] = init_db_connection(index, true);
+    }
 
     return g_db_connection[index];
 }
@@ -376,15 +389,13 @@ sys::DBConnection* CConfigLoader::init_db_connection(int index, bool need_lock) 
 
 sys::DBConnection* CConfigLoader::do_init_db_connection(int index) const
 {
+    const int max_retries = 3;
     const struct DbInfo* _db_info = _db_info_array[index];
-    sys::DBConnection* db_connection = new sys::CMySQLConnection;
+    sys::DBConnection* db_connection = NULL;
 
-    if (NULL == db_connection)
+    for (int retries=0; retries<max_retries; ++retries)
     {
-        MYLOG_ERROR("can not create MySQL connection by 'mysql_connection'\n");
-    }
-    else
-    {
+        db_connection = new sys::CMySQLConnection;
         db_connection->set_host(_db_info->host, (uint16_t)_db_info->port);
         db_connection->set_user(_db_info->user, _db_info->password);
         db_connection->set_db_name(_db_info->name);
@@ -394,12 +405,24 @@ sys::DBConnection* CConfigLoader::do_init_db_connection(int index) const
         try
         {
             db_connection->open();
+            break;
         }
         catch (sys::CDBException& db_ex)
         {
-            MYLOG_ERROR("connect %s failed: %s\n", _db_info->str().c_str(), db_ex.str().c_str());
+            bool is_disconnected_exception = db_connection->is_disconnected_exception(db_ex);
             delete db_connection;
             db_connection = NULL;
+
+            if (!is_disconnected_exception || retries==max_retries-1)
+            {
+                MYLOG_ERROR("connect %s failed: %s\n", _db_info->str().c_str(), db_ex.str().c_str());
+                break;
+            }
+            else
+            {
+                MYLOG_ERROR("connect %s failed to retry: %s\n", _db_info->str().c_str(), db_ex.str().c_str());
+                mooon::sys::CUtils::millisleep(100); // 网络类原因稍后重试
+            }
         }
     }
 

@@ -152,47 +152,61 @@ int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, co
     }
     else
     {
-        sys::DBConnection* db_connection = config_loader->get_db_connection(update_info.database_index);
-
-        try
+        const int max_retries = 3;
+        for (int retries=0; retries<max_retries; ++retries)
         {
-            if (NULL == db_connection)
-            {
-                MYLOG_ERROR("[%d]database_index[%d] not exists\n", seq, update_info.database_index);
-                if (throw_exception)
-                    throw apache::thrift::TApplicationException("database_index not exists");
-            }
-            else if (tokens.size() > utils::FORMAT_STRING_SIZE)
-            {
-                MYLOG_ERROR("[%d]too big: %d\n", seq, (int)tokens.size());
-                if (throw_exception)
-                    throw apache::thrift::TApplicationException("tokens too many");
-            }
-            else
-            {
-                std::vector<std::string> escaped_tokens;
-                escape_tokens(db_connection, tokens, &escaped_tokens);
-                std::string sql = utils::format_string(update_info.sql_template.c_str(), escaped_tokens);
+            sys::DBConnection* db_connection = config_loader->get_db_connection(update_info.database_index);
 
-                // 将SQL记录到日志文件中
-                if (1 == argument::log_sql->value())
+            try
+            {
+                if (NULL == db_connection)
                 {
-                    sql.append(";\n");
-                    CSqlLogger::get_singleton()->write_log(update_info.database_index, sql);
+                    MYLOG_ERROR("[%d]get database(%d) connection failed\n", seq, update_info.database_index);
+                    if (throw_exception)
+                        throw apache::thrift::TApplicationException("database_index not exists");
+                    break; // 连接未成功不重试，原因是get_db_connection已做了重试连接
                 }
+                else if (tokens.size() > utils::FORMAT_STRING_SIZE)
+                {
+                    MYLOG_ERROR("[%d]too big: %d\n", seq, (int)tokens.size());
+                    if (throw_exception)
+                        throw apache::thrift::TApplicationException("tokens too many");
+                }
+                else
+                {
+                    std::vector<std::string> escaped_tokens;
+                    escape_tokens(db_connection, tokens, &escaped_tokens);
+                    std::string sql = utils::format_string(update_info.sql_template.c_str(), escaped_tokens);
 
-                MYLOG_DEBUG("%s\n", sql.c_str());
-                int affected_rows = db_connection->update("%s", sql.c_str());
-                return affected_rows;
+                    // 将SQL记录到日志文件中
+                    if (1 == argument::log_sql->value())
+                    {
+                        sql.append(";\n");
+                        CSqlLogger::get_singleton()->write_log(update_info.database_index, sql);
+                    }
+
+                    MYLOG_DEBUG("%s\n", sql.c_str());
+                    int affected_rows = db_connection->update("%s", sql.c_str());
+                    return affected_rows;
+                }
             }
-        }
-        catch (sys::CDBException& db_ex)
-        {
-            //db_connection->is_duplicate_exception(db_ex.errcode());
-            MYLOG_ERROR("[%d]%s\n", seq, db_ex.str().c_str());
-            if (throw_exception)
-                throw apache::thrift::TApplicationException(db_ex.str());
-        }
+            catch (sys::CDBException& db_ex)
+            {
+                if (!db_connection->is_disconnected_exception(db_ex) || (retries==max_retries-1))
+                {
+                    MYLOG_ERROR("[%d]%s\n", seq, db_ex.str().c_str());
+                    if (throw_exception)
+                        throw apache::thrift::TApplicationException(db_ex.str());
+                    break;
+                }
+                else
+                {
+                    MYLOG_ERROR("[retry][%d]%s\n", seq, db_ex.str().c_str());
+                    config_loader->release_db_connection(update_info.database_index);
+                    mooon::sys::CUtils::millisleep(100); // 网络类原因稍后重试
+                }
+            }
+        } // for
     }
 
     return -1;

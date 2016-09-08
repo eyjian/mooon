@@ -208,6 +208,7 @@ public:
 public:
     CConfigLoader();
     bool load(const std::string& filepath);
+    void release_db_connection(int index);
     sys::DBConnection* get_db_connection(int index) const;
     bool get_query_info(int index, struct QueryInfo* query_info) const;
     bool get_update_info(int index, struct UpdateInfo* update_info) const;
