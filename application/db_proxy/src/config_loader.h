@@ -203,6 +203,7 @@ public:
 public:
     // 监控配置文件的变化
     void monitor();
+    void stop_monitor();
 
 public:
     CConfigLoader();
@@ -230,6 +231,7 @@ private:
     sys::DBConnection* do_init_db_connection(int index) const;
 
 private:
+    volatile bool _stop_monitor;
     mutable sys::CReadWriteLock _read_write_lock;
     struct DbInfo* _db_info_array[MAX_DB_CONNECTION];
     struct QueryInfo* _query_info_array[MAX_SQL_TEMPLATE];

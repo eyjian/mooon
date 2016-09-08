@@ -33,6 +33,7 @@ class CMainHelper: public mooon::sys::IMainHelper
 public:
     CMainHelper();
     ~CMainHelper();
+    void stop(int signo);
 
 private:
     virtual bool init(int argc, char* argv[]);
@@ -47,6 +48,12 @@ private:
         mooon::db_proxy::CDbProxyHandler, mooon::db_proxy::DbProxyServiceProcessor> _thrift_server;
 };
 
+static CMainHelper* g_main_helper = NULL;
+static void on_signal(int signo)
+{
+    g_main_helper->stop(signo);
+}
+
 // 参数说明：
 // 1) --port rpc服务端口号
 //
@@ -54,8 +61,9 @@ private:
 // ./db_proxy --port=8888
 extern "C" int main(int argc, char* argv[])
 {
-    CMainHelper main_helper;
-    return mooon::sys::main_template(&main_helper, argc, argv);
+    g_main_helper = new CMainHelper;
+    mooon::utils::ScopedPtr<CMainHelper> main_helper(g_main_helper);
+    return mooon::sys::main_template(main_helper.get(), argc, argv);
 }
 
 CMainHelper::CMainHelper()
@@ -66,6 +74,12 @@ CMainHelper::CMainHelper()
 CMainHelper::~CMainHelper()
 {
     mooon::observer::destroy();
+}
+
+void CMainHelper::stop(int signo)
+{
+    _thrift_server.stop();
+    mooon::db_proxy::CConfigLoader::get_singleton()->stop_monitor();
 }
 
 bool CMainHelper::init(int argc, char* argv[])
@@ -105,6 +119,9 @@ bool CMainHelper::init(int argc, char* argv[])
         // SQL日志文件大小
         mooon::db_proxy::CSqlLogger::sql_log_filesize = mooon::argument::sql_log_filesize->value();
 
+        // 注册信息，以支持优雅退出不丢数据
+        signal(SIGTERM, on_signal);
+
         std::string filepath = mooon::db_proxy::CConfigLoader::get_filepath();
         return mooon::db_proxy::CConfigLoader::get_singleton()->load(filepath);
     }
@@ -124,6 +141,7 @@ bool CMainHelper::run()
     {
         MYLOG_INFO("thrift will listen on port[%u]\n", mooon::argument::port->value());
         _thrift_server.serve(mooon::argument::port->value());
+        MYLOG_INFO("db_proxy exit now\n");
         return true;
     }
     catch (apache::thrift::TException& tx)

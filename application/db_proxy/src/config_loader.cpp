@@ -77,7 +77,7 @@ std::string CConfigLoader::get_filepath()
 
 void CConfigLoader::monitor()
 {
-    while (true)
+    while (!_stop_monitor)
     {
         sys::CUtils::millisleep(2000);
 
@@ -86,7 +86,13 @@ void CConfigLoader::monitor()
     }
 }
 
+void CConfigLoader::stop_monitor()
+{
+    _stop_monitor = true;
+}
+
 CConfigLoader::CConfigLoader()
+    : _stop_monitor(false)
 {
     init_db_info_array(_db_info_array);
     init_query_info_array(_query_info_array);
