@@ -175,7 +175,9 @@ int main(int argc, char* argv[])
 
                 if (exitcode != 0)
                 {
-                    if (126 == exitcode)
+                    if (1 == exitcode)
+                        fprintf(stderr, "command return %d\n", exitcode);
+                    else if (126 == exitcode)
                         fprintf(stderr, "%d: command not executable\n", exitcode);
                     else if (127 == exitcode)
                         fprintf(stderr, "%d: command not found\n", exitcode);

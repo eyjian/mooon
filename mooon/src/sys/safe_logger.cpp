@@ -458,65 +458,17 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
         (void)write(STDOUT_FILENO, log_line.get(), log_real_size);
     }
 
-    // 写日志文件
-    int thread_log_fd = get_thread_log_fd();
-    if (thread_log_fd != -1)
+    if (false)
     {
-        int bytes = write(thread_log_fd, log_line.get(), log_real_size);
-        if (-1 == bytes)
-        {
-            fprintf(stderr, "[%d:%lu] SafeLogger[%d] write error: %m\n", getpid(), pthread_self(), thread_log_fd);
-        }
-        else if (bytes > 0)
-        {
-            try
-            {
-                // 判断是否需要滚动
-                if (need_rotate(thread_log_fd))
-                {
-                    std::string lock_path = _log_dir + std::string("/.") + _log_filename + std::string(".lock");
-                    FileLocker file_locker(lock_path.c_str(), true); // 确保这里一定加锁
-
-                    // _fd可能已被其它进程或线程滚动了，所以这里需要重新open一下
-                    int log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
-                    if (-1 == log_fd)
-                    {
-                        fprintf(stderr, "[%d:%lu] SafeLogger open %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str());
-                    }
-                    else
-                    {
-                        try
-                        {
-                            if (need_rotate(log_fd))
-                            {
-                                close(log_fd);
-                                rotate_log();
-                            }
-                            else
-                            {
-                                // 如果是线程执行了滚动，则_log_fd值为非-1，可直接使用
-                                // 如果是其它进程执行了滚动了，则应当使用log_fd替代_log_fd
-
-                                // 可以放在锁FileLocker之外，用来保护_log_fd
-                                // 由于每个线程并不直接使用_log_fd，而是对_log_fd做了dup，所以只要保护_log_fd即可
-                                LockHelper<CLock> lock_helper(_lock);
-
-                                close(_log_fd);
-                                _log_fd = log_fd;
-                            }
-                        }
-                        catch (CSyscallException& syscall_ex)
-                        {
-                            fprintf(stderr, "[%d:%lu] SafeLogger[%d] rotate error: %s.\n", getpid(), pthread_self(), log_fd, syscall_ex.str().c_str());
-                        }
-                    }
-                }
-            }
-            catch (CSyscallException& syscall_ex)
-            {
-                fprintf(stderr, "[%d:%lu] SafeLogger[%d] rotate error: %s\n", getpid(), pthread_self(), thread_log_fd, syscall_ex.str().c_str());
-            }
-        }
+        // 异步写入日志文件
+        //log_line.release();
+    }
+    else
+    {
+        // 同步写入日志文件
+        int thread_log_fd = get_thread_log_fd();
+        if (thread_log_fd != -1)
+            write_log(thread_log_fd, log_line.get(), log_real_size);
     }
 }
 
@@ -571,6 +523,65 @@ void CSafeLogger::rotate_log()
     if (-1 == close(_log_fd))
         fprintf(stderr, "[%d:%lu] SafeLogger close %s error: %m.\n", getpid(), pthread_self(), _log_filepath.c_str());
     _log_fd = log_fd;
+}
+
+void CSafeLogger::write_log(int log_fd, const char* log_line, int log_line_size)
+{
+    int bytes = write(log_fd, log_line, log_line_size);
+    if (-1 == bytes)
+    {
+        fprintf(stderr, "[%d:%lu] SafeLogger[%d] write error: %m\n", getpid(), pthread_self(), log_fd);
+    }
+    else if (bytes > 0)
+    {
+        try
+        {
+            // 判断是否需要滚动
+            if (need_rotate(log_fd))
+            {
+                std::string lock_path = _log_dir + std::string("/.") + _log_filename + std::string(".lock");
+                FileLocker file_locker(lock_path.c_str(), true); // 确保这里一定加锁
+
+                // _fd可能已被其它进程或线程滚动了，所以这里需要重新open一下
+                int new_log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
+                if (-1 == new_log_fd)
+                {
+                    fprintf(stderr, "[%d:%lu] SafeLogger open %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str());
+                }
+                else
+                {
+                    try
+                    {
+                        if (need_rotate(new_log_fd))
+                        {
+                            close(new_log_fd);
+                            rotate_log();
+                        }
+                        else
+                        {
+                            // 如果是线程执行了滚动，则_log_fd值为非-1，可直接使用
+                            // 如果是其它进程执行了滚动了，则应当使用log_fd替代_log_fd
+
+                            // 可以放在锁FileLocker之外，用来保护_log_fd
+                            // 由于每个线程并不直接使用_log_fd，而是对_log_fd做了dup，所以只要保护_log_fd即可
+                            LockHelper<CLock> lock_helper(_lock);
+
+                            close(_log_fd);
+                            _log_fd = new_log_fd;
+                        }
+                    }
+                    catch (CSyscallException& syscall_ex)
+                    {
+                        fprintf(stderr, "[%d:%lu] SafeLogger[%d] rotate error: %s.\n", getpid(), pthread_self(), new_log_fd, syscall_ex.str().c_str());
+                    }
+                }
+            }
+        }
+        catch (CSyscallException& syscall_ex)
+        {
+            fprintf(stderr, "[%d:%lu] SafeLogger[%d] rotate error: %s\n", getpid(), pthread_self(), log_fd, syscall_ex.str().c_str());
+        }
+    }
 }
 
 SYS_NAMESPACE_END
