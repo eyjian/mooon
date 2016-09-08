@@ -28,6 +28,11 @@ INTEGER_ARG_DEFINE(uint8_t, log_sql, 0, 0, 1, "write sql to special log file");
 // 单个SQL日志文件大小，单位为字节数，默认为500MB，最大为1GB，最小为1KB
 INTEGER_ARG_DEFINE(uint32_t, sql_log_filesize, 5242880, 1024, 1073741824, "bytes of a sql log file size");
 
+// IO线程数
+INTEGER_ARG_DEFINE(uint8_t, num_io_threads, 1, 1, 50, "number of IO threads");
+// 工作线程数
+INTEGER_ARG_DEFINE(uint8_t, num_work_threads, 1, 1, 50, "number of work threads");
+
 class CMainHelper: public mooon::sys::IMainHelper
 {
 public:
@@ -140,7 +145,9 @@ bool CMainHelper::run()
     try
     {
         MYLOG_INFO("thrift will listen on port[%u]\n", mooon::argument::port->value());
-        _thrift_server.serve(mooon::argument::port->value());
+        MYLOG_INFO("number of IO threads is %d\n", mooon::argument::num_io_threads->value());
+        MYLOG_INFO("number of work threads is %d\n", mooon::argument::num_work_threads->value());
+        _thrift_server.serve(mooon::argument::port->value(), mooon::argument::num_work_threads->value(), mooon::argument::num_io_threads->value());
         MYLOG_INFO("db_proxy exit now\n");
         return true;
     }
