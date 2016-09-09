@@ -16,10 +16,10 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-// 批量上传工具
+// 下载工具
 // 使用示例：
-// ./mooon_upload -h=192.168.10.11,192.168.10.12 -p=6000 -u=root -P='root123' -s=./abc -d=/tmp/
-// 表示将本地的文件./abc上传到两台机器192.168.10.11和192.168.10.12的/tmp/目录
+// ./mooon_download -h=192.168.10.11 -p=6000 -u=root -P='root123' -s=/etc/hosts,/etc/passwd -d=/tmp/
+// 表示将192.168.10.11机器上的文件/etc/hosts和/etc/passwd两个文件下载到本地的/tmp目录下
 #include "mooon/net/libssh2.h"
 #include "mooon/sys/stop_watch.h"
 #include "mooon/utils/args_parser.h"
@@ -30,18 +30,18 @@
 #include <iostream>
 
 // 逗号分隔的远程主机列表
-STRING_ARG_DEFINE(h, "", "remote hosts");
+STRING_ARG_DEFINE(h, "", "remote host");
 // 远程主机的sshd端口号
-INTEGER_ARG_DEFINE(uint16_t, p, 36000, 10, 65535, "remote hosts port");
+INTEGER_ARG_DEFINE(uint16_t, p, 36000, 10, 65535, "remote host port");
 // 用户名
 STRING_ARG_DEFINE(u, "root", "remote host user");
 // 密码
 STRING_ARG_DEFINE(P, "", "remote host password");
 
 // 被上传的文件路径
-STRING_ARG_DEFINE(s, "", "the local source files uploaded, separated by comma");
+STRING_ARG_DEFINE(s, "", "the remote source files to download, separated by comma");
 // 文件上传后存放的目录路径
-STRING_ARG_DEFINE(d, "", "the remote directory to store");
+STRING_ARG_DEFINE(d, "", "the local directory to store");
 
 // 连接超时，单位为秒
 INTEGER_ARG_DEFINE(uint16_t, t, 10, 1, 65535, "timeout seconds to remote host");
@@ -51,7 +51,7 @@ struct ResultInfo
 {
     bool success; // 为true表示执行成功
     std::string ip; // 远程host的IP地址
-    std::string source; // 被上传的文件
+    std::string source; // 被下载的文件
     uint32_t seconds; // 运行花费的时长，精确到秒
 
     ResultInfo()
@@ -87,12 +87,12 @@ int main(int argc, char* argv[])
     uint16_t port = mooon::argument::p->value();
     std::string sources = mooon::argument::s->value();
     std::string directory = mooon::argument::d->value();
-    std::string hosts = mooon::argument::h->value();
+    std::string host = mooon::argument::h->value();
     std::string user = mooon::argument::u->value();
     std::string password = mooon::argument::P->value();
     mooon::utils::CStringUtils::trim(sources);
     mooon::utils::CStringUtils::trim(directory);
-    mooon::utils::CStringUtils::trim(hosts);
+    mooon::utils::CStringUtils::trim(host);
     mooon::utils::CStringUtils::trim(user);
     mooon::utils::CStringUtils::trim(password);
 
@@ -111,19 +111,19 @@ int main(int argc, char* argv[])
     }
 
     // 检查参数（-h）
-    if (hosts.empty())
+    if (host.empty())
     {
         // 尝试从环境变量取值
-        const char* hosts_ = getenv("HOSTS");
-        if (NULL == hosts_)
+        const char* host_ = getenv("HOSTS");
+        if (NULL == host_)
         {
             fprintf(stderr, "parameter[-h]'s value not set\n");
             exit(1);
         }
 
-        hosts = hosts_;
-        mooon::utils::CStringUtils::trim(hosts);
-        if (hosts.empty())
+        host = host_;
+        mooon::utils::CStringUtils::trim(host);
+        if (host.empty())
         {
             fprintf(stderr, "parameter[-h]'s value not set\n");
             exit(1);
@@ -147,60 +147,43 @@ int main(int argc, char* argv[])
     std::vector<std::string> source_files;
     int num_source_files = mooon::utils::CTokener::split(&source_files, sources, ",", true);
 
-    std::vector<std::string> hosts_ip;
-    const std::string& remote_hosts_ip = hosts;
-    int num_remote_hosts_ip = mooon::utils::CTokener::split(&hosts_ip, remote_hosts_ip, ",", true);
-    if (0 == num_remote_hosts_ip)
+    std::vector<struct ResultInfo> results(num_source_files);
+    for (int j=0; j<num_source_files; ++j)
     {
-        fprintf(stderr, "parameter[-h] error\n");
-        exit(1);
-    }
+        bool color = true;
 
-    std::vector<struct ResultInfo> results(num_remote_hosts_ip * num_source_files);
-    for (int i=0, k=0; i<num_remote_hosts_ip; ++i)
-    {
-    	for (int j=0; j<num_source_files; ++j)
-    	{
-			bool color = true;
+        std::string local_filepath = directory + std::string("/") + mooon::utils::CStringUtils::extract_filename(source_files[j]);
+        results[j].ip = host;
+        results[j].source = source_files[j];
+        results[j].success = false;
 
-			std::string remote_filepath = directory + std::string("/") + mooon::utils::CStringUtils::extract_filename(source_files[j]);
-			const std::string& remote_host_ip = hosts_ip[i];
-			results[k].ip = remote_host_ip;
-			results[k].source = source_files[j];
-			results[k].success = false;
+        std::ofstream local_fs(local_filepath.c_str());
+        mooon::sys::CStopWatch stop_watch;
+        try
+        {
+            int file_size = 0;
+            mooon::net::CLibssh2 libssh2(host, port, user, password, mooon::argument::t->value());
+            libssh2.download(source_files[j], local_fs, &file_size);
 
-			fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"]\n", remote_host_ip.c_str());
-			fprintf(stdout, PRINT_COLOR_GREEN);
+            fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"] SUCCESS: %d bytes (%s)\n", host.c_str(), file_size, source_files[j].c_str());
+            results[j].success = true;
+        }
+        catch (mooon::sys::CSyscallException& ex)
+        {
+            if (color)
+                fprintf(stdout, PRINT_COLOR_NONE); // color = true;
 
-			mooon::sys::CStopWatch stop_watch;
-			try
-			{
-				int file_size = 0;
-				mooon::net::CLibssh2 libssh2(remote_host_ip, port, user, password, mooon::argument::t->value());
-				libssh2.upload(source_files[j], remote_filepath, &file_size);
+            fprintf(stderr, "["PRINT_COLOR_RED"%s"PRINT_COLOR_NONE"] failed: %s (%s)\n", host.c_str(), ex.str().c_str(), source_files[j].c_str());
+        }
+        catch (mooon::utils::CException& ex)
+        {
+            if (color)
+                fprintf(stdout, PRINT_COLOR_NONE); // color = true;
 
-				fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"] SUCCESS: %d bytes (%s)\n", remote_host_ip.c_str(), file_size, source_files[j].c_str());
-				results[k].success = true;
-			}
-			catch (mooon::sys::CSyscallException& ex)
-			{
-				if (color)
-					fprintf(stdout, PRINT_COLOR_NONE); // color = true;
+            fprintf(stderr, "["PRINT_COLOR_RED"%s"PRINT_COLOR_NONE"] failed: %s (%s)\n", host.c_str(), ex.str().c_str(), source_files[j].c_str());
+        }
 
-				fprintf(stderr, "["PRINT_COLOR_RED"%s"PRINT_COLOR_NONE"] failed: %s (%s)\n", remote_host_ip.c_str(), ex.str().c_str(), source_files[j].c_str());
-			}
-			catch (mooon::utils::CException& ex)
-			{
-				if (color)
-					fprintf(stdout, PRINT_COLOR_NONE); // color = true;
-
-				fprintf(stderr, "["PRINT_COLOR_RED"%s"PRINT_COLOR_NONE"] failed: %s (%s)\n", remote_host_ip.c_str(), ex.str().c_str(), source_files[j].c_str());
-			}
-
-			std::cout << std::endl;
-			results[k].seconds = stop_watch.get_elapsed_microseconds() / 1000000;
-			++k;
-    	}
+        results[j].seconds = stop_watch.get_elapsed_microseconds() / 1000000;
     }
 
     // 输出总结

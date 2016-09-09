@@ -20,9 +20,13 @@ if (HAVE_LIBSSH2)
 	add_executable(mooon_upload mooon_upload.cpp)
 	target_link_libraries(mooon_upload libmooon_net.a libmooon_sys.a libmooon_utils.a libssh2.a libcrypto.a)
 
+    # 下载工具
+    add_executable(mooon_download mooon_download.cpp)
+    target_link_libraries(mooon_download libmooon_net.a libmooon_sys.a libmooon_utils.a libssh2.a libcrypto.a)
+    
 	# CMAKE_INSTALL_PREFIX
 	install(
-	        TARGETS mooon_ssh mooon_upload
+	        TARGETS mooon_ssh mooon_upload mooon_download
 	        DESTINATION bin
 	       )
 endif ()
