@@ -133,7 +133,7 @@ public:
     static std::string get_dirpath(const std::string& filepath);
 
     /***
-      * 设置进程名
+      * 设置线程的名称
       * @new_name 新的名字，通过ps或top查看线程时，可以看到线程的名字
       * @exception: 如果调用出错，则抛出CSyscallException异常
       */

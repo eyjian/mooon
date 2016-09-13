@@ -114,6 +114,24 @@ public:
     static void handle(Object* object) throw ();
 
 private:
+    template <class Object>
+    static void do_handle(Object* object,
+            void (*on_terminated)(),
+            void (*on_child_end)(pid_t child_pid, int child_exited_status),
+            void (*on_signal_handler)(int signo),
+            void (*on_exception)(int errcode)) throw ();
+
+    // 用于应付编译器，啥也不做，目的是为了实现两个版本的handle复用同一个do_handle实现
+    class NullObject
+    {
+    public:
+        void on_terminated() {}
+        void on_child_end(pid_t child_pid, int child_exited_status) {}
+        void on_signal_handler(int signo) {}
+        void on_exception(int errcode) {}
+    };
+
+private:
     static sigset_t _sigset;
     static std::vector<int> _signo_array;
 };
@@ -290,23 +308,46 @@ inline void CSignalHandler::handle(
         void (*on_signal_handler)(int signo),
         void (*on_exception)(int errcode)) throw ()
 {
+    do_handle<NullObject>(NULL, on_terminated, on_child_end, on_signal_handler, on_exception);
+}
+
+template <class Object>
+inline void CSignalHandler::handle(Object* object) throw ()
+{
+    do_handle(object, NULL, NULL, NULL, NULL);
+}
+
+template <class Object>
+inline void CSignalHandler::do_handle(
+        Object* object,
+        void (*on_terminated)(),
+        void (*on_child_end)(pid_t child_pid, int child_exited_status),
+        void (*on_signal_handler)(int signo),
+        void (*on_exception)(int errcode)) throw ()
+{
     int signo = wait_signal();
 
     if (-1 == signo)
     {
-        if (on_exception != NULL)
+        if (object != NULL)
+            object->on_exception(errno);
+        else if (on_exception != NULL)
             on_exception(errno);
     }
     else if (SIGTERM == signo)
     {
         // 进程自己收到SIGTERM的回调
-        if (on_terminated != NULL)
+        if (object != NULL)
+            object->on_terminated();
+        else if (on_terminated != NULL)
             on_terminated();
     }
     else if (signo != SIGCHLD)
     {
         // 非SIGTERM和SIGCHLD信号处理
-        if (on_signal_handler != NULL)
+        if (object != NULL)
+            object->on_signal_handler(signo);
+        else if (on_signal_handler != NULL)
             on_signal_handler(signo);
     }
     else
@@ -325,7 +366,9 @@ inline void CSignalHandler::handle(
             else if (child_pid > 0)
             {
                 // 子进程结束回调
-                if (on_child_end != NULL)
+                if (object != NULL)
+                    object->on_child_end(child_pid, child_exited_status);
+                else if (on_child_end != NULL)
                     on_child_end(child_pid, child_exited_status);
             }
             else
@@ -335,61 +378,10 @@ inline void CSignalHandler::handle(
                     // /usr/include/asm-generic/errno-base.h:
                     // #define   ECHILD          10      /* No child processes */
                     // wait error
-                    if (on_exception != NULL)
+                    if (object != NULL)
+                        object->on_exception(errno);
+                    else if (on_exception != NULL)
                         on_exception(errno);
-                }
-
-                break;
-            }
-        }
-    }
-}
-
-template <class Object>
-inline void CSignalHandler::handle(Object* object) throw ()
-{
-    int signo = wait_signal();
-
-    if (-1 == signo)
-    {
-        object->on_exception(errno);
-    }
-    else if (SIGTERM == signo)
-    {
-        // 进程自己收到SIGTERM的回调
-        object->on_terminated();
-    }
-    else if (signo != SIGCHLD)
-    {
-        // 非SIGTERM和SIGCHLD信号处理
-        object->on_signal_handler(signo);
-    }
-    else
-    {
-        // 子进程退出信号处理
-        // 这里需要循环，以免漏掉处理，SIGCHLD是不可靠信号
-        while (true)
-        {
-            int child_exited_status;
-            pid_t child_pid = waitpid(-1, &child_exited_status, WNOHANG);
-
-            if (0 == child_pid)
-            {
-                break;
-            }
-            else if (child_pid > 0)
-            {
-                // 子进程结束回调
-                object->on_child_end(child_pid, child_exited_status);
-            }
-            else
-            {
-                if (errno != ECHILD)
-                {
-                    // /usr/include/asm-generic/errno-base.h:
-                    // #define   ECHILD          10      /* No child processes */
-                    // wait error
-                    object->on_exception(errno);
                 }
 
                 break;

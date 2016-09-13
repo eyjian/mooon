@@ -350,7 +350,11 @@ void CUtils::init_process_title(int argc, char *argv[])
 
 void CUtils::set_process_title(const std::string &new_title)
 {
-    if (!new_title.empty())
+    MOOON_ASSERT(g_arg_start != NULL);
+    MOOON_ASSERT(g_arg_end != NULL);
+    MOOON_ASSERT(g_env_start != NULL);
+
+    if ((g_arg_start != NULL) && (g_arg_end != NULL) && (g_env_start != NULL) && !new_title.empty())
     {
         size_t new_title_len = new_title.length();
 
