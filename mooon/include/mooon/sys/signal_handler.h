@@ -97,6 +97,22 @@ public:
             void (*on_signal_handler)(int signo),
             void (*on_exception)(int errcode)) throw ();
 
+    /***
+     * 对象版handle，作为与普通版相同
+     *
+     * 类Object必须实现以下四个public成员函数，否则会导致编译错误
+     * class Object
+     * {
+     * public:
+     *     void on_terminated();
+     *     void on_child_end(pid_t child_pid, int child_exited_status);
+     *     void on_signal_handler(int signo);
+     *     void on_exception(int errcode);
+     * };
+     */
+    template <class Object>
+    static void handle(Object* object) throw ();
+
 private:
     static sigset_t _sigset;
     static std::vector<int> _signo_array;
@@ -321,6 +337,59 @@ inline void CSignalHandler::handle(
                     // wait error
                     if (on_exception != NULL)
                         on_exception(errno);
+                }
+
+                break;
+            }
+        }
+    }
+}
+
+template <class Object>
+inline void CSignalHandler::handle(Object* object) throw ()
+{
+    int signo = wait_signal();
+
+    if (-1 == signo)
+    {
+        object->on_exception(errno);
+    }
+    else if (SIGTERM == signo)
+    {
+        // 进程自己收到SIGTERM的回调
+        object->on_terminated();
+    }
+    else if (signo != SIGCHLD)
+    {
+        // 非SIGTERM和SIGCHLD信号处理
+        object->on_signal_handler(signo);
+    }
+    else
+    {
+        // 子进程退出信号处理
+        // 这里需要循环，以免漏掉处理，SIGCHLD是不可靠信号
+        while (true)
+        {
+            int child_exited_status;
+            pid_t child_pid = waitpid(-1, &child_exited_status, WNOHANG);
+
+            if (0 == child_pid)
+            {
+                break;
+            }
+            else if (child_pid > 0)
+            {
+                // 子进程结束回调
+                object->on_child_end(child_pid, child_exited_status);
+            }
+            else
+            {
+                if (errno != ECHILD)
+                {
+                    // /usr/include/asm-generic/errno-base.h:
+                    // #define   ECHILD          10      /* No child processes */
+                    // wait error
+                    object->on_exception(errno);
                 }
 
                 break;
