@@ -7,6 +7,7 @@
 #include <mooon/observer/observer_manager.h>
 #include <mooon/sys/main_template.h>
 #include <mooon/sys/safe_logger.h>
+#include <mooon/sys/signal_handler.h>
 #include <mooon/sys/thread_engine.h>
 #include <mooon/sys/utils.h>
 #include <mooon/utils/args_parser.h>
@@ -38,13 +39,23 @@ class CMainHelper: public mooon::sys::IMainHelper
 public:
     CMainHelper();
     ~CMainHelper();
-    void stop(int signo);
+
+public:
+    void signal_thread();
+    void on_terminated();
+    void on_child_end(pid_t child_pid, int child_exited_status);
+    void on_signal_handler(int signo);
+    void on_exception(int errcode) throw ();
 
 private:
     virtual bool init(int argc, char* argv[]);
     virtual bool run();
     virtual void fini();
     virtual std::string get_restart_env_name() const { return std::string("DB_PROXY_AUTO_RESTART"); }
+
+private:
+    volatile bool _stop_signal_thread;
+    mooon::sys::CThreadEngine* _signal_thread;
 
 private:
     mooon::utils::ScopedPtr<mooon::sys::CSafeLogger> _data_logger;
@@ -54,26 +65,21 @@ private:
         mooon::db_proxy::CDbProxyHandler, mooon::db_proxy::DbProxyServiceProcessor> _thrift_server;
 };
 
-static CMainHelper* g_main_helper = NULL;
-static void on_signal(int signo)
-{
-    g_main_helper->stop(signo);
-}
-
 // 参数说明：
 // 1) --port rpc服务端口号
 //
 // 运行示例：
 // ./db_proxy --port=8888
+static CMainHelper* sg_main_helper;
 extern "C" int main(int argc, char* argv[])
 {
-    g_main_helper = new CMainHelper;
-    mooon::utils::ScopedPtr<CMainHelper> main_helper(g_main_helper);
-    return mooon::sys::main_template(main_helper.get(), argc, argv);
+    sg_main_helper = new CMainHelper;
+    mooon::utils::ScopedPtr<CMainHelper> main_helper_ptr(sg_main_helper);
+    return mooon::sys::main_template(sg_main_helper, argc, argv);
 }
 
 CMainHelper::CMainHelper()
-    : _observer_manager(NULL)
+    : _stop_signal_thread(false), _signal_thread(NULL), _observer_manager(NULL)
 {
 }
 
@@ -82,10 +88,42 @@ CMainHelper::~CMainHelper()
     mooon::observer::destroy();
 }
 
-void CMainHelper::stop(int signo)
+void CMainHelper::signal_thread()
+{
+    mooon::sys::CUtils::set_process_name("db_proxy_sigthread");
+    //mooon::sys::CUtils::set_process_title("sig_thread");
+
+    while (!_stop_signal_thread)
+    {
+        mooon::sys::CSignalHandler::handle(this);
+    }
+}
+
+void CMainHelper::on_terminated()
 {
     _thrift_server.stop();
     mooon::db_proxy::CConfigLoader::get_singleton()->stop_monitor();
+    _stop_signal_thread = true;
+    MYLOG_INFO("db_proxy will exit by SIGTERM\n");
+}
+
+void CMainHelper::on_child_end(pid_t child_pid, int child_exited_status)
+{
+}
+
+void CMainHelper::on_signal_handler(int signo)
+{
+    if (SIGINT == signo)
+    {
+        _thrift_server.stop();
+        mooon::db_proxy::CConfigLoader::get_singleton()->stop_monitor();
+        _stop_signal_thread = true;
+        MYLOG_INFO("db_proxy will exit by SIGINT\n");
+    }
+}
+
+void CMainHelper::on_exception(int errcode) throw ()
+{
 }
 
 bool CMainHelper::init(int argc, char* argv[])
@@ -96,6 +134,15 @@ bool CMainHelper::init(int argc, char* argv[])
         fprintf(stderr, "%s\n", errmsg.c_str());
         return false;
     }
+
+    // 阻塞SIGINT、SIG_CHLD和SIG_TERM三个信号
+    mooon::sys::CSignalHandler::block_signal(SIGCHLD);
+    mooon::sys::CSignalHandler::block_signal(SIGINT);
+    mooon::sys::CSignalHandler::block_signal(SIGTERM);
+
+    // 创建信号线程
+    _signal_thread = new mooon::sys::CThreadEngine(mooon::sys::bind(&CMainHelper::signal_thread, this));
+    mooon::sys::CUtils::init_process_title(argc, argv);
 
     try
     {
@@ -125,9 +172,6 @@ bool CMainHelper::init(int argc, char* argv[])
         // SQL日志文件大小
         mooon::db_proxy::CSqlLogger::sql_log_filesize = mooon::argument::sql_log_filesize->value();
 
-        // 注册信息，以支持优雅退出不丢数据
-        signal(SIGTERM, on_signal);
-
         std::string filepath = mooon::db_proxy::CConfigLoader::get_filepath();
         return mooon::db_proxy::CConfigLoader::get_singleton()->load(filepath);
     }
@@ -149,6 +193,14 @@ bool CMainHelper::run()
         MYLOG_INFO("number of IO threads is %d\n", mooon::argument::num_io_threads->value());
         MYLOG_INFO("number of work threads is %d\n", mooon::argument::num_work_threads->value());
         _thrift_server.serve(mooon::argument::port->value(), mooon::argument::num_work_threads->value(), mooon::argument::num_io_threads->value());
+        MYLOG_INFO("thrift server exit\n");
+
+        if (_signal_thread != NULL)
+        {
+            _signal_thread->join();
+            MYLOG_INFO("signal thread exit\n");
+        }
+
         MYLOG_INFO("db_proxy exit now\n");
         return true;
     }
