@@ -70,12 +70,10 @@ private:
 //
 // 运行示例：
 // ./db_proxy --port=8888
-static CMainHelper* sg_main_helper;
 extern "C" int main(int argc, char* argv[])
 {
-    sg_main_helper = new CMainHelper;
-    mooon::utils::ScopedPtr<CMainHelper> main_helper_ptr(sg_main_helper);
-    return mooon::sys::main_template(sg_main_helper, argc, argv);
+    CMainHelper main_helper;
+    return mooon::sys::main_template(&main_helper, argc, argv);
 }
 
 CMainHelper::CMainHelper()
