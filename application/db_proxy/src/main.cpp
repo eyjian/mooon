@@ -122,6 +122,7 @@ void CMainHelper::on_signal_handler(int signo)
 
 void CMainHelper::on_exception(int errcode) throw ()
 {
+    MYLOG_ERROR("(%d)%s\n", errcode, mooon::sys::Error::to_string(errcode).c_str());
 }
 
 bool CMainHelper::init(int argc, char* argv[])
@@ -158,7 +159,9 @@ bool CMainHelper::init(int argc, char* argv[])
             if (data_dirpath.empty())
                 return false;
 
-            _data_logger.reset(new mooon::sys::CSafeLogger(data_dirpath.c_str(), "db_proxy.data"));
+            const std::string program_short_name = mooon::sys::CUtils::get_program_short_name();
+            const std::string data_filename = mooon::utils::CStringUtils::replace_suffix(program_short_name, ".data");
+            _data_logger.reset(new mooon::sys::CSafeLogger(data_dirpath.c_str(), data_filename.c_str()));
             _data_logger->enable_raw_log(true);
             _data_reporter.reset(new mooon::observer::CDefaultDataReporter(_data_logger.get()));
 
