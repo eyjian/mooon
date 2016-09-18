@@ -314,13 +314,13 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 // 不带参数
 
-Functor bind(FunctionWithoutParameter::FunctionPtr function_ptr)
+inline Functor bind(FunctionWithoutParameter::FunctionPtr function_ptr)
 {
     return Functor(function_ptr);    
 }
 
 template <class ObjectType>
-Functor bind(typename MemberFunctionWithoutParameter<ObjectType>::MemberFunctionPtr member_function_ptr, ObjectType* object)
+inline Functor bind(typename MemberFunctionWithoutParameter<ObjectType>::MemberFunctionPtr member_function_ptr, ObjectType* object)
 {
     return Functor(member_function_ptr, object);
 }
@@ -329,13 +329,13 @@ Functor bind(typename MemberFunctionWithoutParameter<ObjectType>::MemberFunction
 // 带1个参数
 
 template <typename ParameterType>
-Functor bind(typename FunctionWith1Parameter<ParameterType>::FunctionPtr function_ptr, ParameterType parameter)
+inline Functor bind(typename FunctionWith1Parameter<ParameterType>::FunctionPtr function_ptr, ParameterType parameter)
 {
     return Functor(function_ptr, parameter);    
 }
 
 template <class ObjectType, typename ParameterType>
-Functor bind(typename MemberFunctionWith1Parameter<ObjectType, ParameterType>::MemberFunctionPtr member_function_ptr, ObjectType* object, ParameterType parameter)
+inline Functor bind(typename MemberFunctionWith1Parameter<ObjectType, ParameterType>::MemberFunctionPtr member_function_ptr, ObjectType* object, ParameterType parameter)
 {
     return Functor(member_function_ptr, object, parameter);
 }
@@ -344,13 +344,13 @@ Functor bind(typename MemberFunctionWith1Parameter<ObjectType, ParameterType>::M
 // 带2个参数
 
 template <typename Parameter1Type, typename Parameter2Type>
-Functor bind(typename FunctionWith2Parameter<Parameter1Type, Parameter2Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2)
+inline Functor bind(typename FunctionWith2Parameter<Parameter1Type, Parameter2Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2)
 {
     return Functor(function_ptr, parameter1, parameter2);
 }
 
 template <class ObjectType, typename Parameter1Type, typename Parameter2Type>
-Functor bind(typename MemberFunctionWith2Parameter<ObjectType, Parameter1Type, Parameter2Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2)
+inline Functor bind(typename MemberFunctionWith2Parameter<ObjectType, Parameter1Type, Parameter2Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2)
 {
     return Functor(member_function_ptr, object, parameter1, parameter2);
 }
@@ -359,13 +359,13 @@ Functor bind(typename MemberFunctionWith2Parameter<ObjectType, Parameter1Type, P
 // 带3个参数
 
 template <typename Parameter1Type, typename Parameter2Type, typename Parameter3Type>
-Functor bind(typename FunctionWith3Parameter<Parameter1Type, Parameter2Type, Parameter3Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3)
+inline Functor bind(typename FunctionWith3Parameter<Parameter1Type, Parameter2Type, Parameter3Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3)
 {
     return Functor(function_ptr, parameter1, parameter2, parameter3);
 }
 
 template <class ObjectType, typename Parameter1Type, typename Parameter2Type, typename Parameter3Type>
-Functor bind(typename MemberFunctionWith3Parameter<ObjectType, Parameter1Type, Parameter2Type, Parameter3Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3)
+inline Functor bind(typename MemberFunctionWith3Parameter<ObjectType, Parameter1Type, Parameter2Type, Parameter3Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3)
 {
     return Functor(member_function_ptr, object, parameter1, parameter2, parameter3);
 }

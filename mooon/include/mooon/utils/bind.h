@@ -28,13 +28,13 @@ UTILS_NAMESPACE_BEGIN
 // 不带参数
 
 template <typename ReturnType>
-Functor<ReturnType> bind(typename FunctionWithoutParameter<ReturnType>::FunctionPtr function_ptr)
+inline Functor<ReturnType> bind(typename FunctionWithoutParameter<ReturnType>::FunctionPtr function_ptr)
 {
     return Functor<ReturnType>(function_ptr);
 }
 
 template <typename ReturnType, class ObjectType>
-Functor<ReturnType> bind(typename MemberFunctionWithoutParameter<ReturnType, ObjectType>::MemberFunctionPtr member_function_ptr, ObjectType* object)
+inline Functor<ReturnType> bind(typename MemberFunctionWithoutParameter<ReturnType, ObjectType>::MemberFunctionPtr member_function_ptr, ObjectType* object)
 {
     return Functor<ReturnType>(member_function_ptr, object);
 }
@@ -43,13 +43,13 @@ Functor<ReturnType> bind(typename MemberFunctionWithoutParameter<ReturnType, Obj
 // 带1个参数
 
 template <typename ReturnType, typename ParameterType>
-Functor<ReturnType> bind(typename FunctionWith1Parameter<ReturnType, ParameterType>::FunctionPtr function_ptr, ParameterType parameter)
+inline Functor<ReturnType> bind(typename FunctionWith1Parameter<ReturnType, ParameterType>::FunctionPtr function_ptr, ParameterType parameter)
 {
     return Functor<ReturnType>(function_ptr, parameter);
 }
 
 template <typename ReturnType, class ObjectType, typename ParameterType>
-Functor<ReturnType> bind(typename MemberFunctionWith1Parameter<ReturnType, ObjectType, ParameterType>::MemberFunctionPtr member_function_ptr, ObjectType* object, ParameterType parameter)
+inline Functor<ReturnType> bind(typename MemberFunctionWith1Parameter<ReturnType, ObjectType, ParameterType>::MemberFunctionPtr member_function_ptr, ObjectType* object, ParameterType parameter)
 {
     return Functor<ReturnType>(member_function_ptr, object, parameter);
 }
@@ -58,13 +58,13 @@ Functor<ReturnType> bind(typename MemberFunctionWith1Parameter<ReturnType, Objec
 // 带2个参数
 
 template <typename ReturnType, typename Parameter1Type, typename Parameter2Type>
-Functor<ReturnType> bind(typename FunctionWith2Parameter<ReturnType, Parameter1Type, Parameter2Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2)
+inline Functor<ReturnType> bind(typename FunctionWith2Parameter<ReturnType, Parameter1Type, Parameter2Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2)
 {
     return Functor<ReturnType>(function_ptr, parameter1, parameter2);
 }
 
 template <typename ReturnType, class ObjectType, typename Parameter1Type, typename Parameter2Type>
-Functor<ReturnType> bind(typename MemberFunctionWith2Parameter<ReturnType, ObjectType, Parameter1Type, Parameter2Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2)
+inline Functor<ReturnType> bind(typename MemberFunctionWith2Parameter<ReturnType, ObjectType, Parameter1Type, Parameter2Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2)
 {
     return Functor<ReturnType>(member_function_ptr, object, parameter1, parameter2);
 }
@@ -73,13 +73,13 @@ Functor<ReturnType> bind(typename MemberFunctionWith2Parameter<ReturnType, Objec
 // 带3个参数
 
 template <typename ReturnType, typename Parameter1Type, typename Parameter2Type, typename Parameter3Type>
-Functor<ReturnType> bind(typename FunctionWith3Parameter<ReturnType, Parameter1Type, Parameter2Type, Parameter3Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3)
+inline Functor<ReturnType> bind(typename FunctionWith3Parameter<ReturnType, Parameter1Type, Parameter2Type, Parameter3Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3)
 {
     return Functor<ReturnType>(function_ptr, parameter1, parameter2, parameter3);
 }
 
 template <typename ReturnType, class ObjectType, typename Parameter1Type, typename Parameter2Type, typename Parameter3Type>
-Functor<ReturnType> bind(typename MemberFunctionWith3Parameter<ReturnType, ObjectType, Parameter1Type, Parameter2Type, Parameter3Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3)
+inline Functor<ReturnType> bind(typename MemberFunctionWith3Parameter<ReturnType, ObjectType, Parameter1Type, Parameter2Type, Parameter3Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3)
 {
     return Functor<ReturnType>(member_function_ptr, object, parameter1, parameter2, parameter3);
 }
@@ -88,13 +88,13 @@ Functor<ReturnType> bind(typename MemberFunctionWith3Parameter<ReturnType, Objec
 // 带4个参数
 
 template <typename ReturnType, typename Parameter1Type, typename Parameter2Type, typename Parameter3Type, typename Parameter4Type>
-Functor<ReturnType> bind(typename FunctionWith4Parameter<ReturnType, Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3, Parameter4Type parameter4)
+inline Functor<ReturnType> bind(typename FunctionWith4Parameter<ReturnType, Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3, Parameter4Type parameter4)
 {
     return Functor<ReturnType>(function_ptr, parameter1, parameter2, parameter3, parameter4);
 }
 
 template <typename ReturnType, class ObjectType, typename Parameter1Type, typename Parameter2Type, typename Parameter3Type, typename Parameter4Type>
-Functor<ReturnType> bind(typename MemberFunctionWith4Parameter<ReturnType, ObjectType, Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3, Parameter4Type parameter4)
+inline Functor<ReturnType> bind(typename MemberFunctionWith4Parameter<ReturnType, ObjectType, Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3, Parameter4Type parameter4)
 {
     return Functor<ReturnType>(member_function_ptr, object, parameter1, parameter2, parameter3, parameter4);
 }
@@ -102,13 +102,13 @@ Functor<ReturnType> bind(typename MemberFunctionWith4Parameter<ReturnType, Objec
 // 带5个参数
 
 template <typename ReturnType, typename Parameter1Type, typename Parameter2Type, typename Parameter3Type, typename Parameter4Type, typename Parameter5Type>
-Functor<ReturnType> bind(typename FunctionWith5Parameter<ReturnType, Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type, Parameter5Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3, Parameter4Type parameter4, Parameter5Type parameter5)
+inline Functor<ReturnType> bind(typename FunctionWith5Parameter<ReturnType, Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type, Parameter5Type>::FunctionPtr function_ptr, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3, Parameter4Type parameter4, Parameter5Type parameter5)
 {
     return Functor<ReturnType>(function_ptr, parameter1, parameter2, parameter3, parameter4, parameter5);
 }
 
 template <typename ReturnType, class ObjectType, typename Parameter1Type, typename Parameter2Type, typename Parameter3Type, typename Parameter4Type, typename Parameter5Type>
-Functor<ReturnType> bind(typename MemberFunctionWith5Parameter<ReturnType, ObjectType, Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type, Parameter5Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3, Parameter4Type parameter4, Parameter5Type parameter5)
+inline Functor<ReturnType> bind(typename MemberFunctionWith5Parameter<ReturnType, ObjectType, Parameter1Type, Parameter2Type, Parameter3Type, Parameter4Type, Parameter5Type>::MemberFunctionPtr member_function_ptr, ObjectType* object, Parameter1Type parameter1, Parameter2Type parameter2, Parameter3Type parameter3, Parameter4Type parameter4, Parameter5Type parameter5)
 {
     return Functor<ReturnType>(member_function_ptr, object, parameter1, parameter2, parameter3, parameter4, parameter5);
 }
