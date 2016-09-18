@@ -1,8 +1,10 @@
 // Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 #include "config_loader.h"
+#include "db_process.h"
 #include "db_proxy_handler.h"
 #include "sql_logger.h"
 #include "DbProxyService.h" // 执行cmake或make db_proxy_rpc时生成的文件
+#include <map>
 #include <mooon/net/thrift_helper.h>
 #include <mooon/observer/observer_manager.h>
 #include <mooon/sys/main_template.h>
@@ -54,6 +56,11 @@ private:
     virtual std::string get_restart_env_name() const { return std::string("DB_PROXY_AUTO_RESTART"); }
 
 private:
+    void stop();
+    bool create_db_process();
+
+private:
+    std::map<pid_t, mooon::db_proxy::DbInfo> _db_process_table; // key为入库进程ID
     volatile bool _stop_signal_thread;
     mooon::sys::CThreadEngine* _signal_thread;
 
@@ -61,8 +68,7 @@ private:
     mooon::utils::ScopedPtr<mooon::sys::CSafeLogger> _data_logger;
     mooon::utils::ScopedPtr<mooon::observer::CDefaultDataReporter> _data_reporter;
     mooon::observer::IObserverManager* _observer_manager;
-    mooon::net::CThriftServerHelper<
-        mooon::db_proxy::CDbProxyHandler, mooon::db_proxy::DbProxyServiceProcessor> _thrift_server;
+    mooon::net::CThriftServerHelper<mooon::db_proxy::CDbProxyHandler, mooon::db_proxy::DbProxyServiceProcessor> _thrift_server;
 };
 
 // 参数说明：
@@ -99,23 +105,29 @@ void CMainHelper::signal_thread()
 
 void CMainHelper::on_terminated()
 {
-    _thrift_server.stop();
-    mooon::db_proxy::CConfigLoader::get_singleton()->stop_monitor();
-    _stop_signal_thread = true;
+    stop();
     MYLOG_INFO("db_proxy will exit by SIGTERM\n");
 }
 
 void CMainHelper::on_child_end(pid_t child_pid, int child_exited_status)
 {
+    std::map<pid_t, mooon::db_proxy::DbInfo>::iterator iter = _db_process_table.find(child_pid);
+    if (iter == _db_process_table.end())
+    {
+        MYLOG_WARN("not found db process(%u), exited with code(%d)\n", static_cast<unsigned int>(child_pid), child_exited_status);
+    }
+    else
+    {
+        MYLOG_INFO("db process(%u) exit with code(%d)\n", static_cast<unsigned int>(child_pid), child_exited_status);
+        _db_process_table.erase(iter);
+    }
 }
 
 void CMainHelper::on_signal_handler(int signo)
 {
     if (SIGINT == signo)
     {
-        _thrift_server.stop();
-        mooon::db_proxy::CConfigLoader::get_singleton()->stop_monitor();
-        _stop_signal_thread = true;
+        stop();
         MYLOG_INFO("db_proxy will exit by SIGINT\n");
     }
 }
@@ -174,7 +186,12 @@ bool CMainHelper::init(int argc, char* argv[])
         mooon::db_proxy::CSqlLogger::sql_log_filesize = mooon::argument::sql_log_filesize->value();
 
         std::string filepath = mooon::db_proxy::CConfigLoader::get_filepath();
-        return mooon::db_proxy::CConfigLoader::get_singleton()->load(filepath);
+        if (!mooon::db_proxy::CConfigLoader::get_singleton()->load(filepath))
+        {
+            return false;
+        }
+
+        return create_db_process();
     }
     catch (mooon::sys::CSyscallException& syscall_ex)
     {
@@ -214,4 +231,62 @@ bool CMainHelper::run()
 
 void CMainHelper::fini()
 {
+}
+
+void CMainHelper::stop()
+{
+    _thrift_server.stop();
+    mooon::db_proxy::CConfigLoader::get_singleton()->stop_monitor();
+    _stop_signal_thread = true;
+
+    for (std::map<pid_t, mooon::db_proxy::DbInfo>::iterator iter=_db_process_table.begin(); iter!=_db_process_table.end(); ++iter)
+    {
+        const pid_t db_pid = iter->first;
+        const mooon::db_proxy::DbInfo& dbinfo = iter->second;
+
+        MYLOG_INFO("tell dbprocess(%u, %s) to exit\n", static_cast<unsigned int>(db_pid), dbinfo.str().c_str());
+        kill(db_pid, SIGTERM); // Tell db process to exit.
+    }
+
+    // 让db_proxy尽量忙完
+    mooon::sys::CUtils::millisleep(200);
+}
+
+bool CMainHelper::create_db_process()
+{
+    for (int index=0; index<mooon::db_proxy::MAX_DB_CONNECTION; ++index)
+    {
+        struct mooon::db_proxy::DbInfo dbinfo;
+        if (mooon::db_proxy::CConfigLoader::get_singleton()->get_db_info(index, &dbinfo))
+        {
+            if (dbinfo.alias.empty())
+            {
+                MYLOG_INFO("alias empty, no dbprocess(%s)\n", dbinfo.str().c_str());
+            }
+            else
+            {
+                pid_t db_pid = fork();
+                if (-1 == db_pid)
+                {
+                    MYLOG_ERROR("create dbprocess(%s) error: %s\n", dbinfo.str().c_str(), mooon::sys::Error::to_string().c_str());
+                    return false;
+                }
+                else if (0 == db_pid)
+                {
+                    // 入库进程
+                    mooon::db_proxy::CDbProcess db_process(dbinfo);
+                    db_process.run();
+                    MYLOG_INFO("dbprocess(%u, %s) exit\n", static_cast<unsigned int>(getpid()), dbinfo.str().c_str());
+                    exit(0);
+                }
+                else
+                {
+                    _db_process_table.insert(std::make_pair(db_pid, dbinfo));
+                    MYLOG_INFO("add dbprocess(%u, %s)\n", static_cast<unsigned int>(db_pid), dbinfo.str().c_str());
+                }
+            }
+        }
+    }
+
+    return true;
 }

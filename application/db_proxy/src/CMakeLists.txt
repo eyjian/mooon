@@ -15,7 +15,7 @@ exec_program(${THRIFT_HOME}/bin/thrift ARGS --gen cpp -r -out ${CMAKE_CURRENT_SO
 
 #aux_source_directory(sql_writer SQL_WRITER_SRC)
 set(RPC DbProxyService.cpp db_proxy_constants.cpp db_proxy_types.cpp)
-add_executable(db_proxy main.cpp db_proxy_handler.cpp config_loader.cpp sql_logger.cpp ${RPC})
+add_executable(db_proxy ${RPC} main.cpp db_proxy_handler.cpp config_loader.cpp sql_logger.cpp db_process.cpp)
 if (EXISTS ${MYSQL_HOME}/lib/libmysqlclient_r.a)
     target_link_libraries(db_proxy libjsoncpp.a libmysqlclient_r.a libthriftnb.a libthrift.a libevent.a)
 elseif (EXISTS ${MYSQL_HOME}/lib/mysql/libmysqlclient_r.a)
