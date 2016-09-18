@@ -26,11 +26,6 @@ INTEGER_ARG_DEFINE(uint8_t, screen, 0, 0, 1, "print log on screen if 1");
 // 数据上报频率（单位为秒），如果值为0表示禁止收集数据
 INTEGER_ARG_DEFINE(uint16_t, report_frequency_seconds, 0, 0, 3600, "frequency seconds to report data");
 
-// 是否记录SQL日志
-INTEGER_ARG_DEFINE(uint8_t, log_sql, 0, 0, 1, "write sql to special log file");
-// 单个SQL日志文件大小，单位为字节数，默认为500MB，最大为1GB，最小为1KB
-INTEGER_ARG_DEFINE(uint32_t, sql_log_filesize, 5242880, 1024, 1073741824, "bytes of a sql log file size");
-
 // IO线程数
 INTEGER_ARG_DEFINE(uint8_t, num_io_threads, 1, 1, 50, "number of IO threads");
 // 工作线程数
@@ -181,9 +176,6 @@ bool CMainHelper::init(int argc, char* argv[])
             if (NULL == _observer_manager)
                 return false;
         }
-
-        // SQL日志文件大小
-        mooon::db_proxy::CSqlLogger::sql_log_filesize = mooon::argument::sql_log_filesize->value();
 
         std::string filepath = mooon::db_proxy::CConfigLoader::get_filepath();
         if (!mooon::db_proxy::CConfigLoader::get_singleton()->load(filepath))

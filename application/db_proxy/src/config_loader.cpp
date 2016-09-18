@@ -206,6 +206,19 @@ sys::DBConnection* CConfigLoader::get_db_connection(int index) const
     return g_db_connection[index];
 }
 
+bool CConfigLoader::get_db_info(int index, struct DbInfo* db_info) const
+{
+    sys::ReadLockHelper read_lock(_read_write_lock);
+
+    if ((index < 0) || (index >= MAX_DB_CONNECTION))
+        return false;
+    if (NULL == _db_info_array[index])
+        return false;
+
+    *db_info = *(_db_info_array[index]);
+    return true;
+}
+
 bool CConfigLoader::get_query_info(int index, struct QueryInfo* query_info) const
 {
     sys::ReadLockHelper read_lock(_read_write_lock);
@@ -227,19 +240,6 @@ bool CConfigLoader::get_update_info(int index, struct UpdateInfo* update_info) c
         return false;
 
     *update_info = *(_update_info_array[index]);
-    return true;
-}
-
-bool CConfigLoader::get_db_info(int index, struct DbInfo* db_info) const
-{
-    sys::ReadLockHelper read_lock(_read_write_lock);
-
-    if ((index < 0) || (index >= MAX_DB_CONNECTION))
-        return false;
-    if (NULL == _db_info_array[index])
-        return false;
-
-    *db_info = *(_db_info_array[index]);
     return true;
 }
 

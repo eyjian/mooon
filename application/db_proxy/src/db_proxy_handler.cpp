@@ -11,10 +11,6 @@
 #include <mooon/utils/string_utils.h>
 #include <thrift/TApplicationException.h>
 #include <vector>
-
-// 是否记录SQL日志
-INTEGER_ARG_DECLARE(uint8_t, log_sql);
-
 namespace mooon { namespace db_proxy {
 
 CDbProxyHandler::CDbProxyHandler()
@@ -178,16 +174,17 @@ int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, co
                     escape_tokens(db_connection, tokens, &escaped_tokens);
                     std::string sql = utils::format_string(update_info.sql_template.c_str(), escaped_tokens);
 
-                    // 将SQL记录到日志文件中
-                    if (1 == argument::log_sql->value())
-                    {
-                        sql.append(";\n");
-                        CSqlLogger::get_singleton()->write_log(update_info.database_index, sql);
-                    }
-
                     MYLOG_DEBUG("%s\n", sql.c_str());
-                    int affected_rows = db_connection->update("%s", sql.c_str());
-                    return affected_rows;
+                    if (true)
+                    {
+                        int affected_rows = db_connection->update("%s", sql.c_str());
+                        return affected_rows;
+                    }
+                    else
+                    {
+                        // 写入文件将由dbprocess写入DB
+                        return 0;
+                    }
                 }
             }
             catch (sys::CDBException& db_ex)
