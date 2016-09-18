@@ -1,19 +1,21 @@
 {
     "database": [
         {
+            "alias": "test1",
             "index": 1,
             "host": "127.0.0.1",
             "port": 3306,
-            "name": "test",
+            "name": "test1",
             "user": "root",
             "password": "2015",
             "charset": ""
         },
         {
+            "alias": "",
             "index": 2,
             "host": "127.0.0.1",
             "port": 3306,
-            "name": "test",
+            "name": "test2",
             "user": "root",
             "password": "2015",
             "charset": "utf-8"

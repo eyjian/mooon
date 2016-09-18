@@ -7,6 +7,8 @@
 #include <mooon/sys/simple_db.h>
 #include <mooon/utils/string_utils.h>
 #include <string>
+
+#define INVALID_ALIAS_PREFIX "-" // 无效别名前缀
 namespace mooon { namespace db_proxy {
 
 // 定义常量
@@ -18,6 +20,7 @@ enum
 
 struct DbInfo
 {
+    std::string alias; // 可选的别名，如果存在则SQL先落文件再由独立的进程入库，别名需要独无二，否则只有第一个配置的别名有效
     int index;
     std::string host;
     int port;
@@ -34,6 +37,7 @@ struct DbInfo
 
     DbInfo(const Json::Value& json)
     {
+        alias = json["alias"].asString();
         index = json["index"].asInt();
         host = json["host"].asString();
         port = json["port"].asInt();
@@ -41,10 +45,13 @@ struct DbInfo
         user = json["user"].asString();
         password = json["password"].asString();
         charset = json["charset"].asString();
+
+        mooon::utils::CStringUtils::trim(alias);
     }
 
     DbInfo& operator =(const DbInfo& other)
     {
+        alias = other.alias;
         index = other.index;
         host = other.host;
         port = other.port;
@@ -59,7 +66,7 @@ struct DbInfo
     std::string str() const
     {
         return utils::CStringUtils::format_string(
-            "database://%d/%s/%d/%s/%s", index, host.c_str(), port, name.c_str(), user.c_str());
+            "database://%s/%d/%s/%d/%s/%s", alias.c_str(), index, host.c_str(), port, name.c_str(), user.c_str());
     }
 
     bool check() const

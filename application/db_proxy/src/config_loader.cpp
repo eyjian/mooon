@@ -7,6 +7,7 @@
 #include <mooon/sys/mysql_db.h>
 #include <mooon/sys/utils.h>
 #include <mooon/utils/md5_helper.h>
+#include <set>
 #include <sys/inotify.h> // 一些低版本内核没有实现
 namespace mooon { namespace db_proxy {
 
@@ -244,6 +245,8 @@ bool CConfigLoader::get_db_info(int index, struct DbInfo* db_info) const
 
 bool CConfigLoader::load_database(const Json::Value& json, struct DbInfo* db_info_array[])
 {
+    std::set<std::string> alias_set;
+
     for (int i=0; i<static_cast<int>(json.size()); ++i)
     {
         struct DbInfo* db_info = new struct DbInfo(json[i]);
@@ -256,6 +259,17 @@ bool CConfigLoader::load_database(const Json::Value& json, struct DbInfo* db_inf
         else
         {
             MYLOG_INFO("%s\n", db_info->str().c_str());
+
+            if (!db_info->alias.empty())
+            {
+                std::pair<std::set<std::string>::iterator, bool> ret = alias_set.insert(db_info->alias);
+                if (!ret.second)
+                {
+                    // 同名的别名已存在
+                    MYLOG_ERROR("alias exists: %s\n", db_info->alias.c_str());
+                    db_info->alias = std::string(INVALID_ALIAS_PREFIX) + db_info->alias; // 设置为无效别名
+                }
+            }
             if (!add_db_info(db_info, db_info_array))
             {
                 delete db_info;
