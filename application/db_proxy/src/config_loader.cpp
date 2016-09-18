@@ -151,10 +151,10 @@ bool CConfigLoader::load(const std::string& filepath)
 
     int i; // 加写锁
     sys::WriteLockHelper write_lock(_read_write_lock);
-
     release_db_info_array(_db_info_array);
     release_query_info_array(_query_info_array);
     release_update_info_array(_update_info_array);
+
     for (i=0; i<MAX_DB_CONNECTION; ++i)
     {
         if (db_info_array[i] != NULL)
@@ -234,7 +234,7 @@ bool CConfigLoader::get_db_info(int index, struct DbInfo* db_info) const
 {
     sys::ReadLockHelper read_lock(_read_write_lock);
 
-    if ((index < 0) || (index >= MAX_SQL_TEMPLATE))
+    if ((index < 0) || (index >= MAX_DB_CONNECTION))
         return false;
     if (NULL == _db_info_array[index])
         return false;
