@@ -12,8 +12,11 @@ service DbProxyService
     // seq 方便用来和服务端对比日志
     // database_index 目标数据库
     // query_index 对应的查询语句
-    // limit 最多返回的记录数
-    // limit_start 从哪条记录开始，如果值小于或等于0则忽略
+    // limit 最多返回的记录数，值不能小于0否则为sql语法错误
+    // limit_start 从哪条记录开始，如果值小于0则表示不使用limit_start
+    //
+    // limit - limit_start的值不能超过1000，如果limit_start的值小于0则limit的值不能超过1000，
+    // 1000的限制是为了保护db_proxy自身和后端的mysql，以防止一次请求返回过大的数据将两者撑死。
     DBTable query(1: string sign, 2: i32 seq, 3: i32 query_index, 4: list<string> tokens, 5: i32 limit, 6: i32 limit_start)
     
     // DB更新和插入
