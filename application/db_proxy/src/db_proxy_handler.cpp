@@ -5,7 +5,7 @@
 #include <mooon/observer/observer_manager.h>
 #include <mooon/sys/datetime_utils.h>
 #include <mooon/sys/log.h>
-#include <mooon/sys/simple_db.h>
+#include <mooon/sys/mysql_db.h>
 #include <mooon/utils/args_parser.h>
 #include <mooon/utils/format_string.h>
 #include <mooon/utils/string_utils.h>
@@ -50,7 +50,7 @@ void CDbProxyHandler::query(DBTable& _return, const std::string& sign, const int
 
         try
         {
-            sys::DBConnection* db_connection = config_loader->get_db_connection(query_info.database_index);
+            sys::CMySQLConnection* db_connection = config_loader->get_db_connection(query_info.database_index);
             if (NULL == db_connection)
             {
                 MYLOG_ERROR("database_index[%d] not exists\n", query_info.database_index);
@@ -65,10 +65,10 @@ void CDbProxyHandler::query(DBTable& _return, const std::string& sign, const int
             {
                 std::vector<std::string> escaped_tokens;
                 escape_tokens(db_connection, tokens, &escaped_tokens);
-                std::string sql = utils::format_string(query_info.sql_template.c_str(), escaped_tokens);
+                const std::string sql = utils::format_string(query_info.sql_template.c_str(), escaped_tokens);
 
                 MYLOG_DEBUG("%s LIMIT %d,%d\n", sql.c_str(), limit_start, limit);
-                if (limit_start > 0)
+                if (limit_start >= 0) // limit_start是从0开始而不是1
                     db_connection->query(_return, "%s LIMIT %d,%d", sql.c_str(), limit_start, limit);
                 else
                     db_connection->query(_return, "%s LIMIT %d", sql.c_str(), limit);
@@ -125,11 +125,16 @@ void CDbProxyHandler::escape_tokens(void* db_connection, const std::vector<std::
 {
     sys::DBConnection* db_connection_ = (sys::DBConnection*)db_connection;
 
+    escaped_tokens->clear();
     escaped_tokens->resize(tokens.size());
     for (std::vector<std::string>::size_type i=0; i<tokens.size(); ++i)
     {
+        std::string escape_token;
         const std::string& token = tokens[i];
-        std::string escape_token = db_connection_->escape_string(token);
+        if (NULL == db_connection_)
+            sys::CMySQLConnection::escape_string(token, &escape_token);
+        else
+            escape_token = db_connection_->escape_string(token);
         (*escaped_tokens)[i] = escape_token;
     }
 }
@@ -148,62 +153,70 @@ int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, co
     }
     else
     {
-        const int max_retries = 3;
-        for (int retries=0; retries<max_retries; ++retries)
+        std::vector<std::string> escaped_tokens;
+        struct DbInfo db_info;
+        config_loader->get_db_info(update_info.database_index, &db_info);
+
+        if (!db_info.alias.empty())
         {
-            sys::DBConnection* db_connection = config_loader->get_db_connection(update_info.database_index);
+            // 写入文件由dbprocess写入db
+            escape_tokens(NULL, tokens, &escaped_tokens);
+            if (throw_exception)
+                throw apache::thrift::TApplicationException("io error");
+            return 0;
+        }
+        else
+        {
+            // 直接入库
+            const int max_retries = 3;
 
-            try
+            for (int retries=0; retries<max_retries; ++retries)
             {
-                if (NULL == db_connection)
-                {
-                    MYLOG_ERROR("[%d]get database(%d) connection failed\n", seq, update_info.database_index);
-                    if (throw_exception)
-                        throw apache::thrift::TApplicationException("database_index not exists");
-                    break; // 连接未成功不重试，原因是get_db_connection已做了重试连接
-                }
-                else if (tokens.size() > utils::FORMAT_STRING_SIZE)
-                {
-                    MYLOG_ERROR("[%d]too big: %d\n", seq, (int)tokens.size());
-                    if (throw_exception)
-                        throw apache::thrift::TApplicationException("tokens too many");
-                }
-                else
-                {
-                    std::vector<std::string> escaped_tokens;
-                    escape_tokens(db_connection, tokens, &escaped_tokens);
-                    std::string sql = utils::format_string(update_info.sql_template.c_str(), escaped_tokens);
+                sys::DBConnection* db_connection = config_loader->get_db_connection(update_info.database_index);
 
-                    MYLOG_DEBUG("%s\n", sql.c_str());
-                    if (true)
+                try
+                {
+                    if (NULL == db_connection)
                     {
-                        int affected_rows = db_connection->update("%s", sql.c_str());
-                        return affected_rows;
+                        MYLOG_ERROR("[%d]get database(%d) connection failed\n", seq, update_info.database_index);
+                        if (throw_exception)
+                            throw apache::thrift::TApplicationException("database_index not exists");
+                        break; // 连接未成功不重试，原因是get_db_connection已做了重试连接
+                    }
+                    else if (tokens.size() > utils::FORMAT_STRING_SIZE)
+                    {
+                        MYLOG_ERROR("[%d]too big: %d\n", seq, (int)tokens.size());
+                        if (throw_exception)
+                            throw apache::thrift::TApplicationException("tokens too many");
                     }
                     else
                     {
-                        // 写入文件将由dbprocess写入DB
-                        return 0;
+                        escape_tokens(db_connection, tokens, &escaped_tokens);
+                        std::string sql = utils::format_string(update_info.sql_template.c_str(), escaped_tokens);
+
+                        MYLOG_DEBUG("%s\n", sql.c_str());
+                        int affected_rows = db_connection->update("%s", sql.c_str());
+                        return affected_rows;
                     }
                 }
-            }
-            catch (sys::CDBException& db_ex)
-            {
-                if (!db_connection->is_disconnected_exception(db_ex) || (retries==max_retries-1))
+                catch (sys::CDBException& db_ex)
                 {
-                    MYLOG_ERROR("[%d]%s\n", seq, db_ex.str().c_str());
-                    if (throw_exception)
-                        throw apache::thrift::TApplicationException(db_ex.str());
-                    break;
+                    if (!db_connection->is_disconnected_exception(db_ex) || (retries==max_retries-1))
+                    {
+                        MYLOG_ERROR("[%d]%s\n", seq, db_ex.str().c_str());
+                        if (throw_exception)
+                            throw apache::thrift::TApplicationException(db_ex.str());
+                        break;
+                    }
+                    else
+                    {
+                        MYLOG_ERROR("[retry][%d]%s\n", seq, db_ex.str().c_str());
+                        config_loader->release_db_connection(update_info.database_index);
+                        mooon::sys::CUtils::millisleep(100); // 网络类原因稍后重试
+                    }
                 }
-                else
-                {
-                    MYLOG_ERROR("[retry][%d]%s\n", seq, db_ex.str().c_str());
-                    config_loader->release_db_connection(update_info.database_index);
-                    mooon::sys::CUtils::millisleep(100); // 网络类原因稍后重试
-                }
-            }
-        } // for
+            } // for
+        }
     }
 
     return -1;

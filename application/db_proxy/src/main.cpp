@@ -147,6 +147,7 @@ bool CMainHelper::init(int argc, char* argv[])
     mooon::sys::CSignalHandler::block_signal(SIGTERM);
 
     // 创建信号线程
+    mooon::sys::CUtils::millisleep(1000);
     _signal_thread = new mooon::sys::CThreadEngine(mooon::sys::bind(&CMainHelper::signal_thread, this));
     mooon::sys::CUtils::init_process_title(argc, argv);
 

@@ -3,8 +3,8 @@
 #define MOOON_DB_PROXY_CONFIG_LOADER_H
 #include <json/json.h>
 #include <mooon/sys/log.h>
+#include <mooon/sys/mysql_db.h>
 #include <mooon/sys/read_write_lock.h>
-#include <mooon/sys/simple_db.h>
 #include <mooon/utils/string_utils.h>
 #include <string>
 
@@ -216,7 +216,7 @@ public:
     CConfigLoader();
     bool load(const std::string& filepath);
     void release_db_connection(int index);
-    sys::DBConnection* get_db_connection(int index) const;
+    sys::CMySQLConnection* get_db_connection(int index) const;
     bool get_db_info(int index, struct DbInfo* db_info) const;
     bool get_query_info(int index, struct QueryInfo* query_info) const;
     bool get_update_info(int index, struct UpdateInfo* update_info) const;
@@ -232,9 +232,9 @@ private:
 private:
     // 有锁版本
     // need_lock 用来指示是否需要加锁
-    sys::DBConnection* init_db_connection(int index, bool need_lock) const;
+    sys::CMySQLConnection* init_db_connection(int index, bool need_lock) const;
     // 无锁版本，被init_db_connection()调用
-    sys::DBConnection* do_init_db_connection(int index) const;
+    sys::CMySQLConnection* do_init_db_connection(int index) const;
 
 private:
     volatile bool _stop_monitor;

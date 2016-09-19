@@ -28,8 +28,8 @@ else ()
     target_link_libraries(db_proxy libjsoncpp.a libmysqlclient.a libthriftnb.a libthrift.a libevent.a)
 endif ()
 
-add_executable(db_proxy-tester tester.cpp ${RPC})
-target_link_libraries(db_proxy-tester libjsoncpp.a libthriftnb.a libthrift.a libevent.a)
+add_executable(db_proxy_client db_proxy_client.cpp ${RPC})
+target_link_libraries(db_proxy_client libjsoncpp.a libthriftnb.a libthrift.a libevent.a)
 
 # DBConnection依赖于SQLite3，虽然db_proxy并未使用SQLite3
 if (HAVE_SQLITE3)

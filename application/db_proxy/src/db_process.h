@@ -32,6 +32,7 @@ private:
     sys::CThreadEngine* _signal_thread;
     sys::CMySQLConnection _mysql;
     uint32_t _consecutive_failures; // 用于减少连接DB失败时的重复日志
+    bool _db_connected; // 是否连接了DB
 };
 
 }} // namespace mooon { namespace db_proxy {

@@ -1,7 +1,7 @@
 {
     "database": [
         {
-            "alias": "test1",
+            "alias": "",
             "index": 1,
             "host": "127.0.0.1",
             "port": 3306,
@@ -11,14 +11,14 @@
             "charset": ""
         },
         {
-            "alias": "",
+            "alias": "test2",
             "index": 2,
             "host": "127.0.0.1",
             "port": 3306,
             "name": "test2",
             "user": "root",
             "password": "2015",
-            "charset": "utf-8"
+            "charset": "utf8"
         }
     ],
     "query": [
@@ -41,7 +41,7 @@
         {
             "index": 1,
             "database_index": 1,
-            "sql_template": "INSERT INTO %s VALUES (%s, \"%s\", %s)",
+            "sql_template": "INSERT INTO %s (f_name,f_amount,f_date) VALUES (\"%s\",%s,\"%s\")",
             "sign": ""
         },
         {

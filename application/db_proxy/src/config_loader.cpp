@@ -12,7 +12,7 @@
 namespace mooon { namespace db_proxy {
 
 // 线程级DB连接
-static __thread sys::DBConnection* g_db_connection[MAX_DB_CONNECTION] = { NULL } ;
+static __thread sys::CMySQLConnection* g_db_connection[MAX_DB_CONNECTION] = { NULL } ;
 
 static void init_db_info_array(struct DbInfo* db_info_array[])
 {
@@ -191,7 +191,7 @@ void CConfigLoader::release_db_connection(int index)
     }
 }
 
-sys::DBConnection* CConfigLoader::get_db_connection(int index) const
+sys::CMySQLConnection* CConfigLoader::get_db_connection(int index) const
 {
     if ((index < 0) || (index >= MAX_DB_CONNECTION))
     {
@@ -388,7 +388,7 @@ bool CConfigLoader::add_update_info(struct UpdateInfo* update_info, struct Updat
     return true;
 }
 
-sys::DBConnection* CConfigLoader::init_db_connection(int index, bool need_lock) const
+sys::CMySQLConnection* CConfigLoader::init_db_connection(int index, bool need_lock) const
 {
     if (!need_lock)
     {
@@ -401,11 +401,11 @@ sys::DBConnection* CConfigLoader::init_db_connection(int index, bool need_lock) 
     }
 }
 
-sys::DBConnection* CConfigLoader::do_init_db_connection(int index) const
+sys::CMySQLConnection* CConfigLoader::do_init_db_connection(int index) const
 {
     const int max_retries = 3;
     const struct DbInfo* _db_info = _db_info_array[index];
-    sys::DBConnection* db_connection = NULL;
+    sys::CMySQLConnection* db_connection = NULL;
 
     for (int retries=0; retries<max_retries; ++retries)
     {

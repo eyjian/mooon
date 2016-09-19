@@ -7,7 +7,7 @@ namespace mooon { namespace db_proxy {
 
 CDbProcess::CDbProcess(const struct DbInfo& dbinfo)
     : _dbinfo(dbinfo), _stop_signal_thread(false), _signal_thread(NULL),
-      _consecutive_failures(0)
+      _consecutive_failures(0), _db_connected(false)
 {
 }
 
@@ -34,7 +34,7 @@ void CDbProcess::run()
             MYLOG_INFO("dbprocess(%u, %s) will exit for parent process not exit\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str());
             break;
         }
-        if (!connect_db())
+        if (!_db_connected && !connect_db())
         {
             mooon::sys::CUtils::millisleep(1000);
             continue;
@@ -81,14 +81,17 @@ bool CDbProcess::connect_db()
         _mysql.set_user(_dbinfo.user, _dbinfo.password);
         _mysql.set_db_name(_dbinfo.name);
         _mysql.set_charset(_dbinfo.charset);
+        _mysql.enable_auto_reconnect();
         _mysql.open();
 
+        _db_connected = true;
         _consecutive_failures = 0;
         MYLOG_ERROR("dbprocess(%u, %s) connect %s ok\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str(), _mysql.str().c_str());
         return true;
     }
     catch (sys::CDBException& ex)
     {
+        _db_connected = false;
         if (0 == _consecutive_failures++%60)
         {
             MYLOG_ERROR("dbprocess(%u, %s) connect %s error(%u): %s\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str(), _mysql.str().c_str(), _consecutive_failures, ex.str().c_str());
