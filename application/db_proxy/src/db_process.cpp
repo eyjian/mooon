@@ -86,7 +86,7 @@ bool CDbProcess::connect_db()
 
         _db_connected = true;
         _consecutive_failures = 0;
-        MYLOG_ERROR("dbprocess(%u, %s) connect %s ok\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str(), _mysql.str().c_str());
+        MYLOG_INFO("dbprocess(%u, %s) connect %s ok\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str(), _mysql.str().c_str());
         return true;
     }
     catch (sys::CDBException& ex)
