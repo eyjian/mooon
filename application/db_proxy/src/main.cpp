@@ -154,10 +154,6 @@ bool CMainHelper::init(int argc, char* argv[])
     try
     {
         mooon::sys::g_logger = mooon::sys::create_safe_logger(true, 8096);
-        if (mooon::argument::screen->value() == 1) // 日志打印到屏幕上
-            mooon::sys::g_logger->enable_screen(true);
-        mooon::sys::log_level_t log_level = mooon::sys::get_log_level(mooon::argument::log_level->c_value());
-        mooon::sys::g_logger->set_log_level(log_level);
 
         // 只有当参数report_frequency_seconds的值大于0时才启动统计功能
         int report_frequency_seconds = mooon::argument::report_frequency_seconds->value();
