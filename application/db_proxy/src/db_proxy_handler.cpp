@@ -70,15 +70,36 @@ void CDbProxyHandler::query(DBTable& _return, const std::string& sign, const int
                 if (sql.empty())
                 {
                     MYLOG_ERROR("error number of tokens or template: %s\n", query_info.str().c_str());
-                    throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("error number of tokens or invalid template(%s)", query_info.str().c_str()).c_str());
+                    throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("error number of tokens or invalid template(%s)", query_info.str().c_str()));
                 }
                 else
                 {
                     MYLOG_DEBUG("%s LIMIT %d,%d\n", sql.c_str(), limit_start, limit);
                     if (limit_start >= 0) // limit_start是从0开始而不是1
-                        db_connection->query(_return, "%s LIMIT %d,%d", sql.c_str(), limit_start, limit);
+                    {
+                        // 限制一次性返回的记录数太多将db_proxy搞死
+                        if (limit - limit_start > MAX_LIMIT)
+                        {
+                            MYLOG_ERROR("limit(%d) - limit_start(%d) > %d: %s\n", limit, limit_start, MAX_LIMIT, query_info.str().c_str());
+                            throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("limit(%d) - limit_start(%d) > %d", limit, limit_start, MAX_LIMIT));
+                        }
+                        else
+                        {
+                            db_connection->query(_return, "%s LIMIT %d,%d", sql.c_str(), limit_start, limit);
+                        }
+                    }
                     else
-                        db_connection->query(_return, "%s LIMIT %d", sql.c_str(), limit);
+                    {
+                        if (limit > MAX_LIMIT)
+                        {
+                            MYLOG_ERROR("limit(%d) > %d: %s\n", limit, MAX_LIMIT, query_info.str().c_str());
+                            throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("limit(%d) > %d", limit, MAX_LIMIT));
+                        }
+                        else
+                        {
+                            db_connection->query(_return, "%s LIMIT %d", sql.c_str(), limit);
+                        }
+                    }
 
                     ++_num_query_success;
                 }

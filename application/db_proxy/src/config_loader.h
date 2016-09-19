@@ -14,8 +14,9 @@ namespace mooon { namespace db_proxy {
 // 定义常量
 enum
 {
-    MAX_DB_CONNECTION = 100, // 单个线程最多支持的DB连接个数
-    MAX_SQL_TEMPLATE = 10000 // 单个线程最多支持的SQL模板个数
+    MAX_DB_CONNECTION = 100,  // 单个线程最多支持的DB连接个数
+    MAX_SQL_TEMPLATE = 10000, // 单个线程最多支持的SQL模板个数
+    MAX_LIMIT = 1000          // 限制一次性返回的记录数太多将db_proxy搞死
 };
 
 struct DbInfo
