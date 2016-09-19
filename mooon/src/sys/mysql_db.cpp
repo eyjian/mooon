@@ -39,6 +39,13 @@ bool CMySQLConnection::is_duplicate(int errcode)
     return ER_DUP_ENTRY == errcode; // 1062
 }
 
+void CMySQLConnection::escape_string(const std::string& str, std::string* escaped_str)
+{
+    escaped_str->resize(str.size()*2+1, '\0');
+    int escaped_string_length = mysql_escape_string(const_cast<char*>(escaped_str->data()), str.c_str(), str.length());
+    escaped_str->resize(escaped_string_length);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 CMySQLConnection::CMySQLConnection(size_t sql_max)
     : CDBConnectionBase(sql_max), _mysql_handler(NULL)

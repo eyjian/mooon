@@ -32,6 +32,7 @@ class CMySQLConnection: public CDBConnectionBase, public utils::CObject
 {
 public:
     static bool is_duplicate(int errcode);
+    static void escape_string(const std::string& str, std::string* escaped_str);
 
 public:
     CMySQLConnection(size_t sql_max=8192);
