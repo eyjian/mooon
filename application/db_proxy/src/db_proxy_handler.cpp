@@ -67,13 +67,21 @@ void CDbProxyHandler::query(DBTable& _return, const std::string& sign, const int
                 escape_tokens(db_connection, tokens, &escaped_tokens);
                 const std::string sql = utils::format_string(query_info.sql_template.c_str(), escaped_tokens);
 
-                MYLOG_DEBUG("%s LIMIT %d,%d\n", sql.c_str(), limit_start, limit);
-                if (limit_start >= 0) // limit_start是从0开始而不是1
-                    db_connection->query(_return, "%s LIMIT %d,%d", sql.c_str(), limit_start, limit);
+                if (sql.empty())
+                {
+                    MYLOG_ERROR("error number of tokens or template: %s\n", query_info.str().c_str());
+                    throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("error number of tokens or invalid template(%s)", query_info.str().c_str()).c_str());
+                }
                 else
-                    db_connection->query(_return, "%s LIMIT %d", sql.c_str(), limit);
+                {
+                    MYLOG_DEBUG("%s LIMIT %d,%d\n", sql.c_str(), limit_start, limit);
+                    if (limit_start >= 0) // limit_start是从0开始而不是1
+                        db_connection->query(_return, "%s LIMIT %d,%d", sql.c_str(), limit_start, limit);
+                    else
+                        db_connection->query(_return, "%s LIMIT %d", sql.c_str(), limit);
 
-                ++_num_query_success;
+                    ++_num_query_success;
+                }
             }
         }
         catch (sys::CDBException& db_ex)
