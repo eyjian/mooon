@@ -4,6 +4,8 @@
 #include <pthread.h>
 SYS_NAMESPACE_BEGIN
 
+// 命令行工具debuginfo-install用于安装debug信息，示例（为glibc安装debug信息，以方便跟踪调试）：debuginfo-install glibc
+
 /***
   * 读写锁类
   * 请注意: 谁加锁谁解锁原则，即一个线程加的锁，不能由另一线程来解锁
@@ -22,33 +24,35 @@ public:
 	void unlock() throw (CSyscallException);
 
     /***
-      * 获取读锁，如果写锁正被持有，则一直等待，直接可获取到读锁
+      * 获取读锁，如果写锁正被持有则一直等待直到可获取到读锁
+      * 注意同一个线程加了同一个对象的读锁后再加写锁会死锁！！！
       * @exception: 出错抛出CSyscallException异常
       */
 	void lock_read() throw (CSyscallException);
 
     /***
-      * 获取写锁，如果写锁正被持有，则一直等待，直接可获取到写锁
+      * 获取写锁，如果写锁正被持有则一直等待直到可获取到写锁
+      * 注意同一个线程加了同一个对象的读锁后再加写锁会死锁！！！
       * @exception: 出错抛出CSyscallException异常
       */
 	void lock_write() throw (CSyscallException);
 
     /***
-      * 尝试去获取读锁，如果写锁正被持有，则立即返回
+      * 尝试去获取读锁，如果写锁正被持有则立即返回
       * @return: 如果成功获取了读锁，则返回true，否则返回false
       * @exception: 出错抛出CSyscallException异常
       */
 	bool try_lock_read() throw (CSyscallException);
 
     /***
-      * 尝试去获取写锁，如果写锁正被持有，则立即返回
+      * 尝试去获取写锁，如果写锁正被持有则立即返回
       * @return: 如果成功获取了写锁，则返回true，否则返回false
       * @exception: 出错抛出CSyscallException异常
       */
 	bool try_lock_write() throw (CSyscallException);
 
     /***
-      * 以超时方式获取读锁，如果写锁正被持有，则等待指定的毫秒数，
+      * 以超时方式获取读锁，如果写锁正被持有则等待指定的毫秒数，
       * 如果在指定的毫秒时间内，仍不能得到读锁，则立即返回
       * @millisecond: 等待获取读锁的毫秒数
       * @return: 如果在指定的毫秒时间内获取到了读锁，则返回true，否则如果超时则返回false
@@ -57,7 +61,7 @@ public:
 	bool timed_lock_read(uint32_t millisecond) throw (CSyscallException);
 
     /***
-      * 以超时方式获取写锁，如果写锁正被持有，则等待指定的毫秒数，
+      * 以超时方式获取写锁，如果写锁正被持有则等待指定的毫秒数，
       * 如果在指定的毫秒时间内，仍不能得到写锁，则立即返回
       * @millisecond: 等待获取写锁的毫秒数
       * @return: 如果在指定的毫秒时间内获取到了写锁，则返回true，否则如果超时则返回false
