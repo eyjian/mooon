@@ -6,7 +6,7 @@
 #include <vector>
 UTILS_NAMESPACE_BEGIN
 
-enum { FORMAT_STRING_SIZE = 30 };
+enum { FORMAT_STRING_SIZE = 56 };
 inline std::string format_string(const char* format, const std::vector<std::string>& tokens)
 {
     if (0 == tokens.size())
