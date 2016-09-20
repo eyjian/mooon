@@ -9,166 +9,160 @@
 #include <mooon/sys/utils.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
 namespace mooon { namespace db_proxy {
 
-// 线程级别的
-static __thread int sg_thread_sql_log_fd = -1;
+static __thread int stg_log_fd = -1;
+static __thread int stg_old_log_fd = -1;
 
-SINGLETON_IMPLEMENT(CSqlLogger)
-uint32_t CSqlLogger::sql_log_filesize = 5242880; // 500MB
-
-void CSqlLogger::write_log(int database_index, const std::string& sql)
+CSqlLogger::CSqlLogger(int database_index, const struct DbInfo* dbinfo)
+    : _database_index(database_index)
 {
-    int fd = get_fd(database_index);
-    if (-1 == fd)
-    {
-        MYLOG_ERROR("[SQL]%s\n", sql.c_str());
-    }
-    else
-    {
-        int bytes = write(fd, sql.c_str(), sql.size());
+    atomic_set(&_log_fd, -1);
+    _dbinfo = new struct DbInfo(dbinfo);
+}
 
-        if (bytes != static_cast<int>(sql.size()))
-        {
-            MYLOG_ERROR("write error: %s\n", strerror(errno));
-        }
+CSqlLogger::~CSqlLogger()
+{
+    int log_fd = atomic_read(&_log_fd);
+    if (log_fd != -1)
+        close(log_fd);
+    atomic_set(&_log_fd, -2);
+    delete _dbinfo;
+}
 
-        if (need_roll(fd))
+std::string CSqlLogger::str() const
+{
+    return _dbinfo->str();
+}
+
+bool CSqlLogger::write_log(const std::string& sql)
+{
+    try
+    {
+        int log_fd = atomic_read(&_log_fd);
+        MYLOG_DEBUG("[%s]: log_fd=%d, stg_log_fd=%d, stg_old_log_fd=%d\n", _dbinfo->str().c_str(), log_fd, stg_log_fd, stg_old_log_fd);
+        if ((-1 == stg_log_fd) || (stg_old_log_fd != log_fd))
         {
             sys::LockHelper<sys::CLock> lock_helper(_lock);
-            if (need_roll(fd))
+            if (-1 == log_fd)
             {
-                roll(database_index);
+                rotate_log();
+            }
+            else
+            {
+                if (stg_log_fd != -1)
+                    close(stg_log_fd);
+                stg_old_log_fd = log_fd;
+                stg_log_fd = dup(log_fd);
+                if (stg_log_fd != -1)
+                {
+                    MYLOG_DEBUG("dup ok: (%d)%s\n", stg_log_fd, _dbinfo->str().c_str());
+                }
+                else
+                {
+                    const std::string log_filepath = get_log_filepath();
+                    MYLOG_ERROR("[%s] dup %s error: %s\n", _dbinfo->str().c_str(), log_filepath.c_str(), sys::Error::to_string().c_str());
+                }
             }
         }
-    }
-}
-
-int CSqlLogger::get_fd(int database_index)
-{
-    if (-1 == sg_thread_sql_log_fd)
-        sg_thread_sql_log_fd = open_sql_log(database_index);
-
-    return sg_thread_sql_log_fd;
-}
-
-int CSqlLogger::open_sql_log(const std::string& current_filepath)
-{
-    int fd = -1;
-
-    for (int i=0; i<3; ++i) // 试图打开时，其它线程可能正在滚动操作，所以稍后重试一次
-    {
-        fd = open(current_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
-
-        if (fd != -1)
+        if (-1 == stg_log_fd)
         {
-            MYLOG_INFO("open %s ok\n", current_filepath.c_str());
-            break;
+            return false;
+        }
+
+        ssize_t bytes_written = write(stg_log_fd, sql.data(), sql.size());
+        if (bytes_written != static_cast<ssize_t>(sql.size()))
+        {
+            int errcode = errno;
+            sys::LockHelper<sys::CLock> lock_helper(_lock);
+            const std::string log_filepath = get_log_filepath();
+            MYLOG_ERROR("[%s][%s] write sql[%s] error: (bytes_written=%zd,stg_log_fd=%d)%s\n", _dbinfo->str().c_str(), log_filepath.c_str(), sql.c_str(), bytes_written, stg_log_fd, sys::Error::to_string(errcode).c_str());
+            return false;
         }
         else
         {
-            // if/else是为优化日志输出
-            if ((0 == i) && sys::Error::is_not(ENOENT)) // No such file or directory
+            int total_bytes_written = atomic_add_return(bytes_written, &_total_bytes_written);
+            if (total_bytes_written > 1024*1024*300)
             {
-                MYLOG_ERROR("open %s error: (%d)%s\n", current_filepath.c_str(), sys::Error::code(), sys::Error::to_string().c_str());
-            }
-            else if (2 == i)
-            {
-                MYLOG_ERROR("open %s error: (%d)%s\n", current_filepath.c_str(), sys::Error::code(), sys::Error::to_string().c_str());
-            }
-            else if (0 == i)
-            {
-                try
-                {
-                    // 目录不存在时尝试创建一下
-                    sys::CDirUtils::create_directory_byfilepath(current_filepath.c_str(), DIRECTORY_DEFAULT_PERM);
-                }
-                catch (sys::CSyscallException& syscall_ex)
-                {
-                    MYLOG_ERROR("create directory by [%s] error: %s\n", current_filepath.c_str(), syscall_ex.str().c_str());
-                }
+                sys::LockHelper<sys::CLock> lock_helper(_lock);
+                rotate_log();
             }
 
-            // 试图打开时，其它线程可能正在滚动操作，所以稍后重试一次
-            sys::CUtils::millisleep(100u);
+            return true;
         }
     }
-
-    return fd;
+    catch (sys::CSyscallException& ex)
+    {
+        const std::string log_filepath = get_log_filepath();
+        MYLOG_ERROR("[%s] write %s failed: %s\n", _dbinfo->str().c_str(), log_filepath.c_str(), ex.str().c_str());
+        return false;
+    }
 }
 
-int CSqlLogger::open_sql_log(int database_index)
+void CSqlLogger::rotate_log()
 {
-    int fd = -1;
-    struct DbInfo db_info;
+    const std::string log_filepath = get_log_filepath();
+    int log_fd = atomic_read(&_log_fd);
 
-    if (!CConfigLoader::get_singleton()->get_db_info(database_index, &db_info))
+    if (log_fd != -1)
     {
-        MYLOG_ERROR("get_db_info failed: db[%d] not exist\n", database_index);
+        close(log_fd);
+        MYLOG_DEBUG("close log_fd: (%d)%s\n", log_fd, _dbinfo->str().c_str());
+        atomic_set(&_log_fd, -1);
+    }
+    if (stg_log_fd != -1)
+    {
+        close(stg_log_fd);
+        MYLOG_DEBUG("[%s] close stg_log_fd: %s\n", _dbinfo->str().c_str(), log_filepath.c_str());
+        stg_log_fd = -1;
+    }
+
+    log_fd = open(log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND|O_EXCL, FILE_DEFAULT_PERM);
+    if (-1 == log_fd)
+    {
+        MYLOG_ERROR("[%s] create log[%s] error: %s\n", _dbinfo->str().c_str(), log_filepath.c_str(), sys::Error::to_string().c_str());
     }
     else
     {
-        std::string sql_log_filepath = get_current_filepath(db_info);
-        fd = open_sql_log(sql_log_filepath);
+        off_t log_file_size = sys::CFileUtils::get_file_size(log_fd);
+        atomic_set(&_total_bytes_written, log_file_size);
+        atomic_set(&_log_fd, log_fd);
+        stg_log_fd = dup(log_fd);
+        stg_old_log_fd = log_fd;
+        MYLOG_INFO("[%s] rotate and create new log file: (log_fd=%d, stg_log_fd=%d)%s\n", _dbinfo->str().c_str(), log_fd, stg_log_fd, log_filepath.c_str());
     }
-
-    return fd;
 }
 
-// homedir/sql_log/db_host_db_name/current/db_host_db_name.sql
-std::string CSqlLogger::get_current_filepath(const struct DbInfo& db_info) const
+std::string CSqlLogger::get_log_filepath() const
 {
-    std::string homedir = sys::CUtils::get_program_path() + std::string("/..");
-    std::string filepath = homedir + std::string("/sql_log/") +
-                           db_info.host + std::string("_") + db_info.name + std::string("/current/") +
-                           db_info.host + std::string("_") + db_info.name + std::string(".sql");
+    std::string log_filepath;
 
-    return filepath;
-}
-
-// homedir/sql_log/db_host_db_name/current/db_host_db_name_YYYYMMDDHHmmss.sql
-std::string CSqlLogger::get_rolled_filepath(const struct DbInfo& db_info, const std::string& datetime) const
-{
-    std::string homedir = sys::CUtils::get_program_path() + std::string("/..");
-    std::string filepath = homedir + std::string("/sql_log/") +
-                           db_info.host + std::string("_") + db_info.name + std::string("/current/") +
-                           db_info.host + std::string("_") + db_info.name + std::string("_") + datetime + std::string(".sql");
-
-    return filepath;
-}
-
-bool CSqlLogger::need_roll(int fd) const
-{
-    off_t file_size = sys::CFileUtils::get_file_size(fd);
-    return file_size >= static_cast<off_t>(CSqlLogger::sql_log_filesize);
-}
-
-void CSqlLogger::roll(int database_index)
-{
-    struct DbInfo db_info;
-
-    if (CConfigLoader::get_singleton()->get_db_info(database_index, &db_info))
+    MOOON_ASSERT(!_dbinfo->alias.empty());
+    if (_dbinfo->alias.empty())
     {
-        std::string datetime = sys::CDatetimeUtils::get_current_datetime("%04d%02d%02d%02d%02d%02d");
-        std::string current_filepath = get_current_filepath(db_info);
-        std::string rotated_filepath = get_rolled_filepath(db_info, datetime);
-
-        try
-        {
-            sys::CDirUtils::create_directory_byfilepath(rotated_filepath.c_str(), DIRECTORY_DEFAULT_PERM);
-            sys::CFileUtils::rename(current_filepath.c_str(), rotated_filepath.c_str());
-
-            int fd = open_sql_log(current_filepath);
-            if (fd != -1)
-                sg_thread_sql_log_fd = fd;
-        }
-        catch (sys::CSyscallException& syscall_ex)
-        {
-            MYLOG_ERROR("rename [%s] to [%s] failed: %s\n",
-                current_filepath.c_str(), rotated_filepath.c_str(), sys::Error::to_string().c_str());
-        }
+        MYLOG_ERROR("alias empty: %s\n", _dbinfo->str().c_str());
     }
+    else
+    {
+        const std::string program_path = sys::CUtils::get_program_path();
+        std::string log_dirpath = program_path + std::string("/../sql_log");
+        if (!sys::CDirUtils::exist(log_dirpath))
+        {
+            MYLOG_WARN("[%s][%s] not exist to use %s to store sql log\n", _dbinfo->str().c_str(), log_dirpath.c_str(), program_path.c_str());
+            log_dirpath = program_path;
+        }
+
+        log_dirpath = log_dirpath + std::string("/") + _dbinfo->alias;
+        if (!sys::CDirUtils::exist(log_dirpath))
+        {
+            sys::CDirUtils::create_directory(log_dirpath.c_str(), DIRECTORY_DEFAULT_PERM);
+        }
+
+        time_t now = time(NULL);
+        log_filepath = utils::CStringUtils::format_string("%s/sql.%" PRId64, log_dirpath.c_str(), static_cast<int64_t>(now));
+    }
+
+    return log_filepath;
 }
 
 } // namespace db_proxy

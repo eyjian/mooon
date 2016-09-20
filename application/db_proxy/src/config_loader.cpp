@@ -1,5 +1,6 @@
 // Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 #include "config_loader.h"
+#include "sql_logger.h"
 #include <errno.h>
 #include <fstream>
 #include <mooon/net/utils.h>
@@ -16,46 +17,58 @@ static __thread sys::CMySQLConnection* g_db_connection[MAX_DB_CONNECTION] = { NU
 
 static void init_db_info_array(struct DbInfo* db_info_array[])
 {
-    for (int i=0; i<MAX_DB_CONNECTION; ++i)
-        db_info_array[i] = NULL;
+    for (int index=0; index<MAX_DB_CONNECTION; ++index)
+        db_info_array[index] = NULL;
 }
 
 static void init_query_info_array(struct QueryInfo* query_info_array[])
 {
-    for (int i=0; i<MAX_SQL_TEMPLATE; ++i)
-        query_info_array[i] = NULL;
+    for (int index=0; index<MAX_SQL_TEMPLATE; ++index)
+        query_info_array[index] = NULL;
 }
 
 static void init_update_info_array(struct UpdateInfo* update_info_array[])
 {
-    for (int i=0; i<MAX_SQL_TEMPLATE; ++i)
-        update_info_array[i] = NULL;
+    for (int index=0; index<MAX_SQL_TEMPLATE; ++index)
+        update_info_array[index] = NULL;
 }
 
 static void release_db_info_array(struct DbInfo* db_info_array[])
 {
-    for (int i=0; i<MAX_DB_CONNECTION; ++i)
+    for (int index=0; index<MAX_DB_CONNECTION; ++index)
     {
-        delete db_info_array[i];
-        db_info_array[i] = NULL;
+        delete db_info_array[index];
+        db_info_array[index] = NULL;
+    }
+}
+
+static void release_sql_logger_array(CSqlLogger* sql_logger_array[])
+{
+    for (int index=0; index<MAX_DB_CONNECTION; ++index)
+    {
+        if (sql_logger_array[index] != NULL)
+        {
+            sql_logger_array[index]->dec_refcount();
+            sql_logger_array[index] = NULL;
+        }
     }
 }
 
 static void release_query_info_array(struct QueryInfo* query_info_array[])
 {
-    for (int i=0; i<MAX_SQL_TEMPLATE; ++i)
+    for (int index=0; index<MAX_SQL_TEMPLATE; ++index)
     {
-        delete query_info_array[i];
-        query_info_array[i] = NULL;
+        delete query_info_array[index];
+        query_info_array[index] = NULL;
     }
 }
 
 static void release_update_info_array(struct UpdateInfo* update_info_array[])
 {
-    for (int i=0; i<MAX_SQL_TEMPLATE; ++i)
+    for (int index=0; index<MAX_SQL_TEMPLATE; ++index)
     {
-        delete update_info_array[i];
-        update_info_array[i] = NULL;
+        delete update_info_array[index];
+        update_info_array[index] = NULL;
     }
 }
 
@@ -149,32 +162,38 @@ bool CConfigLoader::load(const std::string& filepath)
     if (!load_update(root["update"], update_info_array))
         return false;
 
-    int i; // 加写锁
+    // 加写锁
     sys::WriteLockHelper write_lock(_read_write_lock);
     release_db_info_array(_db_info_array);
+    release_sql_logger_array(_sql_logger_array);
     release_query_info_array(_query_info_array);
     release_update_info_array(_update_info_array);
 
-    for (i=0; i<MAX_DB_CONNECTION; ++i)
+    for (int index=0; index<MAX_DB_CONNECTION; ++index)
     {
-        if (db_info_array[i] != NULL)
+        if (db_info_array[index] != NULL)
         {
             // 启动时即连接一下，以早期发现配置等问题
-            _db_info_array[i] = new struct DbInfo(*db_info_array[i]);
-            sys::DBConnection* db_connection = init_db_connection(i, false);
+            _db_info_array[index] = new struct DbInfo(*db_info_array[index]);
+            sys::DBConnection* db_connection = init_db_connection(index, false);
             if (db_connection != NULL)
             {
                 delete db_connection;
                 db_connection = NULL;
             }
+
+            // 创建好SqlLogger
+            CSqlLogger* sql_logger = new CSqlLogger(index, _db_info_array[index]);
+            _sql_logger_array[index] = sql_logger;
+            sql_logger->inc_refcount();
         }
     }
-    for (i=0; i<MAX_SQL_TEMPLATE; ++i)
+    for (int index=0; index<MAX_SQL_TEMPLATE; ++index)
     {
-        if (query_info_array[i] != NULL)
-            _query_info_array[i] = new struct QueryInfo(*query_info_array[i]);
-        if (update_info_array[i] != NULL)
-            _update_info_array[i] = new struct UpdateInfo(*update_info_array[i]);
+        if (query_info_array[index] != NULL)
+            _query_info_array[index] = new struct QueryInfo(*query_info_array[index]);
+        if (update_info_array[index] != NULL)
+            _update_info_array[index] = new struct UpdateInfo(*update_info_array[index]);
     }
 
     _md5_sum = md5_sum;
@@ -182,9 +201,63 @@ bool CConfigLoader::load(const std::string& filepath)
     return true;
 }
 
+CSqlLogger* CConfigLoader::get_sql_logger(int index)
+{
+    CSqlLogger* sql_logger = NULL;
+
+    if ((index >= 0) && (index < MAX_DB_CONNECTION))
+    {
+        {
+            sys::ReadLockHelper read_lock(_read_write_lock);
+            sql_logger = _sql_logger_array[index];
+            if (sql_logger != NULL)
+                sql_logger->inc_refcount();
+        }
+
+        if (NULL == sql_logger)
+        {
+            sys::WriteLockHelper write_lock(_read_write_lock);
+            sql_logger = _sql_logger_array[index];
+            if (sql_logger != NULL)
+            {
+                sql_logger->inc_refcount();
+            }
+            else
+            {
+                struct DbInfo* dbinfo = _db_info_array[index];
+                if (dbinfo != NULL)
+                {
+                    sql_logger = new CSqlLogger(index, dbinfo);
+                    _sql_logger_array[index] = sql_logger;
+                    sql_logger->inc_refcount();
+                }
+            }
+        }
+    }
+
+    return sql_logger;
+}
+
+void CConfigLoader::release_sql_logger(CSqlLogger* sql_logger)
+{
+    if (sql_logger != NULL)
+    {
+        const std::string str = sql_logger->str();
+        const int index = sql_logger->get_database_index();
+
+        sys::ReadLockHelper read_lock(_read_write_lock);
+        if (sql_logger->dec_refcount())
+        {
+            MYLOG_WARN("deleted sqllogger: %s\n", str.c_str());
+            if (sql_logger == _sql_logger_array[index])
+                _sql_logger_array[index] = NULL;
+        }
+    }
+}
+
 void CConfigLoader::release_db_connection(int index)
 {
-    if ((index >= 0) || (index < MAX_DB_CONNECTION))
+    if ((index >= 0) && (index < MAX_DB_CONNECTION))
     {
         delete g_db_connection[index];
         g_db_connection[index] = NULL;

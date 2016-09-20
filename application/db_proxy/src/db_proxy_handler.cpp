@@ -188,11 +188,27 @@ int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, co
 
         if (!db_info.alias.empty())
         {
-            // 写入文件由dbprocess写入db
-            escape_tokens(NULL, tokens, &escaped_tokens);
-            if (throw_exception)
-                throw apache::thrift::TApplicationException("io error");
-            return 0;
+            CSqlLogger* sql_logger = config_loader->get_sql_logger(update_info.database_index);
+            if (NULL == sql_logger)
+            {
+                if (throw_exception)
+                    throw apache::thrift::TApplicationException("no sql logger");
+                return 0;
+            }
+            else
+            {
+                // 写入文件由dbprocess写入db
+                escape_tokens(NULL, tokens, &escaped_tokens);
+                std::string sql = utils::format_string(update_info.sql_template.c_str(), escaped_tokens);
+                MYLOG_DEBUG("%s\n", sql.c_str());
+                sql.append(";\n");
+
+                bool written = sql_logger->write_log(sql);
+                config_loader->release_sql_logger(sql_logger);
+                if (!written && throw_exception)
+                    throw apache::thrift::TApplicationException("io error");
+                return 0;
+            }
         }
         else
         {
@@ -221,7 +237,7 @@ int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, co
                     else
                     {
                         escape_tokens(db_connection, tokens, &escaped_tokens);
-                        std::string sql = utils::format_string(update_info.sql_template.c_str(), escaped_tokens);
+                        const std::string sql = utils::format_string(update_info.sql_template.c_str(), escaped_tokens);
 
                         MYLOG_DEBUG("%s\n", sql.c_str());
                         int affected_rows = db_connection->update("%s", sql.c_str());

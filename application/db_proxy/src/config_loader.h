@@ -50,17 +50,19 @@ struct DbInfo
         mooon::utils::CStringUtils::trim(alias);
     }
 
+    DbInfo(const DbInfo& other)
+    {
+        init(&other);
+    }
+
+    DbInfo(const DbInfo* other)
+    {
+        init(other);
+    }
+
     DbInfo& operator =(const DbInfo& other)
     {
-        alias = other.alias;
-        index = other.index;
-        host = other.host;
-        port = other.port;
-        name = other.name;
-        user = other.user;
-        password = other.password;
-        charset = other.charset;
-
+        init(&other);
         return *this;
     }
 
@@ -79,6 +81,18 @@ struct DbInfo
         }
 
         return true;
+    }
+
+    void init(const DbInfo* other)
+    {
+        alias = other->alias;
+        index = other->index;
+        host = other->host;
+        port = other->port;
+        name = other->name;
+        user = other->user;
+        password = other->password;
+        charset = other->charset;
     }
 };
 
@@ -201,6 +215,8 @@ struct UpdateInfo
     }
 };
 
+class CSqlLogger;
+
 // 负责配置的加载
 class CConfigLoader
 {
@@ -216,8 +232,12 @@ public:
 public:
     CConfigLoader();
     bool load(const std::string& filepath);
+    CSqlLogger* get_sql_logger(int index);
+    void release_sql_logger(CSqlLogger* sql_logger);
+
     void release_db_connection(int index);
     sys::CMySQLConnection* get_db_connection(int index) const;
+
     bool get_db_info(int index, struct DbInfo* db_info) const;
     bool get_query_info(int index, struct QueryInfo* query_info) const;
     bool get_update_info(int index, struct UpdateInfo* update_info) const;
@@ -240,6 +260,7 @@ private:
 private:
     volatile bool _stop_monitor;
     mutable sys::CReadWriteLock _read_write_lock;
+    CSqlLogger* _sql_logger_array[MAX_DB_CONNECTION];
     struct DbInfo* _db_info_array[MAX_DB_CONNECTION];
     struct QueryInfo* _query_info_array[MAX_SQL_TEMPLATE];
     struct UpdateInfo* _update_info_array[MAX_SQL_TEMPLATE];

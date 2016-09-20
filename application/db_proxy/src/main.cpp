@@ -136,9 +136,9 @@ bool CMainHelper::init(int argc, char* argv[])
         return false;
     }
 
-    // 阻塞SIGINT、SIG_CHLD和SIG_TERM三个信号
+    // 阻塞SIG_CHLD和SIG_TERM两个信号
     mooon::sys::CSignalHandler::block_signal(SIGCHLD);
-    mooon::sys::CSignalHandler::block_signal(SIGINT);
+    //mooon::sys::CSignalHandler::block_signal(SIGINT);
     mooon::sys::CSignalHandler::block_signal(SIGTERM);
 
     // 创建信号线程
