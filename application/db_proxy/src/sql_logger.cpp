@@ -20,6 +20,8 @@ static __thread int stg_old_log_fd = -1;
 CSqlLogger::CSqlLogger(int database_index, const struct DbInfo* dbinfo)
     : _database_index(database_index)
 {
+    _log_file_timestamp = 0;
+    _log_file_suffix = 0;
     atomic_set(&_log_fd, -1);
     _dbinfo = new struct DbInfo(dbinfo);
 }
@@ -50,6 +52,7 @@ bool CSqlLogger::write_log(const std::string& sql)
             log_fd = atomic_read(&_log_fd); // 进入锁之前，可能其它线程已抢先做了滚动
             if (-1 == log_fd)
             {
+                MYLOG_INFO("[%s] try to rotate sql log: log_fd=%d, stg_log_fd=%d, stg_old_log_fd=%d\n", _dbinfo->str().c_str(), log_fd, stg_log_fd, stg_old_log_fd);
                 rotate_log();
             }
             else
@@ -90,15 +93,18 @@ bool CSqlLogger::write_log(const std::string& sql)
             {
                 sys::LockHelper<sys::CLock> lock_helper(_lock);
                 int log_fd = atomic_read(&_log_fd);
-                MYLOG_DEBUG("[%s]: log_fd=%d, stg_old_log_fd=%d, stg_log_fd=%d\n", _dbinfo->str().c_str(), log_fd, stg_old_log_fd, stg_log_fd);
-                if (log_fd == stg_old_log_fd)
+                int new_total_bytes_written = atomic_read(&_total_bytes_written);
+                // 如果其它线程滚动了，则新读到的将和前面一步可能不同，只要参数sql_file_size足够大，基本可以保证下一句的判断成立
+
+                if ((log_fd == stg_old_log_fd) && (new_total_bytes_written >= total_bytes_written))
                 {
+                    MYLOG_INFO("[%s] try to rotate sql log: total_bytes_written=%d, new_total_bytes_written=%d, log_fd=%d, stg_log_fd=%d, stg_old_log_fd=%d\n", _dbinfo->str().c_str(), total_bytes_written, new_total_bytes_written, log_fd, stg_log_fd, stg_old_log_fd);
                     rotate_log();
                 }
                 else
                 {
                     // 进入锁之前，其它线程已抢先做了滚动
-                    MYLOG_INFO("sql log rotated by other: %s\n", _dbinfo->str().c_str());
+                    MYLOG_INFO("[%s] sql log rotated by other: total_bytes_written=%d, new_total_bytes_written=%d, log_fd=%d, stg_log_fd=%d, stg_old_log_fd=%d\n", _dbinfo->str().c_str(), total_bytes_written, new_total_bytes_written, log_fd, stg_log_fd, stg_old_log_fd);
                     close(stg_log_fd);
                     stg_log_fd = dup(log_fd);
                     stg_old_log_fd = log_fd;
@@ -119,38 +125,39 @@ bool CSqlLogger::write_log(const std::string& sql)
 void CSqlLogger::rotate_log()
 {
     const std::string log_filepath = get_log_filepath();
-    int log_fd = atomic_read(&_log_fd);
+    int new_log_fd = open(log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND|O_EXCL, FILE_DEFAULT_PERM);
 
-    if (log_fd != -1)
-    {
-        close(log_fd);
-        MYLOG_DEBUG("close log_fd: (%d)%s\n", log_fd, _dbinfo->str().c_str());
-        atomic_set(&_log_fd, -1);
-    }
-    if (stg_log_fd != -1)
-    {
-        close(stg_log_fd);
-        MYLOG_DEBUG("[%s] close stg_log_fd: %s\n", _dbinfo->str().c_str(), log_filepath.c_str());
-        stg_log_fd = -1;
-    }
-
-    log_fd = open(log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND|O_EXCL, FILE_DEFAULT_PERM);
-    if (-1 == log_fd)
+    if (-1 == new_log_fd)
     {
         MYLOG_ERROR("[%s] create log[%s] error: %s\n", _dbinfo->str().c_str(), log_filepath.c_str(), sys::Error::to_string().c_str());
     }
     else
     {
-        off_t log_file_size = sys::CFileUtils::get_file_size(log_fd);
+        // 关闭old_log_fd一定要放在open之后，以确保write_log中判断被其它线程抢先滚动能够成立，原因是open会重用最近一次被close的fd
+        int old_log_fd = atomic_read(&_log_fd);
+        if (old_log_fd != -1)
+        {
+            close(old_log_fd);
+            MYLOG_DEBUG("close log_fd: (%d)%s\n", old_log_fd, _dbinfo->str().c_str());
+            atomic_set(&_log_fd, -1);
+        }
+        if (stg_log_fd != -1)
+        {
+            close(stg_log_fd);
+            MYLOG_DEBUG("[%s] close stg_log_fd: %s\n", _dbinfo->str().c_str(), log_filepath.c_str());
+            stg_log_fd = -1;
+        }
+
+        int log_file_size = static_cast<int>(sys::CFileUtils::get_file_size(new_log_fd));
         atomic_set(&_total_bytes_written, log_file_size);
-        atomic_set(&_log_fd, log_fd);
-        stg_log_fd = dup(log_fd);
-        stg_old_log_fd = log_fd;
-        MYLOG_INFO("[%s] rotate and create new log file: (log_fd=%d, stg_log_fd=%d)%s\n", _dbinfo->str().c_str(), log_fd, stg_log_fd, log_filepath.c_str());
+        atomic_set(&_log_fd, new_log_fd);
+        stg_log_fd = dup(new_log_fd);
+        stg_old_log_fd = new_log_fd;
+        MYLOG_INFO("[%s] rotate and create new log file: (log_file_size=%d, new_log_fd=%d, old_log_fd=%d, stg_log_fd=%d, stg_old_log_fd=%d)%s\n", _dbinfo->str().c_str(), log_file_size, new_log_fd, old_log_fd, stg_log_fd, stg_old_log_fd, log_filepath.c_str());
     }
 }
 
-std::string CSqlLogger::get_log_filepath() const
+std::string CSqlLogger::get_log_filepath()
 {
     std::string log_filepath;
 
@@ -162,21 +169,31 @@ std::string CSqlLogger::get_log_filepath() const
     else
     {
         const std::string program_path = sys::CUtils::get_program_path();
-        std::string log_dirpath = program_path + std::string("/../sql_log");
+        std::string log_dirpath = program_path + std::string("/../sqllog");
         if (!sys::CDirUtils::exist(log_dirpath))
         {
-            MYLOG_WARN("[%s][%s] not exist to use %s to store sql log\n", _dbinfo->str().c_str(), log_dirpath.c_str(), program_path.c_str());
-            log_dirpath = program_path;
+            MYLOG_INFO("to create sqllog dir[%s]: %s\n", log_dirpath.c_str(), _dbinfo->str().c_str());
+            sys::CDirUtils::create_directory(log_dirpath.c_str(), DIRECTORY_DEFAULT_PERM);
         }
 
         log_dirpath = log_dirpath + std::string("/") + _dbinfo->alias;
         if (!sys::CDirUtils::exist(log_dirpath))
         {
+            MYLOG_INFO("to create alias dir[%s]: %s\n", log_dirpath.c_str(), _dbinfo->str().c_str());
             sys::CDirUtils::create_directory(log_dirpath.c_str(), DIRECTORY_DEFAULT_PERM);
         }
 
         time_t now = time(NULL);
-        log_filepath = utils::CStringUtils::format_string("%s/sql.%" PRId64, log_dirpath.c_str(), static_cast<int64_t>(now));
+        if (now == _log_file_timestamp)
+        {
+            ++_log_file_suffix;
+        }
+        else
+        {
+            _log_file_suffix = 0;
+            _log_file_timestamp = now;
+        }
+        log_filepath = utils::CStringUtils::format_string("%s/sql.%" PRId64".%06d", log_dirpath.c_str(), static_cast<int64_t>(now), _log_file_suffix);
     }
 
     return log_filepath;

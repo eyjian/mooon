@@ -6,6 +6,9 @@
 namespace mooon { namespace db_proxy {
 
 struct DbInfo;
+
+// 实现关键点：
+// 需要确保一个线程能够区分文件是否被其它线程滚动了，这可以通过大小是否变小了，fd值是否变化了来判断
 class CSqlLogger: public sys::CRefCountable
 {
 public:
@@ -17,9 +20,11 @@ public:
 
 private:
     void rotate_log();
-    std::string get_log_filepath() const;
+    std::string get_log_filepath();
 
 private:
+    volatile time_t _log_file_timestamp; // 创建日志文件的时间
+    volatile int _log_file_suffix; // 为防止同一秒内创建的文件超出1个，设一suffix
     int _database_index;
     struct DbInfo* _dbinfo;
     sys::CLock _lock;
