@@ -28,6 +28,7 @@ private:
 
 private:
     struct DbInfo _dbinfo;
+    std::string _log_dirpath; // 日志存放目录
     volatile bool _stop_signal_thread;
     sys::CThreadEngine* _signal_thread;
     sys::CMySQLConnection _mysql;

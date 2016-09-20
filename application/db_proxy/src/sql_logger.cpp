@@ -171,7 +171,7 @@ std::string CSqlLogger::get_log_filepath()
     else
     {
         const std::string program_path = sys::CUtils::get_program_path();
-        std::string log_dirpath = program_path + std::string("/../sqllog");
+        std::string log_dirpath = get_log_dirpath();
         if (!sys::CDirUtils::exist(log_dirpath))
         {
             MYLOG_INFO("to create sqllog dir[%s]: %s\n", log_dirpath.c_str(), _dbinfo->str().c_str());

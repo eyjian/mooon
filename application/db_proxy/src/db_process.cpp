@@ -2,6 +2,7 @@
 #include "db_process.h"
 #include <mooon/sys/log.h>
 #include <mooon/sys/signal_handler.h>
+#include <mooon/utils/string_utils.h>
 #include <string.h>
 namespace mooon { namespace db_proxy {
 
@@ -9,6 +10,8 @@ CDbProcess::CDbProcess(const struct DbInfo& dbinfo)
     : _dbinfo(dbinfo), _stop_signal_thread(false), _signal_thread(NULL),
       _consecutive_failures(0), _db_connected(false)
 {
+    const std::string program_path = sys::CUtils::get_program_path();
+    _log_dirpath = get_log_dirpath();
 }
 
 CDbProcess::~CDbProcess()
@@ -36,11 +39,11 @@ void CDbProcess::run()
         }
         if (!_db_connected && !connect_db())
         {
-            mooon::sys::CUtils::millisleep(1000);
+            sys::CUtils::millisleep(1000);
             continue;
         }
 
-        mooon::sys::CUtils::millisleep(1000);
+        sys::CUtils::millisleep(1000);
     }
 
     MYLOG_INFO("dbprocess(%u, %s) exit now\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str());

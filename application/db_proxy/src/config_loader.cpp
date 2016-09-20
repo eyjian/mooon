@@ -12,6 +12,12 @@
 #include <sys/inotify.h> // 一些低版本内核没有实现
 namespace mooon { namespace db_proxy {
 
+std::string get_log_dirpath()
+{
+    const std::string program_path = sys::CUtils::get_program_path();
+    return utils::CStringUtils::format_string("%s/../%s", program_path.c_str(), SQLLOG_DIRNAME);
+}
+
 // 线程级DB连接
 static __thread sys::CMySQLConnection* g_db_connection[MAX_DB_CONNECTION] = { NULL } ;
 

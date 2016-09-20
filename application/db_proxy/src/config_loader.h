@@ -9,7 +9,10 @@
 #include <string>
 
 #define INVALID_ALIAS_PREFIX "-" // 无效别名前缀
+#define SQLLOG_DIRNAME "sqllog"
 namespace mooon { namespace db_proxy {
+
+extern std::string get_log_dirpath();
 
 // 定义常量
 enum
