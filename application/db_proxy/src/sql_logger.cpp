@@ -44,6 +44,7 @@ bool CSqlLogger::write_log(const std::string& sql)
         if ((-1 == stg_log_fd) || (stg_old_log_fd != log_fd))
         {
             sys::LockHelper<sys::CLock> lock_helper(_lock);
+            log_fd = atomic_read(&_log_fd); // 进入锁之前，可能其它线程已抢先做了滚动
             if (-1 == log_fd)
             {
                 rotate_log();
@@ -85,7 +86,20 @@ bool CSqlLogger::write_log(const std::string& sql)
             if (total_bytes_written > 1024*1024*300)
             {
                 sys::LockHelper<sys::CLock> lock_helper(_lock);
-                rotate_log();
+                int log_fd = atomic_read(&_log_fd);
+                MYLOG_DEBUG("[%s]: log_fd=%d, stg_old_log_fd=%d, stg_log_fd=%d\n", _dbinfo->str().c_str(), log_fd, stg_old_log_fd, stg_log_fd);
+                if (log_fd == stg_old_log_fd)
+                {
+                    rotate_log();
+                }
+                else
+                {
+                    // 进入锁之前，其它线程已抢先做了滚动
+                    MYLOG_INFO("sql log rotated by other: %s\n", _dbinfo->str().c_str());
+                    close(stg_log_fd);
+                    stg_log_fd = dup(log_fd);
+                    stg_old_log_fd = log_fd;
+                }
             }
 
             return true;
