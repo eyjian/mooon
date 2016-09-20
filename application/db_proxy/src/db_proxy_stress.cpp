@@ -94,9 +94,17 @@ void stress_thread()
         catch (apache::thrift::transport::TTransportException& ex)
         {
             atomic_inc(&sg_failure_num);
-            std::cerr << "TransportException: " << ex.what() << std::endl;
+            std::cerr << "TransportException(read): " << ex.what() << std::endl;
             db_proxy.close();
-            db_proxy.connect();
+            try
+            {
+                db_proxy.connect();
+            }
+            catch (apache::thrift::transport::TTransportException& ex)
+            {
+                std::cerr << "TransportException(connect): " << ex.what() << std::endl;
+                break;
+            }
         }
         catch (apache::thrift::TApplicationException& ex)
         {
