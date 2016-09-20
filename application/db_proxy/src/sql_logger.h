@@ -19,8 +19,9 @@ public:
     bool write_log(const std::string& sql);
 
 private:
-    void rotate_log();
+    void rotate_log(bool boot); // 启动后第一次调用参数值须为true，其它为false
     std::string get_log_filepath();
+    std::string get_last_log_filepath(); // 取得启动之前最新的一个日志文件，如果不存在则等同于get_log_filepath()
 
 private:
     volatile time_t _log_file_timestamp; // 创建日志文件的时间

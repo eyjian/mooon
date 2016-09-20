@@ -1,6 +1,8 @@
 // Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 #include "db_process.h"
-#include <mooon/sys/log.h>
+#include <algorithm>
+#include <mooon/sys/dir_utils.h>
+#include <mooon/sys/safe_logger.h>
 #include <mooon/sys/signal_handler.h>
 #include <mooon/utils/string_utils.h>
 #include <string.h>
@@ -11,7 +13,7 @@ CDbProcess::CDbProcess(const struct DbInfo& dbinfo)
       _consecutive_failures(0), _db_connected(false)
 {
     const std::string program_path = sys::CUtils::get_program_path();
-    _log_dirpath = get_log_dirpath();
+    _log_dirpath = get_log_dirpath(_dbinfo.alias);
 }
 
 CDbProcess::~CDbProcess()
@@ -25,7 +27,11 @@ CDbProcess::~CDbProcess()
 
 void CDbProcess::run()
 {
-    sys::CUtils::set_process_title("db_process");
+    const std::string log_dirpath = sys::get_log_dirpath(true);
+    const std::string db_process_title = std::string("db_") + _dbinfo.alias;
+    sys::CUtils::set_process_title(db_process_title);
+    delete sys::g_logger; // 不共享父进程的日志文件
+    sys::g_logger = sys::create_safe_logger(log_dirpath, db_process_title, 8192);
 
     _signal_thread = new sys::CThreadEngine(sys::bind(&CDbProcess::signal_thread, this));
     while (!_stop_signal_thread)
@@ -43,7 +49,9 @@ void CDbProcess::run()
             continue;
         }
 
-        sys::CUtils::millisleep(1000);
+        handle_directory();
+        if (!_stop_signal_thread)
+            sys::CUtils::millisleep(1000);
     }
 
     MYLOG_INFO("dbprocess(%u, %s) exit now\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str());
@@ -76,6 +84,37 @@ void CDbProcess::on_signal_handler(int signo)
 void CDbProcess::on_exception(int errcode) throw ()
 {
     MYLOG_ERROR("dbprocess(%u, %s) error: (%d)%s\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str(), errcode, sys::Error::to_string(errcode).c_str());
+}
+
+void CDbProcess::handle_directory()
+{
+    std::vector<std::string>* subdir_names = NULL;
+    std::vector<std::string>* link_names = NULL;
+    std::vector<std::string> file_names;
+
+    sys::CDirUtils::list(_log_dirpath, subdir_names, &file_names, link_names);
+    if (!file_names.empty())
+    {
+        // 文件名格式为：
+        // sql.timestamp.suffix，需要按timespamp从小到大排充，如果timestamp相同则按suffix从小到大排序
+        std::sort(file_names.begin(), file_names.end());
+
+        for (std::vector<std::string>::size_type i=0; !_stop_signal_thread&&i<file_names.size(); ++i)
+        {
+            const std::string& filename = file_names[i];
+            handle_file(filename);
+        }
+    }
+}
+
+void CDbProcess::handle_file(const std::string& filename)
+{
+    const std::string filepath = _log_dirpath + std::string("/") + filename;
+    MYLOG_INFO("start to handle file:/%s\n", filepath.c_str());
+    while (true)
+    {
+        break;
+    }
 }
 
 bool CDbProcess::connect_db()

@@ -1,6 +1,7 @@
 // Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 #include "sql_logger.h"
 #include "config_loader.h"
+#include <algorithm>
 #include <fcntl.h>
 #include <mooon/sys/datetime_utils.h>
 #include <mooon/sys/dir_utils.h>
@@ -53,7 +54,7 @@ bool CSqlLogger::write_log(const std::string& sql)
             if (-1 == log_fd)
             {
                 MYLOG_INFO("[%s] try to rotate sql log: log_fd=%d, stg_log_fd=%d, stg_old_log_fd=%d\n", _dbinfo->str().c_str(), log_fd, stg_log_fd, stg_old_log_fd);
-                rotate_log();
+                rotate_log(true);
             }
             else
             {
@@ -99,7 +100,7 @@ bool CSqlLogger::write_log(const std::string& sql)
                 if ((log_fd == stg_old_log_fd) && (new_total_bytes_written >= total_bytes_written))
                 {
                     MYLOG_INFO("[%s] try to rotate sql log: total_bytes_written=%d, new_total_bytes_written=%d, log_fd=%d, stg_log_fd=%d, stg_old_log_fd=%d\n", _dbinfo->str().c_str(), total_bytes_written, new_total_bytes_written, log_fd, stg_log_fd, stg_old_log_fd);
-                    rotate_log();
+                    rotate_log(false);
                 }
                 else
                 {
@@ -124,10 +125,10 @@ bool CSqlLogger::write_log(const std::string& sql)
     }
 }
 
-void CSqlLogger::rotate_log()
+void CSqlLogger::rotate_log(bool boot)
 {
-    const std::string log_filepath = get_log_filepath();
-    int new_log_fd = open(log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND|O_EXCL, FILE_DEFAULT_PERM);
+    const std::string log_filepath = boot? get_last_log_filepath(): get_log_filepath();
+    int new_log_fd = open(log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM); // O_EXCL
 
     if (-1 == new_log_fd)
     {
@@ -170,19 +171,11 @@ std::string CSqlLogger::get_log_filepath()
     }
     else
     {
-        const std::string program_path = sys::CUtils::get_program_path();
-        std::string log_dirpath = get_log_dirpath();
+        const std::string log_dirpath = get_log_dirpath(_dbinfo->alias);
         if (!sys::CDirUtils::exist(log_dirpath))
         {
             MYLOG_INFO("to create sqllog dir[%s]: %s\n", log_dirpath.c_str(), _dbinfo->str().c_str());
-            sys::CDirUtils::create_directory(log_dirpath.c_str(), DIRECTORY_DEFAULT_PERM);
-        }
-
-        log_dirpath = log_dirpath + std::string("/") + _dbinfo->alias;
-        if (!sys::CDirUtils::exist(log_dirpath))
-        {
-            MYLOG_INFO("to create alias dir[%s]: %s\n", log_dirpath.c_str(), _dbinfo->str().c_str());
-            sys::CDirUtils::create_directory(log_dirpath.c_str(), DIRECTORY_DEFAULT_PERM);
+            sys::CDirUtils::create_directory_recursive(log_dirpath.c_str(), DIRECTORY_DEFAULT_PERM);
         }
 
         time_t now = time(NULL);
@@ -199,6 +192,41 @@ std::string CSqlLogger::get_log_filepath()
     }
 
     return log_filepath;
+}
+
+std::string CSqlLogger::get_last_log_filepath()
+{
+    std::vector<std::string>* subdir_names = NULL;
+    std::vector<std::string>* link_names = NULL;
+    std::vector<std::string> file_names;
+    std::string log_filename;
+    const std::string log_dirpath = get_log_dirpath(_dbinfo->alias);
+
+    sys::CDirUtils::list(log_dirpath, subdir_names, &file_names, link_names);
+    if (!file_names.empty())
+    {
+        std::sort(file_names.begin(), file_names.end());
+        for (std::vector<std::string>::size_type i=0; i<file_names.size(); ++i)
+        {
+            if (is_sql_log_filename(file_names[i]))
+            {
+                log_filename = file_names[i];
+                break;
+            }
+        }
+    }
+
+    if (log_filename.empty())
+    {
+        MYLOG_INFO("no history log file: %s\n", _dbinfo->str().c_str());
+        return get_log_filepath();
+    }
+    else
+    {
+        const std::string last_log_filepath = log_dirpath + std::string("/") + log_filename;
+        MYLOG_INFO("[%s] history log file exists: %s\n", _dbinfo->str().c_str(), last_log_filepath.c_str());
+        return last_log_filepath;
+    }
 }
 
 } // namespace db_proxy

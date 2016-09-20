@@ -12,7 +12,8 @@
 #define SQLLOG_DIRNAME "sqllog"
 namespace mooon { namespace db_proxy {
 
-extern std::string get_log_dirpath();
+extern bool is_sql_log_filename(const std::string& filename);
+extern std::string get_log_dirpath(const std::string& alias);
 
 // 定义常量
 enum

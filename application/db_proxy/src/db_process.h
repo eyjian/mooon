@@ -24,6 +24,8 @@ public:
     void on_exception(int errcode) throw ();
 
 private:
+    void handle_directory();
+    void handle_file(const std::string& filename);
     bool connect_db();
 
 private:
