@@ -39,6 +39,8 @@ void CDbProcess::run()
             mooon::sys::CUtils::millisleep(1000);
             continue;
         }
+
+        mooon::sys::CUtils::millisleep(100);
     }
 
     MYLOG_INFO("dbprocess(%u, %s) exit now\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str());
