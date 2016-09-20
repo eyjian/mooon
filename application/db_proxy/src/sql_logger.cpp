@@ -103,7 +103,9 @@ bool CSqlLogger::write_log(const std::string& sql)
                 }
                 else
                 {
-                    // 进入锁之前，其它线程已抢先做了滚动
+                    // 进入锁之前，其它线程已抢先做了滚动，以下特征一定标记着被其它线程滚动了：
+                    // 1. 大小变小了
+                    // 2. log_fd值发生了变化
                     MYLOG_INFO("[%s] sql log rotated by other: total_bytes_written=%d, new_total_bytes_written=%d, log_fd=%d, stg_log_fd=%d, stg_old_log_fd=%d\n", _dbinfo->str().c_str(), total_bytes_written, new_total_bytes_written, log_fd, stg_log_fd, stg_old_log_fd);
                     close(stg_log_fd);
                     stg_log_fd = dup(log_fd);
