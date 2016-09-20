@@ -28,8 +28,13 @@ else ()
     target_link_libraries(db_proxy libjsoncpp.a libmysqlclient.a libthriftnb.a libthrift.a libevent.a)
 endif ()
 
+# dbproxy客户端工具
 add_executable(db_proxy_client db_proxy_client.cpp ${RPC})
 target_link_libraries(db_proxy_client libjsoncpp.a libthriftnb.a libthrift.a libevent.a)
+
+# dbproxy压力测试工具
+add_executable(db_proxy_stress db_proxy_stress.cpp ${RPC})
+target_link_libraries(db_proxy_stress libjsoncpp.a libthriftnb.a libthrift.a libevent.a)
 
 # DBConnection依赖于SQLite3，虽然db_proxy并未使用SQLite3
 if (HAVE_SQLITE3)
@@ -52,6 +57,11 @@ add_custom_command(
 
 # CMAKE_INSTALL_PREFIX
 install(
+        TARGETS db_proxy_client db_proxy_stress
+        DESTINATION bin
+       )
+
+install(
         TARGETS mooon_db_proxy
         DESTINATION lib
        )
@@ -60,6 +70,7 @@ install(
         FILES db_proxy.thrift
         DESTINATION include/mooon/db_proxy
        )
+
 install(
         FILES DbProxyService.h db_proxy_types.h db_proxy_constants.h
         DESTINATION include/mooon/db_proxy
