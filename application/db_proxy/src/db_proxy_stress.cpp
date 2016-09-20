@@ -4,6 +4,8 @@
 #include "DbProxyService.h"
 #include <iostream>
 #include <mooon/net/thrift_helper.h>
+#include <mooon/sys/atomic.h>
+#include <mooon/sys/stop_watch.h>
 #include <mooon/sys/thread_engine.h>
 #include <mooon/utils/args_parser.h>
 #include <mooon/utils/tokener.h>
@@ -15,6 +17,8 @@ INTEGER_ARG_DEFINE(uint32_t, number, 1, 1, std::numeric_limits<uint32_t>::max(),
 INTEGER_ARG_DEFINE(int16_t, index, 0, 0, mooon::db_proxy::MAX_SQL_TEMPLATE, "query or update index");
 STRING_ARG_DEFINE(tokens, "", "tokens separated by comma");
 
+static atomic_t sg_success_num = 0; // 成功个数
+static atomic_t sg_failure_num = 0; // 失败个数
 static void stress_thread();
 
 int main(int argc, char* argv[])
@@ -33,6 +37,7 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
+    mooon::sys::CStopWatch stop_watch;
     mooon::sys::CThreadEngine** stress_threads = new mooon::sys::CThreadEngine*[mooon::argument::threads->value()];
     for (uint8_t i=0; i<mooon::argument::threads->value(); ++i)
         stress_threads[i] = new mooon::sys::CThreadEngine(mooon::sys::bind(stress_thread));
@@ -42,6 +47,16 @@ int main(int argc, char* argv[])
         delete stress_threads[i];
     }
     delete []stress_threads;
+    unsigned int elapsed_microseconds = stop_watch.get_elapsed_microseconds();
+    unsigned int elapsed_milliseconds = elapsed_microseconds / 1000;
+    unsigned int elapsed_seconds = elapsed_milliseconds / 1000;
+
+    int success = atomic_read(&sg_success_num);
+    int failure = atomic_read(&sg_failure_num);
+    int qps = (elapsed_seconds>0)? (success+failure) / static_cast<int>(elapsed_seconds): (success+failure);
+    std::cout << "microseconds: " << elapsed_microseconds << ", milliseconds: " << elapsed_milliseconds << ", seconds: " << elapsed_seconds << std::endl
+              << "success: " << success << ", failure: " << failure << std::endl
+              << "qps: " << qps << std::endl;
     return 0;
 }
 
@@ -67,21 +82,25 @@ void stress_thread()
             if (index > 0)
             {
                 db_proxy->update(sign, seq, index, tokens);
+                atomic_inc(&sg_success_num);
             }
             else
             {
                 mooon::db_proxy::DBTable dbtable;
                 db_proxy->query(dbtable, sign, seq, -index, tokens, limit, limit_start);
+                atomic_inc(&sg_success_num);
             }
         }
         catch (apache::thrift::transport::TTransportException& ex)
         {
+            atomic_inc(&sg_failure_num);
             std::cerr << "TransportException: " << ex.what() << std::endl;
             db_proxy.close();
             db_proxy.connect();
         }
         catch (apache::thrift::TApplicationException& ex)
         {
+            atomic_inc(&sg_failure_num);
             std::cerr << "ApplicationException: " << ex.what() << std::endl;
         }
     }
