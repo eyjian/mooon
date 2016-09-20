@@ -7,8 +7,11 @@
 #include <mooon/sys/file_utils.h>
 #include <mooon/sys/log.h>
 #include <mooon/sys/utils.h>
+#include <mooon/utils/args_parser.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+INTEGER_ARG_DECLARE(int, sql_file_size);
 namespace mooon { namespace db_proxy {
 
 static __thread int stg_log_fd = -1;
@@ -83,7 +86,7 @@ bool CSqlLogger::write_log(const std::string& sql)
         else
         {
             int total_bytes_written = atomic_add_return(bytes_written, &_total_bytes_written);
-            if (total_bytes_written > 1024*1024*300)
+            if (total_bytes_written > mooon::argument::sql_file_size->value())
             {
                 sys::LockHelper<sys::CLock> lock_helper(_lock);
                 int log_fd = atomic_read(&_log_fd);
