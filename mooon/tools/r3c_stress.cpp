@@ -16,6 +16,7 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
+// 基于r3c实现的redis性能测试工具（r3c是一个在hiredis上实现的redis cluster c++客户端库）
 #include <r3c/r3c.h>
 #include <mooon/sys/atomic.h>
 #include <mooon/sys/stop_watch.h>
