@@ -37,8 +37,8 @@ static atomic_t sg_not_exists = 0;
 
 static void set_test();
 static void get_test();
-static void set_stress_thread();
-static void get_stress_thread();
+static void set_stress_thread(uint8_t index);
+static void get_stress_thread(uint8_t index);
 
 int main(int argc, char* argv[])
 {
@@ -63,7 +63,7 @@ void set_test()
     mooon::sys::CStopWatch stop_watch;
     mooon::sys::CThreadEngine** threads = new mooon::sys::CThreadEngine*[mooon::argument::threads->value()];
     for (uint8_t i=0; i<mooon::argument::threads->value(); ++i)
-        threads[i] = new mooon::sys::CThreadEngine(mooon::sys::bind(set_stress_thread));
+        threads[i] = new mooon::sys::CThreadEngine(mooon::sys::bind(set_stress_thread, i));
     for (uint8_t i=0; i<mooon::argument::threads->value(); ++i)
     {
         threads[i]->join();
@@ -91,7 +91,7 @@ void get_test()
     mooon::sys::CStopWatch stop_watch;
     mooon::sys::CThreadEngine** threads = new mooon::sys::CThreadEngine*[mooon::argument::threads->value()];
     for (uint8_t i=0; i<mooon::argument::threads->value(); ++i)
-        threads[i] = new mooon::sys::CThreadEngine(mooon::sys::bind(get_stress_thread));
+        threads[i] = new mooon::sys::CThreadEngine(mooon::sys::bind(get_stress_thread, i));
     for (uint8_t i=0; i<mooon::argument::threads->value(); ++i)
     {
         threads[i]->join();
@@ -111,7 +111,7 @@ void get_test()
     fprintf(stdout, "qps: %u\n", qps);
 }
 
-void set_stress_thread()
+void set_stress_thread(uint8_t index)
 {
     atomic_set(&sg_success, 0);
     atomic_set(&sg_failure, 0);
@@ -120,7 +120,7 @@ void set_stress_thread()
     r3c::CRedisClient redis(mooon::argument::redis->value());
     for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
     {
-        const std::string key = mooon::utils::CStringUtils::format_string("%s_%u", mooon::argument::prefix->c_value(), i);
+        const std::string key = mooon::utils::CStringUtils::format_string("%s_%d_%u", mooon::argument::prefix->c_value(), index, i);
 
         try
         {
@@ -138,12 +138,12 @@ void set_stress_thread()
     }
 }
 
-void get_stress_thread()
+void get_stress_thread(uint8_t index)
 {
     r3c::CRedisClient redis(mooon::argument::redis->value());
     for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
     {
-        const std::string key = mooon::utils::CStringUtils::format_string("%s_%u", mooon::argument::prefix->c_value(), i);
+        const std::string key = mooon::utils::CStringUtils::format_string("%s_%d_%u", mooon::argument::prefix->c_value(), index, i);
 
         try
         {
