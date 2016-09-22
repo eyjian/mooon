@@ -172,6 +172,14 @@ discover_library(ZOOKEEPER zookeeper)
 #link_libraries(libzookeeper_st.a)
 #link_libraries(libzookeeper_mt.a)
 
+# hiredis
+discover_library(HIREDIS hiredis)
+#link_libraries(libhiredis.a)
+
+# r3c (based on hiredis)
+discover_library(R3C r3c)
+#link_libraries(libr3c.a)
+
 # 编译参数
 # 启用__STDC_FORMAT_MACROS是为了可以使用inttypes.h中的PRId64等
 # 启用__STDC_LIMIT_MACROS是为了可以使用stdint.h中的__UINT64_C和INT32_MIN等

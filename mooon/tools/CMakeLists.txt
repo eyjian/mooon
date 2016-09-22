@@ -31,6 +31,17 @@ if (HAVE_LIBSSH2)
 	       )
 endif ()
 
+if (HAVE_R3C)
+    add_executable(r3c_stress r3c_stress.cpp)
+    target_link_libraries(r3c_stress libmooon_sys.a libmooon_utils.a libr3c.a libhiredis.a)
+    
+    # CMAKE_INSTALL_PREFIX
+    install(
+            TARGETS r3c_stress
+            DESTINATION bin
+           )    
+endif ()
+
 # CMAKE_INSTALL_PREFIX
 install(
         TARGETS md5
