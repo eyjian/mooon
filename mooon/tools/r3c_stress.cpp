@@ -139,7 +139,7 @@ void get_stress_thread()
     {
         try
         {
-            const std::string key = mooon::utils::CStringUtils::format_string("r3c_%u", i);
+            const std::string key = mooon::utils::CStringUtils::format_string("%s_%u", mooon::argument::prefix->c_value(), i);
             std::string value;
             if (redis.get(key, &value))
                 atomic_inc(&sg_success);
