@@ -29,6 +29,7 @@ INTEGER_ARG_DEFINE(uint8_t, threads, 1, 1, 100, "number of threads");
 INTEGER_ARG_DEFINE(uint32_t, requests, 1, 1, std::numeric_limits<int32_t>::max(), "number of requests of every threads");
 STRING_ARG_DEFINE(prefix, "r3c", "key prefix");
 INTEGER_ARG_DEFINE(uint32_t, expire, 60, 1, 3600, "key expired seconds");
+INTEGER_ARG_DEFINE(uint8_t, verbose, 0, 0, 1, "print error");
 
 static atomic_t sg_success = 0;
 static atomic_t sg_failure = 0;
@@ -85,6 +86,7 @@ void get_test()
 {
     atomic_set(&sg_success, 0);
     atomic_set(&sg_failure, 0);
+    atomic_set(&sg_not_exists, 0);
 
     mooon::sys::CStopWatch stop_watch;
     mooon::sys::CThreadEngine** threads = new mooon::sys::CThreadEngine*[mooon::argument::threads->value()];
@@ -113,13 +115,15 @@ void set_stress_thread()
 {
     atomic_set(&sg_success, 0);
     atomic_set(&sg_failure, 0);
+    atomic_set(&sg_not_exists, 0);
 
     r3c::CRedisClient redis(mooon::argument::redis->value());
     for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
     {
+        const std::string key = mooon::utils::CStringUtils::format_string("%s_%u", mooon::argument::prefix->c_value(), i);
+
         try
         {
-            const std::string key = mooon::utils::CStringUtils::format_string("%s_%u", mooon::argument::prefix->c_value(), i);
             const std::string value = mooon::utils::CStringUtils::int_tostring(i);
             const uint32_t expired_seconds = mooon::argument::expire->value();
             redis.setex(key, value, expired_seconds);
@@ -128,6 +132,8 @@ void set_stress_thread()
         catch (r3c::CRedisException& ex)
         {
             atomic_inc(&sg_failure);
+            if (1 == mooon::argument::verbose->value())
+                fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
         }
     }
 }
@@ -137,18 +143,27 @@ void get_stress_thread()
     r3c::CRedisClient redis(mooon::argument::redis->value());
     for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
     {
+        const std::string key = mooon::utils::CStringUtils::format_string("%s_%u", mooon::argument::prefix->c_value(), i);
+
         try
         {
-            const std::string key = mooon::utils::CStringUtils::format_string("%s_%u", mooon::argument::prefix->c_value(), i);
             std::string value;
             if (redis.get(key, &value))
+            {
                 atomic_inc(&sg_success);
+            }
             else
+            {
                 atomic_inc(&sg_not_exists);
+                if (1 == mooon::argument::verbose->value())
+                    fprintf(stderr, "[%s] not exists\n", key.c_str());
+            }
         }
         catch (r3c::CRedisException& ex)
         {
             atomic_inc(&sg_failure);
+            if (1 == mooon::argument::verbose->value())
+                fprintf(stderr, "GET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
         }
     }
 }
