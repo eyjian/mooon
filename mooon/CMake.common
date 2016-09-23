@@ -159,6 +159,10 @@ discover_library(JSONCPP jsoncpp)
 discover_library(RAPIDJSON rapidjson)
 # rapidjson纯头文件，没有库文件
 
+# rapidxml
+discover_library(RAPIDXML rapidxml)
+# rapidxml纯头文件，没有库文件
+
 # OpenSSL
 discover_library(OPENSSL openssl)
 #link_libraries(libssl.a libcrypto.a)
