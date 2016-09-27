@@ -20,6 +20,8 @@ bool is_sql_log_filename(const std::string& filename)
     std::vector<std::string> tokens;
     utils::CTokener::split(&tokens, filename, ".");
     return (3 == tokens.size()) && (tokens[0] == "sql") &&
+           (12 == tokens[1].size()) &&
+           (6 == tokens[2].size()) &&
            utils::CStringUtils::is_numeric_string(tokens[1].c_str()) &&
            utils::CStringUtils::is_numeric_string(tokens[2].c_str());
 }

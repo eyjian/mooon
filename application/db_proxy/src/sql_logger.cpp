@@ -188,7 +188,7 @@ std::string CSqlLogger::get_log_filepath()
             _log_file_suffix = 0;
             _log_file_timestamp = now;
         }
-        log_filepath = utils::CStringUtils::format_string("%s/sql.%" PRId64".%06d", log_dirpath.c_str(), static_cast<int64_t>(now), _log_file_suffix);
+        log_filepath = utils::CStringUtils::format_string("%s/sql.%012" PRId64".%06d", log_dirpath.c_str(), static_cast<int64_t>(now), _log_file_suffix);
     }
 
     return log_filepath;
