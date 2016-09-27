@@ -206,7 +206,7 @@ std::string CSqlLogger::get_last_log_filepath()
     if (!file_names.empty())
     {
         std::sort(file_names.begin(), file_names.end());
-        for (std::vector<std::string>::size_type i=0; i<file_names.size(); ++i)
+        for (int i=static_cast<int>(file_names.size()-1); i>=0; --i)
         {
             if (is_sql_log_filename(file_names[i]))
             {
