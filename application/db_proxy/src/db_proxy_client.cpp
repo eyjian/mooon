@@ -65,9 +65,14 @@ int main(int argc, char* argv[])
         std::cerr << "[1] " << tx.what() << std::endl;
         exit(1);
     }
+    catch (apache::thrift::transport::TTransportException& ex)
+    {
+        std::cerr << "[2] (" << ex.getType() << ")" << ex.what() << std::endl;
+        exit(1);
+    }
     catch (std::exception& ex)
     {
-        std::cerr << "[2] " << ex.what() << std::endl;
+        std::cerr << "[3] " << ex.what() << std::endl;
         exit(1);
     }
 }
