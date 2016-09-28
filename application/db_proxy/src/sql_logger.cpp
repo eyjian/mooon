@@ -11,6 +11,7 @@
 #include <mooon/utils/args_parser.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/uio.h>
 
 INTEGER_ARG_DECLARE(int, sql_file_size);
 namespace mooon { namespace db_proxy {
@@ -78,8 +79,16 @@ bool CSqlLogger::write_log(const std::string& sql)
             return false;
         }
 
-        ssize_t bytes_written = write(stg_log_fd, sql.data(), sql.size());
-        if (bytes_written != static_cast<ssize_t>(sql.size()))
+        int32_t length = static_cast<int32_t>(sql.size());
+        struct iovec iov[2];
+        iov[0].iov_base = &length;
+        iov[0].iov_len = sizeof(length);
+        iov[1].iov_base = const_cast<char*>(sql.data());
+        iov[1].iov_len = sql.size();
+        //ssize_t bytes_written = write(stg_log_fd, sql.data(), sql.size());
+        ssize_t bytes_written = writev(stg_log_fd, iov, sizeof(iov)/sizeof(iov[0]));
+        //if (bytes_written != static_cast<ssize_t>(sql.size()))
+        if (bytes_written != static_cast<int>(iov[0].iov_len+iov[1].iov_len))
         {
             int errcode = errno;
             sys::LockHelper<sys::CLock> lock_helper(_lock);
@@ -99,6 +108,9 @@ bool CSqlLogger::write_log(const std::string& sql)
 
                 if ((log_fd == stg_old_log_fd) && (new_total_bytes_written >= total_bytes_written))
                 {
+                    // 写结束标志
+                    write_endtag();
+
                     MYLOG_INFO("[%s] try to rotate sql log: total_bytes_written=%d, new_total_bytes_written=%d, log_fd=%d, stg_log_fd=%d, stg_old_log_fd=%d\n", _dbinfo->str().c_str(), total_bytes_written, new_total_bytes_written, log_fd, stg_log_fd, stg_old_log_fd);
                     rotate_log(false);
                 }
@@ -122,6 +134,16 @@ bool CSqlLogger::write_log(const std::string& sql)
         const std::string log_filepath = get_log_filepath();
         MYLOG_ERROR("[%s] write %s failed: %s\n", _dbinfo->str().c_str(), log_filepath.c_str(), ex.str().c_str());
         return false;
+    }
+}
+
+void CSqlLogger::write_endtag()
+{
+    int32_t length = 0;
+    if (write(stg_log_fd, &length, sizeof(length)) != sizeof(length))
+    {
+        const std::string log_filepath = get_log_filepath();
+        MYLOG_ERROR("[%s][%s] IO error: %s\n", _dbinfo->str().c_str(), log_filepath.c_str(), sys::Error::to_string().c_str());
     }
 }
 
@@ -223,9 +245,61 @@ std::string CSqlLogger::get_last_log_filepath()
     }
     else
     {
-        const std::string last_log_filepath = log_dirpath + std::string("/") + log_filename;
-        MYLOG_INFO("[%s] history log file exists: %s\n", _dbinfo->str().c_str(), last_log_filepath.c_str());
+        std::string last_log_filepath = log_dirpath + std::string("/") + log_filename;
+
+        // 检查是否为一个已完成文件
+        if (!has_endtag(last_log_filepath))
+        {
+            MYLOG_INFO("[%s] history log file exists: %s\n", _dbinfo->str().c_str(), last_log_filepath.c_str());
+        }
+        else
+        {
+            last_log_filepath = get_log_filepath();
+            MYLOG_INFO("new log file: %s\n", last_log_filepath.c_str());
+        }
+
         return last_log_filepath;
+    }
+}
+
+bool CSqlLogger::has_endtag(const std::string& log_filepath) const
+{
+    int fd = open(log_filepath.c_str(), O_RDONLY);
+    if (-1 == fd)
+    {
+        MYLOG_ERROR("open [%s] error: %s\n", log_filepath.c_str(), sys::Error::to_string().c_str());
+        return false;
+    }
+    else
+    {
+        while (true)
+        {
+            int32_t length = 0;
+            int bytes_read = read(fd, &length, sizeof(length));
+            if (bytes_read != sizeof(length))
+            {
+                MYLOG_ERROR("read [%s] error: (%d)%s\n", log_filepath.c_str(), bytes_read, sys::Error::to_string().c_str());
+                break;
+            }
+            else if (0 == length)
+            {
+                // found endtag
+                close(fd);
+                MYLOG_INFO("[%s] has endtag\n", log_filepath.c_str());
+                return true;
+            }
+            else
+            {
+                if (-1 == lseek(fd, length, SEEK_CUR))
+                {
+                    MYLOG_ERROR("lseek [%s] error: (%d)%s\n", log_filepath.c_str(), bytes_read, sys::Error::to_string().c_str());
+                }
+            }
+        }
+
+        close(fd);
+        MYLOG_INFO("[%s] without endtag\n", log_filepath.c_str());
+        return false;
     }
 }
 

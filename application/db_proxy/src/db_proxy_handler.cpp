@@ -201,7 +201,7 @@ int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, co
                 escape_tokens(NULL, tokens, &escaped_tokens);
                 std::string sql = utils::format_string(update_info.sql_template.c_str(), escaped_tokens);
                 MYLOG_DEBUG("%s\n", sql.c_str());
-                sql.append(";\n");
+                //sql.append(";\n");
 
                 bool written = sql_logger->write_log(sql);
                 config_loader->release_sql_logger(sql_logger);
