@@ -40,27 +40,30 @@ void CDbProcess::run()
     delete sys::g_logger; // 不共享父进程的日志文件
     sys::g_logger = sys::create_safe_logger(log_dirpath, db_process_title, 8192);
 
-    if (get_progress(&_progress) && open_progress())
+    if (create_history_directory())
     {
-        _signal_thread = new sys::CThreadEngine(sys::bind(&CDbProcess::signal_thread, this));
-        while (!_stop_signal_thread)
+        if (get_progress(&_progress) && open_progress())
         {
-            pid_t ppid = getppid();
-            if (1 == ppid)
+            _signal_thread = new sys::CThreadEngine(sys::bind(&CDbProcess::signal_thread, this));
+            while (!_stop_signal_thread)
             {
-                // 父进程不在则自动退出
-                MYLOG_INFO("dbprocess(%u, %s) will exit for parent process not exit\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str());
-                break;
-            }
-            if (!_db_connected && !connect_db())
-            {
-                sys::CUtils::millisleep(1000);
-                continue;
-            }
+                pid_t ppid = getppid();
+                if (1 == ppid)
+                {
+                    // 父进程不在则自动退出
+                    MYLOG_INFO("dbprocess(%u, %s) will exit for parent process not exit\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str());
+                    break;
+                }
+                if (!_db_connected && !connect_db())
+                {
+                    sys::CUtils::millisleep(1000);
+                    continue;
+                }
 
-            handle_directory();
-            if (!_stop_signal_thread)
-                sys::CUtils::millisleep(1000);
+                handle_directory();
+                if (!_stop_signal_thread)
+                    sys::CUtils::millisleep(1000);
+            }
         }
     }
 
@@ -94,6 +97,26 @@ void CDbProcess::on_signal_handler(int signo)
 void CDbProcess::on_exception(int errcode) throw ()
 {
     MYLOG_ERROR("dbprocess(%u, %s) error: (%d)%s\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str(), errcode, sys::Error::to_string(errcode).c_str());
+}
+
+bool CDbProcess::create_history_directory() const
+{
+    const std::string history_directory = _log_dirpath + std::string("/history");
+
+    try
+    {
+        sys::CDirUtils::create_directory(history_directory.c_str(), DIRECTORY_DEFAULT_PERM);
+        MYLOG_INFO("create directory ok: %s\n", history_directory.c_str());
+        return true;
+    }
+    catch (sys::CSyscallException& ex)
+    {
+        if (EEXIST == ex.errcode())
+            return true;
+
+        MYLOG_ERROR("create directory[%s] failed: %s\n", history_directory.c_str(), sys::Error::to_string().c_str());
+        return false;
+    }
 }
 
 void CDbProcess::handle_directory()
@@ -221,9 +244,11 @@ bool CDbProcess::handle_file(const std::string& filename)
                 catch (sys::CDBException& ex)
                 {
                     MYLOG_ERROR("%s\n", ex.str().c_str());
+
                     // 网络类需要重试，直到成功
                     if (!_mysql.is_disconnected_exception(ex))
                         break;
+                    sys::CUtils::millisleep(1000);
                 }
             }
         }
@@ -364,7 +389,7 @@ bool CDbProcess::open_progress()
 void CDbProcess::archive_file(const std::string& filename) const
 {
     const std::string filepath = _log_dirpath + std::string("/") + filename;
-    const std::string archived_filepath = _log_dirpath + std::string("/") + filename + std::string(".ar");
+    const std::string archived_filepath = _log_dirpath + std::string("/history/") + filename;
     if (-1 == rename(filepath.c_str(), archived_filepath.c_str()))
     {
         MYLOG_ERROR("archived %s to %s failed: %s\n", filepath.c_str(), archived_filepath.c_str(), sys::Error::to_string().c_str());

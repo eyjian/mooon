@@ -55,6 +55,7 @@ public:
     void on_exception(int errcode) throw ();
 
 private:
+    bool create_history_directory() const;
     void handle_directory();
     bool handle_file(const std::string& filename);
     bool file_handled(const std::string& filename) const; // 是否已处理过
