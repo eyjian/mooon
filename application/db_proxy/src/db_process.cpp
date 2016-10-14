@@ -177,6 +177,7 @@ bool CDbProcess::handle_file(const std::string& filename)
             MYLOG_INFO("lseek %s to %u\n", _progress.str().c_str(), _progress.offset);
         }
 
+        int count = 0; // 入库的条数
         int consecutive_nodata = 0; // 连接无data的次数
         while (!_stop_signal_thread)
         {
@@ -202,7 +203,7 @@ bool CDbProcess::handle_file(const std::string& filename)
             if (0 == length)
             {
                 // END
-                MYLOG_INFO("%s ENDED\n", _progress.str().c_str());
+                MYLOG_INFO("%s ENDED: %d\n", _progress.str().c_str(), count);
                 // 归档
                 archive_file(filename);
                 break;
@@ -231,6 +232,7 @@ bool CDbProcess::handle_file(const std::string& filename)
                     if (!update_progress(filename, offset))
                         return false;
 
+                    ++count;
                     if (0 == ++_num_sqls%10000)
                     {
                         MYLOG_INFO("[%s] ok: %d, %" PRIu64"\n", sql.c_str(), rows, _num_sqls);
