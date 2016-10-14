@@ -4,7 +4,38 @@
 #include "config_loader.h"
 #include <mooon/sys/mysql_db.h>
 #include <mooon/sys/thread_engine.h>
+#include <zlib.h>
 namespace mooon { namespace db_proxy {
+
+struct Progress
+{
+    uint32_t crc32;
+    uint32_t offset;
+    char filename[sizeof("sql.0123456789AB.123456")]; // 包含结尾符'\0'
+
+    Progress()
+    {
+        crc32 = 0;
+        offset = 0;
+        memset(filename, sizeof(filename), 0);
+    }
+
+    bool empty() const
+    {
+        return '\0' == filename[0];
+    }
+
+    std::string str() const
+    {
+        return utils::CStringUtils::format_string("progress://C%u/O%u/F%s", crc32, offset, filename);
+    }
+
+    uint32_t get_crc32() const
+    {
+        const std::string crc32_str = utils::CStringUtils::format_string("%u%s", offset, filename);
+        return ::crc32(0L, (const unsigned char*)crc32_str.data(), crc32_str.size());
+    }
+};
 
 // 父进程不在时自动退出
 class CDbProcess
@@ -25,16 +56,26 @@ public:
 
 private:
     void handle_directory();
-    void handle_file(const std::string& filename);
+    bool handle_file(const std::string& filename);
+    bool file_handled(const std::string& filename) const; // 是否已处理过
+    bool is_current_file(const std::string& filename) const;
     bool connect_db();
+    void close_db();
+    bool update_progress(const std::string& filename, uint32_t offset);
+    bool get_progress(struct Progress* progress);
+    bool open_progress();
+    void archive_file(const std::string& filename) const;
 
 private:
+    int _progess_fd; // 进度文件句柄
+    struct Progress _progress;
     struct DbInfo _dbinfo;
     std::string _log_dirpath; // 日志存放目录
     volatile bool _stop_signal_thread;
     sys::CThreadEngine* _signal_thread;
     sys::CMySQLConnection _mysql;
     uint32_t _consecutive_failures; // 用于减少连接DB失败时的重复日志
+    uint64_t _num_sqls; // 启动以来总共处理过的SQL条数
     bool _db_connected; // 是否连接了DB
 };
 

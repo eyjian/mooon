@@ -3,6 +3,7 @@
 #include "config_loader.h"
 #include <algorithm>
 #include <fcntl.h>
+#include <mooon/sys/close_helper.h>
 #include <mooon/sys/datetime_utils.h>
 #include <mooon/sys/dir_utils.h>
 #include <mooon/sys/file_utils.h>
@@ -272,10 +273,16 @@ bool CSqlLogger::has_endtag(const std::string& log_filepath) const
     }
     else
     {
+        sys::CloseHelper<int> close_helper(fd);
+
         while (true)
         {
             int32_t length = 0;
             int bytes_read = read(fd, &length, sizeof(length));
+            if (0 == bytes_read)
+            {
+                break;
+            }
             if (bytes_read != sizeof(length))
             {
                 MYLOG_ERROR("read [%s] error: (%d)%s\n", log_filepath.c_str(), bytes_read, sys::Error::to_string().c_str());
@@ -284,7 +291,6 @@ bool CSqlLogger::has_endtag(const std::string& log_filepath) const
             else if (0 == length)
             {
                 // found endtag
-                close(fd);
                 MYLOG_INFO("[%s] has endtag\n", log_filepath.c_str());
                 return true;
             }
@@ -297,7 +303,6 @@ bool CSqlLogger::has_endtag(const std::string& log_filepath) const
             }
         }
 
-        close(fd);
         MYLOG_INFO("[%s] without endtag\n", log_filepath.c_str());
         return false;
     }

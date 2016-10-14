@@ -29,6 +29,8 @@ INTEGER_ARG_DEFINE(uint8_t, num_work_threads, 1, 1, 50, "number of work threads"
 // sql日志文件大小，建议大小不小于（1024*1024*100），更小的值是为了方便开发时的测试
 INTEGER_ARG_DEFINE(int, sql_file_size, (1024*1024*300), (1024*1024), std::numeric_limits<int>::max(), "size of single sql log file");
 
+// 运行示例：
+//
 class CMainHelper: public mooon::sys::IMainHelper
 {
 public:

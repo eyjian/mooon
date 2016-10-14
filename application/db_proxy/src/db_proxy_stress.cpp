@@ -112,4 +112,6 @@ void stress_thread()
             std::cerr << "ApplicationException: " << ex.what() << std::endl;
         }
     }
+
+    db_proxy.close();
 }

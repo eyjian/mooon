@@ -1,16 +1,21 @@
 // Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 #include "db_process.h"
 #include <algorithm>
+#include <mooon/sys/close_helper.h>
 #include <mooon/sys/dir_utils.h>
 #include <mooon/sys/safe_logger.h>
 #include <mooon/sys/signal_handler.h>
+#include <mooon/utils/args_parser.h>
 #include <mooon/utils/string_utils.h>
 #include <string.h>
+#include <sys/uio.h>
+
+INTEGER_ARG_DECLARE(int, sql_file_size);
 namespace mooon { namespace db_proxy {
 
 CDbProcess::CDbProcess(const struct DbInfo& dbinfo)
-    : _dbinfo(dbinfo), _stop_signal_thread(false), _signal_thread(NULL),
-      _consecutive_failures(0), _db_connected(false)
+    : _progess_fd(-1), _dbinfo(dbinfo), _stop_signal_thread(false), _signal_thread(NULL),
+      _consecutive_failures(0), _num_sqls(0), _db_connected(false)
 {
     const std::string program_path = sys::CUtils::get_program_path();
     _log_dirpath = get_log_dirpath(_dbinfo.alias);
@@ -18,6 +23,8 @@ CDbProcess::CDbProcess(const struct DbInfo& dbinfo)
 
 CDbProcess::~CDbProcess()
 {
+    if (_progess_fd != -1)
+        close(_progess_fd);
     if (_signal_thread != NULL)
     {
         _signal_thread->join();
@@ -33,25 +40,28 @@ void CDbProcess::run()
     delete sys::g_logger; // 不共享父进程的日志文件
     sys::g_logger = sys::create_safe_logger(log_dirpath, db_process_title, 8192);
 
-    _signal_thread = new sys::CThreadEngine(sys::bind(&CDbProcess::signal_thread, this));
-    while (!_stop_signal_thread)
+    if (get_progress(&_progress) && open_progress())
     {
-        pid_t ppid = getppid();
-        if (1 == ppid)
+        _signal_thread = new sys::CThreadEngine(sys::bind(&CDbProcess::signal_thread, this));
+        while (!_stop_signal_thread)
         {
-            // 父进程不在则自动退出
-            MYLOG_INFO("dbprocess(%u, %s) will exit for parent process not exit\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str());
-            break;
-        }
-        if (!_db_connected && !connect_db())
-        {
-            sys::CUtils::millisleep(1000);
-            continue;
-        }
+            pid_t ppid = getppid();
+            if (1 == ppid)
+            {
+                // 父进程不在则自动退出
+                MYLOG_INFO("dbprocess(%u, %s) will exit for parent process not exit\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str());
+                break;
+            }
+            if (!_db_connected && !connect_db())
+            {
+                sys::CUtils::millisleep(1000);
+                continue;
+            }
 
-        handle_directory();
-        if (!_stop_signal_thread)
-            sys::CUtils::millisleep(1000);
+            handle_directory();
+            if (!_stop_signal_thread)
+                sys::CUtils::millisleep(1000);
+        }
     }
 
     MYLOG_INFO("dbprocess(%u, %s) exit now\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str());
@@ -102,19 +112,135 @@ void CDbProcess::handle_directory()
         for (std::vector<std::string>::size_type i=0; !_stop_signal_thread&&i<file_names.size(); ++i)
         {
             const std::string& filename = file_names[i];
-            handle_file(filename);
+            if (is_sql_log_filename(filename))
+                handle_file(filename);
+            if (_stop_signal_thread)
+                break;
         }
     }
 }
 
-void CDbProcess::handle_file(const std::string& filename)
+bool CDbProcess::handle_file(const std::string& filename)
 {
-    const std::string filepath = _log_dirpath + std::string("/") + filename;
-    MYLOG_INFO("start to handle file:/%s\n", filepath.c_str());
-    while (true)
+    if (file_handled(filename))
     {
-        break;
+        MYLOG_INFO("handled: %s\n", filename.c_str());
     }
+    else
+    {
+        MYLOG_DEBUG("handling: %s\n", filename.c_str());
+    }
+
+    const std::string log_filepath = _log_dirpath + std::string("/") + filename;
+    uint32_t offset = 0;
+    int fd = open(log_filepath.c_str(), O_RDONLY);
+    if (-1 == fd)
+    {
+        MYLOG_ERROR("open %s error: %s\n", log_filepath.c_str(), sys::Error::to_string().c_str());
+        return false;
+    }
+    else
+    {
+        sys::CloseHelper<int> close_helper(fd);
+        if (is_current_file(filename))
+        {
+            if (-1 == lseek(fd, _progress.offset, SEEK_SET))
+            {
+                MYLOG_ERROR("lseek %s error: %s\n", _progress.str().c_str(), sys::Error::to_string().c_str());
+                return false;
+            }
+
+            offset = _progress.offset;
+            MYLOG_INFO("lseek %s to %u\n", _progress.str().c_str(), _progress.offset);
+        }
+
+        int consecutive_nodata = 0; // 连接无data的次数
+        while (!_stop_signal_thread)
+        {
+            int bytes = 0;
+            int32_t length = 0;
+
+            // 读取SQL语句长度
+            bytes = read(fd, &length, sizeof(length));
+            if (-1 == bytes)
+            {
+                MYLOG_ERROR("read %s error: %s\n", log_filepath.c_str(), sys::Error::to_string().c_str());
+                return false;
+            }
+            else if (0 == bytes)
+            {
+                if (0 == consecutive_nodata++%1000)
+                {
+                    MYLOG_INFO("no data to sleep: %s\n", _progress.str().c_str());
+                }
+                sys::CUtils::millisleep(1000);
+                continue;
+            }
+            if (0 == length)
+            {
+                // END
+                MYLOG_INFO("%s ENDED\n", _progress.str().c_str());
+                // 归档
+                archive_file(filename);
+                break;
+            }
+
+            consecutive_nodata = 0; // reset
+            if (bytes > 0)
+                offset += static_cast<uint32_t>(bytes);
+
+            // 读取SQL语句
+            std::string sql(length, '\0');
+            bytes = read(fd, const_cast<char*>(sql.data()), length);
+            if (-1 == bytes)
+            {
+                MYLOG_ERROR("read %s error: %s\n", log_filepath.c_str(), sys::Error::to_string().c_str());
+                return false;
+            }
+            if (bytes > 0)
+                offset += static_cast<uint32_t>(bytes);
+
+            while (!_stop_signal_thread)
+            {
+                try
+                {
+                    int rows = _mysql.update("%s", sql.c_str());
+                    if (!update_progress(filename, offset))
+                        return false;
+
+                    if (0 == ++_num_sqls%10000)
+                    {
+                        MYLOG_INFO("[%s] ok: %d, %" PRIu64"\n", sql.c_str(), rows, _num_sqls);
+                    }
+                    else
+                    {
+                        MYLOG_DEBUG("[%s] ok: %d, %" PRIu64"\n", sql.c_str(), rows, _num_sqls);
+                    }
+                    break;
+                }
+                catch (sys::CDBException& ex)
+                {
+                    MYLOG_ERROR("%s\n", ex.str().c_str());
+                    // 网络类需要重试，直到成功
+                    if (!_mysql.is_disconnected_exception(ex))
+                        break;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+bool CDbProcess::file_handled(const std::string& filename) const
+{
+    // 是否为已处理过的文件，如果是则跳过
+    return (!_progress.empty()) && (-1 == strcmp(filename.c_str(), _progress.filename));
+}
+
+bool CDbProcess::is_current_file(const std::string& filename) const
+{
+    return 0 == strcmp(filename.c_str(), _progress.filename);
 }
 
 bool CDbProcess::connect_db()
@@ -142,6 +268,110 @@ bool CDbProcess::connect_db()
         }
 
         return false;
+    }
+}
+
+void CDbProcess::close_db()
+{
+    if (_db_connected)
+    {
+        _mysql.close();
+        _db_connected = false;
+    }
+}
+
+bool CDbProcess::update_progress(const std::string& filename, uint32_t offset)
+{
+    strncpy(_progress.filename, filename.c_str(), sizeof(_progress.filename));
+    _progress.offset = offset;
+    _progress.crc32 = _progress.get_crc32(); // get_crc32()依赖offset和filename，所以顺序不能颠倒
+
+    ssize_t bytes_written = pwrite(_progess_fd, &_progress, sizeof(_progress), 0);
+    if (bytes_written != static_cast<ssize_t>(sizeof(_progress)))
+    {
+        MYLOG_ERROR("write progess(%s:%d) error: %s\n", filename.c_str(), offset, sys::Error::to_string().c_str());
+        return false;
+    }
+
+    MYLOG_DEBUG("update %s ok\n", _progress.str().c_str());
+    return true;
+}
+
+bool CDbProcess::get_progress(struct Progress* progress)
+{
+    const std::string progress_filepath = _log_dirpath + std::string("/sql.progress");
+    int progess_fd = open(progress_filepath.c_str(), O_RDONLY);
+
+    if (-1 == progess_fd)
+    {
+        int errcode = sys::Error::code();
+        if (errcode != ENOENT)
+        {
+            MYLOG_ERROR("open %s failed: (%d)%s\n", progress_filepath.c_str(), errcode, sys::Error::to_string(errcode).c_str());
+            return false;
+        }
+
+        return true;
+    }
+    else
+    {
+        sys::CloseHelper<int> close_helper(progess_fd);
+
+        MYLOG_INFO("open %s ok\n", progress_filepath.c_str());
+        ssize_t bytes_read = pread(progess_fd, progress, sizeof(*progress), 0);
+        if (0 == bytes_read)
+        {
+            // 空文件
+            MYLOG_INFO("progess is empty\n");
+            return true;
+        }
+        else if (bytes_read != sizeof(*progress))
+        {
+            // 被损坏的文件
+            MYLOG_ERROR("get progress(%s) failed: %" PRId64",%zd\n", progress_filepath.c_str(), bytes_read, sizeof(*progress));
+            return false;
+        }
+        else
+        {
+            uint32_t crc32 = progress->get_crc32();
+            if (crc32 != progress->crc32)
+            {
+                MYLOG_ERROR("crc32 progress(%s) failed: (%u)%s\n", progress_filepath.c_str(), crc32, progress->str().c_str());
+                return false;
+            }
+
+            MYLOG_INFO("get %s ok\n", progress->str().c_str());
+            return true;
+        }
+    }
+}
+
+bool CDbProcess::open_progress()
+{
+    const std::string progress_filepath = _log_dirpath + std::string("/sql.progress");
+    int progess_fd = open(progress_filepath.c_str(), O_WRONLY|O_CREAT, FILE_DEFAULT_PERM);
+    if (-1 == progess_fd)
+    {
+        int errcode = sys::Error::code();
+        MYLOG_ERROR("open %s failed: (%d)%s\n", progress_filepath.c_str(), errcode, sys::Error::to_string(errcode).c_str());
+        return false;
+    }
+
+    _progess_fd = progess_fd;
+    return true;
+}
+
+void CDbProcess::archive_file(const std::string& filename) const
+{
+    const std::string filepath = _log_dirpath + std::string("/") + filename;
+    const std::string archived_filepath = _log_dirpath + std::string("/") + filename + std::string(".ar");
+    if (-1 == rename(filepath.c_str(), archived_filepath.c_str()))
+    {
+        MYLOG_ERROR("archived %s to %s failed: %s\n", filepath.c_str(), archived_filepath.c_str(), sys::Error::to_string().c_str());
+    }
+    else
+    {
+        MYLOG_INFO("archived %s to %s ok\n", filepath.c_str(), archived_filepath.c_str());
     }
 }
 
