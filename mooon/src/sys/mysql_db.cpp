@@ -270,6 +270,7 @@ void CMySQLConnection::do_open() throw (CDBException)
     // 连接时，将释放该对象。
     _mysql_handler = mysql_init(NULL);
     MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
+    MOOON_ASSERT(mysql_handler != NULL);
 
     // 设置超时时长
     mysql_options(mysql_handler, MYSQL_OPT_CONNECT_TIMEOUT, reinterpret_cast<char*>(&_timeout_seconds));
