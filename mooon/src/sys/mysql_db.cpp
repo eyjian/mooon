@@ -34,6 +34,23 @@ SYS_NAMESPACE_BEGIN
 // 将自己注释到CObjectFactdory中
 REGISTER_OBJECT_CREATOR("mysql_connection", CMySQLConnection)
 
+bool CMySQLConnection::library_init(int argc, char **argv, char **groups)
+{
+    // In a nonmulti-threaded environment, the call to mysql_library_init() may be omitted,
+    // because mysql_init() will invoke it automatically as necessary.
+    // However, mysql_library_init() is not thread-safe in a multi-threaded environment,
+    // and thus neither is mysql_init(), which calls mysql_library_init().
+    // You must either call mysql_library_init() prior to spawning any threads
+    // or else use a mutex to protect the call, whether you invoke mysql_library_init() or indirectly through mysql_init().
+    return 0 == mysql_library_init(argc, argv, groups);
+}
+
+void CMySQLConnection::library_end()
+{
+    // This function finalizes the MySQL library. Call it when you are done using the library
+    mysql_library_end();
+}
+
 bool CMySQLConnection::is_duplicate(int errcode)
 {
     return ER_DUP_ENTRY == errcode; // 1062

@@ -31,6 +31,12 @@ SYS_NAMESPACE_BEGIN
 class CMySQLConnection: public CDBConnectionBase, public utils::CObject
 {
 public:
+    // Call this function to initialize the MySQL library before you call any other MySQL function
+    // 多线程环境必须调用library_init，并且必须在创建任何线程之前调用library_init
+    static bool library_init(int argc=0, char **argv=NULL, char **groups=NULL);
+    // library_end用于释放library_init分配的资源
+    static void library_end();
+
     static bool is_duplicate(int errcode);
     static void escape_string(const std::string& str, std::string* escaped_str);
 
