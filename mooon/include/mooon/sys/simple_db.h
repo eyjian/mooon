@@ -106,7 +106,17 @@ public:
      * 设置用来连接的超时秒数，如果不主动设置，则使用默认的10秒
      * 注意，只有在open()或reopen()之前调用才生效
      */
-    virtual void set_timeout_seconds(int timeout_seconds) = 0;
+    virtual void set_connect_timeout_seconds(int timeout_seconds) = 0;
+
+    /***
+     * 设置读超时
+     */
+    virtual void set_read_timeout_seconds(int timeout_seconds) = 0;
+
+    /***
+     * 设置写超时
+     */
+    virtual void set_write_timeout_seconds(int timeout_seconds) = 0;
     
     /***
      * 设置空值，字段在DB表中的值为NULL时，返回的内容
@@ -192,7 +202,9 @@ public:
     virtual void set_user(const std::string& db_user, const std::string& db_password);
     virtual void set_charset(const std::string& charset);
     virtual void enable_auto_reconnect();
-    virtual void set_timeout_seconds(int timeout_seconds);
+    virtual void set_connect_timeout_seconds(int timeout_seconds);
+    virtual void set_read_timeout_seconds(int timeout_seconds);
+    virtual void set_write_timeout_seconds(int timeout_seconds);
     virtual void set_null_value(const std::string& null_value);
 
 public:
@@ -223,7 +235,9 @@ protected:
     std::string _db_password;
     std::string _charset;
     bool _auto_reconnect;
-    int _timeout_seconds;
+    int _connect_timeout_seconds; // 连接超时
+    int _read_timeout_seconds;
+    int _write_timeout_seconds;
     std::string _null_value; // 字段在DB表中的值为NULL时，返回的内容
 };
 

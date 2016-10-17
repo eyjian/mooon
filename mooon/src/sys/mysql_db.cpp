@@ -302,7 +302,9 @@ void CMySQLConnection::do_open() throw (CDBException)
     MOOON_ASSERT(mysql_handler != NULL);
 
     // 设置超时时长
-    mysql_options(mysql_handler, MYSQL_OPT_CONNECT_TIMEOUT, reinterpret_cast<char*>(&_timeout_seconds));
+    mysql_options(mysql_handler, MYSQL_OPT_CONNECT_TIMEOUT, reinterpret_cast<char*>(&_connect_timeout_seconds));
+    mysql_options(mysql_handler, MYSQL_OPT_READ_TIMEOUT, reinterpret_cast<char*>(&_read_timeout_seconds));
+    mysql_options(mysql_handler, MYSQL_OPT_WRITE_TIMEOUT, reinterpret_cast<char*>(&_write_timeout_seconds));
 
     // 设置自动重连接
     mysql_options(mysql_handler, MYSQL_OPT_RECONNECT, &reconnect);

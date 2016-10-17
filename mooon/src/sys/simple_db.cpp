@@ -28,7 +28,9 @@ SYS_NAMESPACE_BEGIN
 
 CDBConnectionBase::CDBConnectionBase(size_t sql_size)
     : _sql_size(sql_size), _is_established(false),
-      _db_port(3306), _auto_reconnect(false), _timeout_seconds(10), _null_value("$NULL$")
+      _db_port(3306), _auto_reconnect(false),
+      _connect_timeout_seconds(10), _read_timeout_seconds(10), _write_timeout_seconds(10),
+      _null_value("$NULL$")
 {
 }
 
@@ -59,9 +61,19 @@ void CDBConnectionBase::enable_auto_reconnect()
     _auto_reconnect = true;    
 }
 
-void CDBConnectionBase::set_timeout_seconds(int timeout_seconds)
+void CDBConnectionBase::set_connect_timeout_seconds(int timeout_seconds)
 {
-    _timeout_seconds = timeout_seconds;    
+    _connect_timeout_seconds = timeout_seconds;
+}
+
+void CDBConnectionBase::set_read_timeout_seconds(int timeout_seconds)
+{
+    _read_timeout_seconds = timeout_seconds;
+}
+
+void CDBConnectionBase::set_write_timeout_seconds(int timeout_seconds)
+{
+    _write_timeout_seconds = timeout_seconds;
 }
 
 void CDBConnectionBase::set_null_value(const std::string& null_value)
