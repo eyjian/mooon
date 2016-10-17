@@ -6,31 +6,12 @@
 #include <mooon/net/utils.h>
 #include <mooon/sys/file_utils.h>
 #include <mooon/sys/mysql_db.h>
-#include <mooon/sys/utils.h>
 #include <mooon/utils/md5_helper.h>
 #include <mooon/utils/string_utils.h>
-#include <mooon/utils/tokener.h>
 #include <set>
 #include <sys/inotify.h> // 一些低版本内核没有实现
 #include <vector>
 namespace mooon { namespace db_proxy {
-
-bool is_sql_log_filename(const std::string& filename)
-{
-    std::vector<std::string> tokens;
-    utils::CTokener::split(&tokens, filename, ".");
-    return (3 == tokens.size()) && (tokens[0] == "sql") &&
-           (12 == tokens[1].size()) &&
-           (6 == tokens[2].size()) &&
-           utils::CStringUtils::is_numeric_string(tokens[1].c_str()) &&
-           utils::CStringUtils::is_numeric_string(tokens[2].c_str());
-}
-
-std::string get_log_dirpath(const std::string& alias)
-{
-    const std::string program_path = sys::CUtils::get_program_path();
-    return utils::CStringUtils::format_string("%s/../%s/%s", program_path.c_str(), SQLLOG_DIRNAME, alias.c_str());
-}
 
 // 线程级DB连接
 static __thread sys::CMySQLConnection* g_db_connection[MAX_DB_CONNECTION] = { NULL } ;

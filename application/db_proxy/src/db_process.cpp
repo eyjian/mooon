@@ -5,6 +5,7 @@
 #include <mooon/sys/dir_utils.h>
 #include <mooon/sys/safe_logger.h>
 #include <mooon/sys/signal_handler.h>
+#include <mooon/sys/stop_watch.h>
 #include <mooon/utils/args_parser.h>
 #include <mooon/utils/string_utils.h>
 #include <string.h>
@@ -179,6 +180,7 @@ bool CDbProcess::handle_file(const std::string& filename)
 
         int count = 0; // 入库的条数
         int consecutive_nodata = 0; // 连接无data的次数
+        sys::CStopWatch stop_watch;
         while (!_stop_signal_thread)
         {
             int bytes = 0;
@@ -209,6 +211,7 @@ bool CDbProcess::handle_file(const std::string& filename)
                 break;
             }
 
+            MYLOG_DEBUG("read length const: %u\n", stop_watch.get_elapsed_microseconds(true));
             consecutive_nodata = 0; // reset
             if (bytes > 0)
                 offset += static_cast<uint32_t>(bytes);
@@ -224,14 +227,17 @@ bool CDbProcess::handle_file(const std::string& filename)
             if (bytes > 0)
                 offset += static_cast<uint32_t>(bytes);
 
+            MYLOG_DEBUG("read sql const: %u\n", stop_watch.get_elapsed_microseconds(true));
             while (!_stop_signal_thread)
             {
                 try
                 {
                     int rows = _mysql.update("%s", sql.c_str());
+                    MYLOG_DEBUG("sql const: %u\n", stop_watch.get_elapsed_microseconds(true));
                     if (!update_progress(filename, offset))
                         return false;
 
+                    MYLOG_DEBUG("progress const: %u\n", stop_watch.get_elapsed_microseconds(true));
                     ++count;
                     if (0 == ++_num_sqls%10000)
                     {

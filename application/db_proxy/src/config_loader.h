@@ -5,15 +5,31 @@
 #include <mooon/sys/log.h>
 #include <mooon/sys/mysql_db.h>
 #include <mooon/sys/read_write_lock.h>
+#include <mooon/sys/utils.h>
 #include <mooon/utils/string_utils.h>
+#include <mooon/utils/tokener.h>
 #include <string>
 
 #define INVALID_ALIAS_PREFIX "-" // 无效别名前缀
 #define SQLLOG_DIRNAME "sqllog"
 namespace mooon { namespace db_proxy {
 
-extern bool is_sql_log_filename(const std::string& filename);
-extern std::string get_log_dirpath(const std::string& alias);
+inline bool is_sql_log_filename(const std::string& filename)
+{
+    std::vector<std::string> tokens;
+    utils::CTokener::split(&tokens, filename, ".");
+    return (3 == tokens.size()) && (tokens[0] == "sql") &&
+           (12 == tokens[1].size()) &&
+           (6 == tokens[2].size()) &&
+           utils::CStringUtils::is_numeric_string(tokens[1].c_str()) &&
+           utils::CStringUtils::is_numeric_string(tokens[2].c_str());
+}
+
+inline std::string get_log_dirpath(const std::string& alias)
+{
+    const std::string program_path = sys::CUtils::get_program_path();
+    return utils::CStringUtils::format_string("%s/../%s/%s", program_path.c_str(), SQLLOG_DIRNAME, alias.c_str());
+}
 
 // 定义常量
 enum
