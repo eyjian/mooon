@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
     if (0 == seconds)
         fprintf(stdout, "qps: %d\n", count);
     else
-        fprintf(stdout, "qps: %d\n", count/seconds);
+        fprintf(stdout, "qps: %d, %d\n", count/seconds, count/seconds/mooon::argument::threads->value());
 
     delete []stress_threads;
     mooon::sys::CMySQLConnection::library_end();

@@ -79,6 +79,11 @@ private:
     uint32_t _consecutive_failures; // 用于减少连接DB失败时的重复日志
     uint64_t _num_sqls; // 启动以来总共处理过的SQL条数
     bool _db_connected; // 是否连接了DB
+
+private:
+    time_t _begin_time; // 效率统计开始时间
+    int _interval_count; // 效率统计时间段内发生的数目
+    int _batch; // 当前事务已写的条数
 };
 
 }} // namespace mooon { namespace db_proxy {

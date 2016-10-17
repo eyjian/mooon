@@ -29,8 +29,11 @@ INTEGER_ARG_DEFINE(uint8_t, num_work_threads, 1, 1, 50, "number of work threads"
 // sql日志文件大小，建议大小不小于（1024*1024*100），更小的值是为了方便开发时的测试
 INTEGER_ARG_DEFINE(int, sql_file_size, (1024*1024*300), (1024*10), std::numeric_limits<int>::max(), "size of single sql log file");
 
-// 运行示例：
-//
+// 批量提交SQL数
+INTEGER_ARG_DEFINE(uint8_t, batch, 1, 1, std::numeric_limits<uint8_t>::max(), "number of batch commit");
+// 效率数据定时输出间隔，单位为秒
+INTEGER_ARG_DEFINE(uint16_t, efficiency, 10, 2, std::numeric_limits<uint8_t>::max(), "interval to output efficiency (seconds)");
+
 class CMainHelper: public mooon::sys::IMainHelper
 {
 public:

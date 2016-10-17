@@ -12,6 +12,8 @@
 #include <sys/uio.h>
 
 INTEGER_ARG_DECLARE(int, sql_file_size);
+INTEGER_ARG_DECLARE(uint8_t, batch);
+INTEGER_ARG_DECLARE(uint16_t, efficiency);
 namespace mooon { namespace db_proxy {
 
 CDbProcess::CDbProcess(const struct DbInfo& dbinfo)
@@ -20,6 +22,10 @@ CDbProcess::CDbProcess(const struct DbInfo& dbinfo)
 {
     const std::string program_path = sys::CUtils::get_program_path();
     _log_dirpath = get_log_dirpath(_dbinfo.alias);
+
+    _begin_time = time(NULL);
+    _interval_count = 0;
+    _batch = 0;
 }
 
 CDbProcess::~CDbProcess()
@@ -191,8 +197,7 @@ bool CDbProcess::handle_file(const std::string& filename)
         }
 
         int count = 0; // 入库的条数
-        int consecutive_nodata = 0; // 连接无data的次数
-        sys::CStopWatch stop_watch;
+        int consecutive_nodata = 0; // 连续无data的次数
         while (!_stop_signal_thread)
         {
             int bytes = 0;
@@ -225,7 +230,6 @@ bool CDbProcess::handle_file(const std::string& filename)
                 break;
             }
 
-            MYLOG_DEBUG("read length const: %u\n", stop_watch.get_elapsed_microseconds(true));
             consecutive_nodata = 0; // reset
             if (bytes > 0)
                 offset += static_cast<uint32_t>(bytes);
@@ -239,9 +243,11 @@ bool CDbProcess::handle_file(const std::string& filename)
                 return false;
             }
             if (bytes > 0)
+            {
                 offset += static_cast<uint32_t>(bytes);
+            }
 
-            MYLOG_DEBUG("read sql const: %u\n", stop_watch.get_elapsed_microseconds(true));
+            // 操作DB异常时不断重试
             while (!_stop_signal_thread)
             {
                 if (parent_process_not_exists())
@@ -249,13 +255,48 @@ bool CDbProcess::handle_file(const std::string& filename)
 
                 try
                 {
-                    int rows = _mysql.update("%s", sql.c_str());
-                    MYLOG_DEBUG("sql const: %u\n", stop_watch.get_elapsed_microseconds(true));
+                    const int rows = _mysql.update("%s", sql.c_str());
+                    const time_t end_time = time(NULL);
+                    const int interval = static_cast<int>(end_time - _begin_time);
+
+                    if (mooon::argument::batch->value() <= 1)
+                    {
+                        // 非批量提交
+                        ++count;
+                        ++_interval_count;
+
+                        if (interval >= mooon::argument::efficiency->value())
+                        {
+                            MYLOG_INFO("efficiency: %d (%d, %ds)\n", _interval_count/interval, _interval_count, interval);
+                            _begin_time = end_time;
+                            _interval_count = 0;
+                        }
+                    }
+                    else
+                    {
+                        ++_batch;
+
+                        // 批量提交
+                        if (_batch >= mooon::argument::batch->value() || (interval > 1))
+                        {
+                            _mysql.commit();
+                            count += _batch;
+                            _interval_count += _batch;
+                            _batch = 0;
+
+                            if (interval >= mooon::argument::efficiency->value())
+                            {
+                                MYLOG_INFO("efficiency: %d (%d, %ds)\n", _interval_count/interval, _interval_count, interval);
+                                _begin_time = end_time;
+                                _interval_count = 0;
+                            }
+                        }
+                    }
+
+                    // 更新进度
                     if (!update_progress(filename, offset))
                         return false;
 
-                    MYLOG_DEBUG("progress const: %u\n", stop_watch.get_elapsed_microseconds(true));
-                    ++count;
                     if (0 == ++_num_sqls%10000)
                     {
                         MYLOG_INFO("[%s] ok: %d, %" PRIu64"\n", sql.c_str(), rows, _num_sqls);
@@ -264,6 +305,7 @@ bool CDbProcess::handle_file(const std::string& filename)
                     {
                         MYLOG_DEBUG("[%s] ok: %d, %" PRIu64"\n", sql.c_str(), rows, _num_sqls);
                     }
+
                     break;
                 }
                 catch (sys::CDBException& ex)
@@ -303,6 +345,20 @@ bool CDbProcess::connect_db()
         _mysql.set_charset(_dbinfo.charset);
         _mysql.enable_auto_reconnect();
         _mysql.open();
+
+        // 如果批量提交则需要禁用自动提交
+        if (mooon::argument::batch->value() > 1)
+        {
+            try
+            {
+                _mysql.enable_autocommit(false);
+            }
+            catch (sys::CDBException& ex)
+            {
+                _mysql.close();
+                throw;
+            }
+        }
 
         _db_connected = true;
         _consecutive_failures = 0;
