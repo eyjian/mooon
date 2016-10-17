@@ -140,6 +140,11 @@ bool CMainHelper::init(int argc, char* argv[])
         fprintf(stderr, "%s\n", errmsg.c_str());
         return false;
     }
+    if (!mooon::sys::CMySQLConnection::library_init())
+    {
+        fprintf(stderr, "init mysql failed\n");
+        return 1;
+    }
 
     // 阻塞SIG_CHLD和SIG_TERM两个信号
     mooon::sys::CSignalHandler::block_signal(SIGCHLD);
@@ -220,6 +225,7 @@ bool CMainHelper::run()
 
 void CMainHelper::fini()
 {
+    mooon::sys::CMySQLConnection::library_end();
 }
 
 void CMainHelper::stop()
