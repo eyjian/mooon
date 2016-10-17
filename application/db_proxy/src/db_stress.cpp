@@ -26,6 +26,9 @@ INTEGER_ARG_DEFINE(uint8_t, threads, 1, 1, 100, "number of threads to stress");
 // 压力测试用的SQL
 STRING_ARG_DEFINE(sql, "", "stress sql");
 
+// 批量提交的SQL数
+INTEGER_ARG_DEFINE(uint8_t, batch, 1, 1, std::numeric_limits<uint8_t>::max(), "number of sql to batch to commit");
+
 static atomic_t sg_count = 0;
 static void stress_thread(uint8_t index);
 
@@ -81,10 +84,19 @@ void stress_thread(uint8_t index)
     try
     {
         mysql.open();
-        for (uint32_t i=0; i<mooon::argument::num->value(); ++i)
+        if (mooon::argument::batch->value() > 1)
+            mysql.enable_autocommit(false);
+
+        for (uint32_t i=0; i<mooon::argument::num->value();)
         {
-            mysql.update("%s", mooon::argument::sql->c_value());
-            atomic_inc(&sg_count);
+            for (uint8_t j=0; j<mooon::argument::batch->value()&&i<mooon::argument::num->value(); ++j,++i)
+            {
+                mysql.update("%s", mooon::argument::sql->c_value());
+                atomic_inc(&sg_count);
+            }
+
+            if (mooon::argument::batch->value() > 1)
+                mysql.commit();
         }
     }
     catch (mooon::sys::CDBException& ex)
