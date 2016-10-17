@@ -48,13 +48,9 @@ void CDbProcess::run()
             _signal_thread = new sys::CThreadEngine(sys::bind(&CDbProcess::signal_thread, this));
             while (!_stop_signal_thread)
             {
-                pid_t ppid = getppid();
-                if (1 == ppid)
-                {
-                    // 父进程不在则自动退出
-                    MYLOG_INFO("dbprocess(%u, %s) will exit for parent process not exit\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str());
+                if (parent_process_not_exists())
                     break;
-                }
+
                 if (!_db_connected && !connect_db())
                 {
                     sys::CUtils::millisleep(1000);
@@ -100,6 +96,19 @@ void CDbProcess::on_exception(int errcode) throw ()
     MYLOG_ERROR("dbprocess(%u, %s) error: (%d)%s\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str(), errcode, sys::Error::to_string(errcode).c_str());
 }
 
+bool CDbProcess::parent_process_not_exists() const
+{
+    pid_t ppid = getppid();
+    if (1 == ppid)
+    {
+        // 父进程不在则自动退出
+        MYLOG_INFO("dbprocess(%u, %s) will exit for parent process not exit\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str());
+        return true;
+    }
+
+    return false;
+}
+
 bool CDbProcess::create_history_directory() const
 {
     const std::string history_directory = _log_dirpath + std::string("/history");
@@ -135,6 +144,9 @@ void CDbProcess::handle_directory()
 
         for (std::vector<std::string>::size_type i=0; !_stop_signal_thread&&i<file_names.size(); ++i)
         {
+            if (parent_process_not_exists())
+                break;
+
             const std::string& filename = file_names[i];
             if (is_sql_log_filename(filename))
                 handle_file(filename);
@@ -185,6 +197,8 @@ bool CDbProcess::handle_file(const std::string& filename)
         {
             int bytes = 0;
             int32_t length = 0;
+            if (parent_process_not_exists())
+                break;
 
             // 读取SQL语句长度
             bytes = read(fd, &length, sizeof(length));
@@ -230,6 +244,9 @@ bool CDbProcess::handle_file(const std::string& filename)
             MYLOG_DEBUG("read sql const: %u\n", stop_watch.get_elapsed_microseconds(true));
             while (!_stop_signal_thread)
             {
+                if (parent_process_not_exists())
+                    break;
+
                 try
                 {
                     int rows = _mysql.update("%s", sql.c_str());

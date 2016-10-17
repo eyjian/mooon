@@ -55,6 +55,7 @@ public:
     void on_exception(int errcode) throw ();
 
 private:
+    bool parent_process_not_exists() const;
     bool create_history_directory() const;
     void handle_directory();
     bool handle_file(const std::string& filename);
