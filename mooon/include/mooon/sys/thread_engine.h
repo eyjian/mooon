@@ -36,6 +36,12 @@ public:
 };
 
 // 当前版本支持最多9个参数
+//
+// 不支持&引用类型和const类型参数，包括const指针类型参数，
+// 比如不支持const std::string&和std::string&，
+// 可以为非const指针类型如std::string*，或值类型如std::string，
+// 否则编译时会报无效类型转换错误（invalid conversion from）！
+
 ////////////////////////////////////////////////////////////////////////////////
 // 不带参数
 
@@ -884,6 +890,11 @@ static void* thread_proc(void* parameter)
     delete functor; // 记得这里需要delete
     return NULL;
 }
+
+// 不支持&引用类型和const类型参数，包括const指针类型参数，
+// 比如不支持const std::string&和std::string&，
+// 可以为非const指针类型如std::string*，或值类型如std::string，
+// 否则编译时会报无效类型转换错误（invalid conversion from）！
 
 class CThreadEngine
 {
