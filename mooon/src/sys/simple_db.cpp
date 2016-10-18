@@ -29,7 +29,7 @@ SYS_NAMESPACE_BEGIN
 CDBConnectionBase::CDBConnectionBase(size_t sql_size)
     : _sql_size(sql_size), _is_established(false),
       _db_port(3306), _auto_reconnect(false),
-      _connect_timeout_seconds(10), _read_timeout_seconds(10), _write_timeout_seconds(10),
+      _connect_timeout_seconds(DB_CONNECT_TIMEOUT_SECONDS_DEFAULT), _read_timeout_seconds(DB_READ_TIMEOUT_SECONDS_DEFAULT), _write_timeout_seconds(DB_WRITE_TIMEOUT_SECONDS_DEFAULT),
       _null_value("$NULL$")
 {
 }
@@ -59,6 +59,24 @@ void CDBConnectionBase::set_charset(const std::string& charset)
 void CDBConnectionBase::enable_auto_reconnect()
 {
     _auto_reconnect = true;    
+}
+
+void CDBConnectionBase::set_timeout_seconds(int connect_timeout_seconds, int read_timeout_seconds, int write_timeout_seconds)
+{
+    // 连接超时
+    set_connect_timeout_seconds(connect_timeout_seconds);
+
+    // 读超时
+    if (read_timeout_seconds < 0)
+        set_read_timeout_seconds(connect_timeout_seconds);
+    else
+        set_read_timeout_seconds(read_timeout_seconds);
+
+    // 写超时
+    if (write_timeout_seconds < 0)
+        set_write_timeout_seconds(connect_timeout_seconds);
+    else
+        set_write_timeout_seconds(write_timeout_seconds);
 }
 
 void CDBConnectionBase::set_connect_timeout_seconds(int timeout_seconds)

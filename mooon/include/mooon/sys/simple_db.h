@@ -26,6 +26,14 @@ SYS_NAMESPACE_BEGIN
 typedef std::vector<std::string> DBRow; // 用来存储一行所有字段的值
 typedef std::vector<DBRow> DBTable;     // 用来存储所有行
 
+// DB连接、读和写超时时长，单位为秒
+enum
+{
+    DB_CONNECT_TIMEOUT_SECONDS_DEFAULT = 2,
+    DB_READ_TIMEOUT_SECONDS_DEFAULT = 2, // MySQL对读有重试三次机制，因此实际的读超时时长可能为三倍
+    DB_WRITE_TIMEOUT_SECONDS_DEFAULT = 2 // MySQL对写有重试两次机制，因此实际的读超时时长可能为两倍
+};
+
 /**
  * 访问DB的接口，是一个抽象接口，当前只支持MySQL
  *
@@ -103,18 +111,30 @@ public:
     virtual void enable_auto_reconnect() = 0;
     
     /***
-     * 设置用来连接的超时秒数，如果不主动设置，则使用默认的10秒
+     * 设置连接、读和写超时时长
+     * 如果read_timeout_seconds值为负值，则表示使用和connect_timeout_seconds相同的值，
+     * 如果write_timeout_seconds值为负值，则表示使用和connect_timeout_seconds相同的值，
+     */
+    virtual void set_timeout_seconds(int connect_timeout_seconds, int read_timeout_seconds=-1, int write_timeout_seconds=-1) = 0;
+
+    /***
+     * 设置用来连接的超时秒数，如果不主动设置则使用默认的DB_CONNECT_TIMEOUT_SECONDS_DEFAULT秒
      * 注意，只有在open()或reopen()之前调用才生效
+     *
+     * 对于读MySQL有重试三次机制，因此实际超时时长可能为参数timeout_seconds的三倍，
+     * 对于写MySQL有重试两次机制，因此实际超时时长可能为参数timeout_seconds的两倍
      */
     virtual void set_connect_timeout_seconds(int timeout_seconds) = 0;
 
     /***
-     * 设置读超时
+     * 设置读超时，如果不主动设置则使用默认的DB_READ_TIMEOUT_SECONDS_DEFAULT秒
+     * 对于读MySQL有重试三次机制，因此实际超时时长可能为参数timeout_seconds的三倍
      */
     virtual void set_read_timeout_seconds(int timeout_seconds) = 0;
 
     /***
-     * 设置写超时
+     * 设置写超时，如果不主动设置则使用默认的DB_WRITE_TIMEOUT_SECONDS_DEFAULT秒
+     * 对于写MySQL有重试两次机制，因此实际超时时长可能为参数timeout_seconds的两倍
      */
     virtual void set_write_timeout_seconds(int timeout_seconds) = 0;
     
@@ -202,6 +222,7 @@ public:
     virtual void set_user(const std::string& db_user, const std::string& db_password);
     virtual void set_charset(const std::string& charset);
     virtual void enable_auto_reconnect();
+    virtual void set_timeout_seconds(int connect_timeout_seconds, int read_timeout_seconds=-1, int write_timeout_seconds=-1);
     virtual void set_connect_timeout_seconds(int timeout_seconds);
     virtual void set_read_timeout_seconds(int timeout_seconds);
     virtual void set_write_timeout_seconds(int timeout_seconds);
