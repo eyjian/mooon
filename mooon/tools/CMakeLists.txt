@@ -13,7 +13,7 @@ target_link_libraries(md5 libmooon_utils.a)
 
 # 硬盘性能测试工具
 add_executable(disk_benchmark disk_benchmark.cpp)
-target_link_libraries(disk_benchmark libmooon_utils.a libmooon_sys.a)
+target_link_libraries(disk_benchmark libmooon_sys.a libmooon_utils.a)
 
 if (HAVE_LIBSSH2)
 	# 远程命令工具
