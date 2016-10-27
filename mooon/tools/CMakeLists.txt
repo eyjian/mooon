@@ -11,6 +11,10 @@ link_directories(../src/utils)
 add_executable(md5 md5.cpp)
 target_link_libraries(md5 libmooon_utils.a)
 
+# 硬盘性能测试工具
+add_executable(disk_benchmark disk_benchmark.cpp)
+target_link_libraries(disk_benchmark libmooon_utils.a libmooon_sys.a)
+
 if (HAVE_LIBSSH2)
 	# 远程命令工具
 	add_executable(mooon_ssh mooon_ssh.cpp)
@@ -60,6 +64,6 @@ endif ()
 
 # CMAKE_INSTALL_PREFIX
 install(
-        TARGETS md5
+        TARGETS md5 disk_benchmark
         DESTINATION bin
        )
