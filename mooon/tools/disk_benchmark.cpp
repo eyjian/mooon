@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
             exit(1);
         }
 
-        if (1 == mooon::argument::buffer->value())
+        if (0 == mooon::argument::buffer->value())
         {
             if (-1 == fsync(fd))
             {
