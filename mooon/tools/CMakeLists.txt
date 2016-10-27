@@ -31,6 +31,7 @@ if (HAVE_LIBSSH2)
 	       )
 endif ()
 
+# r3c_stress
 if (HAVE_R3C)
     add_executable(r3c_stress r3c_stress.cpp)
     target_link_libraries(r3c_stress libmooon_sys.a libmooon_utils.a libr3c.a libhiredis.a)
@@ -40,6 +41,21 @@ if (HAVE_R3C)
             TARGETS r3c_stress
             DESTINATION bin
            )    
+endif ()
+
+# hbase_stress
+if (HAVE_THRIFT)
+    exec_program(${THRIFT_HOME}/bin/thrift ARGS --gen cpp -r -out ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/hbase.thrift)
+    exec_program(rm ARGS ${CMAKE_CURRENT_SOURCE_DIR}/THBaseService_server.skeleton.cpp)
+
+    add_executable(hbase_stress hbase_stress.cpp THBaseService.cpp hbase_constants.cpp hbase_types.cpp)
+    target_link_libraries(hbase_stress libmooon_sys.a libmooon_utils.a libthrift.a)
+    
+    # CMAKE_INSTALL_PREFIX
+    install(
+            TARGETS hbase_stress
+            DESTINATION bin
+           )      
 endif ()
 
 # CMAKE_INSTALL_PREFIX
