@@ -16,7 +16,8 @@
  *
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
-// 基于r3c实现的redis性能测试工具（r3c是一个在hiredis上实现的redis cluster c++客户端库）
+// 磁盘性能测试工具，用于测试磁盘的读写性能：每秒写和读的笔数、每笔写和读花费的时长
+// 可以指定每次写和读的块大小，以及连读多少次写和读来求平均值。
 #include <mooon/sys/close_helper.h>
 #include <mooon/sys/stop_watch.h>
 #include <mooon/sys/utils.h>
