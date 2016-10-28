@@ -24,11 +24,25 @@
 #include <mooon/utils/args_parser.h>
 #include <mooon/utils/print_color.h>
 #include <mooon/utils/string_utils.h>
+#include <signal.h>
 
 STRING_ARG_DEFINE(dir, ".", "temporary file directory");
-INTEGER_ARG_DEFINE(uint32_t, block, 1024, 1, 1024*1024*1024, "block bytes");
-INTEGER_ARG_DEFINE(uint32_t, times, 10000, 1, std::numeric_limits<uint32_t>::max(), "times to write and read");
+INTEGER_ARG_DEFINE(uint32_t, block, 4096, 1, 1024*1024*1024, "block bytes");
+INTEGER_ARG_DEFINE(uint32_t, times, 100000, 1, std::numeric_limits<uint32_t>::max(), "times to write and read");
 INTEGER_ARG_DEFINE(uint8_t, buffer, 1, 0, 1, "buffer write");
+
+static char filename[sizeof("disk_benchmark_XXXXXX")] = { '\0' };
+static void onsignal(int signo)
+{
+    if (SIGINT == signo)
+    {
+        if (filename[0] != '\0')
+        {
+            remove(filename);
+            exit(1);
+        }
+    }
+}
 
 int main(int argc, char* argv[])
 {
@@ -41,7 +55,8 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    char filename[] = "disk_benchmark_XXXXXX";
+    signal(SIGINT, onsignal);
+    strncpy(filename, "disk_benchmark_XXXXXX", sizeof("disk_benchmark_XXXXXX")-1);
     int fd = mkstemp(filename);
     if (-1 == fd)
     {
@@ -50,13 +65,14 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    fprintf(stdout, "file: %s\n\n", filename);
+    fprintf(stdout, "block size: %u, file: %s\n\n", mooon::argument::block->value(), filename);
     const std::string buffer(mooon::argument::block->value(), '#');
     mooon::sys::CStopWatch stop_watch;
     int64_t total_bytes = 0;
+    ssize_t bytes = 0;
     for (uint32_t i=0; i<mooon::argument::times->value(); ++i)
     {
-        ssize_t bytes = write(fd, buffer.data(), buffer.size());
+        bytes = write(fd, buffer.data(), buffer.size());
         if (bytes != static_cast<ssize_t>(buffer.size()))
         {
             fprintf(stderr, "write %s error: %m\n", filename);
@@ -84,8 +100,11 @@ int main(int argc, char* argv[])
     unsigned int elapsed_seconds = elapsed_microseconds / 1000000;
     unsigned int iops = (0 == elapsed_seconds)? mooon::argument::times->value(): mooon::argument::times->value()/elapsed_seconds;
     double rate =  elapsed_microseconds / mooon::argument::times->value();
+    double total_bytes_k = total_bytes / 1024;
+    double total_bytes_m = total_bytes_k / 1024;
+    double bytes_sec = (0 == elapsed_seconds)? total_bytes_m: total_bytes_m / elapsed_seconds;
     fprintf(stdout, "[" PRINT_COLOR_YELLOW"WRITE" PRINT_COLOR_NONE"]\n");
-    fprintf(stdout, "bytes: %" PRId64", times: %u\n", total_bytes, mooon::argument::times->value());
+    fprintf(stdout, "bytes: %" PRId64" (%.02fMB, %.02fMB/s), times: %u\n", total_bytes, total_bytes_m, bytes_sec, mooon::argument::times->value());
     fprintf(stdout, "microseconds: %u, milliseconds: %u, seconds: %u\n", elapsed_microseconds, elapsed_milliseconds, elapsed_seconds);
     fprintf(stdout, "iops: %u, rate: %0.2fus (%0.2fms)\n", iops, rate, rate/1000);
 
@@ -105,10 +124,11 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
+    total_bytes = 0;
     stop_watch.restart();
     for (uint32_t i=0; i<mooon::argument::times->value(); ++i)
     {
-        ssize_t bytes = read(fd, const_cast<char*>(buffer.data()), mooon::argument::block->value());
+        bytes = read(fd, const_cast<char*>(buffer.data()), mooon::argument::block->value());
         if (bytes != static_cast<ssize_t>(buffer.size()))
         {
             fprintf(stderr, "read %s error: %m\n", filename);
@@ -116,6 +136,8 @@ int main(int argc, char* argv[])
             close(fd);
             exit(1);
         }
+
+        total_bytes += bytes;
     }
 
     elapsed_microseconds = stop_watch.get_elapsed_microseconds();
@@ -123,7 +145,11 @@ int main(int argc, char* argv[])
     elapsed_seconds = elapsed_microseconds / 1000000;
     iops = (0 == elapsed_seconds)? mooon::argument::times->value(): mooon::argument::times->value()/elapsed_seconds;
     rate =  elapsed_microseconds / mooon::argument::times->value();
+    total_bytes_k = total_bytes / 1024;
+    total_bytes_m = total_bytes_k / 1024;
+    bytes_sec = (0 == elapsed_seconds)? total_bytes_m: total_bytes_m / elapsed_seconds;
     fprintf(stdout, "[" PRINT_COLOR_YELLOW"READ" PRINT_COLOR_NONE"]\n");
+    fprintf(stdout, "bytes: %" PRId64" (%.02fMB/s), times: %u\n", total_bytes, bytes_sec, mooon::argument::times->value());
     fprintf(stdout, "microseconds: %u, milliseconds: %u, seconds: %u\n", elapsed_microseconds, elapsed_milliseconds, elapsed_seconds);
     fprintf(stdout, "iops: %u, rate: %0.2fus (%0.2fms)\n", iops, rate, rate/1000);
 
