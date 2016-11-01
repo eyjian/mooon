@@ -48,6 +48,13 @@ static void foo()
 
 int main(int argc, char* argv[])
 {
+    std::string errmsg;
+    if (!utils::parse_arguments(argc, argv, &errmsg))
+    {
+        fprintf(stderr, "%s\n", errmsg.c_str());
+        exit(1);
+    }
+
     try
     {
         pid_t pid;
