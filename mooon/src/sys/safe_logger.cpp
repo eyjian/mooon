@@ -113,6 +113,8 @@ int CSafeLogger::release()
         ret = close(sg_thread_log_fd);
         if (0 == ret)
             sg_thread_log_fd = -1;
+        else
+            fprintf(stderr, "process(%u,%lu) close fd(%d) error: %m\n", getpid(), pthread_self(), sg_thread_log_fd);
     }
 
     return ret;
