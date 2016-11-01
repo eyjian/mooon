@@ -62,7 +62,8 @@ class CSafeLogger: public ILogger
 {
 public:
     CSafeLogger(const char* log_dir, const char* log_filename, uint16_t log_line_size=8192) throw (CSyscallException);
-    ~CSafeLogger();
+    virtual ~CSafeLogger();
+    virtual int release();
 
     /** 是否允许同时在标准输出上打印日志 */
     virtual void enable_screen(bool enabled);

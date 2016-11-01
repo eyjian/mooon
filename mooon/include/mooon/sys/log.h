@@ -91,7 +91,14 @@ class ILogger
 public:
     /** 空虚拟析构函数，以屏蔽编译器告警 */
     virtual ~ILogger() {}
-        
+
+    /** 释放资源，
+     * 每个线程退出之前应当调用一次，否则可能会有内存泄漏，
+     * 但是否有内存泄漏和具体实现相关，对于CSafeLogger则必须调用，
+     * 返回0表示成功
+     */
+    virtual int release() { return 0; }
+
     /** 是否允许同时在标准输出上打印日志 */
     virtual void enable_screen(bool enabled) {}
     /** 是否允许二进制日志，二进制日志必须通过它来打开 */
@@ -167,6 +174,11 @@ public:
 //////////////////////////////////////////////////////////////////////////
 // 日志宏，方便记录日志
 extern ILogger* g_logger; // 只是声明，不是定义，不能赋值哦！
+
+#define __MYLOG_RELEASE(logger) \
+    if (logger != NULL) { \
+        logger->release(); \
+    }
 
 #define __MYLOG_DETAIL(logger, module_name, format, ...) \
 do { \
@@ -274,8 +286,9 @@ do { \
         logger->log_bin(__FILE__, __LINE__, module_name, log, size); \
 } while(false)
 
+#define MYLOG_RELEASE()              __MYLOG_RELEASE(::mooon::sys::g_logger)
 #define MYLOG_BIN(log, size)         __MYLOG_BIN(::mooon::sys::g_logger, log, size)
-#define MYLOG_RAW(format, ...)     __MYLOG_RAW(::mooon::sys::g_logger, format, ##__VA_ARGS__)
+#define MYLOG_RAW(format, ...)       __MYLOG_RAW(::mooon::sys::g_logger, format, ##__VA_ARGS__)
 #define MYLOG_TRACE(format, ...)     __MYLOG_TRACE(::mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
 #define MYLOG_STATE(format, ...)     __MYLOG_STATE(::mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
 #define MYLOG_FATAL(format, ...)     __MYLOG_FATAL(::mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)

@@ -105,6 +105,19 @@ CSafeLogger::~CSafeLogger()
     }
 }
 
+int CSafeLogger::release()
+{
+    int ret = 0;
+    if (sg_thread_log_fd != -1)
+    {
+        ret = close(sg_thread_log_fd);
+        if (0 == ret)
+            sg_thread_log_fd = -1;
+    }
+
+    return ret;
+}
+
 void CSafeLogger::enable_screen(bool enabled)
 {
     _screen_enabled = enabled;
@@ -531,6 +544,10 @@ void CSafeLogger::write_log(int log_fd, const char* log_line, int log_line_size)
     if (-1 == bytes)
     {
         fprintf(stderr, "[%d:%lu] SafeLogger[%d] write error: %m\n", getpid(), pthread_self(), log_fd);
+    }
+    else if (0 == bytes)
+    {
+        fprintf(stderr, "[%d:%lu] write nothing: SafeLogger[%d]\n", getpid(), pthread_self(), log_fd);
     }
     else if (bytes > 0)
     {
