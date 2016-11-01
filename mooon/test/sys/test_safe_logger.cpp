@@ -121,6 +121,8 @@ int main(int argc, char* argv[])
         MYLOG_INFO("hello\n");
         MYLOG_ERROR("%s\n", "world");
         MYLOG_RELEASE();
+        delete ::mooon::sys::g_logger;
+        ::mooon::sys::g_logger = NULL;
 
         // 等待所有子进程结束
         while (true)
