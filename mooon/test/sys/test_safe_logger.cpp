@@ -113,6 +113,7 @@ int main(int argc, char* argv[])
                 thread3.join();
                 thread4.join();
                 thread5.join();
+                MYLOG_RELEASE();
                 exit(0);
             }
         }
