@@ -26,6 +26,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+INTEGER_ARG_DEFINE(int, processes, 10, 1, 100, "number of processes");
 INTEGER_ARG_DEFINE(int, lines, 10000, 1, 100000000, "number of lines");
 INTEGER_ARG_DEFINE(uint32_t, size, 1024*1024*800, 1024, 1024*1024*2000, "size of a single log file");
 INTEGER_ARG_DEFINE(uint16_t, backup, 10, 1, 100, "backup number of log file");
@@ -91,7 +92,7 @@ int main(int argc, char* argv[])
         sys::g_logger->set_log_level(sys::LOG_LEVEL_DETAIL);
         sys::g_logger->enable_trace_log(true);
 
-        for (int i=0; i<10; ++i)
+        for (int i=0; i<mooon::argument::processes->value(); ++i)
         {
             pid = fork();
             if (-1 == pid)
@@ -149,7 +150,7 @@ int main(int argc, char* argv[])
 
         int thread_lines = 7 * mooon::argument::lines->value();
         int all_threads_lines = 5 * thread_lines;
-        int all_processes_lines = 10 * all_threads_lines;
+        int all_processes_lines = all_threads_lines * mooon::argument::processes->value();
         int total_lines = 2 + all_processes_lines;
         fprintf(stdout, "thread lines: %d\n", thread_lines);
         fprintf(stdout, "all threads lines: %d\n", all_threads_lines);
