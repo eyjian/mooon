@@ -393,10 +393,7 @@ int CSafeLogger::get_thread_log_fd() const
 {
     if (-1 == sg_thread_log_fd)
     {
-        {
-            LockHelper<CLock> lock_helper(_lock);
-            sg_thread_log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
-        }
+        sg_thread_log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
         if (-1 == sg_thread_log_fd)
             fprintf(stderr, "open %s error: %m\n", _log_filepath.c_str());
     }
