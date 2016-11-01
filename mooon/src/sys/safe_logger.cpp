@@ -25,7 +25,10 @@
 #include <libgen.h>
 #include <pthread.h>
 #include <sstream>
+#include <syslog.h>
 #include <unistd.h>
+
+#define WRITE_SYSLOG 0 // 出错时是否记录系统日志，1表示记录
 SYS_NAMESPACE_BEGIN
 
 // 线程级别的
@@ -483,7 +486,19 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
         // 同步写入日志文件
         int thread_log_fd = get_thread_log_fd();
         if (thread_log_fd != -1)
+        {
             write_log(thread_log_fd, log_line.get(), log_real_size);
+        }
+        else
+        {
+            fprintf(stderr, "process(%u,%lu) without thread log\n", getpid(), pthread_self());
+
+#if WRITE_SYSLOG==1
+            openlog("mooon-safe-logger", LOG_CONS|LOG_PID, 0);
+            syslog(LOG_ERR, "process(%u,%lu) without thread log\n", getpid(), pthread_self());
+            closelog();
+#endif // WRITE_SYSLOG
+        }
     }
 }
 
@@ -532,11 +547,26 @@ void CSafeLogger::rotate_log()
     if (-1 == log_fd)
     {
         fprintf(stderr, "[%d:%lu] SafeLogger create %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str());
+
+#if WRITE_SYSLOG==1
+        openlog("mooon-safe-logger", LOG_CONS|LOG_PID, 0);
+        syslog(LOG_ERR, "[%d:%lu] SafeLogger create %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str());
+        closelog();
+#endif // WRITE_SYSLOG
     }
 
     LockHelper<CLock> lock_helper(_lock);
     if (-1 == close(_log_fd))
+    {
         fprintf(stderr, "[%d:%lu] SafeLogger close %s error: %m.\n", getpid(), pthread_self(), _log_filepath.c_str());
+
+#if WRITE_SYSLOG==1
+        openlog("mooon-safe-logger", LOG_CONS|LOG_PID, 0);
+        syslog(LOG_ERR, "[%d:%lu] SafeLogger close %s error: %m.\n", getpid(), pthread_self(), _log_filepath.c_str());
+        closelog();
+#endif // WRITE_SYSLOG
+    }
+
     _log_fd = log_fd;
 }
 
