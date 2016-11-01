@@ -153,6 +153,8 @@ int main(int argc, char* argv[])
         fprintf(stdout, "all threads lines: %d\n", all_threads_lines);
         fprintf(stdout, "all processes lines: %d\n", all_processes_lines);
         fprintf(stdout, "total lines: %d\n", total_lines);
+        fprintf(stdout, "press ENTER to exit\n");
+        getchar();
     }
     catch (sys::CSyscallException& syscall_ex)
     {
