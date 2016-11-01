@@ -19,24 +19,29 @@
 #include <mooon/sys/safe_logger.h>
 #include <mooon/sys/thread_engine.h>
 #include <mooon/sys/utils.h>
+#include <mooon/utils/args_parser.h>
+#include <mooon/utils/string_utils.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
+INTEGER_ARG_DEFINE(int, lines, 10000, 1, 100000000, "number of lines");
+INTEGER_ARG_DEFINE(uint32_t, size, 1024*1024*800, 1024, 1024*1024*2000, "size of a single log file");
+INTEGER_ARG_DEFINE(uint16_t, backup, 10, 1, 100, "backup number of log file");
 MOOON_NAMESPACE_USE
 
 static void foo()
 {
-    for (int i=0; i<100000; ++i)
+    for (int i=0; i<mooon::argument::lines->value(); ++i)
     {
-        MYLOG_DEBUG("[%d]MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM", i);
-        MYLOG_DETAIL("[%d]KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK", i+1);
-        MYLOG_INFO("[%d]BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", i+2);
-        MYLOG_ERROR("[%d]TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", i+3);
-        MYLOG_WARN("[%d]PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP", i+4);
-        MYLOG_TRACE("[%d]AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", i+5);
-        MYLOG_STATE("[%d]ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ", i+6);
-
+        /* 1 */ MYLOG_DEBUG("[%d]MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM\n", i);
+        /* 2 */ MYLOG_DETAIL("[%d]KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK\n", i+1);
+        /* 3 */ MYLOG_INFO("[%d]BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\n", i+2);
+        /* 4 */ MYLOG_ERROR("[%d]TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT\n", i+3);
+        /* 5 */ MYLOG_WARN("[%d]PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP\n", i+4);
+        /* 6 */ MYLOG_TRACE("[%d]AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n", i+5);
+        /* 7 */ MYLOG_STATE("[%d]ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\n", i+6);
         //sys::CUtils::millisleep(10);
     }
 }
@@ -47,11 +52,10 @@ int main(int argc, char* argv[])
     {
         pid_t pid;
         ::mooon::sys::g_logger = new sys::CSafeLogger(".", "test.log");
-        sys::g_logger->set_single_filesize(20240000);
-        sys::g_logger->set_backup_number(10);
-
-        MYLOG_INFO("hello");
-        MYLOG_ERROR("world");
+        sys::g_logger->set_single_filesize(mooon::argument::size->value());
+        sys::g_logger->set_backup_number(mooon::argument::backup->value());
+        sys::g_logger->set_log_level(sys::LOG_LEVEL_DETAIL);
+        sys::g_logger->enable_trace_log(true);
 
         for (int i=0; i<10; ++i)
         {
@@ -79,6 +83,9 @@ int main(int argc, char* argv[])
             }
         }
 
+        MYLOG_INFO("hello\n");
+        MYLOG_ERROR("%s\n", "world");
+
         // 等待所有子进程结束
         while (true)
         {
@@ -101,6 +108,15 @@ int main(int argc, char* argv[])
                 }
             }
         }
+
+        int thread_lines = 7 * mooon::argument::lines->value();
+        int all_threads_lines = 5 * thread_lines;
+        int all_processes_lines = 10 * all_threads_lines;
+        int total_lines = 2 + all_processes_lines;
+        fprintf(stdout, "thread lines: %d\n", thread_lines);
+        fprintf(stdout, "all threads lines: %d\n", all_threads_lines);
+        fprintf(stdout, "all processes lines: %d\n", all_processes_lines);
+        fprintf(stdout, "total lines: %d\n", total_lines);
     }
     catch (sys::CSyscallException& syscall_ex)
     {
