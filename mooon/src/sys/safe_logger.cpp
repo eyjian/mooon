@@ -103,11 +103,19 @@ int CSafeLogger::release()
     int ret = 0;
     if (sg_thread_log_fd != -1)
     {
-        ret = close(sg_thread_log_fd);
-        if (0 == ret)
-            sg_thread_log_fd = -1;
+        ret = fsync(sg_thread_log_fd);
+        if (-1 == ret)
+        {
+            fprintf(stderr, "process(%u,%lu) fsync fd(%d) error: %m\n", getpid(), pthread_self(), sg_thread_log_fd);
+        }
         else
-            fprintf(stderr, "process(%u,%lu) close fd(%d) error: %m\n", getpid(), pthread_self(), sg_thread_log_fd);
+        {
+            ret = close(sg_thread_log_fd);
+            if (0 == ret)
+                sg_thread_log_fd = -1;
+            else
+                fprintf(stderr, "process(%u,%lu) close fd(%d) error: %m\n", getpid(), pthread_self(), sg_thread_log_fd);
+        }
     }
 
     return ret;
