@@ -26,16 +26,17 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+INTEGER_ARG_DEFINE(int, threads, 10, 1, 100, "number of threads");
 INTEGER_ARG_DEFINE(int, processes, 10, 1, 100, "number of processes");
 INTEGER_ARG_DEFINE(int, lines, 10000, 1, 100000000, "number of lines");
 INTEGER_ARG_DEFINE(uint32_t, size, 1024*1024*800, 1024, 1024*1024*2000, "size of a single log file");
-INTEGER_ARG_DEFINE(uint16_t, backup, 10, 1, 100, "backup number of log file");
+INTEGER_ARG_DEFINE(uint16_t, backup, 100, 1, 1000, "backup number of log file");
 MOOON_NAMESPACE_USE
 
 static atomic_t sg_counter = 0;
 static void foo()
 {
-    for (int i=0,j=0; i<mooon::argument::lines->value(); ++i)
+    for (int i=0,j=0; i<argument::lines->value(); ++i)
     {
         // 借助j和counter可观察在哪儿丢了日志，如果存在这个情况
 
@@ -72,8 +73,12 @@ static void foo()
     MYLOG_RELEASE();
 }
 
-// 压测非滚动时：./test_safe_logger --lines=100000
-// 压测滚动：./test_safe_logger --lines=30 --size=1024000
+// 1073741824 = 1024*1024*1024
+// 838860800 = 1024*1024*800
+// 压测非滚动时：./test_safe_logger --lines=10000 --size=1073741824 --processes=6 --threads=12
+// 压测滚动1：./test_safe_logger --lines=10000 --size=1024000 --processes=1 --threads=1
+// 压测滚动2：./test_safe_logger --lines=100 --size=1024000 --processes=10 --threads=1
+// 压测滚动3：./test_safe_logger --lines=100 --size=1024000 --processes=2 --threads=10
 int main(int argc, char* argv[])
 {
     std::string errmsg;
@@ -87,12 +92,12 @@ int main(int argc, char* argv[])
     {
         pid_t pid;
         ::mooon::sys::g_logger = new sys::CSafeLogger(".", "test.log");
-        sys::g_logger->set_single_filesize(mooon::argument::size->value());
-        sys::g_logger->set_backup_number(mooon::argument::backup->value());
+        sys::g_logger->set_single_filesize(argument::size->value());
+        sys::g_logger->set_backup_number(argument::backup->value());
         sys::g_logger->set_log_level(sys::LOG_LEVEL_DETAIL);
         sys::g_logger->enable_trace_log(true);
 
-        for (int i=0; i<mooon::argument::processes->value(); ++i)
+        for (int i=0; i<argument::processes->value(); ++i)
         {
             pid = fork();
             if (-1 == pid)
@@ -103,17 +108,19 @@ int main(int argc, char* argv[])
             else if (0 == pid)
             {
                 // 子进程
-                sys::CThreadEngine thread1(sys::bind(&foo));
-                sys::CThreadEngine thread2(sys::bind(&foo));
-                sys::CThreadEngine thread3(sys::bind(&foo));
-                sys::CThreadEngine thread4(sys::bind(&foo));
-                sys::CThreadEngine thread5(sys::bind(&foo));
+                sys::CThreadEngine** threads = new sys::CThreadEngine*[argument::threads->value()];
 
-                thread1.join();
-                thread2.join();
-                thread3.join();
-                thread4.join();
-                thread5.join();
+                for (int i=0; i<argument::threads->value(); ++i)
+                {
+                    threads[i] = new sys::CThreadEngine(sys::bind(&foo));
+                }
+                for (int i=0; i<argument::threads->value(); ++i)
+                {
+                    threads[i]->join();
+                    delete threads[i];
+                }
+                delete []threads;
+
                 MYLOG_RELEASE();
                 exit(0);
             }
@@ -148,8 +155,8 @@ int main(int argc, char* argv[])
             }
         }
 
-        int thread_lines = 7 * mooon::argument::lines->value();
-        int all_threads_lines = 5 * thread_lines;
+        int thread_lines = 7 * mooon::argument::lines->value(); // foo函数输出了7行日志
+        int all_threads_lines = thread_lines * argument::threads->value();
         int all_processes_lines = all_threads_lines * mooon::argument::processes->value();
         int total_lines = 2 + all_processes_lines;
         fprintf(stdout, "thread lines: %d\n", thread_lines);
