@@ -34,42 +34,45 @@ INTEGER_ARG_DEFINE(uint16_t, backup, 100, 1, 1000, "backup number of log file");
 MOOON_NAMESPACE_USE
 
 static atomic_t sg_counter = 0;
-static void foo()
+static void foo(int index)
 {
+    int len = 20+(index*10);
+    char* str = new char[len+1];
+    str[len] = '\0';
+    if (0 == index)
+        memset(str, '*', len);
+    else if (1 == index)
+        memset(str, '#', len);
+    else if (2 == index)
+         memset(str, '-', len);
+    else if (3 == index)
+        memset(str, '1', len);
+    else if (4 == index)
+        memset(str, 'A', len);
+    else if (5 == index)
+        memset(str, '@', len);
+    else if (6 == index)
+        memset(str, '~', len);
+    else if (7 == index)
+        memset(str, '.', len);
+    else if (8 == index)
+        memset(str, '^', len);
+    else if (9 == index)
+        memset(str, '9', len);
+    else if (10 == index)
+        memset(str, 'Z', len);
+    else
+        memset(str, '+', len);
+
     for (int i=0,j=0; i<argument::lines->value(); ++i)
     {
         // 借助j和counter可观察在哪儿丢了日志，如果存在这个情况
-
         ++j;
         unsigned int counter = static_cast<unsigned int>(atomic_inc_return(&sg_counter));
-        /* 1 */ MYLOG_DEBUG("[%u,%d]MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM\n", counter, j);
-
-        ++j;
-        counter = static_cast<unsigned int>(atomic_inc_return(&sg_counter));
-        /* 2 */ MYLOG_DETAIL("[%u,%d]KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK\n", counter, j);
-
-        ++j;
-        counter = static_cast<unsigned int>(atomic_inc_return(&sg_counter));
-        /* 3 */ MYLOG_INFO("[%u,%d]BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\n", counter, j);
-
-        ++j;
-        counter = static_cast<unsigned int>(atomic_inc_return(&sg_counter));
-        /* 4 */ MYLOG_ERROR("[%u,%d]TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT\n", counter, j);
-
-        ++j;
-        counter = static_cast<unsigned int>(atomic_inc_return(&sg_counter));
-        /* 5 */ MYLOG_WARN("[%u,%d]PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP\n", counter, j);
-
-        ++j;
-        counter = static_cast<unsigned int>(atomic_inc_return(&sg_counter));
-        /* 6 */ MYLOG_TRACE("[%u,%d]AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n", counter, j);
-
-        ++j;
-        counter = static_cast<unsigned int>(atomic_inc_return(&sg_counter));
-        /* 7 */ MYLOG_STATE("[%u,%d]ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\n", counter, j);
-        //sys::CUtils::millisleep(10);
+        MYLOG_DEBUG("[%u,%d]%s\n", counter, j, str);
     }
 
+    delete []str;
     MYLOG_RELEASE();
 }
 
@@ -118,7 +121,7 @@ int main(int argc, char* argv[])
 
                 for (int i=0; i<argument::threads->value(); ++i)
                 {
-                    threads[i] = new sys::CThreadEngine(sys::bind(&foo));
+                    threads[i] = new sys::CThreadEngine(sys::bind(&foo, i));
                 }
                 for (int i=0; i<argument::threads->value(); ++i)
                 {
@@ -167,7 +170,7 @@ int main(int argc, char* argv[])
             }
         }
 
-        int thread_lines = 7 * mooon::argument::lines->value(); // foo函数输出了7行日志
+        int thread_lines = mooon::argument::lines->value();
         int all_threads_lines = thread_lines * argument::threads->value();
         int all_processes_lines = all_threads_lines * mooon::argument::processes->value();
         int total_lines = 2 + all_processes_lines;
