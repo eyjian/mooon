@@ -156,10 +156,9 @@ private:
     bool _screen_enabled;
     atomic_t _max_bytes;
     atomic_t _backup_number;
-    std::string _log_dir;
-    std::string _log_filename;
-    std::string _log_filepath;
-    mutable CLock _lock;
+    const std::string _log_dir;
+    const std::string _log_filename;
+    const std::string _log_filepath;
 };
 
 SYS_NAMESPACE_END

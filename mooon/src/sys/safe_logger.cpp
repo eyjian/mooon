@@ -79,6 +79,7 @@ CSafeLogger::CSafeLogger(const char* log_dir, const char* log_filename, uint16_t
     ,_screen_enabled(false)
     ,_log_dir(log_dir)
     ,_log_filename(log_filename)
+    ,_log_filepath(_log_dir + std::string("/") + _log_filename)
 {
     atomic_set(&_max_bytes, DEFAULT_LOG_FILE_SIZE);
     atomic_set(&_log_level, LOG_LEVEL_INFO);
@@ -89,7 +90,6 @@ CSafeLogger::CSafeLogger(const char* log_dir, const char* log_filename, uint16_t
     if (_log_line_size > LOG_LINE_SIZE_MAX)
         _log_line_size = LOG_LINE_SIZE_MAX;
 
-    _log_filepath = _log_dir + std::string("/") + _log_filename;
     int log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
     if (-1 == log_fd)
     {
