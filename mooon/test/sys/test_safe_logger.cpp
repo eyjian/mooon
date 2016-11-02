@@ -74,6 +74,7 @@ static void foo(int index)
 
     delete []str;
     MYLOG_RELEASE();
+    fprintf(stdout, "thread(%u,%lu) exit now\n", getpid(), pthread_self());
 }
 
 // 1073741824 = 1024*1024*1024
