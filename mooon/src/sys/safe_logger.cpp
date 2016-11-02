@@ -66,6 +66,7 @@ CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std::strin
     CSafeLogger* logger = new CSafeLogger(log_dirpath.c_str(), log_filename.c_str(), log_line_size);
 
     set_log_level_by_env(logger);
+    enable_screen_log_by_env(logger);
     return logger;
 }
 

@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
     try
     {
         pid_t pid;
-        ::mooon::sys::g_logger = new sys::CSafeLogger(".", "test.log");
+        ::mooon::sys::g_logger = sys::create_safe_logger(".", "test");
         sys::g_logger->set_single_filesize(argument::size->value());
         sys::g_logger->set_backup_number(argument::backup->value());
         sys::g_logger->set_log_level(sys::LOG_LEVEL_DETAIL);
