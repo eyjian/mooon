@@ -78,7 +78,8 @@ static void foo()
 // 压测非滚动时：./test_safe_logger --lines=10000 --size=1073741824 --processes=6 --threads=12
 // 压测滚动1：./test_safe_logger --lines=10000 --size=1024000 --processes=1 --threads=1
 // 压测滚动2：./test_safe_logger --lines=100 --size=1024000 --processes=10 --threads=1
-// 压测滚动3：./test_safe_logger --lines=100 --size=1024000 --processes=2 --threads=10
+// 压测滚动3：./test_safe_logger --lines=100 --size=1024000 --processes=1 --threads=10
+// 压测滚动4：./test_safe_logger --lines=100 --size=1024000 --processes=2 --threads=10
 int main(int argc, char* argv[])
 {
     std::string errmsg;
