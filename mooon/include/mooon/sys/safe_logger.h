@@ -27,11 +27,6 @@ SYS_NAMESPACE_BEGIN
 
 class CSafeLogger;
 
-// 如果有显示的线束或退出线程，
-// 则应当在线程结束“之前”调用close_thread_log_fd()，否则可能产生内存泄漏
-// 注意须在被结束的线程内调用才有效！
-extern void close_thread_log_fd();
-
 // 根据程序文件创建CSafeLogger
 //
 // 假设目录结构为：

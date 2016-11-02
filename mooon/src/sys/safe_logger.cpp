@@ -34,17 +34,6 @@ SYS_NAMESPACE_BEGIN
 // 线程级别的
 static __thread int sg_thread_log_fd = -1;
 
-void close_thread_log_fd()
-{
-    if (sg_thread_log_fd != -1)
-    {
-        if (0 == close(sg_thread_log_fd))
-            sg_thread_log_fd = -1;
-        else
-            fprintf(stderr, "[%d:%lu] SafeLogger close error: %m\n", getpid(), pthread_self());
-    }
-}
-
 CSafeLogger* create_safe_logger(bool enable_program_path, uint16_t log_line_size) throw (CSyscallException)
 {
     std::string log_dirpath = get_log_dirpath(enable_program_path);
@@ -585,7 +574,7 @@ void CSafeLogger::write_log(int thread_log_fd, const char* log_line, int log_lin
                 {
                     try
                     {
-                        close_thread_log_fd();
+                        release();
 
                         if (need_rotate(new_log_fd))
                         {
