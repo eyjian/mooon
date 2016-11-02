@@ -403,7 +403,8 @@ int CSafeLogger::get_thread_log_fd() const
 
 bool CSafeLogger::need_rotate(int fd) const
 {
-    return CFileUtils::get_file_size(fd) > static_cast<off_t>(_max_bytes);
+    off_t file_size = CFileUtils::get_file_size(fd);
+    return file_size > static_cast<off_t>(atomic_read(&_max_bytes));
 }
 
 void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno, const char* module_name, const char* format, va_list& args)
@@ -499,7 +500,8 @@ void CSafeLogger::rotate_log()
     std::string old_path;  // 滚动前的文件路径，包含目录和文件名
 
     // 历史滚动
-    for (uint8_t i=_backup_number-1; i>1; --i)
+    int backup_number = atomic_read(&_backup_number);
+    for (int i=backup_number-1; i>1; --i)
     {
         new_path = _log_dir + std::string("/") + _log_filename + std::string(".") + utils::CStringUtils::any2string(static_cast<int>(i));
         old_path = _log_dir + std::string("/") + _log_filename + std::string(".") + utils::CStringUtils::any2string(static_cast<int>(i-1));
@@ -516,7 +518,7 @@ void CSafeLogger::rotate_log()
         }
     }
 
-    if (_backup_number > 0)
+    if (backup_number > 0)
     {
         // 当前滚动
         new_path = _log_dir + std::string("/") + _log_filename + std::string(".1");
