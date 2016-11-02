@@ -525,9 +525,13 @@ void CSafeLogger::rotate_log()
     }
 
     // 重新创建
-    printf("[%d:%lu] SafeLogger create %s\n", getpid(), pthread_self(), _log_filepath.c_str());
+    //fprintf(stdout, "[%d:%lu] SafeLogger create %s\n", getpid(), pthread_self(), _log_filepath.c_str());
     int new_log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_EXCL, FILE_DEFAULT_PERM);
-    if (-1 == new_log_fd)
+    if (new_log_fd != -1)
+    {
+        sg_thread_log_fd = new_log_fd;
+    }
+    else
     {
         fprintf(stderr, "[%d:%lu] SafeLogger create %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str());
 
@@ -536,10 +540,6 @@ void CSafeLogger::rotate_log()
         syslog(LOG_ERR, "[%d:%lu] SafeLogger create %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str());
         closelog();
 #endif // WRITE_SYSLOG
-    }
-    else
-    {
-        sg_thread_log_fd = new_log_fd;
     }
 }
 
@@ -576,14 +576,15 @@ void CSafeLogger::write_log(int thread_log_fd, const char* log_line, int log_lin
                     {
                         release();
 
-                        if (need_rotate(new_log_fd))
-                        {
-                            rotate_log();
-                        }
-                        else
+                        if (!need_rotate(new_log_fd))
                         {
                             // 其它进程或线程抢先做了滚动
                             sg_thread_log_fd = new_log_fd;
+                        }
+                        else
+                        {
+                            close(new_log_fd);
+                            rotate_log();
                         }
                     }
                     catch (CSyscallException& syscall_ex)
