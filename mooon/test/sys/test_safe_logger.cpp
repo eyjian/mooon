@@ -76,10 +76,11 @@ static void foo()
 // 1073741824 = 1024*1024*1024
 // 838860800 = 1024*1024*800
 // 压测非滚动时：./test_safe_logger --lines=10000 --size=1073741824 --processes=6 --threads=12
-// 压测滚动1：./test_safe_logger --lines=10000 --size=1024000 --processes=1 --threads=1
-// 压测滚动2：./test_safe_logger --lines=100 --size=1024000 --processes=10 --threads=1
-// 压测滚动3：./test_safe_logger --lines=100 --size=1024000 --processes=1 --threads=10
-// 压测滚动4：./test_safe_logger --lines=100 --size=1024000 --processes=2 --threads=10
+// 压测滚动1：./test_safe_logger --lines=2 --size=1024 --processes=1 --threads=2
+// 压测滚动2：./test_safe_logger --lines=10000 --size=1024000 --processes=1 --threads=1
+// 压测滚动3：./test_safe_logger --lines=100 --size=1024000 --processes=10 --threads=1
+// 压测滚动4：./test_safe_logger --lines=100 --size=1024000 --processes=1 --threads=10
+// 压测滚动5：./test_safe_logger --lines=100 --size=1024000 --processes=2 --threads=10
 int main(int argc, char* argv[])
 {
     std::string errmsg;
@@ -100,7 +101,11 @@ int main(int argc, char* argv[])
 
         for (int i=0; i<argument::processes->value(); ++i)
         {
-            pid = fork();
+            if (argument::processes->value() > 1)
+                pid = fork();
+            else
+                pid = 0;
+
             if (-1 == pid)
             {
                 fprintf(stderr, "fork error: %m\n");
@@ -122,8 +127,11 @@ int main(int argc, char* argv[])
                 }
                 delete []threads;
 
-                MYLOG_RELEASE();
-                exit(0);
+                if (argument::processes->value() > 1)
+                {
+                    MYLOG_RELEASE();
+                    exit(0);
+                }
             }
         }
 
@@ -133,25 +141,28 @@ int main(int argc, char* argv[])
         delete ::mooon::sys::g_logger;
         ::mooon::sys::g_logger = NULL;
 
-        // 等待所有子进程结束
-        while (true)
+        if (argument::processes->value() > 1)
         {
-            int status = -1;
-            pid = wait(&status);
-            if (pid > 0)
+            // 等待所有子进程结束
+            while (true)
             {
-                printf("process[%u] exit with %d\n", pid, status);
-            }
-            else
-            {
-                if (ECHILD == errno)
+                int status = -1;
+                pid = wait(&status);
+                if (pid > 0)
                 {
-                    break;
+                    printf("process[%u] exit with %d\n", pid, status);
                 }
                 else
                 {
-                    printf("unknown error when waiting child\n");
-                    break;
+                    if (ECHILD == errno)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        printf("unknown error when waiting child\n");
+                        break;
+                    }
                 }
             }
         }
