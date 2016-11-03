@@ -25,6 +25,12 @@
 #include <stdio.h>
 SYS_NAMESPACE_BEGIN
 
+// CSafeLogger支持：
+// 1) 通过环境变量名MOOON_LOG_LEVEL来控制日志级别
+// 2) 通过环境变量名MOOON_LOG_SCREEN来控制是否在屏幕上输出日志
+// 3) 通过环境变量名MOOON_LOG_TRACE来控制是否显示trace日志
+// 4) 通过环境变量名MOOON_LOG_FILESIZE来控制单个日志文件的大小
+// 5) 通过环境变量名MOOON_LOG_BACKUP来控制日志文件备份个数
 class CSafeLogger;
 
 // 根据程序文件创建CSafeLogger

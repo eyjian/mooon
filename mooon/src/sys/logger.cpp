@@ -116,6 +116,40 @@ void enable_screen_log_by_env(ILogger* logger)
         logger->enable_screen(true);
 }
 
+void enable_trace_log_by_env(ILogger* logger)
+{
+    const char* c_log_trace = getenv("MOOON_LOG_TRACE");
+
+    if (c_log_trace != NULL)
+    {
+        if ((c_log_trace != NULL) && (0 == strcmp(c_log_trace, "1")))
+            logger->enable_trace_log(true);
+    }
+}
+
+void set_log_filesize_by_env(ILogger* logger)
+{
+    const char* c_log_filesize = getenv("MOOON_LOG_FILESIZE");
+
+    if (c_log_filesize != NULL)
+    {
+        uint32_t log_filesize = utils::CStringUtils::string2int<uint32_t>(c_log_filesize);
+        if (log_filesize >= 1024)
+            logger->set_single_filesize(log_filesize);
+    }
+}
+
+void set_log_backup_by_env(ILogger* logger)
+{
+    const char* c_log_backup = getenv("MOOON_LOG_BACKUP");
+    if (c_log_backup != NULL)
+    {
+        uint16_t log_backup = utils::CStringUtils::string2int<uint16_t>(c_log_backup);
+        if (log_backup > 0)
+            logger->set_backup_number(log_backup);
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////
 // CLogProber
 CLogProber::CLogProber()

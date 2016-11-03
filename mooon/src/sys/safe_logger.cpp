@@ -42,6 +42,10 @@ CSafeLogger* create_safe_logger(bool enable_program_path, uint16_t log_line_size
 
     set_log_level_by_env(logger);
     enable_screen_log_by_env(logger);
+    enable_trace_log_by_env(logger);
+    set_log_filesize_by_env(logger);
+    set_log_backup_by_env(logger);
+
     return logger;
 }
 
@@ -56,6 +60,10 @@ CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std::strin
 
     set_log_level_by_env(logger);
     enable_screen_log_by_env(logger);
+    enable_trace_log_by_env(logger);
+    set_log_filesize_by_env(logger);
+    set_log_backup_by_env(logger);
+
     return logger;
 }
 

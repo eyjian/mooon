@@ -32,7 +32,7 @@ enum
 {
     LOG_LINE_SIZE_MIN              = 256,        /** 日志行最小长度 */
     LOG_LINE_SIZE_MAX              = 32768,      /** 日志行最大长度(32K) ，最大不能超过64K，因为使用2字节无符号整数存储的 */
-    DEFAULT_LOG_FILE_SIZE          = 104857600,  /** 默认的单个日志文件大小(100MB) */
+    DEFAULT_LOG_FILE_SIZE          = 314572800,  /** 默认的单个日志文件大小(300MB) */
     DEFAULT_LOG_FILE_BACKUP_NUMBER = 10          /** 默认的日志文件备份个数 */
 };
 
@@ -82,6 +82,15 @@ extern void set_log_level_by_env(ILogger* logger);
 
 // 根据环境变量名MOOON_LOG_SCREEN控制是否在屏幕上打印日志，只会值为1时才会屏幕上打印日志
 extern void enable_screen_log_by_env(ILogger* logger);
+
+// 根据环境变量名MOOON_LOG_TRACE控制是否记录trace日志
+extern void enable_trace_log_by_env(ILogger* logger);
+
+// 根据环境变量名MOOON_LOG_FILESIZE控制单个日志文件大小
+extern void set_log_filesize_by_env(ILogger* logger);
+
+// 根据环境变量名MOOON_LOG_BACKUP控制日志文件备份个数
+extern void set_log_backup_by_env(ILogger* logger);
 
 /**
   * 日志器接口，提供常见的写日志功能
