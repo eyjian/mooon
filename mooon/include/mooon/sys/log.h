@@ -297,7 +297,7 @@ do { \
 } while(false)
 
 #define MYLOG_RELEASE()              __MYLOG_RELEASE(::mooon::sys::g_logger)
-#define MYLOG_BIN(log, size)         __MYLOG_BIN(::mooon::sys::g_logger, log, size)
+#define MYLOG_BIN(log, size)         __MYLOG_BIN(::mooon::sys::g_logger, NULL, log, size)
 #define MYLOG_RAW(format, ...)       __MYLOG_RAW(::mooon::sys::g_logger, format, ##__VA_ARGS__)
 #define MYLOG_TRACE(format, ...)     __MYLOG_TRACE(::mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
 #define MYLOG_STATE(format, ...)     __MYLOG_STATE(::mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)

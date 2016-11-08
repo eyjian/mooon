@@ -390,11 +390,12 @@ void CSafeLogger::log_bin(const char* filename, int lineno, const char* module_n
 {
     if (enabled_bin())
     {
-        std::string str(size*2+1, '\0');
+        std::string str(size*2, '\0');
         char* str_p = const_cast<char*>(str.data());
-        for (uint16_t i=0; i<size; i+=2)
+        for (uint16_t i=0; i<size; ++i)
         {
-            snprintf(str_p+i, 3, "%02X", log[i]);
+            snprintf(str_p, 3, "%02X", (int)log[i]);
+            str_p += 2;
         }
 
         va_list args;

@@ -37,7 +37,7 @@ SYS_NAMESPACE_BEGIN
 ILogger* g_logger = NULL;
 
 /** 日志级别名称数组，最大名称长度为8个字符，如果长度不够，编译器会报错 */
-static char log_level_name_array[][8] = { "DETAIL", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "STATE", "TRACE" };
+static char log_level_name_array[][8] = { "DETAIL", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "STATE", "TRACE", "RAW", "BIN" };
 
 log_level_t get_log_level(const char* level_name)
 {
@@ -56,7 +56,7 @@ log_level_t get_log_level(const char* level_name)
 
 const char* get_log_level_name(log_level_t log_level)
 {
-    if ((log_level < LOG_LEVEL_DETAIL) || (log_level > LOG_LEVEL_TRACE)) return NULL;
+    if ((log_level < LOG_LEVEL_DETAIL) || (log_level > LOG_LEVEL_BIN)) return NULL;
     return log_level_name_array[log_level];
 }
 
