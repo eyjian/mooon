@@ -390,8 +390,15 @@ void CSafeLogger::log_bin(const char* filename, int lineno, const char* module_n
 {
     if (enabled_bin())
     {
-        //set_log_length(log, size);
-        //_log_thread->push_log(log);
+        std::string str(size*2+1, '\0');
+        char* str_p = const_cast<char*>(str.data());
+        for (uint16_t i=0; i<size; i+=2)
+        {
+            snprintf(str_p+i, 3, "%02X", log[i]);
+        }
+
+        va_list args;
+        do_log(LOG_LEVEL_BIN, filename, lineno, module_name, str.c_str(), args);
     }
 }
 
@@ -442,7 +449,11 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
         int m, n;
         // 注意fix_snprintf()的返回值大小包含了结尾符
         m = utils::CStringUtils::fix_snprintf(log_line.get(), _log_line_size, "%s", log_header.str().c_str());
-        n = utils::CStringUtils::fix_vsnprintf(log_line.get()+m-1, _log_line_size-m, format, args);
+
+        if (LOG_LEVEL_BIN == log_level)
+            n = utils::CStringUtils::fix_snprintf(log_line.get()+m-1, _log_line_size-m, "%s", format);
+        else
+            n = utils::CStringUtils::fix_vsnprintf(log_line.get()+m-1, _log_line_size-m, format, args);
         log_real_size = m + n - 2;
 
         // 是否自动添加结尾用的点号
