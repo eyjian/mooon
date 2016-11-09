@@ -593,8 +593,9 @@ int CLibssh2::read_channel(void* channel, std::ostream& out)
             buffer[bytes] = '\0';
             out << buffer;
 
-            if (bytes < static_cast<int>(sizeof(buffer)-1))
-                break;
+            //小于也是正常的，是否完毕由“if (0 == bytes)”决定
+            //if (bytes < static_cast<int>(sizeof(buffer)-1))
+            //    break;
         }
         else
         {
