@@ -111,12 +111,14 @@ int CSafeLogger::release()
     int ret = 0;
     if (sg_thread_log_fd != -1)
     {
+#if 0 // 由系统决定何时fsync
         ret = fsync(sg_thread_log_fd);
         if (-1 == ret)
         {
             fprintf(stderr, "process(%u,%lu) fsync fd(%d) error: %m\n", getpid(), pthread_self(), sg_thread_log_fd);
         }
         else
+#endif
         {
             ret = close(sg_thread_log_fd);
             if (0 == ret)
