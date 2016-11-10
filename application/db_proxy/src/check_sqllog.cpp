@@ -18,6 +18,7 @@ STRING_ARG_DEFINE(sqllog, ".", "sqllog file or directory");
 // 添加文件完整标志
 INTEGER_ARG_DEFINE(uint8_t, add_endtag, 0, 0, 1, "add endtag for sqllog file");
 
+static int sg_lines = 0;
 static int check_file(const char* filepath);
 static int check_directory(const char* dirpath);
 static bool write_endtag(const char* filepath);
@@ -33,10 +34,14 @@ int main(int argc, char* argv[])
 
     try
     {
+        int ret = 0;
         if (mooon::sys::CUtils::is_file(mooon::argument::sqllog->c_value()))
-            return check_file(mooon::argument::sqllog->c_value());
+            ret = check_file(mooon::argument::sqllog->c_value());
         else
-            return check_directory(mooon::argument::sqllog->c_value());
+            ret = check_directory(mooon::argument::sqllog->c_value());
+
+        fprintf(stdout, "lines: %d\n", sg_lines);
+        return ret;
     }
     catch (mooon::sys::CSyscallException& ex)
     {
@@ -102,6 +107,8 @@ int check_file(const char* filepath)
                 fprintf(stderr, "[BAD] %s\n", filepath);
                 return 1;
             }
+
+            ++sg_lines;
         }
     }
 

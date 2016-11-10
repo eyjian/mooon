@@ -42,10 +42,12 @@ CDbProcess::~CDbProcess()
 void CDbProcess::run()
 {
     const std::string log_dirpath = sys::get_log_dirpath(true);
-    const std::string db_process_title = std::string("db_") + _dbinfo.alias;
+    const std::string db_process_title = std::string("mdbp_") + _dbinfo.alias; // mdbp: mooon db_proxy process
     sys::CUtils::set_process_title(db_process_title);
+
     delete sys::g_logger; // 不共享父进程的日志文件
     sys::g_logger = sys::create_safe_logger(log_dirpath, db_process_title, 8192);
+    MYLOG_INFO("db_process(%u): %s\n", getpid(), db_process_title.c_str());
 
     if (create_history_directory())
     {

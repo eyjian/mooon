@@ -18,23 +18,18 @@ INTEGER_ARG_DECLARE(int, sql_file_size);
 namespace mooon { namespace db_proxy {
 
 static __thread int stg_log_fd = -1;
-static __thread int stg_old_log_fd = -1;
+static __thread std::string* stg_log_filepath = NULL;
 
 CSqlLogger::CSqlLogger(int database_index, const struct DbInfo* dbinfo)
     : _database_index(database_index)
 {
     _log_file_timestamp = 0;
     _log_file_suffix = 0;
-    atomic_set(&_log_fd, -1);
     _dbinfo = new struct DbInfo(dbinfo);
 }
 
 CSqlLogger::~CSqlLogger()
 {
-    int log_fd = atomic_read(&_log_fd);
-    if (log_fd != -1)
-        close(log_fd);
-    atomic_set(&_log_fd, -2);
     delete _dbinfo;
 }
 
@@ -47,37 +42,14 @@ bool CSqlLogger::write_log(const std::string& sql)
 {
     try
     {
-        int log_fd = atomic_read(&_log_fd);
-        MYLOG_DEBUG("[%s]: log_fd=%d, stg_log_fd=%d, stg_old_log_fd=%d\n", _dbinfo->str().c_str(), log_fd, stg_log_fd, stg_old_log_fd);
-        if ((-1 == stg_log_fd) || (stg_old_log_fd != log_fd))
-        {
-            sys::LockHelper<sys::CLock> lock_helper(_lock);
-            log_fd = atomic_read(&_log_fd); // 进入锁之前，可能其它线程已抢先做了滚动
-            if (-1 == log_fd)
-            {
-                MYLOG_INFO("[%s] try to rotate sql log: log_fd=%d, stg_log_fd=%d, stg_old_log_fd=%d\n", _dbinfo->str().c_str(), log_fd, stg_log_fd, stg_old_log_fd);
-                rotate_log(true);
-            }
-            else
-            {
-                if (stg_log_fd != -1)
-                    close(stg_log_fd);
-                stg_old_log_fd = log_fd;
-                stg_log_fd = dup(log_fd);
-                if (stg_log_fd != -1)
-                {
-                    MYLOG_DEBUG("dup ok: (%d)%s\n", stg_log_fd, _dbinfo->str().c_str());
-                }
-                else
-                {
-                    const std::string log_filepath = get_log_filepath();
-                    MYLOG_ERROR("[%s] dup %s error: %s\n", _dbinfo->str().c_str(), log_filepath.c_str(), sys::Error::to_string().c_str());
-                }
-            }
-        }
         if (-1 == stg_log_fd)
         {
-            return false;
+            sys::LockHelper<sys::CLock> lock_helper(_lock);
+            rotate_log();
+            if (-1 == stg_log_fd)
+            {
+                return false;
+            }
         }
 
         int32_t length = static_cast<int32_t>(sql.size());
@@ -86,44 +58,28 @@ bool CSqlLogger::write_log(const std::string& sql)
         iov[0].iov_len = sizeof(length);
         iov[1].iov_base = const_cast<char*>(sql.data());
         iov[1].iov_len = sql.size();
-        //ssize_t bytes_written = write(stg_log_fd, sql.data(), sql.size());
         ssize_t bytes_written = writev(stg_log_fd, iov, sizeof(iov)/sizeof(iov[0]));
-        //if (bytes_written != static_cast<ssize_t>(sql.size()))
         if (bytes_written != static_cast<int>(iov[0].iov_len+iov[1].iov_len))
         {
             int errcode = errno;
             sys::LockHelper<sys::CLock> lock_helper(_lock);
-            const std::string log_filepath = get_log_filepath();
-            MYLOG_ERROR("[%s][%s] write sql[%s] error: (bytes_written=%zd,stg_log_fd=%d)%s\n", _dbinfo->str().c_str(), log_filepath.c_str(), sql.c_str(), bytes_written, stg_log_fd, sys::Error::to_string(errcode).c_str());
+            MYLOG_ERROR("write %s error(%d): %s\n", stg_log_filepath->c_str(), stg_log_fd, sys::Error::to_string(errcode).c_str());
             return false;
         }
         else
         {
-            int total_bytes_written = atomic_add_return(bytes_written, &_total_bytes_written);
-            if (total_bytes_written > mooon::argument::sql_file_size->value())
+            if (need_rotate_by_filesize()) // 达到或超过指定的文件大小
             {
                 sys::LockHelper<sys::CLock> lock_helper(_lock);
-                int log_fd = atomic_read(&_log_fd);
-                int new_total_bytes_written = atomic_read(&_total_bytes_written);
-                // 如果其它线程滚动了，则新读到的将和前面一步可能不同，只要参数sql_file_size足够大，基本可以保证下一句的判断成立
 
-                if ((log_fd == stg_old_log_fd) && (new_total_bytes_written >= total_bytes_written))
+                if (need_rotate_by_filename()) // 文件名发生变化表示其它线程抢先滚动了
                 {
-                    // 写结束标志
-                    write_endtag();
-
-                    MYLOG_INFO("[%s] try to rotate sql log: total_bytes_written=%d, new_total_bytes_written=%d, log_fd=%d, stg_log_fd=%d, stg_old_log_fd=%d\n", _dbinfo->str().c_str(), total_bytes_written, new_total_bytes_written, log_fd, stg_log_fd, stg_old_log_fd);
-                    rotate_log(false);
+                    open_log();
                 }
-                else
+                else // 文件名未变表示还没有滚动
                 {
-                    // 进入锁之前，其它线程已抢先做了滚动，以下特征一定标记着被其它线程滚动了：
-                    // 1. 大小变小了
-                    // 2. log_fd值发生了变化
-                    MYLOG_INFO("[%s] sql log rotated by other: total_bytes_written=%d, new_total_bytes_written=%d, log_fd=%d, stg_log_fd=%d, stg_old_log_fd=%d\n", _dbinfo->str().c_str(), total_bytes_written, new_total_bytes_written, log_fd, stg_log_fd, stg_old_log_fd);
-                    close(stg_log_fd);
-                    stg_log_fd = dup(log_fd);
-                    stg_old_log_fd = log_fd;
+                    write_endtag(); // 写结束标志
+                    rotate_log();
                 }
             }
 
@@ -132,55 +88,73 @@ bool CSqlLogger::write_log(const std::string& sql)
     }
     catch (sys::CSyscallException& ex)
     {
-        const std::string log_filepath = get_log_filepath();
-        MYLOG_ERROR("[%s] write %s failed: %s\n", _dbinfo->str().c_str(), log_filepath.c_str(), ex.str().c_str());
+        MYLOG_ERROR("[%s] write %s failed: %s\n", _dbinfo->str().c_str(), stg_log_filepath->c_str(), ex.str().c_str());
         return false;
     }
 }
 
+bool CSqlLogger::need_rotate_by_filesize() const
+{
+    int file_size = static_cast<int>(sys::CFileUtils::get_file_size(stg_log_fd));
+    return file_size >= argument::sql_file_size->value();
+}
+
+bool CSqlLogger::need_rotate_by_filename() const
+{
+    return _log_filepath == *stg_log_filepath;
+}
+
 void CSqlLogger::write_endtag()
 {
-    int32_t length = 0;
-    if (write(stg_log_fd, &length, sizeof(length)) != sizeof(length))
+    int32_t length = 0; // 当遇到length为0时表示结束
+    if (write(stg_log_fd, &length, sizeof(length)) != static_cast<ssize_t>(sizeof(length)))
     {
-        const std::string log_filepath = get_log_filepath();
-        MYLOG_ERROR("[%s][%s] IO error: %s\n", _dbinfo->str().c_str(), log_filepath.c_str(), sys::Error::to_string().c_str());
+        MYLOG_ERROR("[%s][%s] IO error: %s\n", _dbinfo->str().c_str(), _log_filepath.c_str(), sys::Error::to_string().c_str());
     }
 }
 
-void CSqlLogger::rotate_log(bool boot)
+void CSqlLogger::rotate_log()
 {
-    const std::string log_filepath = boot? get_last_log_filepath(): get_log_filepath();
-    int new_log_fd = open(log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM); // O_EXCL
+    if (stg_log_fd != -1)
+        close(stg_log_fd);
 
-    if (-1 == new_log_fd)
+    if (_log_filepath.empty())
+        _log_filepath = get_last_log_filepath();
+    else
+        _log_filepath = get_log_filepath();
+
+    stg_log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM); // O_EXCL
+    if (-1 == stg_log_fd)
     {
-        MYLOG_ERROR("[%s] create log[%s] error: %s\n", _dbinfo->str().c_str(), log_filepath.c_str(), sys::Error::to_string().c_str());
+        MYLOG_ERROR("[%s] create %s error: %s\n", _dbinfo->str().c_str(), _log_filepath.c_str(), sys::Error::to_string().c_str());
     }
     else
     {
-        // 关闭old_log_fd一定要放在open之后，以确保write_log中判断被其它线程抢先滚动能够成立，原因是open会重用最近一次被close的fd
-        int old_log_fd = atomic_read(&_log_fd);
-        if (old_log_fd != -1)
-        {
-            close(old_log_fd);
-            MYLOG_DEBUG("close log_fd: (%d)%s\n", old_log_fd, _dbinfo->str().c_str());
-            atomic_set(&_log_fd, -1);
-        }
-        if (stg_log_fd != -1)
-        {
-            close(stg_log_fd);
-            MYLOG_DEBUG("[%s] close stg_log_fd: %s\n", _dbinfo->str().c_str(), log_filepath.c_str());
-            stg_log_fd = -1;
-        }
-
-        int log_file_size = static_cast<int>(sys::CFileUtils::get_file_size(new_log_fd));
-        atomic_set(&_total_bytes_written, log_file_size);
-        atomic_set(&_log_fd, new_log_fd);
-        stg_log_fd = dup(new_log_fd);
-        stg_old_log_fd = new_log_fd;
-        MYLOG_INFO("[%s] rotate and create new log file: (log_file_size=%d, new_log_fd=%d, old_log_fd=%d, stg_log_fd=%d, stg_old_log_fd=%d)%s\n", _dbinfo->str().c_str(), log_file_size, new_log_fd, old_log_fd, stg_log_fd, stg_old_log_fd, log_filepath.c_str());
+        int log_file_size = static_cast<int>(sys::CFileUtils::get_file_size(stg_log_fd));
+        MYLOG_INFO("[%s] create %s ok: %d\n", _dbinfo->str().c_str(), _log_filepath.c_str(), log_file_size);
     }
+
+    if (NULL == stg_log_filepath)
+        stg_log_filepath = new std::string;
+    *stg_log_filepath = _log_filepath;
+}
+
+void CSqlLogger::open_log()
+{
+    if (stg_log_fd != -1)
+        close(stg_log_fd);
+
+    stg_log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM); // O_EXCL
+    if (-1 == stg_log_fd)
+    {
+        MYLOG_ERROR("[%s] open %s error: %s\n", _dbinfo->str().c_str(), _log_filepath.c_str(), sys::Error::to_string().c_str());
+    }
+    else
+    {
+        MYLOG_INFO("[%s] open %s ok\n", _dbinfo->str().c_str(), _log_filepath.c_str());
+    }
+
+    *stg_log_filepath = _log_filepath;
 }
 
 std::string CSqlLogger::get_log_filepath()
@@ -211,7 +185,7 @@ std::string CSqlLogger::get_log_filepath()
             _log_file_suffix = 0;
             _log_file_timestamp = now;
         }
-        log_filepath = utils::CStringUtils::format_string("%s/sql.%012" PRId64".%06d", log_dirpath.c_str(), static_cast<int64_t>(now), _log_file_suffix);
+        log_filepath = utils::CStringUtils::format_string("%s/sql.%013" PRId64".%06d", log_dirpath.c_str(), static_cast<int64_t>(now), _log_file_suffix);
     }
 
     return log_filepath;

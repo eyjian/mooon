@@ -19,8 +19,11 @@ public:
     bool write_log(const std::string& sql);
 
 private:
+    bool need_rotate_by_filesize() const;
+    bool need_rotate_by_filename() const;
     void write_endtag();
-    void rotate_log(bool boot); // 启动后第一次调用参数值须为true，其它为false
+    void rotate_log();
+    void open_log();
     std::string get_log_filepath();
     std::string get_last_log_filepath(); // 取得启动之前最新的一个日志文件，如果不存在则等同于get_log_filepath()
     bool has_endtag(const std::string& log_filepath) const;
@@ -31,8 +34,7 @@ private:
     int _database_index;
     struct DbInfo* _dbinfo;
     sys::CLock _lock;
-    atomic_t _log_fd;
-    atomic_t _total_bytes_written; // 日志文件大小
+    std::string _log_filepath; // 须受_lock保护
 };
 
 } // namespace db_proxy
