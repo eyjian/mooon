@@ -104,6 +104,7 @@ CSafeLogger::CSafeLogger(const char* log_dir, const char* log_filename, uint16_t
 
 CSafeLogger::~CSafeLogger()
 {
+    (void)release();
 }
 
 int CSafeLogger::release()
