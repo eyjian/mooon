@@ -72,7 +72,7 @@ bool CSqlLogger::write_log(const std::string& sql)
             {
                 sys::LockHelper<sys::CLock> lock_helper(_lock);
 
-                if (need_rotate_by_filename()) // 文件名发生变化表示其它线程抢先滚动了
+                if (!need_rotate_by_filename()) // 文件名发生变化表示其它线程抢先滚动了
                 {
                     open_log();
                 }
