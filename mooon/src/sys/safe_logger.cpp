@@ -556,7 +556,7 @@ void CSafeLogger::rotate_log()
 
     // 重新创建
     //fprintf(stdout, "[%d:%lu] SafeLogger create %s\n", getpid(), pthread_self(), _log_filepath.c_str());
-    int new_log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_EXCL, FILE_DEFAULT_PERM);
+    int new_log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM); // O_EXCL
     if (new_log_fd != -1)
     {
         sg_thread_log_fd = new_log_fd;

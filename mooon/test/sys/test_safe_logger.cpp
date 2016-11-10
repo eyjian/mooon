@@ -36,6 +36,7 @@ MOOON_NAMESPACE_USE
 static atomic_t sg_counter = 0;
 static void foo(int index)
 {
+    int lines = 0; // 共输出的日志行数
     int len = 20+(index*10);
     char* str = new char[len+1];
     str[len] = '\0';
@@ -64,17 +65,17 @@ static void foo(int index)
     else
         memset(str, '+', len);
 
-    for (int i=0,j=0; i<argument::lines->value(); ++i)
+    for (int i=0,j=0; i<argument::lines->value(); ++i,++j)
     {
         // 借助j和counter可观察在哪儿丢了日志，如果存在这个情况
-        ++j;
         unsigned int counter = static_cast<unsigned int>(atomic_inc_return(&sg_counter));
         MYLOG_DEBUG("[%u,%d]%s\n", counter, j, str);
+        ++lines;
     }
 
     delete []str;
     MYLOG_RELEASE();
-    fprintf(stdout, "thread(%u,%lu) exit now\n", getpid(), pthread_self());
+    //fprintf(stdout, "thread(%u,%lu) exit now: %d\n", getpid(), pthread_self(), lines);
 }
 
 // 1073741824 = 1024*1024*1024
@@ -154,7 +155,7 @@ int main(int argc, char* argv[])
                 pid = wait(&status);
                 if (pid > 0)
                 {
-                    printf("process[%u] exit with %d\n", pid, status);
+                    //printf("process[%u] exit with %d\n", pid, status);
                 }
                 else
                 {
