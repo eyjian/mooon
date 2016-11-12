@@ -1,3 +1,5 @@
+简单原理的极高性能分布式无单点高可用性唯一ID生成服务UniqId
+
 cmake安装方法：
 cmake -DCMAKE_INSTALL_PREFIX=<installation directory> .
 
@@ -46,7 +48,3 @@ MOOON-UniqId各组成均为单进程无线程，成员间通讯采用UDP协议�
      由于UDP不可靠，所以在一个expire周期内，最好保持10次以上的interval，也就是expire的值最好是interval的10倍或更大
 4) master的timeout值要小于agent的interval值，以便及时的将值更新到DB中，比如可以为interval值的一半，或6/10等
 5) agent的steps值最好不小于10000，设置为10万会更佳，每重启一次agent进程，最多会浪费steps两倍的sequence，因此太大也不好。
-
-当前实现还有两个性能可优化点：
-1) 启用recvmmsg
-2) 支持一次调用取多个
