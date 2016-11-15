@@ -32,9 +32,10 @@ class CUtils
 {
 public:
     /** 线程安全的毫秒级sleep函数
-      * @millisecond: 需要sleep的毫秒数
+      * @milliseconds: 需要sleep的毫秒数
       */
-    static void millisleep(uint32_t millisecond);
+    static void millisleep(uint32_t milliseconds);
+    static void microsleep(uint32_t microseconds);
 
     /** 得到指定系统调用错误码的字符串错误信息
       * @errcode: 系统调用错误码

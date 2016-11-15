@@ -45,9 +45,15 @@ static char *g_arg_start = NULL;
 static char *g_arg_end   = NULL;
 static char *g_env_start = NULL;
 
-void CUtils::millisleep(uint32_t millisecond)
+void CUtils::millisleep(uint32_t milliseconds)
 {
-    struct timespec ts = { millisecond / 1000, (millisecond % 1000) * 1000000 };
+    struct timespec ts = { milliseconds / 1000, (milliseconds % 1000) * 1000000 };
+    while ((-1 == nanosleep(&ts, &ts)) && (EINTR == errno));
+}
+
+void CUtils::microsleep(uint32_t microseconds)
+{
+    struct timespec ts = { microseconds / 1000000, (microseconds % 1000000) * 1000 };
     while ((-1 == nanosleep(&ts, &ts)) && (EINTR == errno));
 }
 
