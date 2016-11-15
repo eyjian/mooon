@@ -22,8 +22,13 @@
 #include <exception>
 #include <string>
 
+// 抛出CException异常
 #define THROW_EXCEPTION(errmsg, errcode) \
     throw ::mooon::utils::CException(errmsg, errcode, __FILE__, __LINE__)
+
+// 抛出用户定制异常
+#define THROW_CUSTOM_EXCEPTION(errmsg, errcode, exception_class) \
+    throw exception_class(errmsg, errcode, __FILE__, __LINE__)
 
 UTILS_NAMESPACE_BEGIN
 
