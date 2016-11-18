@@ -30,21 +30,21 @@
 #include <iostream>
 
 // 逗号分隔的远程主机列表
-STRING_ARG_DEFINE(h, "", "remote host");
+STRING_ARG_DEFINE(h, "", "remote hosts separated by comma, e.g., -h='192.168.1.10,192.168.1.11'. You can also set environment `HOSTS` instead of `-h`, e.g., export HOSTS=192.168.1.10,192.168.1.11");
 // 远程主机的sshd端口号
-INTEGER_ARG_DEFINE(uint16_t, p, 36000, 10, 65535, "remote host port");
+INTEGER_ARG_DEFINE(uint16_t, P, 36000, 10, 65535, "remote host port");
 // 用户名
-STRING_ARG_DEFINE(u, "root", "remote host user");
+STRING_ARG_DEFINE(u, "root", "remote host user name");
 // 密码
-STRING_ARG_DEFINE(P, "", "remote host password");
+STRING_ARG_DEFINE(p, "", "remote host password, e.g., -p='password'");
 
 // 被上传的文件路径
-STRING_ARG_DEFINE(s, "", "the remote source files to download, separated by comma");
+STRING_ARG_DEFINE(s, "", "the remote source files to download, separated by comma, e.g., -s='/tmp/x1.txt,/tmp/x2.txt'");
 // 文件上传后存放的目录路径
-STRING_ARG_DEFINE(d, "", "the local directory to store");
+STRING_ARG_DEFINE(d, "", "the local directory to store, e.g., -d='/tmp/'");
 
 // 连接超时，单位为秒
-INTEGER_ARG_DEFINE(uint16_t, t, 10, 1, 65535, "timeout seconds to remote host");
+INTEGER_ARG_DEFINE(uint16_t, t, 60, 1, 65535, "timeout seconds to remote host, e.g., -t=100");
 
 // 结果信息
 struct ResultInfo
@@ -84,12 +84,12 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    uint16_t port = mooon::argument::p->value();
+    uint16_t port = mooon::argument::P->value();
     std::string sources = mooon::argument::s->value();
     std::string directory = mooon::argument::d->value();
     std::string host = mooon::argument::h->value();
     std::string user = mooon::argument::u->value();
-    std::string password = mooon::argument::P->value();
+    std::string password = mooon::argument::p->value();
     mooon::utils::CStringUtils::trim(sources);
     mooon::utils::CStringUtils::trim(directory);
     mooon::utils::CStringUtils::trim(host);
@@ -100,6 +100,7 @@ int main(int argc, char* argv[])
     if (sources.empty())
     {
         fprintf(stderr, "parameter[-s]'s value not set\n");
+        fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
         exit(1);
     }
 
@@ -107,6 +108,7 @@ int main(int argc, char* argv[])
     if (directory.empty())
     {
         fprintf(stderr, "parameter[-d]'s value not set\n");
+        fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
         exit(1);
     }
 
@@ -117,7 +119,8 @@ int main(int argc, char* argv[])
         const char* host_ = getenv("HOSTS");
         if (NULL == host_)
         {
-            fprintf(stderr, "parameter[-h]'s value not set\n");
+            fprintf(stderr, "parameter[-h]'s or environment `HOSTS` not set\n");
+            fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
             exit(1);
         }
 
@@ -125,7 +128,8 @@ int main(int argc, char* argv[])
         mooon::utils::CStringUtils::trim(host);
         if (host.empty())
         {
-            fprintf(stderr, "parameter[-h]'s value not set\n");
+            fprintf(stderr, "parameter[-h] or environment `HOSTS` not set\n");
+            fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
             exit(1);
         }
     }
@@ -134,6 +138,7 @@ int main(int argc, char* argv[])
     if (user.empty())
     {
         fprintf(stderr, "parameter[-u]'s value not set\n");
+        fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
         exit(1);
     }
 
@@ -141,6 +146,7 @@ int main(int argc, char* argv[])
     if (password.empty())
     {
         fprintf(stderr, "parameter[-P]'s value not set\n");
+        fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
         exit(1);
     }
 
