@@ -208,6 +208,8 @@ int main(int argc, char* argv[])
             ++num_failure;
     }
     std::cout << "SUCCESS: " << num_success << ", FAILURE: " << num_failure << std::endl;
+#else
+    fprintf(stderr, "NOT IMPLEMENT! please install libssh2 (https://www.libssh2.org/) into /usr/local/libssh2 and recompile.\n");
 #endif // HAVE_LIBSSH2 == 1
 
     return 0;
