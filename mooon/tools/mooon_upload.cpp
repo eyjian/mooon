@@ -32,9 +32,9 @@
 // 逗号分隔的远程主机列表
 STRING_ARG_DEFINE(h, "", "remote hosts separated by comma, e.g., -h='192.168.1.10,192.168.1.11'. You can also set environment `HOSTS` instead of `-h`, e.g., export HOSTS=192.168.1.10,192.168.1.11");
 // 远程主机的sshd端口号
-INTEGER_ARG_DEFINE(uint16_t, P, 36000, 10, 65535, "remote hosts port");
+INTEGER_ARG_DEFINE(uint16_t, P, 36000, 10, 65535, "remote hosts port, e.g., -P=22");
 // 用户名
-STRING_ARG_DEFINE(u, "root", "remote host user name");
+STRING_ARG_DEFINE(u, "root", "remote host user name, e.g., -u=root");
 // 密码
 STRING_ARG_DEFINE(p, "", "remote host password, e.g., -p='password'");
 
@@ -142,10 +142,10 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    // 检查参数（-P）
+    // 检查参数（-p）
     if (password.empty())
     {
-        fprintf(stderr, "parameter[-P]'s value not set\n");
+        fprintf(stderr, "parameter[-p]'s value not set\n");
         fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
         exit(1);
     }
