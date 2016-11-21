@@ -199,8 +199,8 @@ bool CMainHelper::init(int argc, char* argv[])
 
 bool CMainHelper::run()
 {
-    mooon::db_proxy::CConfigLoader* config_loader = mooon::db_proxy::CConfigLoader::get_singleton();
-    mooon::sys::CThreadEngine monitor(mooon::sys::bind(&mooon::db_proxy::CConfigLoader::monitor, config_loader));
+    //mooon::db_proxy::CConfigLoader* config_loader = mooon::db_proxy::CConfigLoader::get_singleton();
+    //mooon::sys::CThreadEngine monitor(mooon::sys::bind(&mooon::db_proxy::CConfigLoader::monitor, config_loader));
 
     try
     {
@@ -234,7 +234,7 @@ void CMainHelper::fini()
 void CMainHelper::stop()
 {
     _thrift_server.stop();
-    mooon::db_proxy::CConfigLoader::get_singleton()->stop_monitor();
+    //mooon::db_proxy::CConfigLoader::get_singleton()->stop_monitor();
     _stop_signal_thread = true;
 
     for (std::map<pid_t, mooon::db_proxy::DbInfo>::iterator iter=_db_process_table.begin(); iter!=_db_process_table.end(); ++iter)
