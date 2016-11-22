@@ -14,7 +14,7 @@ STRING_ARG_DEFINE(ip, "127.0.0.1", "db proxy IP address");
 INTEGER_ARG_DEFINE(uint16_t, port, 4077, 1000, 5000, "db proxy listen port");
 INTEGER_ARG_DEFINE(uint8_t, threads, 1, 1, 100, "number of threads to test");
 INTEGER_ARG_DEFINE(uint32_t, number, 1, 1, std::numeric_limits<uint32_t>::max(), "number of requests of every stress thread");
-INTEGER_ARG_DEFINE(int16_t, index, 0, 0, mooon::db_proxy::MAX_SQL_TEMPLATE, "query or update index");
+INTEGER_ARG_DEFINE(int16_t, index, 0, -mooon::db_proxy::MAX_SQL_TEMPLATE, mooon::db_proxy::MAX_SQL_TEMPLATE, "query or update index, negative for query, positive for update");
 STRING_ARG_DEFINE(tokens, "", "tokens separated by comma");
 
 static atomic_t sg_success_num = 0; // 成功个数

@@ -493,6 +493,7 @@ sys::CMySQLConnection* CConfigLoader::do_init_db_connection(int index) const
         try
         {
             db_connection->open();
+            MYLOG_INFO("connect %s ok\n", _db_info->str().c_str());
             break;
         }
         catch (sys::CDBException& db_ex)

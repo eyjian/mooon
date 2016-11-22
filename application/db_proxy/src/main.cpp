@@ -161,7 +161,10 @@ bool CMainHelper::init(int argc, char* argv[])
 
     try
     {
-        mooon::sys::g_logger = mooon::sys::create_safe_logger(true, 8096);
+        // 日志文件名加上端口作为后缀，这样同一份即可以启动多端口服务
+        const uint16_t port = mooon::argument::port->value();
+        const std::string port_str = mooon::utils::CStringUtils::int_tostring(port);
+        mooon::sys::g_logger = mooon::sys::create_safe_logger(true, 8096, port_str);
 
         // 只有当参数report_frequency_seconds的值大于0时才启动统计功能
         int report_frequency_seconds = mooon::argument::report_frequency_seconds->value();
@@ -172,7 +175,8 @@ bool CMainHelper::init(int argc, char* argv[])
                 return false;
 
             const std::string program_short_name = mooon::sys::CUtils::get_program_short_name();
-            const std::string data_filename = mooon::utils::CStringUtils::replace_suffix(program_short_name, ".data");
+            std::string data_filename = mooon::utils::CStringUtils::replace_suffix(program_short_name, ".data");
+            data_filename += std::string("_") + port_str;
             _data_logger.reset(new mooon::sys::CSafeLogger(data_dirpath.c_str(), data_filename.c_str()));
             _data_logger->enable_raw_log(true);
             _data_reporter.reset(new mooon::observer::CDefaultDataReporter(_data_logger.get()));
