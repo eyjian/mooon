@@ -175,8 +175,8 @@ bool CMainHelper::init(int argc, char* argv[])
                 return false;
 
             const std::string program_short_name = mooon::sys::CUtils::get_program_short_name();
-            std::string data_filename = mooon::utils::CStringUtils::replace_suffix(program_short_name, ".data");
-            data_filename += std::string("_") + port_str;
+            std::string data_filename = mooon::utils::CStringUtils::remove_suffix(program_short_name);
+            data_filename += std::string("_") + port_str + std::string(".data");
             _data_logger.reset(new mooon::sys::CSafeLogger(data_dirpath.c_str(), data_filename.c_str()));
             _data_logger->enable_raw_log(true);
             _data_reporter.reset(new mooon::observer::CDefaultDataReporter(_data_logger.get()));
