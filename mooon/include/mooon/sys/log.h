@@ -60,9 +60,14 @@ extern log_level_t get_log_level(const char* level_name);
 extern const char* get_log_level_name(log_level_t log_level);
 
 // 根据程序文件得到日志文件名，结果不包含目录
+// 如果suffix为空：
 // 1) 假设程序文件名为mooon，则返回结果为mooon.log
 // 2) 假设程序文件名为mooon.exe，则返回结果为mooon.log
-extern std::string get_log_filename();
+//
+// 如果suffix不为空，假设为6789：
+// 1) 假设程序文件名为mooon，则返回结果为mooon_6789.log
+// 2) 假设程序文件名为mooon.exe，则返回结果为mooon_6789.log
+extern std::string get_log_filename(const std::string& suffix=std::string(""));
 
 // 根据程序文件得到日志文件的目录路径，不包含日志文件名
 extern std::string get_log_dirpath(bool enable_program_path=true);

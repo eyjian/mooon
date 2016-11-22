@@ -45,6 +45,21 @@
 #define UTILS_NAMESPACE_END                   }}
 #define UTILS_NAMESPACE_USE using namespace mooon::utils;
 
+MOOON_NAMESPACE_BEGIN
+enum
+{
+    SIZE_32   = 32, // 32 bytes
+    SIZE_64   = 64,
+    SIZE_128  = 128,
+    SIZE_256  = 256,
+    SIZE_512  = 512,
+    SIZE_1K = 1024,
+    SIZE_2K = 2048,
+    SIZE_4K = 4096,
+    SIZE_8K = 8192
+};
+MOOON_NAMESPACE_END
+
 // 单例
 // 为规避多线程问题，请在所有线程创建之前先调用一次ClassName::get_singleton()，
 // 可以通过delete来删除单例对象

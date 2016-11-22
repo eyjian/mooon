@@ -60,10 +60,14 @@ const char* get_log_level_name(log_level_t log_level)
     return log_level_name_array[log_level];
 }
 
-std::string get_log_filename()
+std::string get_log_filename(const std::string& suffix)
 {
-    std::string program_short_name = CUtils::get_program_short_name();
-    return utils::CStringUtils::replace_suffix(program_short_name, ".log");
+    const std::string program_short_name = CUtils::get_program_short_name();
+    std::string log_filename = utils::CStringUtils::remove_suffix(program_short_name);
+    if (suffix.empty())
+        return log_filename + std::string(".log");
+    else
+        return log_filename + std::string("_") + suffix + std::string(".log");
 }
 
 std::string get_log_dirpath(bool enable_program_path)

@@ -31,6 +31,7 @@ INTEGER_ARG_DEFINE(int, processes, 10, 1, 100, "number of processes");
 INTEGER_ARG_DEFINE(int, lines, 10000, 1, 100000000, "number of lines");
 INTEGER_ARG_DEFINE(uint32_t, size, 1024*1024*800, 1024, 1024*1024*2000, "size of a single log file");
 INTEGER_ARG_DEFINE(uint16_t, backup, 100, 1, 1000, "backup number of log file");
+STRING_ARG_DEFINE(suffix, "", "suffix of log filename");
 MOOON_NAMESPACE_USE
 
 static atomic_t sg_counter = 0;
@@ -98,7 +99,8 @@ int main(int argc, char* argv[])
     try
     {
         pid_t pid;
-        ::mooon::sys::g_logger = sys::create_safe_logger(".", "test");
+        //::mooon::sys::g_logger = sys::create_safe_logger(".", "test");
+        ::mooon::sys::g_logger = sys::create_safe_logger(true, SIZE_8K, argument::suffix->value());
         sys::g_logger->set_single_filesize(argument::size->value());
         sys::g_logger->set_backup_number(argument::backup->value());
         sys::g_logger->set_log_level(sys::LOG_LEVEL_DETAIL);

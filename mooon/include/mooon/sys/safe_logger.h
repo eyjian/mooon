@@ -43,8 +43,11 @@ class CSafeLogger;
 // 可执行程序文件放在bin子目录，则日志文件将自动放在log子目录下，
 // 如果enable_program_path为true，则log子目录不存在时，日志文件将放在和可执行程序文件同一目录下。
 //
+// suffix 日志文件名后缀
+// 假设程序名为test，后缀为空则日志文件名为test.log，如果后缀为6789则日志文件名为test_6789.log
+//
 // 若因目录和文件名，或者创建、打开文件权限等问题，则会抛出CSyscallException异常
-extern CSafeLogger* create_safe_logger(bool enable_program_path=true, uint16_t log_line_size=8192) throw (CSyscallException);
+extern CSafeLogger* create_safe_logger(bool enable_program_path=true, uint16_t log_line_size=SIZE_8K, const std::string& suffix=std::string("")) throw (CSyscallException);
 
 // 根据程序文件创建CSafeLogger
 // 若因目录和文件名，或者创建、打开文件权限等问题，则会抛出CSyscallException异常
