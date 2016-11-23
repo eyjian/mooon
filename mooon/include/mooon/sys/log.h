@@ -77,7 +77,7 @@ extern std::string get_log_dirpath(bool enable_program_path=true);
 // 同时存在目录/data/mooon/log，则日志自动放在该目录下，
 // 否则当enable_program_path为true时，日志放在/data/mooon/bin目录下。
 // 如果不存在目录/data/mooon/log，且enable_program_path为false，则函数返回空字符串
-extern std::string get_log_filepath(bool enable_program_path=true);
+extern std::string get_log_filepath(bool enable_program_path=true, const std::string& suffix=std::string(""));
 
 // 根据环境变量名MOOON_LOG_LEVEL来设置日志级别
 // 如果没有设置环境变量MOOON_LOG_LEVEL，则set_log_level_by_env()什么也不做

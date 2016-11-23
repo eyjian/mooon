@@ -95,10 +95,10 @@ std::string get_log_dirpath(bool enable_program_path)
     return log_dirpath;
 }
 
-std::string get_log_filepath(bool enable_program_path)
+std::string get_log_filepath(bool enable_program_path, const std::string& suffix)
 {
     std::string log_dirpath = get_log_dirpath(enable_program_path);
-    return log_dirpath + std::string("/") + get_log_filename();
+    return log_dirpath + std::string("/") + get_log_filename(suffix);
 }
 
 void set_log_level_by_env(ILogger* logger)
