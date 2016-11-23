@@ -33,11 +33,10 @@ SYS_NAMESPACE_BEGIN
 
 /**
  * #include <sys/file.h>
- * 普通文件锁，总是锁定整个文件
- * ，支持独占和共享两种类型，由参数exclusive决定
- * 进程退出时，它所持有的锁会被自动释放
- * 注意同一个FileLocker对象，不要跨线程使用
- * ，同一个FileLocker对象总是只会被同一个线程调度
+ * 普通文件锁，总是锁定整个文件，支持独占和共享两种类型，由参数exclusive决定
+ *
+ * 进程退出时，它所持有的锁会被自动释放，也可用于同一个进程内的多线程互斥
+ * 但请注意：同一个FileLocker对象，不要跨线程使用，同一个FileLocker对象总是只会被同一个线程调度
  */
 class FileLocker
 {
@@ -58,7 +57,8 @@ public:
     explicit FileLocker(const char* filepath, bool exclusive) throw ()
         : _fd(-1), _filepath(filepath)
     {
-        lock(exclusive);
+        const bool nonblocking = false;
+        lock(exclusive, nonblocking);
     }
 
     ~FileLocker() throw ()
@@ -70,10 +70,12 @@ public:
      * 加锁
      * @exclusive 是否独占锁
      */
-    bool lock(bool exclusive) throw ()
+    bool lock(bool exclusive, bool nonblocking) throw ()
     {
         // 独占还是共享
         int operation = exclusive? LOCK_EX: LOCK_SH;
+        if (nonblocking)
+            operation |= LOCK_NB;
 
         _fd = open(_filepath.c_str(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
         if (_fd != -1)
@@ -91,6 +93,23 @@ public:
         return _fd != -1;
     }
 
+    /**
+     *  FileLocker file_locker(filepath);
+     *  if (!file_locker.try_lock() && (file_locker.would_block())
+     *  {
+     *      // 尝试加锁不成功，原因是其它线程或进程已独占该锁
+     *  }
+     */
+    bool would_block() const throw()
+    {
+        return EWOULDBLOCK == errno;
+    }
+
+    bool try_lock(bool exclusive) throw()
+    {
+        return lock(exclusive, true);
+    }
+
     bool unlock() throw ()
     {
         bool ret = false;
@@ -98,9 +117,11 @@ public:
         if (is_locked())
         {
             if (0 == flock(_fd, LOCK_UN))
+            {
                 ret = true;
-
-            close(_fd);
+                close(_fd);
+                _fd = -1;
+            }
         }
         
         return ret;
