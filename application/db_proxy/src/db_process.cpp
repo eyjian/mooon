@@ -208,8 +208,8 @@ bool CDbProcess::handle_file(const std::string& filename)
         {
             int bytes = 0;
             int32_t length = 0;
-            //if (parent_process_not_exists())
-            //    break;
+            if (parent_process_not_exists())
+                break;
 
             // 读取SQL语句长度
             bytes = read(fd, &length, sizeof(length));
@@ -225,16 +225,9 @@ bool CDbProcess::handle_file(const std::string& filename)
                     MYLOG_INFO("no data to sleep: %s\n", _progress.str().c_str());
                 }
 
-                // 当前文件处理完才退出
-                if (parent_process_not_exists())
-                {
-                    break;
-                }
-                else
-                {
-                    sys::CUtils::millisleep(1000);
-                    continue;
-                }
+                // 可以考虑引入inotify，改轮询为监听方式
+                sys::CUtils::millisleep(1000);
+                continue;
             }
             if (0 == length)
             {

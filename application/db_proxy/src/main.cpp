@@ -7,6 +7,7 @@
 #include <map>
 #include <mooon/net/thrift_helper.h>
 #include <mooon/observer/observer_manager.h>
+#include <mooon/sys/file_locker.h>
 #include <mooon/sys/main_template.h>
 #include <mooon/sys/safe_logger.h>
 #include <mooon/sys/signal_handler.h>
@@ -154,8 +155,10 @@ bool CMainHelper::init(int argc, char* argv[])
     //mooon::sys::CSignalHandler::block_signal(SIGINT);
     mooon::sys::CSignalHandler::block_signal(SIGTERM);
 
-    // 创建信号线程
+    // 延后1秒，让之前的进程有足够时间完成收尾退出
     mooon::sys::CUtils::millisleep(1000);
+
+    // 创建信号线程
     _signal_thread = new mooon::sys::CThreadEngine(mooon::sys::bind(&CMainHelper::signal_thread, this));
     mooon::sys::CUtils::init_process_title(argc, argv);
 
