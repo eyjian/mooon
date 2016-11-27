@@ -40,7 +40,7 @@ void CDbProxyHandler::query(DBTable& _return, const std::string& sign, const int
         if (!config_loader->get_query_info(query_index, &query_info))
         {
             MYLOG_ERROR("query_index[%d] not exists\n", query_index);
-            throw apache::thrift::TApplicationException("query_index not exists");
+            throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("query_index(%d) not exists", query_index));
         }
         if (sign != query_info.sign)
         {
@@ -53,8 +53,8 @@ void CDbProxyHandler::query(DBTable& _return, const std::string& sign, const int
             sys::CMySQLConnection* db_connection = config_loader->get_db_connection(query_info.database_index);
             if (NULL == db_connection)
             {
-                MYLOG_ERROR("database_index[%d] not exists\n", query_info.database_index);
-                throw apache::thrift::TApplicationException("database_index not exists");
+                MYLOG_ERROR("database_index[%d] not exists or cannot connect\n", query_info.database_index);
+                throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("database_index(%d) not exists or cannot connect", query_info.database_index));
             }
             else if (tokens.size() > utils::FORMAT_STRING_SIZE)
             {
@@ -178,7 +178,7 @@ int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, co
     {
         MYLOG_ERROR("[%d]update_index[%d] not exists\n", seq, update_index);
         if (throw_exception)
-            throw apache::thrift::TApplicationException("update_index not exists");
+            throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("update_index(%d) not exists", update_index));
     }
     else
     {
@@ -223,9 +223,9 @@ int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, co
                 {
                     if (NULL == db_connection)
                     {
-                        MYLOG_ERROR("[%d]get database(%d) connection failed\n", seq, update_info.database_index);
+                        MYLOG_ERROR("[%d]database_index[%d] not exists or cannot connect\n", seq, update_info.database_index);
                         if (throw_exception)
-                            throw apache::thrift::TApplicationException("database_index not exists");
+                            throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("database_index(%d) not exists or cannot connect", update_info.database_index));
                         break; // 连接未成功不重试，原因是get_db_connection已做了重试连接
                     }
                     else if (tokens.size() > utils::FORMAT_STRING_SIZE)

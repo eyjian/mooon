@@ -60,9 +60,14 @@ extern log_level_t get_log_level(const char* level_name);
 extern const char* get_log_level_name(log_level_t log_level);
 
 // 根据程序文件得到日志文件名，结果不包含目录
+// 如果suffix为空：
 // 1) 假设程序文件名为mooon，则返回结果为mooon.log
 // 2) 假设程序文件名为mooon.exe，则返回结果为mooon.log
-extern std::string get_log_filename();
+//
+// 如果suffix不为空，假设为6789：
+// 1) 假设程序文件名为mooon，则返回结果为mooon_6789.log
+// 2) 假设程序文件名为mooon.exe，则返回结果为mooon_6789.log
+extern std::string get_log_filename(const std::string& suffix=std::string(""));
 
 // 根据程序文件得到日志文件的目录路径，不包含日志文件名
 extern std::string get_log_dirpath(bool enable_program_path=true);
@@ -72,7 +77,7 @@ extern std::string get_log_dirpath(bool enable_program_path=true);
 // 同时存在目录/data/mooon/log，则日志自动放在该目录下，
 // 否则当enable_program_path为true时，日志放在/data/mooon/bin目录下。
 // 如果不存在目录/data/mooon/log，且enable_program_path为false，则函数返回空字符串
-extern std::string get_log_filepath(bool enable_program_path=true);
+extern std::string get_log_filepath(bool enable_program_path=true, const std::string& suffix=std::string(""));
 
 // 根据环境变量名MOOON_LOG_LEVEL来设置日志级别
 // 如果没有设置环境变量MOOON_LOG_LEVEL，则set_log_level_by_env()什么也不做

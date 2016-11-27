@@ -6,12 +6,15 @@
 #include <mooon/sys/mysql_db.h>
 #include <mooon/sys/read_write_lock.h>
 #include <mooon/sys/utils.h>
+#include <mooon/utils/args_parser.h>
 #include <mooon/utils/string_utils.h>
 #include <mooon/utils/tokener.h>
 #include <string>
 
 #define INVALID_ALIAS_PREFIX "-" // 无效别名前缀
 #define SQLLOG_DIRNAME "sqllog"
+
+INTEGER_ARG_DECLARE(uint16_t, port);
 namespace mooon { namespace db_proxy {
 
 inline bool is_sql_log_filename(const std::string& filename)
@@ -28,7 +31,7 @@ inline bool is_sql_log_filename(const std::string& filename)
 inline std::string get_log_dirpath(const std::string& alias)
 {
     const std::string program_path = sys::CUtils::get_program_path();
-    return utils::CStringUtils::format_string("%s/../%s/%s", program_path.c_str(), SQLLOG_DIRNAME, alias.c_str());
+    return utils::CStringUtils::format_string("%s/../%s_%d/%s", program_path.c_str(), SQLLOG_DIRNAME, argument::port->value(), alias.c_str());
 }
 
 // 定义常量

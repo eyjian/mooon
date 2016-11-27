@@ -88,7 +88,15 @@ bool CSqlLogger::write_log(const std::string& sql)
     }
     catch (sys::CSyscallException& ex)
     {
-        MYLOG_ERROR("[%s] write %s failed: %s\n", _dbinfo->str().c_str(), stg_log_filepath->c_str(), ex.str().c_str());
+        if (NULL == stg_log_filepath)
+        {
+            MYLOG_ERROR("[%s] write failed: %s\n", _dbinfo->str().c_str(), ex.str().c_str());
+        }
+        else
+        {
+            MYLOG_ERROR("[%s] write %s failed: %s\n", _dbinfo->str().c_str(), stg_log_filepath->c_str(), ex.str().c_str());
+        }
+
         return false;
     }
 }
@@ -135,7 +143,10 @@ void CSqlLogger::rotate_log()
     }
 
     if (NULL == stg_log_filepath)
+    {
         stg_log_filepath = new std::string;
+        MYLOG_DEBUG("stg_log_filepath instantiated: %p\n", stg_log_filepath);
+    }
     *stg_log_filepath = _log_filepath;
 }
 

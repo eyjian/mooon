@@ -11,6 +11,7 @@
 #include <string.h>
 #include <sys/uio.h>
 
+INTEGER_ARG_DECLARE(uint16_t, port);
 INTEGER_ARG_DECLARE(int, sql_file_size);
 INTEGER_ARG_DECLARE(uint8_t, batch);
 INTEGER_ARG_DECLARE(uint16_t, efficiency);
@@ -41,12 +42,14 @@ CDbProcess::~CDbProcess()
 
 void CDbProcess::run()
 {
+    const uint16_t port = argument::port->value();
+    const std::string port_str = utils::CStringUtils::int_tostring(port);
     const std::string log_dirpath = sys::get_log_dirpath(true);
-    const std::string db_process_title = std::string("mdbp_") + _dbinfo.alias; // mdbp: mooon db_proxy process
+    const std::string db_process_title = std::string("mdbp_") + _dbinfo.alias + std::string("_") + port_str; // mdbp: mooon db_proxy process
     sys::CUtils::set_process_title(db_process_title);
 
     delete sys::g_logger; // 不共享父进程的日志文件
-    sys::g_logger = sys::create_safe_logger(log_dirpath, db_process_title, 8192);
+    sys::g_logger = sys::create_safe_logger(log_dirpath, db_process_title, SIZE_8K);
     MYLOG_INFO("db_process(%u): %s\n", getpid(), db_process_title.c_str());
 
     if (create_history_directory())
@@ -123,7 +126,8 @@ bool CDbProcess::create_history_directory() const
 
     try
     {
-        sys::CDirUtils::create_directory(history_directory.c_str(), DIRECTORY_DEFAULT_PERM);
+        //sys::CDirUtils::create_directory(history_directory.c_str(), DIRECTORY_DEFAULT_PERM);
+        sys::CDirUtils::create_directory_recursive(history_directory.c_str(), DIRECTORY_DEFAULT_PERM);
         MYLOG_INFO("create directory ok: %s\n", history_directory.c_str());
         return true;
     }
@@ -220,6 +224,8 @@ bool CDbProcess::handle_file(const std::string& filename)
                 {
                     MYLOG_INFO("no data to sleep: %s\n", _progress.str().c_str());
                 }
+
+                // 可以考虑引入inotify，改轮询为监听方式
                 sys::CUtils::millisleep(1000);
                 continue;
             }
@@ -436,7 +442,7 @@ bool CDbProcess::get_progress(struct Progress* progress)
         else if (bytes_read != sizeof(*progress))
         {
             // 被损坏的文件
-            MYLOG_ERROR("get progress(%s) failed: %" PRId64",%zd\n", progress_filepath.c_str(), bytes_read, sizeof(*progress));
+            MYLOG_ERROR("get progress(%s) failed: %zd,%zd\n", progress_filepath.c_str(), bytes_read, sizeof(*progress));
             return false;
         }
         else

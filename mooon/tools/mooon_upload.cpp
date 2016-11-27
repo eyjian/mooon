@@ -30,21 +30,21 @@
 #include <iostream>
 
 // 逗号分隔的远程主机列表
-STRING_ARG_DEFINE(h, "", "remote hosts");
+STRING_ARG_DEFINE(h, "", "remote hosts separated by comma, e.g., -h='192.168.1.10,192.168.1.11'. You can also set environment `HOSTS` instead of `-h`, e.g., export HOSTS=192.168.1.10,192.168.1.11");
 // 远程主机的sshd端口号
-INTEGER_ARG_DEFINE(uint16_t, p, 36000, 10, 65535, "remote hosts port");
+INTEGER_ARG_DEFINE(uint16_t, P, 36000, 10, 65535, "remote hosts port, e.g., -P=22");
 // 用户名
-STRING_ARG_DEFINE(u, "root", "remote host user");
+STRING_ARG_DEFINE(u, "root", "remote host user name, e.g., -u=root");
 // 密码
-STRING_ARG_DEFINE(P, "", "remote host password");
+STRING_ARG_DEFINE(p, "", "remote host password, e.g., -p='password'");
 
 // 被上传的文件路径
-STRING_ARG_DEFINE(s, "", "the local source files uploaded, separated by comma");
+STRING_ARG_DEFINE(s, "", "the local source files uploaded, separated by comma, e.g., -s='/tmp/x1.txt,/tmp/x2.txt'");
 // 文件上传后存放的目录路径
-STRING_ARG_DEFINE(d, "", "the remote directory to store");
+STRING_ARG_DEFINE(d, "", "the remote directory to store, e.g., -d='/tmp/'");
 
 // 连接超时，单位为秒
-INTEGER_ARG_DEFINE(uint16_t, t, 10, 1, 65535, "timeout seconds to remote host");
+INTEGER_ARG_DEFINE(uint16_t, t, 60, 1, 65535, "timeout seconds to remote host, e.g., -t=100");
 
 // 结果信息
 struct ResultInfo
@@ -84,12 +84,12 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    uint16_t port = mooon::argument::p->value();
+    uint16_t port = mooon::argument::P->value();
     std::string sources = mooon::argument::s->value();
     std::string directory = mooon::argument::d->value();
     std::string hosts = mooon::argument::h->value();
     std::string user = mooon::argument::u->value();
-    std::string password = mooon::argument::P->value();
+    std::string password = mooon::argument::p->value();
     mooon::utils::CStringUtils::trim(sources);
     mooon::utils::CStringUtils::trim(directory);
     mooon::utils::CStringUtils::trim(hosts);
@@ -100,6 +100,7 @@ int main(int argc, char* argv[])
     if (sources.empty())
     {
         fprintf(stderr, "parameter[-s]'s value not set\n");
+        fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
         exit(1);
     }
 
@@ -107,6 +108,7 @@ int main(int argc, char* argv[])
     if (directory.empty())
     {
         fprintf(stderr, "parameter[-d]'s value not set\n");
+        fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
         exit(1);
     }
 
@@ -117,7 +119,8 @@ int main(int argc, char* argv[])
         const char* hosts_ = getenv("HOSTS");
         if (NULL == hosts_)
         {
-            fprintf(stderr, "parameter[-h]'s value not set\n");
+            fprintf(stderr, "parameter[-h] or environment `HOSTS` not set\n");
+            fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
             exit(1);
         }
 
@@ -125,7 +128,8 @@ int main(int argc, char* argv[])
         mooon::utils::CStringUtils::trim(hosts);
         if (hosts.empty())
         {
-            fprintf(stderr, "parameter[-h]'s value not set\n");
+            fprintf(stderr, "parameter[-h] or environment `HOSTS` not set\n");
+            fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
             exit(1);
         }
     }
@@ -134,13 +138,15 @@ int main(int argc, char* argv[])
     if (user.empty())
     {
         fprintf(stderr, "parameter[-u]'s value not set\n");
+        fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
         exit(1);
     }
 
-    // 检查参数（-P）
+    // 检查参数（-p）
     if (password.empty())
     {
-        fprintf(stderr, "parameter[-P]'s value not set\n");
+        fprintf(stderr, "parameter[-p]'s value not set\n");
+        fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
         exit(1);
     }
 
@@ -219,6 +225,8 @@ int main(int argc, char* argv[])
             ++num_failure;
     }
     std::cout << "SUCCESS: " << num_success << ", FAILURE: " << num_failure << std::endl;
+#else
+    fprintf(stderr, "NOT IMPLEMENT! please install libssh2 (https://www.libssh2.org/) into /usr/local/libssh2 and recompile.\n");
 #endif // HAVE_LIBSSH2 == 1
 
     return 0;

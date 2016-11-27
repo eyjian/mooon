@@ -76,6 +76,11 @@ public:
     {
     }
     
+    virtual std::string prefix() const throw ()
+    {
+        return "db_exception://";
+    }
+
     /** 返回执行出错的SQL语句，如果不是执行SQL语句，则仅返回一个字符串结尾符 */
     const char* sql() const
     {

@@ -102,9 +102,14 @@ bool CMySQLConnection::is_disconnected_exception(CDBException& db_error) const
 
     // ER_QUERY_INTERRUPTED：比如mysqld进程挂了
     // CR_SERVER_GONE_ERROR：比如客户端将连接close了
-    return (ER_QUERY_INTERRUPTED == errcode) || // Query execution was interrupted
-           (CR_CONN_HOST_ERROR == errcode) ||   // Can't connect to MySQL server
-           (CR_SERVER_GONE_ERROR == errcode);   // MySQL server has gone away
+    // CR_SERVER_LOST: 比如强制kill了MySQL连接
+    return (ER_QUERY_INTERRUPTED == errcode) ||  // Query execution was interrupted
+           (CR_CONN_HOST_ERROR == errcode) ||    // Can't connect to MySQL server
+           (CR_SERVER_GONE_ERROR == errcode) ||  // MySQL server has gone away
+           (CR_SERVER_LOST == errcode) ||        // Lost connection to MySQL server during query
+           (CR_CONNECTION_ERROR == errcode) ||   // Can't connect to local MySQL server through socket '%s' (%d)
+           (CR_IPSOCK_ERROR == errcode) ||       // Can't create TCP/IP socket (%d)
+           (CR_SERVER_HANDSHAKE_ERR == errcode); // Error in server handshake
 }
 
 std::string CMySQLConnection::escape_string(const std::string& str) const

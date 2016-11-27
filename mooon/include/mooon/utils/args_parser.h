@@ -119,12 +119,12 @@ public:
     virtual std::string usage_string() const { return std::string(""); }
 
 public:
-    const std::string name() const
+    const std::string& name() const
     {
         return _name;
     }
 
-    const std::string help_string() const
+    const std::string& help_string() const
     {
         return _help_string;
     }
@@ -196,8 +196,14 @@ public:
 
     virtual std::string usage_string() const
     {
+        std::string prefix;
+        if (name().length() < 2)
+            prefix = "-";
+        else
+            prefix = "--";
+
         return mooon::utils::CStringUtils::format_string(
-             "--%s[%s]: %s", c_name(), c_default_value(), c_help_string());
+             "%s%s[%s]: %s", prefix.c_str(), c_name(), c_default_value(), c_help_string());
     }
 
 private:
@@ -262,12 +268,22 @@ public:
 
     virtual std::string usage_string() const
     {
-        if (sizeof(IntType) == sizeof(char))
-            return mooon::utils::any2string(
-                "--", name(), "[", (int)_default_value, "/", (int)_min_value, ",", (int)_max_value, "]: ", help_string());
+        std::string prefix;
+        if (name().length() < 2)
+            prefix = "-";
         else
+            prefix = "--";
+
+        if (sizeof(IntType) == sizeof(char))
+        {
             return mooon::utils::any2string(
-                "--", name(), "[", _default_value, "/", _min_value, ",", _max_value, "]: ", help_string());
+                prefix, name(), "[", (int)_default_value, "/", (int)_min_value, ",", (int)_max_value, "]: ", help_string());
+        }
+        else
+        {
+            return mooon::utils::any2string(
+                prefix, name(), "[", _default_value, "/", _min_value, ",", _max_value, "]: ", help_string());
+        }
     }
 
 private:
