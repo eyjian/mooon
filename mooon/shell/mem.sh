@@ -1,6 +1,7 @@
 #!/bin/sh
 # writed by yijian on 2016/7/11
 # filename mem.sh
+# 用于统计指定进程的虚拟内存和物理内存占用，以分析是否有内存泄漏
 
 if test $# -lt 1; then
     echo "uage: mem.sh pid interval(seconds)"
