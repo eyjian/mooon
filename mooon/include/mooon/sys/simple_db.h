@@ -167,6 +167,14 @@ public:
       * 数据库查询类操作，包括：select, show, describe, explain和check table等，
       * 如果某字段在DB表中为NULL，则返回结果为"$NULL$"，如果内容刚好为"$NULL$"，则无法区分
       * 出错抛出CDBException异常
+      *
+      * 特别注意：
+      * 如果需要向DB执行一个带格式化的查询，比如：
+      * select date_format(now(), '%Y%m')
+      * 则传递给query的参数应当为：
+      * select date_format(now(), '%%Y%%m')
+      * 注意使用了双%号，否则像“%m”会被query内部调用的vsnprintf解析成它自身内置的“%m”，
+      * 比如预期结果为201611，实际返回结果变成了2016success，就是因为这个原因！
       */
     virtual void query(DBTable& db_table, const char* format, ...) throw (CDBException) __attribute__((format(printf, 3, 4))) = 0;
 
