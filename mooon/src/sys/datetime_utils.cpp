@@ -204,6 +204,34 @@ void CDatetimeUtils::get_current_datetime_struct(struct tm* current_datetime_str
     localtime_r(&now, current_datetime_struct);
 }
 
+void CDatetimeUtils::decompose(struct tm* tm, int* year, int* month, int* day, int64_t* hour, int64_t* minute, int64_t* second)
+{
+    if (year != NULL)
+    {
+        *year = tm->tm_year+1900;
+    }
+    if (month != NULL)
+    {
+        *month = (tm->tm_year+1900)*100 + tm->tm_mon+1;
+    }
+    if (day != NULL)
+    {
+        *day = (tm->tm_year+1900)*10000 + (tm->tm_mon+1)*100 + tm->tm_mday;
+    }
+    if (hour != NULL)
+    {
+        *hour = (tm->tm_year+1900)*1000000LL + (tm->tm_mon+1)*10000 + tm->tm_mday*100 + tm->tm_hour;
+    }
+    if (minute != NULL)
+    {
+        *minute = (tm->tm_year+1900)*100000000LL + (tm->tm_mon+1)*1000000 + tm->tm_mday*10000 + tm->tm_hour*100 + tm->tm_min;
+    }
+    if (second != NULL)
+    {
+        *second = (tm->tm_year+1900)*10000000000LL + (tm->tm_mon+1)*100000000 + tm->tm_mday*1000000 + tm->tm_hour*10000 + tm->tm_min*100 + tm->tm_sec;
+    }
+}
+
 void CDatetimeUtils::to_current_datetime(struct tm* current_datetime_struct, char* datetime_buffer, size_t datetime_buffer_size, const char* format)
 {
     snprintf(datetime_buffer, datetime_buffer_size
