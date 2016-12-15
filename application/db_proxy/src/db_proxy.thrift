@@ -1,5 +1,9 @@
 // Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 namespace cpp mooon.db_proxy
+namespace go mooon.db_proxy
+namespace java mooon.db_proxy
+namespace php mooon.db_proxy
+namespace py mooon.db_proxy
 
 typedef list<string> DBRow
 typedef list<DBRow> DBTable
