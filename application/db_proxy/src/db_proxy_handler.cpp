@@ -102,6 +102,14 @@ void CDbProxyHandler::query(DBTable& _return, const std::string& sign, const int
                     }
 
                     ++_num_query_success;
+                    if (_return.empty())
+                    {
+                        MYLOG_DEBUG("number of rows: %zd, number of columns: %zd\n", _return.size(), 0);
+                    }
+                    else
+                    {
+                        MYLOG_DEBUG("number of rows: %zd, number of columns: %zd\n", _return.size(), _return[0].size());
+                    }
                 }
             }
         }
@@ -241,6 +249,7 @@ int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, co
 
                         MYLOG_DEBUG("%s\n", sql.c_str());
                         int affected_rows = db_connection->update("%s", sql.c_str());
+                        MYLOG_DEBUG("[%s] affected_rows: %d\n", sql.c_str(), affected_rows);
                         return affected_rows;
                     }
                 }
