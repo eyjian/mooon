@@ -104,7 +104,7 @@ void CDbProxyHandler::query(DBTable& _return, const std::string& sign, const int
                     ++_num_query_success;
                     if (_return.empty())
                     {
-                        MYLOG_DEBUG("number of rows: %zd, number of columns: %zd\n", _return.size(), 0);
+                        MYLOG_DEBUG("number of rows: %zd, number of columns: %d\n", _return.size(), 0);
                     }
                     else
                     {
