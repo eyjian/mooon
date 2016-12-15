@@ -232,6 +232,26 @@ void CDatetimeUtils::decompose(struct tm* tm, int* year, int* month, int* day, i
     }
 }
 
+void CDatetimeUtils::decompose(struct tm* tm, std::string* year, std::string* month, std::string* day, std::string* hour, std::string* minute, std::string* second)
+{
+    int Y, M, D; // 年月日
+    int64_t h, m, s; // 时分秒
+
+    decompose(tm, &Y, &M, &D, &h, &h, &s);
+    if (year != NULL)
+        *year = utils::CStringUtils::int_tostring(Y);
+    if (month != NULL)
+        *month = utils::CStringUtils::int_tostring(M);
+    if (day != NULL)
+        *day = utils::CStringUtils::int_tostring(D);
+    if (hour != NULL)
+        *hour = utils::CStringUtils::int_tostring(h);
+    if (minute != NULL)
+        *minute = utils::CStringUtils::int_tostring(m);
+    if (second != NULL)
+        *second = utils::CStringUtils::int_tostring(s);
+}
+
 void CDatetimeUtils::to_current_datetime(struct tm* current_datetime_struct, char* datetime_buffer, size_t datetime_buffer_size, const char* format)
 {
     snprintf(datetime_buffer, datetime_buffer_size
