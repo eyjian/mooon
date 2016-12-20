@@ -66,6 +66,12 @@
 
 // 注意不用要在其它namespace内调用
 // 整数类型参数定义（供main()函数所在文件中调用）
+//
+// 如遇到如下所示的编译错误，
+// 这是因为int_type指定了不带长度的类型，如time_t或long等，指定为带长度的类型，如int32_t等即可解决
+// no matching function for call to 'mooon::utils::CStringUtils::string2int(const char*, long int&, uint8_t&, bool&)'
+//
+// int_type 参数的数据类型
 // param_name 参数名
 // default_value 参数的默认值，如果没有通过命令行指定，则default_value为参数值
 // help_string 对这个参数的说明
@@ -246,8 +252,10 @@ public:
     virtual bool set_value(const std::string& new_value, std::string* errmsg)
     {
         IntType value = 0;
+        uint8_t converted_length = 0; // 阻止调用模板类型的string2int，在一些环境这将导致编译错误，原因是long等类型并不没有对应的带长度的类型
+        bool ignored_zero = false;
 
-        if (!mooon::utils::CStringUtils::string2int(new_value.c_str(), value))
+        if (!mooon::utils::CStringUtils::string2int(new_value.c_str(), value, converted_length, ignored_zero))
         {
             *errmsg = CStringUtils::format_string("invalid value[%s] of argument[%s]", new_value.c_str(), c_name());
             return false;

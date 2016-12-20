@@ -154,7 +154,9 @@ public:
     static IntType string2int(const char* str, IntType error_value=0)
     {
         IntType m = 0;
-        if (!string2int(str, m))
+        uint8_t converted_length = 0;
+        bool ignored_zero = false;
+        if (!string2int(str, m, converted_length, ignored_zero))
             m = error_value;
 
         return m;
@@ -164,9 +166,8 @@ public:
     static IntType string2int(const std::string& str, IntType error_value=0)
     {
         IntType m = 0;
-        if (!string2int(str.c_str(), m))
+        if (!string2int<IntType>(str.c_str(), m))
             m = error_value;
-
         return m;
     }
 
