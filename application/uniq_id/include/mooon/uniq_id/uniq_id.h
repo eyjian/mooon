@@ -60,8 +60,8 @@ union UniqID
         uint64_t year:7;   // 当前年份减去BASE_YEAR后的值，如果当前年份为2016则可支持到2143年
         uint64_t month:4;  // 当前月份
         uint64_t day:5;    // 当前月份的天
-        uint64_t hour:4;   // 当前的小时数
-        uint64_t seq:30;   // 循环递增的序列号，最大为1073741823
+        uint64_t hour:5;   // 当前的小时数
+        uint64_t seq:29;   // 循环递增的序列号，最大为536870911，注意1小时内的数量不能超过这个值，否则会重！
 
         std::string str() const
         {
