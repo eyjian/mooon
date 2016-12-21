@@ -203,6 +203,9 @@ public:
 
         vec.swap(tmp);
     }
+
+    // 取一个随机字符串
+    static std::string get_random_string();
 };
 
 SYS_NAMESPACE_END

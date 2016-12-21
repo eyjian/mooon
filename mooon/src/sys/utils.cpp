@@ -17,6 +17,7 @@
  * Author: jian yi, eyjian@qq.com or eyjian@gmail.com
  */
 #include "sys/utils.h"
+#include "sys/atomic.h"
 #include "sys/close_helper.h"
 #include "utils/string_utils.h"
 #include <dirent.h>
@@ -499,6 +500,33 @@ void CUtils::common_pipe_write(int fd, const char* buffer, int32_t buffer_size)
 		size -= ret;
 		bufferp += ret;
 	}
+}
+
+std::string CUtils::get_random_string()
+{
+    // 随机数因子
+    static atomic_t s_random_factor = ATOMIC_INIT(0);
+    const uint32_t random_factor = static_cast<uint32_t>(atomic_read(&s_random_factor));
+
+    // 取得当前时间
+    struct timeval tv;
+    struct timezone *tz = NULL;
+    gettimeofday(&tv, tz);
+
+    // 随机数1
+    srandom(tv.tv_usec + random_factor + 0);
+    uint64_t m1 = random() % std::numeric_limits<uint64_t>::max();
+
+    // 随机数2
+    srandom(tv.tv_usec + random_factor + 1);
+    uint64_t m2 = random() % std::numeric_limits<uint64_t>::max();
+
+    // 随机数3
+    srandom(tv.tv_usec + random_factor + 2);
+    uint64_t m3 = random() % std::numeric_limits<uint64_t>::max();
+
+    atomic_add(3, &s_random_factor);
+    return utils::CStringUtils::format_string("%" PRIu64"%" PRIu64"%u%" PRIu64"%" PRIu64"%" PRIu64, static_cast<uint64_t>(tv.tv_sec), static_cast<uint64_t>(tv.tv_usec), random_factor, m1, m2, m3);
 }
 
 SYS_NAMESPACE_END
