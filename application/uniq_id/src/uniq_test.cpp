@@ -56,8 +56,8 @@ int main(int argc, char* argv[])
 
 void usage()
 {
-	fprintf(stderr, "Usage1: uniq_cli agent_nodes\n");
-	fprintf(stderr, "Usage2: uniq_cli agent_nodes poll\n");
+	fprintf(stderr, "Usage1: uniq_test agent_nodes\n");
+	fprintf(stderr, "Usage2: uniq_test agent_nodes poll\n");
 }
 
 void print_transaction_id(const char* agent_nodes, bool polling)
