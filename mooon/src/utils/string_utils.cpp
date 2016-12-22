@@ -267,6 +267,48 @@ void CStringUtils::trim_right(std::string& source)
     source = tmp_source;
 }
 
+bool CStringUtils::string2double(const char* source, double& result)
+{
+    char* endptr = NULL;
+    double result_ = strtod(source, &endptr);
+    if ((endptr != NULL) && ('\0' == *endptr))
+        result = result_;
+    return ((endptr != NULL) && ('\0' == *endptr));
+}
+
+double CStringUtils::string2double(const char* source)
+{
+    return strtod(source, NULL);
+}
+
+bool CStringUtils::string2float(const char* source, float& result)
+{
+    char* endptr = NULL;
+    float result_ = strtof(source, &endptr);
+    if ((endptr != NULL) && ('\0' == *endptr))
+        result = result_;
+    return ((endptr != NULL) && ('\0' == *endptr));
+}
+
+float CStringUtils::string2float(const char* source)
+{
+    return strtof(source, NULL);
+}
+
+bool CStringUtils::string2ldouble(const char* source, long double& result)
+{
+    char* endptr = NULL;
+    long double result_ = strtold(source, &endptr);
+    if ((endptr != NULL) && ('\0' == *endptr))
+        result = result_;
+    return ((endptr != NULL) && ('\0' == *endptr));
+}
+
+long double CStringUtils::string2ldouble(const char* source)
+{
+    return strtold(source, NULL);
+}
+
 bool CStringUtils::string2int8(const char* source, int8_t& result, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, result, converted_length, ignored_zero);

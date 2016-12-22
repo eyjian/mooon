@@ -89,12 +89,28 @@
                 #param_name, default_value, min_value, max_value, help_string); \
     }}
 
+// 定义双精度类型参数
+#define DOUBLE_ARG_DEFINE(param_name, default_value, min_value, max_value, help_string) \
+    namespace mooon { namespace argument \
+    { \
+        utils::CDoubleArgument* param_name = \
+            new utils::CDoubleArgument( \
+                #param_name, default_value, min_value, max_value, help_string); \
+    }}
+
 // 注意不用要在其它namespace内调用
 // 整数类型参数声明（供非main()函数所在文件中调用）
 #define INTEGER_ARG_DECLARE(int_type, param_name) \
     namespace mooon { namespace argument /** 保证不污染全局空间 */ \
     { \
         extern utils::CIntArgument<int_type>* param_name; \
+    }}
+
+ // 声明双精度类型参数
+#define DOUBLE_ARG_DECLARE(param_name) \
+    namespace mooon { namespace argument /** 保证不污染全局空间 */ \
+    { \
+        extern utils::CDoubleArgument* param_name; \
     }}
 
 // 注意不用要在其它namespace内调用
@@ -248,6 +264,11 @@ public:
         return _value;
     }
 
+    const std::string& str_value() const
+    {
+        return _str_value;
+    }
+
 public:
     virtual bool set_value(const std::string& new_value, std::string* errmsg)
     {
@@ -255,11 +276,13 @@ public:
         uint8_t converted_length = 0; // 阻止调用模板类型的string2int，在一些环境这将导致编译错误，原因是long等类型并不没有对应的带长度的类型
         bool ignored_zero = false;
 
+        _str_value = new_value;
         if (!mooon::utils::CStringUtils::string2int(new_value.c_str(), value, converted_length, ignored_zero))
         {
             *errmsg = CStringUtils::format_string("invalid value[%s] of argument[%s]", new_value.c_str(), c_name());
             return false;
         }
+
         if ((value < _min_value) || (value > _max_value))
         {
             // 对于int8_t或uint8_t需要强制转换一下，否则按字符显示
@@ -269,9 +292,11 @@ public:
                 *errmsg = any2string("value[", value, "] of argument[", name(), "] not between ", _min_value, " and ", _max_value);
             return false;
         }
-
-        _value = value;
-        return true;
+        else
+        {
+            _value = value;
+            return true;
+        }
     }
 
     virtual std::string usage_string() const
@@ -295,10 +320,90 @@ public:
     }
 
 private:
+    std::string _str_value;
     IntType _default_value;
     IntType _min_value;
     IntType _max_value;
     IntType _value;
+};
+
+class CDoubleArgument: public CArgumentBase
+{
+public:
+    CDoubleArgument(const std::string& name, double default_value, double min_value, double max_value, const std::string& help_string)
+        : CArgumentBase(name, help_string),
+          _default_value(default_value), _min_value(min_value), _max_value(max_value), _value(default_value)
+    {
+        CArgumentContainer::get_singleton()->add_argument(this);
+    }
+
+    double default_value() const
+    {
+        return _default_value;
+    }
+
+    double min_value() const
+    {
+        return _min_value;
+    }
+
+    double max_value() const
+    {
+        return _max_value;
+    }
+
+    double value() const
+    {
+        return _value;
+    }
+
+    const std::string& str_value() const
+    {
+        return _str_value;
+    }
+
+public:
+    virtual bool set_value(const std::string& new_value, std::string* errmsg)
+    {
+        double value = 0.0;
+
+        _str_value = new_value;
+        if (!mooon::utils::CStringUtils::string2double(new_value.c_str(), value))
+        {
+            *errmsg = CStringUtils::format_string("invalid value[%s] of argument[%s]", new_value.c_str(), c_name());
+            return false;
+        }
+
+        if ((value < _min_value) || (value > _max_value))
+        {
+            *errmsg = any2string("value[", value, "] of argument[", name(), "] not between ", _min_value, " and ", _max_value);
+            return false;
+        }
+        else
+        {
+            _value = value;
+            return true;
+        }
+    }
+
+    virtual std::string usage_string() const
+    {
+        std::string prefix;
+        if (name().length() < 2)
+            prefix = "-";
+        else
+            prefix = "--";
+
+         return mooon::utils::any2string(
+                prefix, name(), "[", _default_value, "/", _min_value, ",", _max_value, "]: ", help_string());
+    }
+
+private:
+    std::string _str_value;
+    double _default_value;
+    double _min_value;
+    double _max_value;
+    double _value;
 };
 
 UTILS_NAMESPACE_END

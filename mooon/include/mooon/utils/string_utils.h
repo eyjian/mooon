@@ -66,6 +66,21 @@ public:
     static void trim_right(std::string& source);
 
     /**
+     * 字符串转双精度浮点类型
+     * 如果source是“1.23”则转换成功返回true，如果source是“1.2a”则转换失败返回false
+     */
+    static bool string2double(const char* source, double& result);
+    static double string2double(const char* source);
+
+    /** 字符串转浮点类型 */
+    static bool string2float(const char* source, float& result);
+    static float string2float(const char* source);
+
+    /** 字符串转长双精度类型 */
+    static bool string2ldouble(const char* source, long double& result);
+    static long double string2ldouble(const char* source);
+
+    /**
       * 字符串转换成整数函数
       */
 	
