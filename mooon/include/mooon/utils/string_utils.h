@@ -180,10 +180,7 @@ public:
     template <typename IntType>
     static IntType string2int(const std::string& str, IntType error_value=0)
     {
-        IntType m = 0;
-        if (!string2int<IntType>(str.c_str(), m))
-            m = error_value;
-        return m;
+        return string2int<IntType>(str.c_str(), error_value);
     }
 
     static std::string int_tostring(int16_t source);
