@@ -30,6 +30,7 @@
 #include <thrift/concurrency/ThreadManager.h>
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/server/TNonblockingServer.h>
+#include <thrift/TApplicationException.h>
 #include <thrift/transport/TSocketPool.h>
 #include <thrift/transport/TTransportException.h>
 #include <vector>
@@ -65,7 +66,7 @@ inline bool thrift_not_connected(
 // {
 //     MYLOG_ERROR("thrift exception: (%d)%s\n", ex.getType(), ex.what());
 // }
-// catch (apache::thrift::transport::TApplicationException& ex)
+// catch (apache::thrift::TApplicationException& ex)
 // {
 //     MYLOG_ERROR("thrift exception: %s\n", ex.what());
 // }
