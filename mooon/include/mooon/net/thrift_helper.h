@@ -64,11 +64,11 @@ inline bool thrift_not_connected(
 // }
 // catch (apache::thrift::transport::TTransportException& ex)
 // {
-//     MYLOG_ERROR("thrift exception: (%d)%s\n", ex.getType(), ex.what());
+//     MYLOG_ERROR("thrift transport exception: (%d)%s\n", ex.getType(), ex.what());
 // }
 // catch (apache::thrift::TApplicationException& ex)
 // {
-//     MYLOG_ERROR("thrift exception: %s\n", ex.what());
+//     MYLOG_ERROR("thrift application exception: %s\n", ex.what());
 // }
 // catch (apache::thrift::TException& ex)
 // {
