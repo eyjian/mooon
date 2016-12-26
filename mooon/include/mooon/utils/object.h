@@ -84,6 +84,10 @@ class CObjectFacotry
     SINGLETON_DECLARE(CObjectFacotry)
 
 public:
+    typedef std::map<std::string, CObjectCreator*> ObjectCreatorTable; // key为类型名
+    const ObjectCreatorTable& get_object_creator_table() const { return _object_creator_table; }
+
+public:
     ~CObjectFacotry();
     
     // type_name 对象类型名，每类对象的类型名要求唯一，如果类型名不唯一，则debug模式编译后运行会触发abort()
@@ -98,7 +102,6 @@ public:
     CObject* create_object(const std::string& type_name) const;
 
 private:
-    typedef std::map<std::string, CObjectCreator*> ObjectCreatorTable; // key为类型名
     ObjectCreatorTable _object_creator_table;
 };
 
