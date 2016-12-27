@@ -42,7 +42,7 @@ void CObjectFacotry::register_object_creater(const std::string& type_name, CObje
 {
     std::pair<ObjectCreatorTable::iterator, bool> ret =
         _object_creator_table.insert(std::make_pair(type_name, object_creator));
-    assert(ret.second); // 在调试阶段即可发现问题
+    MOOON_ASSERT(ret.second); // 在调试阶段即可发现问题
 }
 
 CObjectCreator* CObjectFacotry::get_object_creator(const std::string& type_name) const

@@ -24,6 +24,21 @@ UTILS_NAMESPACE_BEGIN
 
 // 用来注册CObjectCreator的宏
 // 使用了匿名名字空间，原因是不需要对外可见和使用
+//
+// 注意必须保证同一进程中object_type_name唯一，
+// object_type_name为std::string类型，ObjectClass为CObject的子类类型
+//
+// 使用示例：
+// class CMyClass: public mooon::utils::CObject
+// {
+// };
+//
+// REGISTER_OBJECT_CREATOR("myclass", CMyClass);
+//
+// 在其它文件中创建CMyClass类型的对象，
+// 如果未调用REGISTER_OBJECT_CREATOR注册，则返回NULL，
+// 如果存在同名的，则debug模式会触发断言错误，非debug模式将导致内存泄露：
+// CMyClass* myclass = (CMyClass*)mooon::utils::CObjectFacotry::get_singleton()->create_object("myclass");
 #define REGISTER_OBJECT_CREATOR(object_type_name, ObjectClass) \
     namespace { \
         class ObjectClass##Creator: public ::mooon::utils::CObjectCreator \
@@ -65,8 +80,6 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// 以下内容仅供宏REGISTER_OBJECT_CREATER()使用
-
 // 对象创建者抽象接口
 class CObjectCreator
 {
