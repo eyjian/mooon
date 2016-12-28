@@ -101,8 +101,8 @@ public:
      * 转换后的minute为YYYYMMDDhhmm格式，
      * 转换后的second为YYYYMMDDhhmmss格式
      */
-    static void decompose(struct tm* tm, int* year=NULL, int* month=NULL, int* day=NULL, int64_t* hour=NULL, int64_t* minute=NULL, int64_t* second=NULL);
-    static void decompose(struct tm* tm, std::string* year=NULL, std::string* month=NULL, std::string* day=NULL, std::string* hour=NULL, std::string* minute=NULL, std::string* second=NULL);
+    static void decompose(const struct tm* tm, int* year=NULL, int* month=NULL, int* day=NULL, int64_t* hour=NULL, int64_t* minute=NULL, int64_t* second=NULL);
+    static void decompose(const struct tm* tm, std::string* year=NULL, std::string* month=NULL, std::string* day=NULL, std::string* hour=NULL, std::string* minute=NULL, std::string* second=NULL);
 
     /** 日期和时间 */
     static void to_current_datetime(struct tm* current_datetime_struct, char* datetime_buffer, size_t datetime_buffer_size, const char* format="%04d-%02d-%02d %02d:%02d:%02d");

@@ -204,7 +204,7 @@ void CDatetimeUtils::get_current_datetime_struct(struct tm* current_datetime_str
     localtime_r(&now, current_datetime_struct);
 }
 
-void CDatetimeUtils::decompose(struct tm* tm, int* year, int* month, int* day, int64_t* hour, int64_t* minute, int64_t* second)
+void CDatetimeUtils::decompose(const struct tm* tm, int* year, int* month, int* day, int64_t* hour, int64_t* minute, int64_t* second)
 {
     if (year != NULL)
     {
@@ -232,7 +232,7 @@ void CDatetimeUtils::decompose(struct tm* tm, int* year, int* month, int* day, i
     }
 }
 
-void CDatetimeUtils::decompose(struct tm* tm, std::string* year, std::string* month, std::string* day, std::string* hour, std::string* minute, std::string* second)
+void CDatetimeUtils::decompose(const struct tm* tm, std::string* year, std::string* month, std::string* day, std::string* hour, std::string* minute, std::string* second)
 {
     int Y, M, D; // 年月日
     int64_t h, m, s; // 时分秒
