@@ -252,6 +252,30 @@ void CDatetimeUtils::decompose(const struct tm* tm, std::string* year, std::stri
         *second = utils::CStringUtils::int_tostring(s);
 }
 
+void CDatetimeUtils::decompose(const struct tm& tm, int* year, int* month, int* day, int64_t* hour, int64_t* minute, int64_t* second)
+{
+    decompose(&tm, year, month, day, hour, minute, second);
+}
+
+void CDatetimeUtils::decompose(const struct tm& tm, std::string* year, std::string* month, std::string* day, std::string* hour, std::string* minute, std::string* second)
+{
+    decompose(&tm, year, month, day, hour, minute, second);
+}
+
+void CDatetimeUtils::decompose(time_t t, int* year, int* month, int* day, int64_t* hour, int64_t* minute, int64_t* second)
+{
+    struct tm tm;
+    localtime_r(&t, &tm);
+    decompose(&tm, year, month, day, hour, minute, second);
+}
+
+void CDatetimeUtils::decompose(time_t t, std::string* year, std::string* month, std::string* day, std::string* hour, std::string* minute, std::string* second)
+{
+    struct tm tm;
+    localtime_r(&t, &tm);
+    decompose(&tm, year, month, day, hour, minute, second);
+}
+
 void CDatetimeUtils::to_current_datetime(struct tm* current_datetime_struct, char* datetime_buffer, size_t datetime_buffer_size, const char* format)
 {
     snprintf(datetime_buffer, datetime_buffer_size
