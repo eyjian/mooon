@@ -108,6 +108,19 @@ public:
     static void decompose(time_t t, int* year=NULL, int* month=NULL, int* day=NULL, int64_t* hour=NULL, int64_t* minute=NULL, int64_t* second=NULL);
     static void decompose(time_t t, std::string* year=NULL, std::string* month=NULL, std::string* day=NULL, std::string* hour=NULL, std::string* minute=NULL, std::string* second=NULL);
 
+    /* 转成格式为“YYYY-01-01 00:00:00”格式的值 */
+    static std::string to_str_long_year(const struct tm& t);
+    /* 转成格式为“YYYY-MM-01 00:00:00”格式的值 */
+    static std::string to_str_long_month(const struct tm& t);
+    /* 转成格式为“YYYY-MM-DD 00:00:00”格式的值 */
+    static std::string to_str_long_day(const struct tm& t);
+    /* 转成格式为“YYYY-MM-DD hh:00:00”格式的值 */
+    static std::string to_str_long_hour(const struct tm& t);
+    /* 转成格式为“YYYY-MM-DD hh:mm:00”格式的值 */
+    static std::string to_str_long_minute(const struct tm& t);
+    /* 转成格式为“YYYY-MM-DD hh:mm:ss”格式的值 */
+    static std::string to_str_long_second(const struct tm& t);
+
     /** 日期和时间 */
     static void to_current_datetime(struct tm* current_datetime_struct, char* datetime_buffer, size_t datetime_buffer_size, const char* format="%04d-%02d-%02d %02d:%02d:%02d");
     static std::string to_current_datetime(struct tm* current_datetime_struct, const char* format="%04d-%02d-%02d %02d:%02d:%02d");
