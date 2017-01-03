@@ -276,34 +276,52 @@ void CDatetimeUtils::decompose(time_t t, std::string* year, std::string* month, 
     decompose(&tm, year, month, day, hour, minute, second);
 }
 
-std::string CDatetimeUtils::to_str_long_year(const struct tm& t)
+std::string CDatetimeUtils::to_str_long_year(const struct tm& t, const char* prefix)
 {
-    return utils::CStringUtils::format_string("%04d-01-01 00:00:00", t.tm_year+1900);
+    if (NULL == prefix)
+        return utils::CStringUtils::format_string("%04d-01-01 00:00:00", t.tm_year+1900);
+    else
+        return utils::CStringUtils::format_string("%s%04d-01-01 00:00:00", prefix, t.tm_year+1900);
 }
 
-std::string CDatetimeUtils::to_str_long_month(const struct tm& t)
+std::string CDatetimeUtils::to_str_long_month(const struct tm& t, const char* prefix)
 {
-    return utils::CStringUtils::format_string("%04d-%02d-01 00:00:00", t.tm_year+1900, t.tm_mon+1);
+    if (NULL == prefix)
+        return utils::CStringUtils::format_string("%04d-%02d-01 00:00:00", t.tm_year+1900, t.tm_mon+1);
+    else
+        return utils::CStringUtils::format_string("%s%04d-%02d-01 00:00:00", prefix, t.tm_year+1900, t.tm_mon+1);
 }
 
-std::string CDatetimeUtils::to_str_long_day(const struct tm& t)
+std::string CDatetimeUtils::to_str_long_day(const struct tm& t, const char* prefix)
 {
-    return utils::CStringUtils::format_string("%04d-%02d-%02d 00:00:00", t.tm_year+1900, t.tm_mon+1, t.tm_mday);
+    if (NULL == prefix)
+        return utils::CStringUtils::format_string("%04d-%02d-%02d 00:00:00", t.tm_year+1900, t.tm_mon+1, t.tm_mday);
+    else
+        return utils::CStringUtils::format_string("%s%04d-%02d-%02d 00:00:00", prefix, t.tm_year+1900, t.tm_mon+1, t.tm_mday);
 }
 
-std::string CDatetimeUtils::to_str_long_hour(const struct tm& t)
+std::string CDatetimeUtils::to_str_long_hour(const struct tm& t, const char* prefix)
 {
-    return utils::CStringUtils::format_string("%04d-%02d-%02d %02d:00:00", t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour);
+    if (NULL == prefix)
+        return utils::CStringUtils::format_string("%04d-%02d-%02d %02d:00:00", t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour);
+    else
+        return utils::CStringUtils::format_string("%s%04d-%02d-%02d %02d:00:00", prefix, t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour);
 }
 
-std::string CDatetimeUtils::to_str_long_minute(const struct tm& t)
+std::string CDatetimeUtils::to_str_long_minute(const struct tm& t, const char* prefix)
 {
-    return utils::CStringUtils::format_string("%04d-%02d-%02d %02d:%02d:00", t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min);
+    if (NULL == prefix)
+        return utils::CStringUtils::format_string("%04d-%02d-%02d %02d:%02d:00", t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min);
+    else
+        return utils::CStringUtils::format_string("%s%04d-%02d-%02d %02d:%02d:00", prefix, t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min);
 }
 
-std::string CDatetimeUtils::to_str_long_second(const struct tm& t)
+std::string CDatetimeUtils::to_str_long_second(const struct tm& t, const char* prefix)
 {
-    return utils::CStringUtils::format_string("%04d-%02d-%02d %02d:%02d:%02d", t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+    if (NULL == prefix)
+        return utils::CStringUtils::format_string("%04d-%02d-%02d %02d:%02d:%02d", t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+    else
+        return utils::CStringUtils::format_string("%s%04d-%02d-%02d %02d:%02d:%02d", prefix, t.tm_year+1900, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
 }
 
 void CDatetimeUtils::to_current_datetime(struct tm* current_datetime_struct, char* datetime_buffer, size_t datetime_buffer_size, const char* format)
