@@ -56,9 +56,9 @@ void CDBConnectionBase::set_charset(const std::string& charset)
     _charset = charset;    
 }
 
-void CDBConnectionBase::enable_auto_reconnect()
+void CDBConnectionBase::enable_auto_reconnect(bool auto_reconnect)
 {
-    _auto_reconnect = true;    
+    _auto_reconnect = auto_reconnect;
 }
 
 void CDBConnectionBase::set_timeout_seconds(int connect_timeout_seconds, int read_timeout_seconds, int write_timeout_seconds)
@@ -236,6 +236,11 @@ void CDBConnectionBase::rollback() throw (CDBException)
 void CDBConnectionBase::enable_autocommit(bool enabled) throw (CDBException)
 {
     THROW_DB_EXCEPTION(NULL, "not supported", DB_NOT_SUPPORTED);
+}
+
+bool CDBConnectionBase::is_established() const
+{
+    return _is_established;
 }
 
 SYS_NAMESPACE_END

@@ -237,7 +237,7 @@ void CDatetimeUtils::decompose(const struct tm* tm, std::string* year, std::stri
     int Y, M, D; // 年月日
     int64_t h, m, s; // 时分秒
 
-    decompose(tm, &Y, &M, &D, &h, &h, &s);
+    decompose(tm, &Y, &M, &D, &h, &m, &s);
     if (year != NULL)
         *year = utils::CStringUtils::int_tostring(Y);
     if (month != NULL)

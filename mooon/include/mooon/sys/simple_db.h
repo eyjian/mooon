@@ -62,6 +62,8 @@ catch (CDBException& db_error)
 
 delete db_connection;
  */
+
+// 请不要跨线程使用
 class DBConnection
 {
 public:
@@ -108,7 +110,7 @@ public:
      * 设置为连接断开后自动重连接，如果不主动设置，默认不自动重连接
      * 注意，只有在open()或reopen()之前调用才生效
      */
-    virtual void enable_auto_reconnect() = 0;
+    virtual void enable_auto_reconnect(bool auto_reconnect=true) = 0;
     
     /***
      * 设置连接、读和写超时时长
@@ -212,11 +214,14 @@ public:
 
     /** 是否允许自动提交事务，注意只有open()或reopen()成功之后，才可以调用 */
     virtual void enable_autocommit(bool enabled) throw (CDBException) = 0;
+
+    /** 是否已建立DB连接 */
+    virtual bool is_established() const = 0;
 };
 
 
 /**
- * 不同DB的通用操作
+ * 不同DB的通用操作，请不要跨线程使用
  */
 class CDBConnectionBase: public DBConnection
 {
@@ -229,7 +234,7 @@ public:
     virtual void set_db_name(const std::string& db_name);
     virtual void set_user(const std::string& db_user, const std::string& db_password);
     virtual void set_charset(const std::string& charset);
-    virtual void enable_auto_reconnect();
+    virtual void enable_auto_reconnect(bool auto_reconnect=true);
     virtual void set_timeout_seconds(int connect_timeout_seconds, int read_timeout_seconds=-1, int write_timeout_seconds=-1);
     virtual void set_connect_timeout_seconds(int timeout_seconds);
     virtual void set_read_timeout_seconds(int timeout_seconds);
@@ -247,6 +252,9 @@ public:
 
     /** 是否允许自动提交事务，注意只有open()或reopen()成功之后，才可以调用 */
     virtual void enable_autocommit(bool enabled) throw (CDBException);
+
+    /** 是否已建立DB连接 */
+    virtual bool is_established() const;
 
 private:
     virtual void do_query(DBTable& db_table, const char* sql, int sql_length) throw (CDBException) = 0;
