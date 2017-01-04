@@ -62,22 +62,62 @@ public:
     		return *this;
     	}
 
-    	bool operator ==(const Value& other)
+    	bool operator ==(const Value& other) const
 		{
     		return (this->low_8bytes == other.low_8bytes) && (this->high_8bytes == other.high_8bytes);
 		}
 
-    	bool operator !=(const Value& other)
+    	bool operator !=(const Value& other) const
 		{
 			return (this->low_8bytes != other.low_8bytes) || (this->high_8bytes != other.high_8bytes);
 		}
 
-	private:
-    	bool operator <(const Value&);
-    	bool operator >(const Value&);
-    	bool operator <=(const Value&);
-    	bool operator >=(const Value&);
+    	bool operator <(const Value& other) const
+    	{
+    	    if (this->low_8bytes < other.low_8bytes)
+    	        return true;
+    	    if (this->low_8bytes == other.low_8bytes)
+    	        return this->high_8bytes < other.high_8bytes;
+    	    return false;
+    	}
+
+    	bool operator >(const Value& other) const
+    	{
+    	    return !(*this < other);
+    	}
+
+    	bool operator <=(const Value& other) const
+        {
+    	    if (this->low_8bytes < other.low_8bytes)
+    	        return true;
+    	    if (this->low_8bytes == other.low_8bytes)
+    	        return this->high_8bytes <= other.high_8bytes;
+    	    return false;
+        }
+
+    	bool operator >=(const Value& other) const
+        {
+    	    return !(*this <= other);
+        }
 	};
+
+    // 求哈希值函数
+    typedef struct
+    {
+        uint64_t operator ()(const struct Value& value) const
+        {
+            return value.low_8bytes;
+        }
+    }ValueHasher;
+
+    // 哈希比较函数
+    typedef struct
+    {
+        bool operator()(const struct Value& lhs, const struct Value& rhs) const
+        {
+            return lhs == rhs;
+        }
+    }ValueComparer;
 
 public:
     CMd5Helper();
