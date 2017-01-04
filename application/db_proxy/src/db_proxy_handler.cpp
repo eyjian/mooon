@@ -5,12 +5,13 @@
 #include <mooon/observer/observer_manager.h>
 #include <mooon/sys/datetime_utils.h>
 #include <mooon/sys/log.h>
-#include <mooon/sys/mysql_db.h>
 #include <mooon/utils/args_parser.h>
 #include <mooon/utils/format_string.h>
 #include <mooon/utils/string_utils.h>
 #include <thrift/TApplicationException.h>
 #include <vector>
+
+INTEGER_ARG_DECLARE(int32_t, cache_number);
 namespace mooon { namespace db_proxy {
 
 CDbProxyHandler::CDbProxyHandler()
@@ -20,6 +21,7 @@ CDbProxyHandler::CDbProxyHandler()
         observer_mananger->register_observee(this);
 
     reset();
+    atomic_set(&_cached_number, 0);
 }
 
 CDbProxyHandler::~CDbProxyHandler()
@@ -27,6 +29,26 @@ CDbProxyHandler::~CDbProxyHandler()
     mooon::observer::IObserverManager* observer_mananger = mooon::observer::get();
     if (observer_mananger != NULL)
         observer_mananger->deregister_objservee(this);
+}
+
+void CDbProxyHandler::cleanup_cache()
+{
+    time_t now = time(NULL);
+    sys::WriteLockHelper write_lock(_cache_table_lock);
+    for (CacheTable::iterator iter=_cache_table.begin(); iter!=_cache_table.end();)
+    {
+        const struct CachedData& cached_data_ref = iter->second;
+
+        if (now < cached_data_ref.cached_seconds+cached_data_ref.timestamp)
+        {
+            ++iter;
+        }
+        else
+        {
+            _cache_table.erase(iter++);
+            atomic_dec(&_cached_number);
+        }
+    }
 }
 
 void CDbProxyHandler::query(DBTable& _return, const std::string& sign, const int32_t seq, const int32_t query_index, const std::vector<std::string> & tokens, const int32_t limit, const int32_t limit_start)
@@ -75,6 +97,19 @@ void CDbProxyHandler::query(DBTable& _return, const std::string& sign, const int
                 else
                 {
                     MYLOG_DEBUG("%s LIMIT %d,%d\n", sql.c_str(), limit_start, limit);
+
+                    if (query_info.cached_seconds < 1)
+                    {
+                        MYLOG_DEBUG("not cache: %s", sql.c_str());
+                    }
+                    else
+                    {
+                        if (get_data_from_cache(_return, sql))
+                        {
+                            return; // 如果缓存中有，则直接返回
+                        }
+                    }
+
                     if (limit_start >= 0) // limit_start是从0开始而不是1
                     {
                         // 限制一次性返回的记录数太多将db_proxy搞死
@@ -109,6 +144,11 @@ void CDbProxyHandler::query(DBTable& _return, const std::string& sign, const int
                     else
                     {
                         MYLOG_DEBUG("number of rows: %zd, number of columns: %zd\n", _return.size(), _return[0].size());
+                    }
+
+                    if ((query_info.cached_seconds > 0) && !_return.empty())
+                    {
+                        add_data_to_cache(_return, sql, query_info.cached_seconds);
                     }
                 }
             }
@@ -287,6 +327,62 @@ void CDbProxyHandler::on_report(mooon::observer::IDataReporter* data_reporter)
             _num_update_success, _num_update_failure,
             _num_async_update_success, _num_async_update_failure);
         reset();
+    }
+}
+
+bool CDbProxyHandler::get_data_from_cache(DBTable& dbtable, const std::string& sql)
+{
+    utils::CMd5Helper md5_helper;
+    md5_helper.update(sql);
+
+    sys::ReadLockHelper read_lock(_cache_table_lock);
+    CacheTable::iterator iter = _cache_table.find(md5_helper.value());
+    if (iter == _cache_table.end())
+    {
+        MYLOG_DEBUG("[%s][%s] not in cache\n", md5_helper.to_string().c_str(), sql.c_str());
+        return false;
+    }
+    else
+    {
+        MYLOG_DEBUG("get [%s][%s] from cache\n", md5_helper.to_string().c_str(), sql.c_str());
+        dbtable = iter->second.cached_data;
+        iter->second.timestamp = time(NULL);
+        return true;
+    }
+}
+
+void CDbProxyHandler::add_data_to_cache(const DBTable& dbtable, const std::string& sql, int cached_seconds)
+{
+    int32_t cached_number = atomic_read(&_cached_number);
+
+    if (cached_number > mooon::argument::cache_number->value())
+    {
+        MYLOG_WARN("too many, can not to cache again: %s\n", sql.c_str());
+    }
+    else
+    {
+        utils::CMd5Helper md5_helper;
+        md5_helper.update(sql);
+
+        struct CachedData cached_data;
+        cached_data.timestamp = time(NULL);
+        cached_data.cached_seconds = cached_seconds;
+        cached_data.cached_data = dbtable;
+
+        sys::WriteLockHelper write_lock(_cache_table_lock);
+        std::pair<CacheTable::iterator, bool> ret = _cache_table.insert(std::make_pair(md5_helper.value(), cached_data));
+        if (ret.second)
+        {
+            atomic_inc(&_cached_number);
+            MYLOG_DEBUG("[%s][%s] added into cache\n", md5_helper.to_string().c_str(), sql.c_str());
+        }
+        else
+        {
+            ret.first->second.timestamp = time(NULL);
+            ret.first->second.cached_seconds = cached_seconds;
+            ret.first->second.cached_data = dbtable;
+            MYLOG_DEBUG("[%s][%s] updated into cache\n", md5_helper.to_string().c_str(), sql.c_str());
+        }
     }
 }
 

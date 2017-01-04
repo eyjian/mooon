@@ -35,6 +35,11 @@ INTEGER_ARG_DEFINE(uint8_t, batch, 1, 1, std::numeric_limits<uint8_t>::max(), "n
 // 效率数据定时输出间隔，单位为秒
 INTEGER_ARG_DEFINE(uint16_t, efficiency, 10, 2, std::numeric_limits<uint8_t>::max(), "interval to output efficiency (seconds)");
 
+// 缓存多少笔数据
+INTEGER_ARG_DEFINE(int32_t, cache_number, 100000, 1, 10000000, "the number of data cached");
+// 清理缓存频率，单位为秒
+INTEGER_ARG_DEFINE(int32_t, cleanup_frequency, 2, 1, 3600, "the frequency to cleanup the cached data");
+
 class CMainHelper: public mooon::sys::IMainHelper
 {
 public:
@@ -42,6 +47,7 @@ public:
     ~CMainHelper();
 
 public:
+    void cleanup_cache_thread();
     void signal_thread();
     void on_terminated();
     void on_child_end(pid_t child_pid, int child_exited_status);
@@ -61,7 +67,8 @@ private:
 private:
     std::map<pid_t, mooon::db_proxy::DbInfo> _db_process_table; // key为入库进程ID
     volatile bool _stop_signal_thread;
-    mooon::sys::CThreadEngine* _signal_thread;
+    mooon::sys::CThreadEngine* _signal_thread; // 专门处理信号的线程
+    mooon::sys::CThreadEngine* _cleanup_cache_thread; // 清理缓存数据的线程
 
 private:
     mooon::utils::ScopedPtr<mooon::sys::CSafeLogger> _data_logger;
@@ -82,24 +89,45 @@ extern "C" int main(int argc, char* argv[])
 }
 
 CMainHelper::CMainHelper()
-    : _stop_signal_thread(false), _signal_thread(NULL), _observer_manager(NULL)
+    : _stop_signal_thread(false), _signal_thread(NULL), _cleanup_cache_thread(NULL), _observer_manager(NULL)
 {
 }
 
 CMainHelper::~CMainHelper()
 {
+    delete _cleanup_cache_thread;
+    delete _signal_thread;
     mooon::observer::destroy();
+}
+
+void CMainHelper::cleanup_cache_thread()
+{
+    mooon::sys::CUtils::set_process_name("db_proxy_cleanup");
+
+    while (!_stop_signal_thread)
+    {
+        mooon::sys::CUtils::millisleep(1000*mooon::argument::cleanup_frequency->value());
+
+        mooon::db_proxy::CDbProxyHandler* dbproxy_handler = _thrift_server.get();
+        if (NULL == dbproxy_handler)
+            break;
+
+        dbproxy_handler->cleanup_cache();
+    }
+
+    MYLOG_INFO("cleanup cache thread exiting\n");
 }
 
 void CMainHelper::signal_thread()
 {
-    mooon::sys::CUtils::set_process_name("db_proxy_sigthread");
-    //mooon::sys::CUtils::set_process_title("sig_thread");
+    mooon::sys::CUtils::set_process_name("db_proxy_signal");
 
     while (!_stop_signal_thread)
     {
         mooon::sys::CSignalHandler::handle(this);
     }
+
+    MYLOG_INFO("signal thread exiting\n");
 }
 
 void CMainHelper::on_terminated()
@@ -157,10 +185,12 @@ bool CMainHelper::init(int argc, char* argv[])
 
     // 延后1秒，让之前的进程有足够时间完成收尾退出
     mooon::sys::CUtils::millisleep(1000);
+    mooon::sys::CUtils::init_process_title(argc, argv);
 
     // 创建信号线程
     _signal_thread = new mooon::sys::CThreadEngine(mooon::sys::bind(&CMainHelper::signal_thread, this));
-    mooon::sys::CUtils::init_process_title(argc, argv);
+    // 创建清理缓存线程
+    _cleanup_cache_thread = new mooon::sys::CThreadEngine(mooon::sys::bind(&CMainHelper::cleanup_cache_thread, this));
 
     try
     {
@@ -217,6 +247,11 @@ bool CMainHelper::run()
         _thrift_server.serve(mooon::argument::port->value(), mooon::argument::num_work_threads->value(), mooon::argument::num_io_threads->value());
         MYLOG_INFO("thrift server exit\n");
 
+        if (_cleanup_cache_thread != NULL)
+        {
+            _cleanup_cache_thread->join();
+            MYLOG_INFO("cleanup cache thread exit\n");
+        }
         if (_signal_thread != NULL)
         {
             _signal_thread->join();
