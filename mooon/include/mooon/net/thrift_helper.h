@@ -95,10 +95,12 @@ public:
     // connect_timeout_milliseconds 连接thrift服务端的超时毫秒数
     // receive_timeout_milliseconds 接收thrift服务端发过来的数据的超时毫秒数
     // send_timeout_milliseconds 向thrift服务端发送数据时的超时毫秒数
+    // set_log_function 是否设置写日志函数，默认设置为debug级别日志
     CThriftClientHelper(const std::string &host, uint16_t port,
                         int connect_timeout_milliseconds=2000,
                         int receive_timeout_milliseconds=2000,
-                        int send_timeout_milliseconds=2000);
+                        int send_timeout_milliseconds=2000,
+                        bool set_log_function=true);
 
     // 支持指定多个servers，运行时随机选择一个，当一个异常时自动选择其它
     // num_retries 重试次数
@@ -106,13 +108,15 @@ public:
     // max_consecutive_failures 单个Server最大连续失败次数
     // randomize_ 是否随机选择一个Server
     // always_try_last 是否总是重试最后一个Server
+    // set_log_function 是否设置写日志函数，默认设置为debug级别日志
     CThriftClientHelper(const std::vector<std::pair<std::string, int> >& servers,
                         int connect_timeout_milliseconds=2000,
                         int receive_timeout_milliseconds=2000,
                         int send_timeout_milliseconds=2000,
                         int num_retries=1, int retry_interval=60,
                         int max_consecutive_failures=1,
-                        bool randomize=true, bool always_try_last=true
+                        bool randomize=true, bool always_try_last=true,
+                        bool set_log_function=true
                         );
     ~CThriftClientHelper();
 
@@ -201,13 +205,14 @@ public:
     // apache::thrift::TApplicationException
     // apache::thrift::TException
     // 参数num_io_threads，只有当Server为TNonblockingServer才有效
-    void serve(uint16_t port, uint8_t num_worker_threads=1, uint8_t num_io_threads=1);
-    void serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads=1);
-    void serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads, void* attached);
+    // set_log_function 是否设置写日志函数，默认设置为debug级别日志
+    void serve(uint16_t port, uint8_t num_worker_threads=1, uint8_t num_io_threads=1, bool set_log_function=true);
+    void serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads=1, bool set_log_function=true);
+    void serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads, void* attached, bool set_log_function=true);
 
     // 要求ThriftHandler类有方法attach(void*)
-    void serve(uint16_t port, void* attached, uint8_t num_worker_threads=1, uint8_t num_io_threads=1);
-    
+    void serve(uint16_t port, void* attached, uint8_t num_worker_threads=1, uint8_t num_io_threads=1, bool set_log_function=true);
+
     // 对于TNonblockingServer调用stop时是停止所有的IO线程，做法是设置一个结束循环标志：
     // for (uint32_t i = 0; i < ioThreads_.size(); ++i) ioThreads_[i]->stop();
     // void TNonblockingIOThread::stop() {
@@ -220,13 +225,14 @@ public:
     {
         return _handler.get();
     }
+
     ThriftHandler* get() const
     {
         return _handler.get();
     }
 
 private:
-    void init(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads);
+    void init(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads, bool set_log_function);
 
 private:
     boost::shared_ptr<ThriftHandler> _handler;
@@ -241,54 +247,55 @@ private:
 // 被thrift回调的写日志函数，由set_thrift_debug_log_function()调用它
 inline void write_thrift_debug_log(const char* log)
 {
-    MYLOG_DEBUG("%s", log);
+    if (::mooon::sys::g_logger != NULL)
+    {
+        MYLOG_DEBUG("%s", log);
+    }
 }
 
 inline void write_thrift_info_log(const char* log)
 {
-    MYLOG_INFO("%s", log);
+    if (::mooon::sys::g_logger != NULL)
+    {
+        MYLOG_INFO("%s", log);
+    }
 }
 
 inline void write_thrift_error_log(const char* log)
 {
-    MYLOG_ERROR("%s", log);
+    if (::mooon::sys::g_logger != NULL)
+    {
+        MYLOG_ERROR("%s", log);
+    }
 }
 
 // 将thrift输出写入到日志文件中
 inline void set_thrift_debug_log_function()
 {
-    if (::mooon::sys::g_logger != NULL)
-    {
-        apache::thrift::GlobalOutput.setOutputFunction(write_thrift_debug_log);
-    }
+    apache::thrift::GlobalOutput.setOutputFunction(write_thrift_debug_log);
 }
 
 inline void set_thrift_info_log_function()
 {
-    if (::mooon::sys::g_logger != NULL)
-    {
-        apache::thrift::GlobalOutput.setOutputFunction(write_thrift_info_log);
-    }
+    apache::thrift::GlobalOutput.setOutputFunction(write_thrift_debug_log);
 }
 
 inline void set_thrift_error_log_function()
 {
-    if (::mooon::sys::g_logger != NULL)
-    {
-        apache::thrift::GlobalOutput.setOutputFunction(write_thrift_error_log);
-    }
+    apache::thrift::GlobalOutput.setOutputFunction(write_thrift_debug_log);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 template <class ThriftClient, class Protocol, class Transport>
 CThriftClientHelper<ThriftClient, Protocol, Transport>::CThriftClientHelper(
         const std::string &host, uint16_t port,
-        int connect_timeout_milliseconds, int receive_timeout_milliseconds, int send_timeout_milliseconds)
+        int connect_timeout_milliseconds, int receive_timeout_milliseconds, int send_timeout_milliseconds, bool set_log_function)
         : _connect_timeout_milliseconds(connect_timeout_milliseconds),
           _receive_timeout_milliseconds(receive_timeout_milliseconds),
           _send_timeout_milliseconds(send_timeout_milliseconds)
 {
-    set_thrift_debug_log_function();
+    if (set_log_function)
+        set_thrift_debug_log_function();
     _socket.reset(new apache::thrift::transport::TSocket(host, port));
     init();
 }
@@ -301,12 +308,13 @@ CThriftClientHelper<ThriftClient, Protocol, Transport>::CThriftClientHelper(
         int send_timeout_milliseconds,
         int num_retries, int retry_interval,
         int max_consecutive_failures,
-        bool randomize, bool always_try_last)
+        bool randomize, bool always_try_last, bool set_log_function)
         : _connect_timeout_milliseconds(connect_timeout_milliseconds),
           _receive_timeout_milliseconds(receive_timeout_milliseconds),
           _send_timeout_milliseconds(send_timeout_milliseconds)
 {
-    set_thrift_debug_log_function();
+    if (set_log_function)
+        set_thrift_debug_log_function();
 
     apache::thrift::transport::TSocketPool* socket_pool = new apache::thrift::transport::TSocketPool(servers);
     socket_pool->setNumRetries(num_retries);
@@ -380,15 +388,15 @@ uint16_t CThriftClientHelper<ThriftClient, Protocol, Transport>::get_port() cons
 
 ////////////////////////////////////////////////////////////////////////////////
 template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serve(uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads)
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serve(uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads, bool set_log_function)
 {
-    serve("0.0.0.0", port, num_worker_threads, num_io_threads);
+    serve("0.0.0.0", port, num_worker_threads, num_io_threads, set_log_function);
 }
 
 template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads)
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads, bool set_log_function)
 {
-    init("0.0.0.0", port, num_worker_threads, num_io_threads);
+    init("0.0.0.0", port, num_worker_threads, num_io_threads, set_log_function);
 
     // 这里也可直接调用serve()，但推荐run()
     // !!!注意调用run()的进程或线程会被阻塞
@@ -397,9 +405,9 @@ void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serv
 }
 
 template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads, void* attached)
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serve(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads, void* attached, bool set_log_function)
 {
-    init(ip, port, num_worker_threads, num_io_threads);
+    init(ip, port, num_worker_threads, num_io_threads, set_log_function, set_log_function);
 
     // 关联
     if (attached != NULL)
@@ -412,9 +420,9 @@ void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serv
 }
 
 template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serve(uint16_t port, void* attached, uint8_t num_worker_threads, uint8_t num_io_threads)
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serve(uint16_t port, void* attached, uint8_t num_worker_threads, uint8_t num_io_threads, bool set_log_function)
 {
-    init("0.0.0.0", port, num_worker_threads, num_io_threads);
+    init("0.0.0.0", port, num_worker_threads, num_io_threads, set_log_function);
 
     // 关联
     if (attached != NULL)
@@ -434,9 +442,10 @@ void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::stop
 }
 
 template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
-void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::init(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads)
+void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::init(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads, bool set_log_function)
 {
-    set_thrift_debug_log_function();
+    if (set_log_function)
+        set_thrift_debug_log_function();
 
     _handler.reset(new ThriftHandler);
     _processor.reset(new ServiceProcessor(_handler));
