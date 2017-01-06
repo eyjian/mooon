@@ -57,12 +57,19 @@ CObjectCreator* CObjectFacotry::get_object_creator(const std::string& type_name)
 
 CObject* CObjectFacotry::create_object(const std::string& type_name) const
 {
-    CObject* object = NULL;
-    CObjectCreator* object_creator = get_object_creator(type_name);
+    if (type_name.empty())
+    {
+        return NULL;
+    }
+    else
+    {
+        CObject* object = NULL;
+        CObjectCreator* object_creator = get_object_creator(type_name);
 
-    if (object_creator != NULL)
-        object = object_creator->create_object();
-    return object;
+        if (object_creator != NULL)
+            object = object_creator->create_object();
+        return object;
+    }
 }
 
 UTILS_NAMESPACE_END
