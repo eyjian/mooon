@@ -18,6 +18,7 @@
 # 实际中，遇到脚本在crontab中运行时，找不到ls和ps等命令
 # 原来是有些环境ls和ps位于/usr/bin目录下，而不是常规的/bin目录
 export PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:$PATH
+trap "" SIGPIPE # 忽略SIGPIPE
 
 # 需要指定个数的命令行参数
 # 参数1：被监控的进程名（可以包含命令行参数）
@@ -123,6 +124,8 @@ while true; do
 
     active=1
     # sleep时间得长一点，原因是启动可能没那么快，以防止启动多个进程
+    # 在某些环境遇到sleep无效，正常sleep后“$?”值为0，则异常时变成“141”，
+    # 这个是因为收到了信号13，可以使用“trap '' SIGPIPE”忽略SIGPIPE。
     sleep $start_seconds
 done
 exit 0
