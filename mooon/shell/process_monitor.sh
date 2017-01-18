@@ -74,7 +74,7 @@ log()
 
     # 处理日志文件过大
     # 日志加上头[$process_cmdline]，用来区分对不同对象的监控
-    if test ! -z $file_size; then        
+    if test ! -z "$file_size"; then        
         if test $file_size -lt $log_filesize; then
             printf "[$process_cmdline]$record"
             printf "[$process_cmdline]$record" >> $log_filepath
@@ -95,26 +95,30 @@ log()
 # 一个重要原因是crontab最高频率为1分钟，不满足秒级的监控要求
 while true; do
     self_count=`ps -C $self_name h -o euser,args| awk 'BEGIN { num=0; } { if (($1==uid || $1==cur_user) && match($0, self_cmdline)) {++num;}} END { printf("%d",num); }' uid=$uid cur_user=$cur_user self_cmdline="$self_cmdline"`
-    if test $self_count -gt 2; then 
-        log "\033[0;32;31m[`date +'%Y-%m-%d %H:%M:%S'`]$0 is running[$self_count/active:$active], current user is $cur_user.\033[m\n"
-        # 经测试，正常情况下一般为2，
-        # 但运行一段时间后，会出现值为3，因此放在crontab中非常必要
-        # 如果监控脚本已经运行，则退出不重复运行
-        if test $active -eq 0; then
-            exit 1
+    if test ! -z "$self_count"; then 
+        if test $self_count -gt 2; then 
+            log "\033[0;32;31m[`date +'%Y-%m-%d %H:%M:%S'`]$0 is running[$self_count/active:$active], current user is $cur_user.\033[m\n"
+            # 经测试，正常情况下一般为2，
+            # 但运行一段时间后，会出现值为3，因此放在crontab中非常必要
+            # 如果监控脚本已经运行，则退出不重复运行
+            if test $active -eq 0; then
+                exit 1
+            fi
         fi
     fi
 
     # 检查被监控的进程是否存在，如果不存在则重启
-    if test -z $process_match; then
+    if test -z "$process_match"; then
         process_count=`ps -C $process_name h -o euser,args| awk 'BEGIN { num=0; } { if (($1==uid || $1==cur_user)) {++num;}} END { printf("%d",num); }' uid=$uid cur_user=$cur_user`
     else
         process_count=`ps -C $process_name h -o euser,args| awk 'BEGIN { num=0; } { if (($1==uid || $1==cur_user) && match($0, process_match)) {++num;}} END { printf("%d",num); }' uid=$uid cur_user=$cur_user process_match="$process_match"`
     fi
-    if test $process_count -lt 1; then
-        # 执行重启脚本，要求这个脚本能够将指定的进程拉起来
-        log "\033[0;32;34m[`date +'%Y-%m-%d %H:%M:%S'`]restart \"$process_cmdline\"\033[m\n"
-        sh -c "$restart_script" >> $log_filepath 2>&1 # 注意一定要以“sh -c”方式执行
+    if test ! -z "$process_count"; then
+        if test $process_count -lt 1; then
+            # 执行重启脚本，要求这个脚本能够将指定的进程拉起来
+            log "\033[0;32;34m[`date +'%Y-%m-%d %H:%M:%S'`]restart \"$process_cmdline\"\033[m\n"
+            sh -c "$restart_script" >> $log_filepath 2>&1 # 注意一定要以“sh -c”方式执行
+        fi
     fi
 
     active=1
