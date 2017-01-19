@@ -98,7 +98,7 @@ bool CMySQLConnection::is_duplicate_exception(int errcode) const
 
 bool CMySQLConnection::is_disconnected_exception(CDBException& db_error) const
 {
-    int errcode = db_error.errcode();
+    const int errcode = db_error.errcode();
 
     // ER_QUERY_INTERRUPTED：比如mysqld进程挂了
     // CR_SERVER_GONE_ERROR：比如客户端将连接close了
@@ -110,6 +110,12 @@ bool CMySQLConnection::is_disconnected_exception(CDBException& db_error) const
            (CR_CONNECTION_ERROR == errcode) ||   // Can't connect to local MySQL server through socket '%s' (%d)
            (CR_IPSOCK_ERROR == errcode) ||       // Can't create TCP/IP socket (%d)
            (CR_SERVER_HANDSHAKE_ERR == errcode); // Error in server handshake
+}
+
+bool CMySQLConnection::is_deadlock_exception(CDBException& db_error) const
+{
+    const int errcode = db_error.errcode();
+    return ER_LOCK_DEADLOCK == errcode;
 }
 
 std::string CMySQLConnection::escape_string(const std::string& str) const

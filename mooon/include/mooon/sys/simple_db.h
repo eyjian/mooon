@@ -78,6 +78,10 @@ public:
     // 判断是否为断开连接异常
     virtual bool is_disconnected_exception(CDBException& db_error) const { return false; }
 
+    // 是否发生死锁错误，
+    // 对于MySQL为：ER_LOCK_DEADLOCK(1213) Deadlock found when trying to get lock; try restarting transaction
+    virtual bool is_deadlock_exception(CDBException& db_error) const { return false; }
+
     // 对字符串进行编码，以防止SQL注入
     // str 需要编码的字符串，返回被编码后的字符串
     virtual std::string escape_string(const std::string& str) const = 0;
