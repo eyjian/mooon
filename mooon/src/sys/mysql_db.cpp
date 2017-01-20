@@ -119,6 +119,12 @@ bool CMySQLConnection::is_deadlock_exception(CDBException& db_error) const
     return ER_LOCK_DEADLOCK == errcode;
 }
 
+bool CMySQLConnection::is_shutdowning_exception(CDBException& db_error) const
+{
+    const int errcode = db_error.errcode();
+    return ER_SERVER_SHUTDOWN == errcode;
+}
+
 std::string CMySQLConnection::escape_string(const std::string& str) const
 {
     MOOON_ASSERT(_mysql_handler != NULL);

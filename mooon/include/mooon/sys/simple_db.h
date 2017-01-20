@@ -82,6 +82,10 @@ public:
     // 对于MySQL为：ER_LOCK_DEADLOCK(1213) Deadlock found when trying to get lock; try restarting transaction
     virtual bool is_deadlock_exception(CDBException& db_error) const { return false; }
 
+    // 关闭中
+    // 对于MySQL为：ER_SERVER_SHUTDOWN(1053) Server shutdown in progress 当执行关闭MySQL时
+    virtual bool is_shutdowning_exception(CDBException& db_error) const { return false; }
+
     // 对字符串进行编码，以防止SQL注入
     // str 需要编码的字符串，返回被编码后的字符串
     virtual std::string escape_string(const std::string& str) const = 0;

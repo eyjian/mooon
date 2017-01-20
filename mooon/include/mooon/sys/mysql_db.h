@@ -49,6 +49,7 @@ public:
     virtual bool is_duplicate_exception(int errcode) const; // errcode值为1062
     virtual bool is_disconnected_exception(CDBException& db_error) const;
     virtual bool is_deadlock_exception(CDBException& db_error) const;
+    virtual bool is_shutdowning_exception(CDBException& db_error) const;
 
     virtual std::string escape_string(const std::string& str) const;
     virtual void open() throw (CDBException);
