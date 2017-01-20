@@ -56,6 +56,7 @@ public:
     virtual void close() throw ();
     virtual void reopen() throw (CDBException);
 
+    // 如果update的值并没变化返回0，否则返回变修改的行数
     virtual int update(const char* format, ...) throw (CDBException) __attribute__((format(printf, 2, 3)));
     virtual std::string str() throw ();
 

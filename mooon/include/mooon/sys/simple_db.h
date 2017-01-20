@@ -207,7 +207,8 @@ public:
 
     /***
       * 数据库insert和update更新操作
-      * 成功返回受影响的记录个数，出错则抛出CDBException异常
+      * 对于MySQL如果update的值并没变化返回0，否则返回变修改的行数
+      * 出错则抛出CDBException异常
       */
     virtual int update(const char* format, ...) throw (CDBException) __attribute__((format(printf, 2, 3))) = 0;
 
