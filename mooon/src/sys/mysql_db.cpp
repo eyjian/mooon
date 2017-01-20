@@ -103,6 +103,7 @@ bool CMySQLConnection::is_disconnected_exception(CDBException& db_error) const
     // ER_QUERY_INTERRUPTED：比如mysqld进程挂了
     // CR_SERVER_GONE_ERROR：比如客户端将连接close了
     // CR_SERVER_LOST: 比如强制kill了MySQL连接
+    // ER_SERVER_SHUTDOWN(1053) Server shutdown in progress 当执行关闭MySQL时
     return (ER_QUERY_INTERRUPTED == errcode) ||  // Query execution was interrupted
            (CR_CONN_HOST_ERROR == errcode) ||    // Can't connect to MySQL server
            (CR_SERVER_GONE_ERROR == errcode) ||  // MySQL server has gone away
