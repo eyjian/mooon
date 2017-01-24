@@ -183,8 +183,8 @@ void child_process(IMainHelper* main_helper, int argc, char* argv[])
     // 设置环境变量TZ，以优化localtime、localtime_r和mktime的性能
     if (NULL == getenv("TZ"))
     {
-        setenv("TZ", "", 1);
-        //setenv("TZ", "Asia/Shanghai", 1);
+        //setenv("TZ", "", 1);
+        setenv("TZ", "Asia/Shanghai", 1);
     }
 
     // 请注意：只有在init成功后，才可以使用__MYLOG_INFO写日志，否则这个时候日志器可能还未created出来
