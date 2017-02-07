@@ -161,10 +161,11 @@ public:
       * 将一个字符串转换成日期时间格式
       * @str: 符合“YYYY-MM-DD HH:MM:SS”格式的日期时间
       * @datetime_struct: 存储转换后的日期时间
+      * @isdst: 值大于0时表示为夏令时，值为0表示非夏令时，值为负数表示未知，注意大于0的值严重影响性能
       * @return: 转换成功返回true，否则返回false
       */
-    static bool datetime_struct_from_string(const char* str, struct tm* datetime_struct);
-    static bool datetime_struct_from_string(const char* str, time_t* datetime);
+    static bool datetime_struct_from_string(const char* str, struct tm* datetime_struct, int isdst=0);
+    static bool datetime_struct_from_string(const char* str, time_t* datetime, int isdst=0);
 
     // 返回“YYYY-MM-DD HH:MM:SS”格式的日期时间
     static std::string to_string(time_t datetime, const char* format="%04d-%02d-%02d %02d:%02d:%02d");
