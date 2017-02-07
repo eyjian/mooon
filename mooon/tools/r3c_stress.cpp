@@ -35,6 +35,7 @@ STRING_ARG_DEFINE(prefix, "r3c", "key prefix");
 INTEGER_ARG_DEFINE(uint32_t, expire, 60, 1, 3600, "key expired seconds");
 INTEGER_ARG_DEFINE(uint8_t, verbose, 0, 0, 1, "print error");
 INTEGER_ARG_DEFINE(uint8_t, increments, 10, 1, 100, "number of increments for hmincrby");
+INTEGER_ARG_DEFINE(uint16_t, value_length, 10, 1, std::numeric_limits<uint16_t>::max(), "length of value");
 
 static atomic_t sg_success = 0;
 static atomic_t sg_failure = 0;
@@ -290,14 +291,15 @@ void rpop_test()
 ////////////////////////////////////////////////////////////////////////////////
 void set_stress_thread(uint8_t index)
 {
+    const std::string value(mooon::argument::value_length->value(), '*');
     r3c::CRedisClient redis(mooon::argument::redis->value());
+
     for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
     {
         const std::string key = mooon::utils::CStringUtils::format_string("%s_%d_%u", mooon::argument::prefix->c_value(), index, i);
 
         try
         {
-            const std::string value = mooon::utils::CStringUtils::int_tostring(i);
             const uint32_t expired_seconds = mooon::argument::expire->value();
             redis.setex(key, value, expired_seconds);
             atomic_inc(&sg_success);
@@ -314,6 +316,7 @@ void set_stress_thread(uint8_t index)
 void get_stress_thread(uint8_t index)
 {
     r3c::CRedisClient redis(mooon::argument::redis->value());
+
     for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
     {
         const std::string key = mooon::utils::CStringUtils::format_string("%s_%d_%u", mooon::argument::prefix->c_value(), index, i);
@@ -344,6 +347,7 @@ void get_stress_thread(uint8_t index)
 ////////////////////////////////////////////////////////////////////////////////
 void hset_stress_thread(uint8_t index)
 {
+    const std::string value(mooon::argument::value_length->value(), '*');
     const std::string key = mooon::utils::CStringUtils::format_string("%s_hash_%d", mooon::argument::prefix->c_value(), index);
     r3c::CRedisClient redis(mooon::argument::redis->value());
 
@@ -354,7 +358,6 @@ void hset_stress_thread(uint8_t index)
 
         try
         {
-            const std::string value = mooon::utils::CStringUtils::int_tostring(i);
             redis.hset(key, field, value);
             atomic_inc(&sg_success);
         }
@@ -431,6 +434,7 @@ void hmincrby_stress_thread(uint8_t index)
 ////////////////////////////////////////////////////////////////////////////////
 void lpush_stress_thread(uint8_t index)
 {
+    const std::string value(mooon::argument::value_length->value(), '*');
     const std::string key = mooon::utils::CStringUtils::format_string("%s_queue_%d", mooon::argument::prefix->c_value(), index);
     r3c::CRedisClient redis(mooon::argument::redis->value());
 
@@ -439,7 +443,6 @@ void lpush_stress_thread(uint8_t index)
     {
         try
         {
-            const std::string value = mooon::utils::CStringUtils::int_tostring(i);
             redis.lpush(key, value);
             atomic_inc(&sg_success);
         }
