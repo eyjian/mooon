@@ -146,6 +146,9 @@ private:
     void write_log(const char* log_line, int log_line_size);
 
 private:
+    int prepare_log_fd();
+
+private:
     CReadWriteLock _read_write_lock;
     int _log_fd;
 

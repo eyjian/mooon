@@ -533,38 +533,13 @@ void CSafeLogger::rotate_log()
 
 void CSafeLogger::write_log(const char* log_line, int log_line_size)
 {
-    int log_fd = -1;
+    CloseHelper<int> log_fd(prepare_log_fd());
+    if (-1 == log_fd.get())
     {
-        ReadLockHelper rlh(_read_write_lock);
-        if (_log_fd != -1)
-            log_fd = dup(_log_fd);
+        return; // 没法继续
     }
-    if (-1 == log_fd)
-    {
-        // 可能是因为文件还未打开过
-        WriteLockHelper rlh(_read_write_lock);
-        if (-1 == _log_fd)
-        {
-            _log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
-            if (-1 == _log_fd)
-            {
-                if (_sys_log_enabled)
-                    syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] open failed: %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), strerror(errno));
-                return; // 没法继续玩
-            }
-        }
 
-        log_fd = dup(_log_fd);
-        if (-1 == log_fd)
-        {
-            if (_sys_log_enabled)
-                syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] dup (%d) failed: %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), _log_fd, strerror(errno));
-            return; // 没法继续玩
-        }
-    }
-    CloseHelper<int> fdh(log_fd);
-
-    int bytes = write(log_fd, log_line, log_line_size);
+    int bytes = write(log_fd.get(), log_line, log_line_size);
     if (-1 == bytes)
     {
         if (_sys_log_enabled)
@@ -580,7 +555,7 @@ void CSafeLogger::write_log(const char* log_line, int log_line_size)
         try
         {
             // 判断是否需要滚动
-            if (need_rotate(log_fd))
+            if (need_rotate(log_fd.get()))
             {
                 std::string lock_path = _log_dir + std::string("/.") + _log_filename + std::string(".lock");
                 FileLocker file_locker(lock_path.c_str(), true); // 确保这里一定加锁
@@ -621,6 +596,42 @@ void CSafeLogger::write_log(const char* log_line, int log_line_size)
                 syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), strerror(errno));
         }
     }
+}
+
+int CSafeLogger::prepare_log_fd()
+{
+    int log_fd = -1;
+    {
+        ReadLockHelper rlh(_read_write_lock);
+        if (_log_fd != -1)
+            log_fd = dup(_log_fd);
+    }
+
+    if (-1 == log_fd)
+    {
+        // 可能是因为文件还未打开过
+        WriteLockHelper rlh(_read_write_lock);
+        if (-1 == _log_fd)
+        {
+            _log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
+            if (-1 == _log_fd)
+            {
+                if (_sys_log_enabled)
+                    syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] open failed: %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), strerror(errno));
+                return -1; // 没法继续玩
+            }
+        }
+
+        log_fd = dup(_log_fd);
+        if (-1 == log_fd)
+        {
+            if (_sys_log_enabled)
+                syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] dup (%d) failed: %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), _log_fd, strerror(errno));
+            return -1; // 没法继续玩
+        }
+    }
+
+    return log_fd;
 }
 
 SYS_NAMESPACE_END
