@@ -26,11 +26,24 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+// 1073741824 = 1024*1024*1024
+// 838860800 = 1024*1024*800
+// 压测非滚动时：./test_safe_logger --lines=10000 --size=1073741824 --processes=6 --threads=12
+// 压测滚动1：./test_safe_logger --lines=2 --size=1024 --processes=1 --threads=2
+// 压测滚动2：./test_safe_logger --lines=10000 --size=1024000 --processes=1 --threads=1
+// 压测滚动3：./test_safe_logger --lines=100 --size=1024000 --processes=10 --threads=1
+// 压测滚动4：./test_safe_logger --lines=100 --size=1024000 --processes=1 --threads=10
+// 压测滚动5：./test_safe_logger --lines=100 --size=1024000 --processes=2 --threads=10
+// 压测滚动6：./test_safe_logger --lines=1000 --size=1024000 --processes=2 --threads=10
+// 压测滚动7：./test_safe_logger --lines=2000 --size=1024000 --processes=10 --threads=10
+// 压测滚动8：./test_safe_logger --lines=5000 --size=1024000 --processes=10 --threads=10
+
 INTEGER_ARG_DEFINE(int, threads, 10, 1, 100, "number of threads");
 INTEGER_ARG_DEFINE(int, processes, 10, 1, 100, "number of processes");
 INTEGER_ARG_DEFINE(int, lines, 10000, 1, 100000000, "number of lines");
 INTEGER_ARG_DEFINE(uint32_t, size, 1024*1024*800, 1024, 1024*1024*2000, "size of a single log file");
-INTEGER_ARG_DEFINE(uint16_t, backup, 100, 1, 1000, "backup number of log file");
+INTEGER_ARG_DEFINE(uint16_t, backup, 1000, 1, 10000, "backup number of log file");
+INTEGER_ARG_DEFINE(uint8_t, enable_syslog, 0, 0, 1, "enable write syslog when error");
 STRING_ARG_DEFINE(suffix, "", "suffix of log filename");
 MOOON_NAMESPACE_USE
 
@@ -75,18 +88,9 @@ static void foo(int index)
     }
 
     delete []str;
-    MYLOG_RELEASE();
     //fprintf(stdout, "thread(%u,%lu) exit now: %d\n", getpid(), pthread_self(), lines);
 }
 
-// 1073741824 = 1024*1024*1024
-// 838860800 = 1024*1024*800
-// 压测非滚动时：./test_safe_logger --lines=10000 --size=1073741824 --processes=6 --threads=12
-// 压测滚动1：./test_safe_logger --lines=2 --size=1024 --processes=1 --threads=2
-// 压测滚动2：./test_safe_logger --lines=10000 --size=1024000 --processes=1 --threads=1
-// 压测滚动3：./test_safe_logger --lines=100 --size=1024000 --processes=10 --threads=1
-// 压测滚动4：./test_safe_logger --lines=100 --size=1024000 --processes=1 --threads=10
-// 压测滚动5：./test_safe_logger --lines=100 --size=1024000 --processes=2 --threads=10
 int main(int argc, char* argv[])
 {
     std::string errmsg;
@@ -99,8 +103,7 @@ int main(int argc, char* argv[])
     try
     {
         pid_t pid;
-        //::mooon::sys::g_logger = sys::create_safe_logger(".", "test");
-        ::mooon::sys::g_logger = sys::create_safe_logger(true, SIZE_8K, argument::suffix->value());
+        ::mooon::sys::g_logger = sys::create_safe_logger(true, SIZE_8K, argument::suffix->value(), 1==mooon::argument::enable_syslog->value());
         sys::g_logger->set_single_filesize(argument::size->value());
         sys::g_logger->set_backup_number(argument::backup->value());
         sys::g_logger->set_log_level(sys::LOG_LEVEL_DETAIL);
@@ -136,7 +139,6 @@ int main(int argc, char* argv[])
 
                 if (argument::processes->value() > 1)
                 {
-                    MYLOG_RELEASE();
                     exit(0);
                 }
             }
@@ -144,7 +146,6 @@ int main(int argc, char* argv[])
 
         MYLOG_INFO("hello\n");
         MYLOG_ERROR("%s\n", "world");
-        MYLOG_RELEASE();
         delete ::mooon::sys::g_logger;
         ::mooon::sys::g_logger = NULL;
 
@@ -183,7 +184,7 @@ int main(int argc, char* argv[])
         fprintf(stdout, "all processes lines: %d\n", all_processes_lines);
         fprintf(stdout, "total lines: %d\n", total_lines);
         fprintf(stdout, "press ENTER to exit\n");
-        getchar();
+        //getchar();
     }
     catch (sys::CSyscallException& syscall_ex)
     {

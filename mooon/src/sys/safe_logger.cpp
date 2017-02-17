@@ -17,6 +17,7 @@
  * Author: jian yi, eyjian@qq.com or eyjian@gmail.com or eyjian@live.com
  */
 #include "mooon/sys/safe_logger.h"
+#include "mooon/sys/close_helper.h"
 #include "mooon/sys/datetime_utils.h"
 #include "mooon/sys/file_locker.h"
 #include "mooon/sys/file_utils.h"
@@ -27,18 +28,18 @@
 #include <sstream>
 #include <syslog.h>
 #include <unistd.h>
-
-#define WRITE_SYSLOG 0 // 出错时是否记录系统日志，1表示记录
 SYS_NAMESPACE_BEGIN
 
-// 线程级别的
-static __thread int sg_thread_log_fd = -1;
+static uint64_t get_current_thread_id()
+{
+    return static_cast<uint64_t>(pthread_self());
+}
 
-CSafeLogger* create_safe_logger(bool enable_program_path, uint16_t log_line_size, const std::string& suffix) throw (CSyscallException)
+CSafeLogger* create_safe_logger(bool enable_program_path, uint16_t log_line_size, const std::string& suffix, bool enable_syslog) throw (CSyscallException)
 {
     const std::string log_dirpath = get_log_dirpath(enable_program_path);
     const std::string log_filename = get_log_filename(suffix);
-    CSafeLogger* logger = new CSafeLogger(log_dirpath.c_str(), log_filename.c_str(), log_line_size);
+    CSafeLogger* logger = new CSafeLogger(log_dirpath.c_str(), log_filename.c_str(), log_line_size, enable_syslog);
 
     set_log_level_by_env(logger);
     enable_screen_log_by_env(logger);
@@ -49,14 +50,14 @@ CSafeLogger* create_safe_logger(bool enable_program_path, uint16_t log_line_size
     return logger;
 }
 
-CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std::string& cpp_filename, uint16_t log_line_size) throw (CSyscallException)
+CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std::string& cpp_filename, uint16_t log_line_size, bool enable_syslog) throw (CSyscallException)
 {
     char* cpp_filepath = strdup(cpp_filename.c_str());
     std::string only_filename = basename(cpp_filepath);
     free(cpp_filepath);
 
     std::string log_filename = utils::CStringUtils::replace_suffix(only_filename, ".log");
-    CSafeLogger* logger = new CSafeLogger(log_dirpath.c_str(), log_filename.c_str(), log_line_size);
+    CSafeLogger* logger = new CSafeLogger(log_dirpath.c_str(), log_filename.c_str(), log_line_size, enable_syslog);
 
     set_log_level_by_env(logger);
     enable_screen_log_by_env(logger);
@@ -68,9 +69,11 @@ CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std::strin
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-CSafeLogger::CSafeLogger(const char* log_dir, const char* log_filename, uint16_t log_line_size) throw (CSyscallException)
-    :_auto_adddot(false)
+CSafeLogger::CSafeLogger(const char* log_dir, const char* log_filename, uint16_t log_line_size, bool enable_syslog) throw (CSyscallException)
+    :_log_fd(-1)
+    ,_auto_adddot(false)
     ,_auto_newline(true)
+    ,_sys_log_enabled(enable_syslog)
     ,_bin_log_enabled(false)
     ,_trace_log_enabled(false)
     ,_raw_log_enabled(false)
@@ -88,48 +91,34 @@ CSafeLogger::CSafeLogger(const char* log_dir, const char* log_filename, uint16_t
     if (_log_line_size > LOG_LINE_SIZE_MAX)
         _log_line_size = LOG_LINE_SIZE_MAX;
 
-    int log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
-    if (-1 == log_fd)
+    // 出错时记录系统日志
+    if (_sys_log_enabled)
+        openlog("mooon-safe-logger", LOG_CONS|LOG_PID, 0);
+
+    _log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
+    if (-1 == _log_fd)
     {
         int errcode = errno;
-        fprintf(stderr, "[%d:%lu] SafeLogger open %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str());
+        if (_sys_log_enabled)
+            syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] open failed: %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), strerror(errcode));
 
         THROW_SYSCALL_EXCEPTION(NULL, errcode, "open");
-    }
-    else
-    {
-        close(log_fd);
     }
 }
 
 CSafeLogger::~CSafeLogger()
 {
-    (void)release();
-}
-
-int CSafeLogger::release()
-{
-    int ret = 0;
-    if (sg_thread_log_fd != -1)
+    if (_log_fd != -1)
     {
-#if 0 // 由系统决定何时fsync
-        ret = fsync(sg_thread_log_fd);
-        if (-1 == ret)
+        if (close(_log_fd) != 0)
         {
-            fprintf(stderr, "process(%u,%lu) fsync fd(%d) error: %m\n", getpid(), pthread_self(), sg_thread_log_fd);
-        }
-        else
-#endif
-        {
-            ret = close(sg_thread_log_fd);
-            if (0 == ret)
-                sg_thread_log_fd = -1;
-            else
-                fprintf(stderr, "process(%u,%lu) close fd(%d) error: %m\n", getpid(), pthread_self(), sg_thread_log_fd);
+            if (_sys_log_enabled)
+                syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] close failed: %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), strerror(errno));
         }
     }
 
-    return ret;
+    if (_sys_log_enabled)
+        closelog();
 }
 
 void CSafeLogger::enable_screen(bool enabled)
@@ -406,18 +395,6 @@ void CSafeLogger::log_bin(const char* filename, int lineno, const char* module_n
     }
 }
 
-int CSafeLogger::get_thread_log_fd() const
-{
-    if (-1 == sg_thread_log_fd)
-    {
-        sg_thread_log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
-        if (-1 == sg_thread_log_fd)
-            fprintf(stderr, "open %s error: %m\n", _log_filepath.c_str());
-    }
-
-    return sg_thread_log_fd;
-}
-
 bool CSafeLogger::need_rotate(int fd) const
 {
     off_t file_size = CFileUtils::get_file_size(fd);
@@ -443,7 +420,7 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
 
         // 日志头内容：[日期][线程ID/进程ID][日志级别][模块名][代码文件名][代码行号]
         log_header << "[" << datetime << "]"
-                   << "[" << pthread_self() << "/" << getpid() << "]"
+                   << "[" << get_current_thread_id() << "/" << getpid() << "]"
                    << "[" << get_log_level_name(log_level) << "]";
         if (module_name != NULL)
             log_header << "[" << module_name << "]";
@@ -497,21 +474,7 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
     else
     {
         // 同步写入日志文件
-        int thread_log_fd = get_thread_log_fd();
-        if (thread_log_fd != -1)
-        {
-            write_log(thread_log_fd, log_line.get(), log_real_size);
-        }
-        else
-        {
-            fprintf(stderr, "process(%u,%lu) without thread log\n", getpid(), pthread_self());
-
-#if WRITE_SYSLOG==1
-            openlog("mooon-safe-logger", LOG_CONS|LOG_PID, 0);
-            syslog(LOG_ERR, "process(%u,%lu) without thread log\n", getpid(), pthread_self());
-            closelog();
-#endif // WRITE_SYSLOG
-        }
+        write_log(log_line.get(), log_real_size);
     }
 }
 
@@ -530,12 +493,18 @@ void CSafeLogger::rotate_log()
         if (0 == access(old_path.c_str(), F_OK))
         {
             if (-1 == rename(old_path.c_str(), new_path.c_str()))
-                fprintf(stderr, "[%d:%lu] SafeLogger rename %s to %s error: %m.\n", getpid(), pthread_self(), old_path.c_str(), new_path.c_str());
+            {
+                if (_sys_log_enabled)
+                    syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] rename to %s failed: %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), old_path.c_str(), new_path.c_str(), strerror(errno));
+            }
         }
         else
         {
             if (errno != ENOENT)
-                fprintf(stderr, "[%d:%lu] SafeLogger access %s error: %m.\n", getpid(), pthread_self(), old_path.c_str());
+            {
+                if (_sys_log_enabled)
+                    syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] access failed: %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), old_path.c_str(), strerror(errno));
+            }
         }
     }
 
@@ -546,51 +515,72 @@ void CSafeLogger::rotate_log()
         if (0 == access(_log_filepath.c_str(), F_OK))
         {
             if (-1 == rename(_log_filepath.c_str(), new_path.c_str()))
-                fprintf(stderr, "[%d:%lu] SafeLogger rename %s to %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str(), new_path.c_str());
+            {
+                if (_sys_log_enabled)
+                    syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] rename to %s failed: %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), new_path.c_str(), strerror(errno));
+            }
         }
         else
         {
             if (errno != ENOENT)
-                fprintf(stderr, "[%d:%lu] SafeLogger access %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str());
+            {
+                if (_sys_log_enabled)
+                    syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] access failed: %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), strerror(errno));
+            }
         }
-    }
-
-    // 重新创建
-    //fprintf(stdout, "[%d:%lu] SafeLogger create %s\n", getpid(), pthread_self(), _log_filepath.c_str());
-    int new_log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM); // O_EXCL
-    if (new_log_fd != -1)
-    {
-        sg_thread_log_fd = new_log_fd;
-    }
-    else
-    {
-        fprintf(stderr, "[%d:%lu] SafeLogger create %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str());
-
-#if WRITE_SYSLOG==1
-        openlog("mooon-safe-logger", LOG_CONS|LOG_PID, 0);
-        syslog(LOG_ERR, "[%d:%lu] SafeLogger create %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str());
-        closelog();
-#endif // WRITE_SYSLOG
     }
 }
 
-void CSafeLogger::write_log(int thread_log_fd, const char* log_line, int log_line_size)
+void CSafeLogger::write_log(const char* log_line, int log_line_size)
 {
-    int bytes = write(thread_log_fd, log_line, log_line_size);
+    int log_fd = -1;
+    {
+        ReadLockHelper rlh(_read_write_lock);
+        if (_log_fd != -1)
+            log_fd = dup(_log_fd);
+    }
+    if (-1 == log_fd)
+    {
+        // 可能是因为文件还未打开过
+        WriteLockHelper rlh(_read_write_lock);
+        if (-1 == _log_fd)
+        {
+            _log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
+            if (-1 == _log_fd)
+            {
+                if (_sys_log_enabled)
+                    syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] open failed: %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), strerror(errno));
+                return; // 没法继续玩
+            }
+        }
+
+        log_fd = dup(_log_fd);
+        if (-1 == log_fd)
+        {
+            if (_sys_log_enabled)
+                syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] dup (%d) failed: %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), _log_fd, strerror(errno));
+            return; // 没法继续玩
+        }
+    }
+    CloseHelper<int> fdh(log_fd);
+
+    int bytes = write(log_fd, log_line, log_line_size);
     if (-1 == bytes)
     {
-        fprintf(stderr, "[%d:%lu] SafeLogger[%d] write error: %m\n", getpid(), pthread_self(), thread_log_fd);
+        if (_sys_log_enabled)
+            syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] write failed: %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), strerror(errno));
     }
     else if (0 == bytes)
     {
-        fprintf(stderr, "[%d:%lu] write nothing: SafeLogger[%d]\n", getpid(), pthread_self(), thread_log_fd);
+        if (_sys_log_enabled)
+            syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] write failed: %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), strerror(errno));
     }
     else if (bytes > 0)
     {
         try
         {
             // 判断是否需要滚动
-            if (need_rotate(thread_log_fd))
+            if (need_rotate(log_fd))
             {
                 std::string lock_path = _log_dir + std::string("/.") + _log_filename + std::string(".lock");
                 FileLocker file_locker(lock_path.c_str(), true); // 确保这里一定加锁
@@ -599,35 +589,36 @@ void CSafeLogger::write_log(int thread_log_fd, const char* log_line, int log_lin
                 int new_log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
                 if (-1 == new_log_fd)
                 {
-                    fprintf(stderr, "[%d:%lu] SafeLogger open %s error: %m\n", getpid(), pthread_self(), _log_filepath.c_str());
+                    if (_sys_log_enabled)
+                        syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] open failed: %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), strerror(errno));
                 }
                 else
                 {
                     try
                     {
-                        release();
-
-                        if (!need_rotate(new_log_fd))
-                        {
-                            // 其它进程或线程抢先做了滚动
-                            sg_thread_log_fd = new_log_fd;
-                        }
-                        else
-                        {
-                            close(new_log_fd);
+                        if (need_rotate(new_log_fd))
                             rotate_log();
-                        }
+
+                        // 不管谁滚动的，都需要重设_log_fd，
+                        // 原因是如果是由其它进程滚动的，则当前进程的_log_fd是不会变化的
+                        WriteLockHelper rlh(_read_write_lock);
+                        if (0 == close(_log_fd))
+                            _log_fd = new_log_fd;
+                        else
+                            close(new_log_fd);
                     }
                     catch (CSyscallException& syscall_ex)
                     {
-                        fprintf(stderr, "[%d:%lu] SafeLogger[%d] rotate error: %s.\n", getpid(), pthread_self(), new_log_fd, syscall_ex.str().c_str());
+                        if (_sys_log_enabled)
+                            syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), strerror(errno));
                     }
                 }
             }
         }
         catch (CSyscallException& syscall_ex)
         {
-            fprintf(stderr, "[%d:%lu] SafeLogger[%d] rotate error: %s\n", getpid(), pthread_self(), thread_log_fd, syscall_ex.str().c_str());
+            if (_sys_log_enabled)
+                syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), strerror(errno));
         }
     }
 }

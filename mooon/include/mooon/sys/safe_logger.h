@@ -20,7 +20,7 @@
 #define MOOON_SYS_SAFE_LOGGER_H
 #include <mooon/sys/log.h>
 #include <mooon/sys/atomic.h>
-#include <mooon/sys/lock.h>
+#include <mooon/sys/read_write_lock.h>
 #include <mooon/sys/syscall_exception.h>
 #include <stdio.h>
 SYS_NAMESPACE_BEGIN
@@ -47,7 +47,7 @@ class CSafeLogger;
 // 假设程序名为test，后缀为空则日志文件名为test.log，如果后缀为6789则日志文件名为test_6789.log
 //
 // 若因目录和文件名，或者创建、打开文件权限等问题，则会抛出CSyscallException异常
-extern CSafeLogger* create_safe_logger(bool enable_program_path=true, uint16_t log_line_size=SIZE_8K, const std::string& suffix=std::string("")) throw (CSyscallException);
+extern CSafeLogger* create_safe_logger(bool enable_program_path=true, uint16_t log_line_size=SIZE_8K, const std::string& suffix=std::string(""), bool enable_syslog=false) throw (CSyscallException);
 
 // 根据程序文件创建CSafeLogger
 // 若因目录和文件名，或者创建、打开文件权限等问题，则会抛出CSyscallException异常
@@ -57,7 +57,7 @@ extern CSafeLogger* create_safe_logger(bool enable_program_path=true, uint16_t l
 // 2) 假设CGI的cpp文件名为mooon.cc，则日志文件名为mooon.log
 // 使用示例：
 // mooon::sys::g_logger = create_safe_logger(logdir, __FILE__);
-extern CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std::string& cpp_filename, uint16_t log_line_size=8192) throw (CSyscallException);
+extern CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std::string& cpp_filename, uint16_t log_line_size=8192, bool enable_syslog=false) throw (CSyscallException);
 
 /**
   * 多线程和多进程安全的日志器
@@ -65,9 +65,8 @@ extern CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std
 class CSafeLogger: public ILogger
 {
 public:
-    CSafeLogger(const char* log_dir, const char* log_filename, uint16_t log_line_size=8192) throw (CSyscallException);
+    CSafeLogger(const char* log_dir, const char* log_filename, uint16_t log_line_size=8192, bool enable_syslog=false) throw (CSyscallException);
     virtual ~CSafeLogger();
-    virtual int release();
 
     /** 是否允许同时在标准输出上打印日志 */
     virtual void enable_screen(bool enabled);
@@ -141,17 +140,21 @@ public:
     virtual void log_bin(const char* filename, int lineno, const char* module_name, const char* log, uint16_t size);
 
 private:
-    int get_thread_log_fd() const;
     bool need_rotate(int fd) const;
     void do_log(log_level_t log_level, const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
     void rotate_log();
-    void write_log(int thread_log_fd, const char* log_line, int log_line_size);
+    void write_log(const char* log_line, int log_line_size);
+
+private:
+    CReadWriteLock _read_write_lock;
+    int _log_fd;
 
 private:
     bool _auto_adddot;
     bool _auto_newline;
     uint16_t _log_line_size;
     atomic_t _log_level;
+    bool _sys_log_enabled;
     bool _bin_log_enabled;
     bool _trace_log_enabled;
     bool _raw_log_enabled;
