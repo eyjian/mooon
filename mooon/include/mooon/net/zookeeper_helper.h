@@ -37,7 +37,7 @@ NET_NAMESPACE_BEGIN
 // class CMyApplication: public CZookeeperHelper
 // {
 // private:
-//     virtual void on_zookeeper_connected(const std::string& path, char* data, int datalen);
+//     virtual void on_zookeeper_connected(const std::string& path, const char* data, int datalen);
 //     virtual void on_zookeeper_expired();
 //     virtual void on_zookeeper_exception(int errcode, const char* errmsg);
 // };
@@ -77,7 +77,7 @@ public: // 仅局限于被zk_watcher()调用，其它情况均不应当调用
     void zookeeper_expired();
 
 private: // 子类可以和需要重写的函数
-    virtual void on_zookeeper_connected(const std::string& path, char* data, int datalen) {}
+    virtual void on_zookeeper_connected(const std::string& path, const char* data, int datalen) {}
 
     // zookeeper会话过期事件
     // 可以调用reconnect_zookeeper()重连接zookeeper
