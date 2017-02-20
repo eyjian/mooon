@@ -90,14 +90,14 @@ private:
     std::string _data;
     std::string _zk_path;
     std::string _zk_nodes;
-    clientid_t* _zk_clientid;
     zhandle_t* _zk_handle;
+    const clientid_t* _zk_clientid;
     volatile bool _zk_connected;
     volatile bool _is_master;
 };
 
 inline CZookeeperHelper::CZookeeperHelper()
-    : _zk_clientid(NULL), _zk_handle(NULL), _zk_connected(false), _is_master(false)
+    : _zk_handle(NULL), _zk_clientid(NULL), _zk_connected(false), _is_master(false)
 {
 }
 
@@ -131,7 +131,7 @@ inline void CZookeeperHelper::connect_zookeeper(const std::string& zk_nodes, con
     _zk_path = zk_path;
     _zk_nodes = zk_nodes;
     _zk_handle = zookeeper_init(_zk_nodes.c_str(), zk_watcher, 5000, _zk_clientid, this, 0);
-    if (NULL == _zhandle)
+    if (NULL == _zk_handle)
     {
         THROW_EXCEPTION(zerror(errno), errno);
     }
@@ -139,7 +139,7 @@ inline void CZookeeperHelper::connect_zookeeper(const std::string& zk_nodes, con
 
 inline void CZookeeperHelper::close_zookeeper() throw (utils::CException)
 {
-    if (_zhandle != NULL)
+    if (_zk_handle != NULL)
     {
         int errcode = zookeeper_close(_zk_handle);
         if (errcode != ZOK)
@@ -148,7 +148,7 @@ inline void CZookeeperHelper::close_zookeeper() throw (utils::CException)
         }
         else
         {
-            _zhandle = NULL;
+            _zk_handle = NULL;
             _zk_clientid = NULL;
             _data.clear();
             _zk_path.clear();
@@ -162,7 +162,7 @@ inline void CZookeeperHelper::reconnect_zookeeper() throw (utils::CException)
     close_zookeeper();
 
     _zk_handle = zookeeper_init(_zk_nodes.c_str(), zk_watcher, 5000, _zk_clientid, this, 0);
-    if (NULL == _zhandle)
+    if (NULL == _zk_handle)
     {
         THROW_EXCEPTION(zerror(errno), errno);
     }
