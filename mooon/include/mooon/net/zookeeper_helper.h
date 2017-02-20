@@ -31,6 +31,10 @@
 NET_NAMESPACE_BEGIN
 #if HAVE_ZOOKEEPER == 1
 
+// 默认zookeeper日志输出到stderr，
+// 可以调用zoo_set_log_stream(FILE)设置输出到文件中
+// 还可以调用zoo_set_debug_level(ZooLogLevel)控制日志级别！！！
+
 // 提供基于zookeeper的主备切换接口
 //
 // 使用示例：
@@ -84,6 +88,7 @@ private: // 子类可以和需要重写的函数
     virtual void on_zookeeper_expired() {}
 
     // zookeeper异常，可以在日志中记录相应的错误信息
+    // (-101)no node，是由于没有创建好父路径
     virtual void on_zookeeper_exception(int errcode, const char* errmsg) {}
 
 private:
@@ -200,6 +205,7 @@ inline void CZookeeperHelper::zookeeper_connected(const std::string& path)
     int errcode = zoo_get(_zk_handle, _zk_path.c_str(), 1, data, &datalen, &stat);
     if (errcode != ZOK)
     {
+        // (-101)no node，是由于没有创建好父路径
         this->on_zookeeper_exception(errcode, zerror(errcode));
     }
     else
