@@ -89,7 +89,7 @@ std::string get_log_dirpath(bool enable_program_path)
         if (enable_program_path)
             log_dirpath = program_path;
 
-        fprintf(stderr, "get_log_filepath failed: %s\n", syscall_ex.str().c_str());
+        //fprintf(stderr, "get_log_filepath failed: %s\n", syscall_ex.str().c_str());
     }
 
     return log_dirpath;

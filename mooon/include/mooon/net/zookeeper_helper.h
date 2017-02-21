@@ -32,7 +32,7 @@ NET_NAMESPACE_BEGIN
 #if HAVE_ZOOKEEPER == 1
 
 // 默认zookeeper日志输出到stderr，
-// 可以调用zoo_set_log_stream(FILE)设置输出到文件中
+// 可以调用zoo_set_log_stream(FILE*)设置输出到文件中
 // 还可以调用zoo_set_debug_level(ZooLogLevel)控制日志级别！！！
 
 // 提供基于zookeeper的主备切换接口
@@ -41,9 +41,9 @@ NET_NAMESPACE_BEGIN
 // class CMyApplication: public CZookeeperHelper
 // {
 // private:
-//     virtual void on_zookeeper_connected(const std::string& path, const char* data, int datalen);
+//     virtual void on_zookeeper_connected(const std::string& path);
 //     virtual void on_zookeeper_expired();
-//     virtual void on_zookeeper_exception(int errcode, const char* errmsg);
+//     virtual void on_zookeeper_exception(int errcode, const char* errmsg, const char* path);
 // };
 class CZookeeperHelper
 {
@@ -70,7 +70,8 @@ public:
     void reconnect_zookeeper() throw (utils::CException);
 
     // 返回当前是否为master状态
-    bool is_master() const { return _is_master; }
+    volatile bool is_master() const { return _is_master; }
+    volatile bool is_connected() const { return _zk_connected; }
 
     // 切换到master状态
     // 总是只在is_master()返回false的前提下调用change_to_master()
@@ -81,7 +82,7 @@ public: // 仅局限于被zk_watcher()调用，其它情况均不应当调用
     void zookeeper_expired();
 
 private: // 子类可以和需要重写的函数
-    virtual void on_zookeeper_connected(const std::string& path, const char* data, int datalen) {}
+    virtual void on_zookeeper_connected(const std::string& path) {}
 
     // zookeeper会话过期事件
     // 可以调用reconnect_zookeeper()重连接zookeeper
@@ -89,7 +90,7 @@ private: // 子类可以和需要重写的函数
 
     // zookeeper异常，可以在日志中记录相应的错误信息
     // (-101)no node，是由于没有创建好父路径
-    virtual void on_zookeeper_exception(int errcode, const char* errmsg) {}
+    virtual void on_zookeeper_exception(int errcode, const char* errmsg, const char* path) {}
 
 private:
     std::string _data;
@@ -135,6 +136,9 @@ inline void CZookeeperHelper::connect_zookeeper(const std::string& zk_nodes, con
     _data = data;
     _zk_path = zk_path;
     _zk_nodes = zk_nodes;
+
+    // 当连接不上时，会报如下错误（默认输出到stderr，可通过zoo_set_log_stream(FILE*)输出到文件）：
+    // zk retcode=-4, errno=111(Connection refused): server refused to accept the client
     _zk_handle = zookeeper_init(_zk_nodes.c_str(), zk_watcher, 5000, _zk_clientid, this, 0);
     if (NULL == _zk_handle)
     {
@@ -198,22 +202,15 @@ inline void CZookeeperHelper::change_to_master() throw (utils::CException)
 
 inline void CZookeeperHelper::zookeeper_connected(const std::string& path)
 {
-    char data[mooon::SIZE_4K];
-    int datalen = static_cast<int>(sizeof(data));
-    struct Stat stat; // zookeeper定义的Stat
+    _zk_clientid = zoo_client_id(_zk_handle);
+    _zk_connected = true;
+    this->on_zookeeper_connected(path);
 
-    int errcode = zoo_get(_zk_handle, _zk_path.c_str(), 1, data, &datalen, &stat);
-    if (errcode != ZOK)
-    {
-        // (-101)no node，是由于没有创建好父路径
-        this->on_zookeeper_exception(errcode, zerror(errcode));
-    }
-    else
-    {
-        _zk_clientid = zoo_client_id(_zk_handle);
-        _zk_connected = true;
-        this->on_zookeeper_connected(path, data, datalen);
-    }
+    //char data[mooon::SIZE_4K];
+    //int datalen = static_cast<int>(sizeof(data));
+    //struct Stat stat; // zookeeper定义的Stat
+    //int errcode = zoo_get(_zk_handle, _zk_path.c_str(), 1, data, &datalen, &stat);
+    //if (errcode != ZOK)
 }
 
 inline void CZookeeperHelper::zookeeper_expired()
