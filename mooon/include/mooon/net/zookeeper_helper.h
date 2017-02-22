@@ -43,8 +43,22 @@ NET_NAMESPACE_BEGIN
 //
 // int main(int argc, char* argv[])
 // {
-//     CMyApplication myapp;
-//     myapp.work();
+//     try
+//     {
+//         CMyApplication myapp;
+//
+//         // 由于仅基于zookeeper的ZOO_EPHEMERAL结点实现互斥，没有组合使用ZOO_SEQUENCE，
+//         // 本实现要求主备结点的data不为能空也不能相同，最简单的做法是取各自的IP作为data参数。
+//
+//         // 请注意，在调用connect_zookeeper()或reconnect_zookeeper()后，
+//         // 都应当重新调用change_to_master()去竞争成为master，即使此时get_zk_data()仍然取得data。
+//         myapp.connect_zookeeper(zk_nodes, zk_path, data, session_timeout_seconds);
+//         myapp.work();
+//     }
+//     catch (mooon::utils::CException& ex)
+//     {
+//         MYLOG_ERROR("%s\n", ex.str().c_str());
+//     }
 //     return 0;
 // }
 //
@@ -66,23 +80,33 @@ NET_NAMESPACE_BEGIN
 //
 //         while (!_stop)
 //         {
-//             const NodeState node_state = get_node_state();
+//             try
+//             {
+//                 const NodeState node_state = get_node_state();
 //
-//             if (NODE_SLAVE == node_state)
-//             {
-//                 break;
+//                 if (NODE_SLAVE == node_state)
+//                 {
+//                     break;
+//                 }
+//                 else if (node_state != NODE_MASTER)
+//                 {
+//                     // 可能是因为连接不上zookeeper集群的任意节点
+//                     mooon::sys::CUtils::millisleep(2000);
+//                 }
+//                 else
+//                 {
+//                     // 多sleep一下，以让原来的master足够时间退出，
+//                     // 原因是原master不一定及时察觉到与zookeeper网络连接断开等，
+//                     // 这样做的目的是为了防止同时存在两个master！！！
+//                     mooon::sys::CUtils::millisleep(10000);
+//                     do_work();
+//                 }
 //             }
-//             else if (node_state != NODE_MASTER)
+//             catch (mooon::utils::CException& ex)
 //             {
-//                 // 可能是因为连接不上zookeeper集群的任意节点
-//                 mooon::sys::CUtils::millisleep(2000);
-//             }
-//             else
-//             {
-//                 // 多sleep一下，以让原来的master足够时间退出，
-//                 // 原因是原master不一定及时察觉到与zookeeper网络连接断开等。
-//                 mooon::sys::CUtils::millisleep(10000);
-//                 do_work();
+//                 MYLOG_ERROR("%s\n", ex.str().c_str());
+//                 if (node_not_exists_exception(ex.errcode()))
+//                     break;
 //             }
 //          }
 //     }
@@ -181,12 +205,21 @@ public:
     // zk_path zookeeper路径，使用时要求其父路径已存在
     // data 存在zk_path节点上的数据，主备节点设置的data不同相同，比如可以使用IP作为data
     // session_timeout_seconds zookeeper session超时时长，单位为秒，但实际值和zookeeper配置项minSessionTimeout和maxSessionTimeout相关
+    //
+    // 由于仅基于zookeeper的ZOO_EPHEMERAL结点实现互斥，没有组合使用ZOO_SEQUENCE，
+    // 本实现要求主备结点的data不为能空也不能相同，最简单的做法是取各自的IP作为data参数。
+    //
+    // 请注意，在调用connect_zookeeper()或reconnect_zookeeper()后，
+    // 都应当重新调用change_to_master()去竞争成为master，即使此时get_zk_data()仍然取得data。
     void connect_zookeeper(const std::string& zk_nodes, const std::string& zk_path, const std::string& data, int session_timeout_seconds=6) throw (utils::CException);
 
     // 关闭与zookeeper的连接
     void close_zookeeper() throw (utils::CException);
 
     // 重新建立与zookeeper的连接，重连接之前会先关闭和释放已建立连接的资源
+    //
+    // 请注意，在调用connect_zookeeper()或reconnect_zookeeper()后，
+    // 都应当重新调用change_to_master()去竞争成为master，即使此时get_zk_data()仍然取得data。
     void reconnect_zookeeper() throw (utils::CException);
 
     // 得到当前连接的zookeeper host
