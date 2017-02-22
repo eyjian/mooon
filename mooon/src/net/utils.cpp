@@ -379,6 +379,16 @@ std::string to_string(const sockaddr_in& addr)
     return to_string(addr.sin_addr) + std::string(":") + utils::CStringUtils::any2string(ntohs(addr.sin_port));
 }
 
+std::string to_string(const struct in6_addr& sin6_addr)
+{
+    return CUtils::ipv6_tostring(sin6_addr.s6_addr32);
+}
+
+std::string to_string(const sockaddr_in6& addr)
+{
+    return to_string(addr.sin6_addr) + std::string(":") + utils::CStringUtils::any2string(ntohs(addr.sin6_port));
+}
+
 std::string ip2string(uint32_t ip)
 {
     struct in_addr sin_addr;
