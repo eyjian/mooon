@@ -119,6 +119,7 @@ NET_NAMESPACE_BEGIN
 //
 //     virtual void on_zookeeper_session_expired(const char *path)
 //     {
+//         // 当session过期后（expired），要想继续使用则应当重连接，而且不能使用原来的ClientId重连接
 //         const NodeState raw_node_state = get_raw_node_state();
 //
 //         if (raw_node_state != NODE_SLAVE)
@@ -285,6 +286,8 @@ private:
     // 但请注意，重连接成功后需要重新调用change_to_master()去竞争成为master，
     // 简单点的做法是session过期后退出当前进程，通过重新启动的方式来竞争成为master，
     // 这样只需要在进程启动时，但还未进入工作之前调用change_to_master()去竞争成为master。
+    //
+    // 当session过期后（expired），要想继续使用则应当重连接，而且不能使用原来的ClientId重连接
     virtual void on_zookeeper_session_expired(const char *path) {}
 
     // session类zookeeper事件
