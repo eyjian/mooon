@@ -119,11 +119,28 @@ NET_NAMESPACE_BEGIN
 //
 //     virtual void on_zookeeper_session_expired(const char *path)
 //     {
-//         _stop = true;
-//         MYLOG_ERROR("will exit, zookeeper[%s] expired: %s\n", get_connected_host().c_str(), path);
+//         const NodeState raw_node_state = get_raw_node_state();
 //
-//         // 除了退出进程外，也可以采取调用reconnect_zookeeper()重连接，
-//         // 然后再调用change_to_master()竞争成为master，但显然退出重启方式更为简单，不过时效性稍差。
+//         if (raw_node_state != NODE_SLAVE)
+//         {
+//             _stop = true;
+//             MYLOG_ERROR("will exit, zookeeper[%s] expired: %s\n", get_connected_host().c_str(), path);
+//
+//             // 除了退出进程外，也可以采取调用reconnect_zookeeper()重连接，
+//             // 然后再调用change_to_master()竞争成为master，但显然退出重启方式更为简单，不过时效性稍差。
+//         }
+//         else
+//         {
+//             try
+//             {
+//                 reconnect_zookeeper();
+//             }
+//             catch (mooon::utils::CException& ex)
+//             {
+//                 MYLOG_ERROR("will exit: %s\n", ex.str().c_str());
+//                 _stop = true;
+//             }
+//         }
 //     }
 //
 //     virtual void on_zookeeper_session_event(int state, const char *path)
@@ -172,6 +189,16 @@ public:
         NODE_SLAVE     = 2, // 明确为slave
         NODE_UNCERTAIN = 3  // 可能为master，但也可能为slave，此状态时应当去查看data是否为自己，如果是则为master否则不是master了
     };
+
+    static const char* node_state2string(NodeState node_state)
+    {
+        static const char* node_state_str[] = { "", "master", "slave", "uncertain" };
+
+        if ((node_state < 0) || (node_state > 3))
+            return "";
+        else
+            return node_state_str[node_state];
+    }
 
 public:
     static bool node_exists_exception(int errcode) { return ZNODEEXISTS == errcode; }
@@ -230,7 +257,10 @@ public:
     bool is_connected() const;
 
     // 取得节点状态
+    // get_node_state()和get_raw_node_state()的区分：
+    // 前者实时取真实的状态，后者直接返回最近一次保存的状态。
     NodeState get_node_state();
+    NodeState get_raw_node_state() const { return _node_state; }
 
     // 取得实际的zookeeper session超时时长，单位为秒
     int get_session_timeout_seconds() const;
@@ -309,7 +339,7 @@ inline static void zk_watcher(zhandle_t *zh, int type, int state, const char *pa
 }
 
 inline CZookeeperHelper::CZookeeperHelper()
-    : _session_timeout_seconds(10), _zk_handle(NULL), _zk_clientid(NULL), _node_state(NODE_UNCERTAIN)
+    : _session_timeout_seconds(10), _zk_handle(NULL), _zk_clientid(NULL), _node_state(NODE_SLAVE)
 {
 }
 
@@ -382,6 +412,7 @@ inline void CZookeeperHelper::close_zookeeper() throw (utils::CException)
         {
             _zk_handle = NULL;
             _zk_clientid = NULL;
+            _node_state = NODE_SLAVE;
         }
     }
 }
@@ -498,8 +529,8 @@ inline void CZookeeperHelper::zookeeper_session_connected(const char* path)
 
 inline void CZookeeperHelper::zookeeper_session_expired(const char* path)
 {
-    _node_state = NODE_SLAVE;
     this->on_zookeeper_session_expired(path);
+    _node_state = NODE_SLAVE;
 }
 
 inline void CZookeeperHelper::zookeeper_session_event(int state, const char *path)
