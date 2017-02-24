@@ -122,7 +122,9 @@ public:
       * @return: 如果转换成功返回true，否则返回false
       */
     static bool string2int(const char* source, int64_t& result, uint8_t converted_length=0, bool ignored_zero=false);
-    static bool string2int64(const char* source, int64_t& result, uint8_t converted_length=0, bool ignored_zero=false);    
+    static bool string2int64(const char* source, int64_t& result, uint8_t converted_length=0, bool ignored_zero=false);
+    static bool string2time_t(const char* source, time_t& result, uint8_t converted_length=0, bool ignored_zero=false);
+    static bool string2size_t(const char* source, size_t& result, uint8_t converted_length=0, bool ignored_zero=false);
 
     /** 将字符串转换成8位的无符号整数
       * @source: 待转换成整数的字符串

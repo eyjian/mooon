@@ -375,6 +375,50 @@ bool CStringUtils::string2int(const char* source, int64_t& result, uint8_t conve
     return true;
 }
 
+bool CStringUtils::string2time_t(const char* source, time_t& result, uint8_t converted_length, bool ignored_zero)
+{
+    // time_t是一个有符号类型，
+    // 32位time_t可能是long的别名，不同于int，虽然字节数可能相同
+    if (sizeof(time_t) == sizeof(int64_t))
+    {
+        int64_t result64;
+        if (!string2int64(source, result64, converted_length, ignored_zero))
+            return false;
+        result = static_cast<time_t>(result64);
+    }
+    else
+    {
+        int32_t result32;
+        if (!string2int32(source, result32, converted_length, ignored_zero))
+            return false;
+        result = static_cast<time_t>(result32);
+    }
+
+    return true;
+}
+
+bool CStringUtils::string2size_t(const char* source, size_t& result, uint8_t converted_length, bool ignored_zero)
+{
+    // size_t是一个无符号类型，
+    // 32位size_t可能是unsigned long的别名，不同于unsigned int，虽然字节数可能相同
+    if (sizeof(size_t) == sizeof(uint64_t))
+    {
+        uint64_t result64;
+        if (!string2uint64(source, result64, converted_length, ignored_zero))
+            return false;
+        result = static_cast<size_t>(result64);
+    }
+    else
+    {
+        uint32_t result32;
+        if (!string2uint32(source, result32, converted_length, ignored_zero))
+            return false;
+        result = static_cast<size_t>(result32);
+    }
+
+    return true;
+}
+
 bool CStringUtils::string2uint8(const char* source, uint8_t& result, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, result, converted_length, ignored_zero);
