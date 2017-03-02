@@ -625,6 +625,19 @@ int64_t CDatetimeUtils::get_current_microseconds()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+uint64_t current_seconds()
+{
+    return static_cast<uint64_t>(time(NULL));
+}
+
+uint64_t current_milliseconds()
+{
+    struct timeval now;
+    (void)gettimeofday(&now, NULL);
+    return (now.tv_sec*1000) + (now.tv_usec/1000);
+}
+
 std::string today(const char* format)
 {
     return CDatetimeUtils::get_current_date(format);

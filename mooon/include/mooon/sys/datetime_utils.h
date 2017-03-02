@@ -183,6 +183,12 @@ public:
     static int64_t get_current_microseconds();
 };
 
+// 返回从1970-01-01 00:00:00以来的秒，返回值和time(NULL)的返回值相等
+extern uint64_t current_seconds();
+
+// 返回从1970-01-01 00:00:00以来的毫秒
+extern uint64_t current_milliseconds();
+
 // 返回今天
 extern std::string today(const char* format="%04d-%02d-%02d");
 // 返回昨天
