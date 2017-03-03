@@ -99,6 +99,30 @@ static bool fast_string2int(const char* str, IntType& result, uint8_t max_length
     return true;
 }
 
+std::string& CStringUtils::reverse_string(std::string* str)
+{
+    std::string& str_ref = *str;
+
+    for (std::string::size_type i=0; i<str_ref.size()/2; ++i)
+    {
+        const std::string::size_type left = i;
+        const std::string::size_type right = str_ref.size() - i - 1;
+        const char lelf_c = str_ref[left];
+        const char right_c = str_ref[right];
+        str_ref[left] = right_c;
+        str_ref[right] = lelf_c;
+    }
+
+    return str_ref;
+}
+
+std::string CStringUtils::reverse_string(const std::string& str)
+{
+    std::string reversed_str = str;
+    reverse_string(&reversed_str);
+    return reversed_str;
+}
+
 void CStringUtils::remove_last(std::string& source, char c)
 {
     std::string::size_type pos = source.rfind(c);

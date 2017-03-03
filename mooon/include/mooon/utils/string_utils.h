@@ -26,6 +26,18 @@ UTILS_NAMESPACE_BEGIN
 class CStringUtils
 {
 public:
+    // 反转字符串
+    // 输入空则啥也不做，输入单个字符则啥也不做，
+    // 输入12则变成21，输入123则变成321，输入1234则变成4321，依次类推。。。
+    // str 即是输入参数，也是输出参数，作为输入参数时存储被反转的字符串，作为输出参数存储反转后的字符串
+    // 返回值指向反转后的字符串
+    static std::string& reverse_string(std::string* str);
+
+    // 反转字符串
+    // str 被反转的字符串
+    // 返回值为反转后的字符串
+    static std::string reverse_string(const std::string& str);
+
     /** 删除字符串尾部从指定字符开始的内容
       * @source: 需要处理的字符串
       * @c: 分隔字符
