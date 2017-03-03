@@ -30,19 +30,29 @@ private:
 // libcurl包装类
 // 如果需要访问https，则在编译curl时需要指定configure的参数--with-ssl的值，值为openssl的安装目录
 //
+// 生成libcurl的Makefile：
+// configure --prefix=/usr/local/curl-7.42.1 --enable-ares=/usr/local/c-ares --with-ssl=/usr/local/openssl # --with-libssh2=/usr/local/libssh2
+//
 // 编译openssl-1.0.2h：
 // 1) ./config --prefix=/usr/local/openssl-1.0.2h shared threads
 // 2) make depend # openssl-1.0.2h之前的版本并不需要这一步
 // 3) make
 // 4) make install
+//
+// 注意：多线程中，一个线程只能有一个CCurlWrapper对象
 class CCurlWrapper
 {
 public:
+    // 非线程安全
+    // 多线程程序，应当在创建线程之前调用global_init一次
     static void global_init();
     static void global_cleanup();
 
 public:
-    CCurlWrapper(int timeout_seconds) throw (utils::CException);
+    // 对于CGI等单线程程序，nosignal为false即可，并且也不用指定c-ares，
+    // 但对于多线程使用curl的程序，则nosignal应当设定为true，并且应当指定c-ares，
+    // 指定nosignal为true时，DNS解析将不带超时，为此需要configure生成Makefile时指定c-ares（c-ares是一个异步DNS解析库）
+    CCurlWrapper(int data_timeout_seconds=2, int connect_timeout_seconds=2, bool nosignal=false) throw (utils::CException);
     ~CCurlWrapper() throw ();
 
     void reset() throw (utils::CException);
@@ -69,7 +79,9 @@ public:
 
 private:
     void* _curl;
-    int _timeout_seconds;
+    int _data_timeout_seconds;
+    int _connect_timeout_seconds;
+    bool _nosignal;
 };
 
 /*

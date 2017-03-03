@@ -112,6 +112,10 @@ if (HAVE_SQLITE3)
     endif ()
 endif ()
 
+# C-ares
+discover_library(CARES c-ares)
+#link_libraries(libcares.a)
+
 # Curl
 discover_library(CURL curl)
 #link_libraries(libcurl.a)

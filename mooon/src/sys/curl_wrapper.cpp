@@ -99,8 +99,8 @@ static size_t on_write_response_header(void* buffer, size_t size, size_t nmemb, 
     return size * nmemb;
 }
 
-CCurlWrapper::CCurlWrapper(int timeout_seconds) throw (utils::CException)
-    : _timeout_seconds(timeout_seconds)
+CCurlWrapper::CCurlWrapper(int data_timeout_seconds, int connect_timeout_seconds, bool nosignal) throw (utils::CException)
+    : _data_timeout_seconds(data_timeout_seconds), _connect_timeout_seconds(connect_timeout_seconds), _nosignal(nosignal)
 {
     CURL* curl = curl_easy_init();
     if (NULL == curl)
@@ -134,8 +134,32 @@ void CCurlWrapper::reset() throw (utils::CException)
     // 重置
     curl_easy_reset(curl);
 
+    // CURLOPT_NOSIGNAL
+    // If onoff is 1, libcurl will not use any functions that install signal handlers or any functions that cause signals to be sent to the process.
+    if (_nosignal)
+    {
+        // DNS解析阶段timeout的实现机制是通过SIGALRM+sigsetjmp/siglongjmp来实现的
+        // 解析前通过alarm设定超时时间，并设置跳转的标记
+        // 在等到超时后，进入alarmfunc函数实现跳转
+        // 如果设置了CURLOPT_NOSIGNAL，则DNS解析不设置超时时间
+        //
+        // 为解决DNS解析不超时问题，编译时指定c-ares（一个异步DNS解析库），configure参数：
+        // --enable-ares[=PATH]  Enable c-ares for DNS lookups
+        const long onoff = _nosignal? 1: 0;
+        errcode = curl_easy_setopt(curl, CURLOPT_NOSIGNAL, onoff);
+        if (errcode != CURLE_OK)
+            THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+    }
+
     // CURLOPT_TIMEOUT
-    errcode = curl_easy_setopt(curl, CURLOPT_TIMEOUT, _timeout_seconds);
+    // In unix-like systems, this might cause signals to be used unless CURLOPT_NOSIGNAL is set.
+    errcode = curl_easy_setopt(curl, CURLOPT_TIMEOUT, _data_timeout_seconds);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    // CURLOPT_CONNECTTIMEOUT
+    // In unix-like systems, this might cause signals to be used unless CURLOPT_NOSIGNAL is set.
+    errcode = curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, _connect_timeout_seconds);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
