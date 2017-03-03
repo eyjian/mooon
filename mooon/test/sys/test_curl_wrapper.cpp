@@ -17,28 +17,45 @@
  * Author: eyjian@qq.com or eyjian@gmail.com or eyjian@live.com
  */
 #include <mooon/sys/curl_wrapper.h>
+#include <mooon/utils/string_utils.h>
 MOOON_NAMESPACE_USE
 
 extern "C" int main(int argc, char* argv[])
 {
-    if (argc != 2)
+    if ((argc < 2) || (argc > 5))
     {
-        fprintf(stderr, "Usage: curl_get url\n");
+        fprintf(stderr, "Usage1: curl_get url, e.g., curl_get 'http://www.qq.com'\n");
+        fprintf(stderr, "Usage2: curl_get url data_timeout_seconds, e.g., curl_get 'http://www.abc123.com' 10\n");
+        fprintf(stderr, "Usage3: curl_get url data_timeout_seconds connect_timeout_seconds, e.g., curl_get 'http://www.abc123.com' 10 20\n");
+        fprintf(stderr, "Usage4: curl_get url data_timeout_seconds connect_timeout_seconds nosignal, e.g., curl_get 'http://www.abc123.com' 10 20 yes\n");
         exit(1);
     }
     
+    bool nosignal = false;
+    int data_timeout_seconds = 5;
+    int connect_timeout_seconds = 2;
+    const std::string url = argv[1];
+    if (argc > 2)
+        data_timeout_seconds = mooon::utils::CStringUtils::string2int<int>(argv[2]);
+    if (argc > 3)
+        connect_timeout_seconds = mooon::utils::CStringUtils::string2int<int>(argv[3]);
+    if (argc > 4)
+    {
+        nosignal = (0 == strcmp(argv[4], "yes"));
+    }
+
     try
     {
-        sys::CCurlWrapper curl_wrapper(2);
+        sys::CCurlWrapper curl_wrapper(data_timeout_seconds, connect_timeout_seconds, nosignal);
         std::string response_header;
         std::string response_body;
 
-        curl_wrapper.http_get(response_header, response_body, argv[1]);
+        curl_wrapper.http_get(response_header, response_body, url.c_str());
         printf("result =>\n%s\n", response_body.c_str());
 
         response_header.clear();
         response_body.clear();
-        curl_wrapper.http_get(response_header, response_body, argv[1]);
+        curl_wrapper.http_get(response_header, response_body, url.c_str());
         printf("result =>\n%s\n", response_body.c_str());
     }
     catch (utils::CException& ex)
