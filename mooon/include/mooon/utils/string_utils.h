@@ -21,6 +21,7 @@
 #include "mooon/utils/config.h"
 #include <math.h>
 #include <sstream>
+#include <vector>
 UTILS_NAMESPACE_BEGIN
 
 class CStringUtils
@@ -283,7 +284,7 @@ public:
       */
     static int chr_index(const char* str, char c);
     static int chr_rindex(const char* str, char c);
-    
+
     /***
       * 从文件路径中提取目录路径
       * @return 返回提取到的目录路径
@@ -371,6 +372,30 @@ public:
 
     static std::string char2hex(unsigned char c);
     static unsigned char hex2char(const std::string& hex);
+
+    // 扫描源字符串src，进行替换
+    // 返回值指向dest的字符串，dest替换后的完整字符串
+    // 注意src和dst不能为同一对象
+    //
+    // 假如src为azb，rules是<a,12>、<b,345>，则dest值为12z345
+    //
+    // 使用示例：
+    // int main()
+    // {
+    //     std::string str, dest;
+    //     std::vector<std::pair<char, std::string> > rules(2);
+    //     rules[0] = std::make_pair('<', "&lt;");
+    //     rules[1] = std::make_pair('>', "&gt;");
+    //
+    //     str = "<12>";
+    //     printf("%s\n", replace_string(str, &dest, rules).c_str());
+    //
+    //     return 0;
+    // }
+    //
+    // 运行输出：
+    // &lt;12&gt;
+    static const std::string& replace_string(const std::string& src, std::string* dest, const std::vector<std::pair<char, std::string> >& rules);
 };
 
 UTILS_NAMESPACE_END

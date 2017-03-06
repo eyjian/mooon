@@ -1092,4 +1092,29 @@ unsigned char CStringUtils::hex2char(const std::string& hex)
     return c;
 }
 
+const std::string& CStringUtils::replace_string(const std::string& src, std::string* dest, const std::vector<std::pair<char, std::string> >& rules)
+{
+    for (std::string::size_type i=0; i<src.size(); ++i)
+    {
+        bool have_replaced = false;
+
+        for (std::vector<std::pair<char, std::string> >::size_type j=0; j<rules.size(); ++j)
+        {
+            if (src[i] == rules[j].first)
+            {
+                dest->append(rules[j].second);
+                have_replaced = true;
+                break;
+            }
+        }
+
+        if (!have_replaced)
+        {
+            dest->push_back(src[i]);
+        }
+    }
+
+    return *dest;
+}
+
 UTILS_NAMESPACE_END
