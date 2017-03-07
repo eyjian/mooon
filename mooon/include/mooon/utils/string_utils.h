@@ -395,6 +395,7 @@ public:
     //
     // 运行输出：
     // &lt;12&gt;
+    static const std::string& replace_string(const char* src, std::string* dest, const std::vector<std::pair<char, std::string> >& rules);
     static const std::string& replace_string(const std::string& src, std::string* dest, const std::vector<std::pair<char, std::string> >& rules);
 };
 

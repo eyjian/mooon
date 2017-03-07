@@ -1092,9 +1092,9 @@ unsigned char CStringUtils::hex2char(const std::string& hex)
     return c;
 }
 
-const std::string& CStringUtils::replace_string(const std::string& src, std::string* dest, const std::vector<std::pair<char, std::string> >& rules)
+const std::string& CStringUtils::replace_string(const char* src, std::string* dest, const std::vector<std::pair<char, std::string> >& rules)
 {
-    for (std::string::size_type i=0; i<src.size(); ++i)
+    for (int i=0; src[i]!='\0'; ++i)
     {
         bool have_replaced = false;
 
@@ -1115,6 +1115,11 @@ const std::string& CStringUtils::replace_string(const std::string& src, std::str
     }
 
     return *dest;
+}
+
+const std::string& CStringUtils::replace_string(const std::string& src, std::string* dest, const std::vector<std::pair<char, std::string> >& rules)
+{
+    return replace_string(src.c_str(), dest, rules);
 }
 
 UTILS_NAMESPACE_END
