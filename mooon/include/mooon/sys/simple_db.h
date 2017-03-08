@@ -212,6 +212,11 @@ public:
       */
     virtual int update(const char* format, ...) throw (CDBException) __attribute__((format(printf, 2, 3))) = 0;
 
+    /***
+     * 取得insert_id，对MySQL有效
+     */
+    virtual uint64_t get_insert_id() const { return 0; }
+
     /**
      * 取得可读的字符串信息
      */

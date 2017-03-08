@@ -212,6 +212,13 @@ int CMySQLConnection::update(const char* format, ...) throw (CDBException)
     return static_cast<int>(mysql_affected_rows(mysql_handler));
 }
 
+uint64_t CMySQLConnection::get_insert_id() const
+{
+    MOOON_ASSERT(_mysql_handler != NULL);
+    MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
+    return static_cast<uint64_t>(mysql_insert_id(mysql_handler));
+}
+
 std::string CMySQLConnection::str() throw ()
 {
     return _id;

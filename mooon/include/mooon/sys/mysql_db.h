@@ -41,7 +41,7 @@ public:
 
     // 双引号转成：\"
     // 单引号转成：\'
-    // 单斜杠转成：\\
+    // 单斜杠转成双斜杠
     // 注意不转义#、%、,、;、&、-和_等
     static void escape_string(const std::string& str, std::string* escaped_str);
 
@@ -63,6 +63,7 @@ public:
 
     // 如果update的值并没变化返回0，否则返回变修改的行数
     virtual int update(const char* format, ...) throw (CDBException) __attribute__((format(printf, 2, 3)));
+    virtual uint64_t get_insert_id() const;
     virtual std::string str() throw ();
 
     virtual void ping() throw (CDBException);
