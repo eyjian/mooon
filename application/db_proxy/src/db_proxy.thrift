@@ -8,6 +8,14 @@ namespace py mooon.db_proxy
 typedef list<string> DBRow
 typedef list<DBRow> DBTable
 
+// Where语句结点：left op right
+struct Condition
+{
+    1: string op,
+    2: string left,
+    3: string right 
+}
+
 // 对应的配置文件为sql.json
 service DbProxyService
 {
@@ -22,11 +30,24 @@ service DbProxyService
     // limit - limit_start的值不能超过1000，如果limit_start的值小于0则limit的值不能超过1000，
     // 1000的限制是为了保护db_proxy自身和后端的mysql，以防止一次请求返回过大的数据将两者撑死。
     DBTable query(1: string sign, 2: i32 seq, 3: i32 query_index, 4: list<string> tokens, 5: i32 limit, 6: i32 limit_start)
-    
+
     // DB更新和插入
     // 返回更新或插入的记录数
     i32 update(1: string sign, 2: i32 seq, 3: i32 update_index, 4: list<string> tokens)
-    
+
     // update()的异步版本
     oneway void async_update(1: string sign, 2: i32 seq, 3: i32 update_index, 4: list<string> tokens)
+
+    // 根据参数自动拼接sql，不需要模版
+    // conditions Where条件结点，只有AND关系，如：(conditions[0].left op conditions[0].right) AND (conditions[1].left op conditions[1].right)
+    // UPDATE tablename (tokens[0].first,tokens[1].first) VALUES (tokens[0].second,tokens[1].second) WHERE (condtion[0].left op condtion[0].right) 
+    i32 update2(1: i32 seq, 2: i32 database_index, 3: string tablename, 4: map<string, string> tokens, 5: list<Condition> conditions)
+
+    // 根据参数自动拼接sql，不需要模版
+    // INSERT INTO tablename (tokens[0].first,tokens[1].first) VALUES (tokens[0].second,tokens[1].second)
+    i32 insert2(1: i32 seq, 2: i32 database_index, 3: string tablename, 4: map<string, string> tokens)
+
+    // 根据参数自动拼接sql，不需要模版
+    // conditions Where条件结点，只有AND关系，如：(conditions[0].left op conditions[0].right) AND (conditions[1].left op conditions[1].right)
+    DBTable query2(1: i32 seq, 2: i32 database_index,  3: string tablename, 4: list<string> fields, 5: list<Condition> conditions, 6: i32 limit, 7: i32 limit_start)
 }

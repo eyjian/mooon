@@ -16,19 +16,7 @@ namespace mooon { namespace db_proxy {
 
 CDbProxyHandler::CDbProxyHandler()
 {
-    mooon::observer::IObserverManager* observer_mananger = mooon::observer::get();
-    if (observer_mananger != NULL)
-        observer_mananger->register_observee(this);
-
-    reset();
     atomic_set(&_cached_number, 0);
-}
-
-CDbProxyHandler::~CDbProxyHandler()
-{
-    mooon::observer::IObserverManager* observer_mananger = mooon::observer::get();
-    if (observer_mananger != NULL)
-        observer_mananger->deregister_objservee(this);
 }
 
 void CDbProxyHandler::cleanup_cache()
@@ -57,145 +45,280 @@ void CDbProxyHandler::query(DBTable& _return, const std::string& sign, const int
     struct QueryInfo query_info;
     std::vector<std::string> escaped_tokens;
 
+    if (!config_loader->get_query_info(query_index, &query_info))
+    {
+        MYLOG_ERROR("query_index[%d] not exists\n", query_index);
+        throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("query_index(%d) not exists", query_index));
+    }
+    if (sign != query_info.sign)
+    {
+        MYLOG_ERROR("sign[%s] error: %s\n", sign.c_str(), query_info.sign.c_str());
+        throw apache::thrift::TApplicationException("sign error");
+    }
+
     try
     {
-        if (!config_loader->get_query_info(query_index, &query_info))
+        sys::CMySQLConnection* db_connection = config_loader->get_db_connection(query_info.database_index);
+        if (NULL == db_connection)
         {
-            MYLOG_ERROR("query_index[%d] not exists\n", query_index);
-            throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("query_index(%d) not exists", query_index));
+            MYLOG_ERROR("database_index[%d] not exists or cannot connect\n", query_info.database_index);
+            throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("database_index(%d) not exists or cannot connect", query_info.database_index));
         }
-        if (sign != query_info.sign)
+        else if (tokens.size() > utils::FORMAT_STRING_SIZE)
         {
-            MYLOG_ERROR("sign[%s] error: %s\n", sign.c_str(), query_info.sign.c_str());
-            throw apache::thrift::TApplicationException("sign error");
+            MYLOG_ERROR("[%d]too big: %d\n", seq, (int)tokens.size());
+            throw apache::thrift::TApplicationException("tokens too many");
         }
+        else
+        {
+            std::vector<std::string> escaped_tokens;
+            escape_tokens(db_connection, tokens, &escaped_tokens);
+            std::string sql = utils::format_string(query_info.sql_template.c_str(), escaped_tokens);
 
-        try
-        {
-            sys::CMySQLConnection* db_connection = config_loader->get_db_connection(query_info.database_index);
-            if (NULL == db_connection)
+            if (sql.empty())
             {
-                MYLOG_ERROR("database_index[%d] not exists or cannot connect\n", query_info.database_index);
-                throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("database_index(%d) not exists or cannot connect", query_info.database_index));
-            }
-            else if (tokens.size() > utils::FORMAT_STRING_SIZE)
-            {
-                MYLOG_ERROR("[%d]too big: %d\n", seq, (int)tokens.size());
-                throw apache::thrift::TApplicationException("tokens too many");
+                MYLOG_ERROR("error number of tokens or template: %s\n", query_info.str().c_str());
+                throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("error number of tokens or invalid template(%s)", query_info.str().c_str()));
             }
             else
             {
-                std::vector<std::string> escaped_tokens;
-                escape_tokens(db_connection, tokens, &escaped_tokens);
-                const std::string sql = utils::format_string(query_info.sql_template.c_str(), escaped_tokens);
+                MYLOG_DEBUG("%s LIMIT %d,%d\n", sql.c_str(), limit_start, limit);
 
-                if (sql.empty())
+                int32_t limit_ = limit;
+                if (limit_ > MAX_LIMIT)
+                    limit_ = MAX_LIMIT;
+                if (limit_start < 0) // limit_start是从0开始而不是1
+                    sql = utils::CStringUtils::format_string("%s LIMIT %d", sql.c_str(), limit_);
+                else
+                    sql = utils::CStringUtils::format_string("%s LIMIT %d,%d", sql.c_str(), limit_start, limit_);
+
+                if (query_info.cached_seconds < 1)
                 {
-                    MYLOG_ERROR("error number of tokens or template: %s\n", query_info.str().c_str());
-                    throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("error number of tokens or invalid template(%s)", query_info.str().c_str()));
+                    MYLOG_DEBUG("not cache: %s", sql.c_str());
                 }
                 else
                 {
-                    MYLOG_DEBUG("%s LIMIT %d,%d\n", sql.c_str(), limit_start, limit);
+                    if (get_data_from_cache(_return, sql))
+                    {
+                        return; // 如果缓存中有，则直接返回
+                    }
+                }
 
-                    if (query_info.cached_seconds < 1)
-                    {
-                        MYLOG_DEBUG("not cache: %s", sql.c_str());
-                    }
-                    else
-                    {
-                        if (get_data_from_cache(_return, sql))
-                        {
-                            return; // 如果缓存中有，则直接返回
-                        }
-                    }
+                db_connection->query(_return, "%s", sql.c_str());
+                if (_return.empty())
+                {
+                    MYLOG_DEBUG("number of rows: %zd, number of columns: %d\n", _return.size(), 0);
+                }
+                else
+                {
+                    MYLOG_DEBUG("number of rows: %zd, number of columns: %zd\n", _return.size(), _return[0].size());
+                }
 
-                    if (limit_start >= 0) // limit_start是从0开始而不是1
-                    {
-                        // 限制一次性返回的记录数太多将db_proxy搞死
-                        if (limit - limit_start <= MAX_LIMIT)
-                        {
-                            db_connection->query(_return, "%s LIMIT %d,%d", sql.c_str(), limit_start, limit);
-                        }
-                        else
-                        {
-                            MYLOG_ERROR("limit(%d) - limit_start(%d) > %d: %s\n", limit, limit_start, MAX_LIMIT, query_info.str().c_str());
-                            throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("limit(%d) - limit_start(%d) > %d", limit, limit_start, MAX_LIMIT));
-                        }
-                    }
-                    else
-                    {
-                        if (limit <= MAX_LIMIT)
-                        {
-                            db_connection->query(_return, "%s LIMIT %d", sql.c_str(), limit);
-                        }
-                        else
-                        {
-                            MYLOG_ERROR("limit(%d) > %d: %s\n", limit, MAX_LIMIT, query_info.str().c_str());
-                            throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("limit(%d) > %d", limit, MAX_LIMIT));
-                        }
-                    }
-
-                    ++_num_query_success;
-                    if (_return.empty())
-                    {
-                        MYLOG_DEBUG("number of rows: %zd, number of columns: %d\n", _return.size(), 0);
-                    }
-                    else
-                    {
-                        MYLOG_DEBUG("number of rows: %zd, number of columns: %zd\n", _return.size(), _return[0].size());
-                    }
-
-                    if ((query_info.cached_seconds > 0) && !_return.empty())
-                    {
-                        add_data_to_cache(_return, sql, query_info.cached_seconds);
-                    }
+                if ((query_info.cached_seconds > 0) && !_return.empty())
+                {
+                    add_data_to_cache(_return, sql, query_info.cached_seconds);
                 }
             }
         }
-        catch (sys::CDBException& db_ex)
-        {
-            MYLOG_ERROR("[%d]%s\n", seq, db_ex.str().c_str());
-            throw apache::thrift::TApplicationException(db_ex.str());
-        }
     }
-    catch (...)
+    catch (sys::CDBException& db_ex)
     {
-        ++_num_query_failure;
-        throw;
+        MYLOG_ERROR("[%d]%s\n", seq, db_ex.str().c_str());
+        throw apache::thrift::TApplicationException(db_ex.str());
     }
 }
 
 int CDbProxyHandler::update(const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string>& tokens)
 {
-    int ret = -1;
-
-    try
-    {
-        ret = do_update(true, sign, seq, update_index, tokens);
-        if (-1 == ret)
-            ++_num_update_failure;
-        else
-            ++_num_update_success;
-    }
-    catch (...)
-    {
-        ++_num_update_failure;
-        throw;
-    }
-
-    return ret;
+    return do_update(true, sign, seq, update_index, tokens);
 }
 
 void CDbProxyHandler::async_update(const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string>& tokens)
 {
     // 异步版本，忽略返回值，
     // 降低了可靠性，提升了性能。
-    int ret = do_update(false, sign, seq, update_index, tokens);
-    if (-1 == ret)
-        ++_num_async_update_failure;
-    else
-        ++_num_async_update_success;
+    (void)do_update(false, sign, seq, update_index, tokens);
+}
+
+// UPDATE tablename (tokens[0].first) VALUES (tokens[0].second) WEHRE (conditions[0].left op conditions[0].right)
+int32_t CDbProxyHandler::update2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens, const std::vector<Condition> & conditions)
+{
+    try
+    {
+        std::string sql;
+        struct DbInfo db_info;
+        CConfigLoader* config_loader = CConfigLoader::get_singleton();
+        if (!config_loader->get_db_info(database_index, &db_info))
+        {
+            MYLOG_ERROR("[%d]database_index[%d] not exists\n", seq, database_index);
+            throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("database_index(%d) not exists", database_index));
+        }
+
+        // DB连接
+        sys::DBConnection* db_connection = config_loader->get_db_connection(database_index);
+        if (NULL == db_connection)
+        {
+            MYLOG_ERROR("[%d]database_index[%d] not exists or cannot connect\n", seq, database_index);
+            throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("database_index(%d) not exists or cannot connect", database_index));
+        }
+
+        // UPDATE tablename (tokens[0].first,tokens[1].first
+        for (std::map<std::string, std::string>::const_iterator iter=tokens.begin(); iter!=tokens.end(); ++iter)
+        {
+            if (iter == tokens.begin())
+                sql = std::string("UPDATE ") + tablename + std::string(" (") + db_connection->escape_string(iter->first);
+            else
+                sql += std::string(",") + db_connection->escape_string(iter->first);
+        }
+
+        // VALUES (tokens[0].second,tokens[1].second
+        for (std::map<std::string, std::string>::const_iterator iter=tokens.begin(); iter!=tokens.end(); ++iter)
+        {
+            if (iter == tokens.begin())
+                sql += std::string(") VALUES (") + db_connection->escape_string(iter->second);
+            else
+                sql += std::string(",") + db_connection->escape_string(iter->second);
+        }
+
+        // )
+        sql += std::string(")");
+
+        // WEHRE (conditions[0].left op conditions[0].right)
+        if (!conditions.empty())
+        {
+            for (std::vector<Condition>::size_type i=0; i<conditions.size(); ++i)
+            {
+                const Condition& condition = conditions[i];
+                if (0 == i)
+                    sql += std::string(" WHERE (") + db_connection->escape_string(condition.left) + std::string(" ") + db_connection->escape_string(condition.op) + std::string(" ") + db_connection->escape_string(condition.right) + std::string(")");
+                else
+                    sql += std::string(" AND (") + db_connection->escape_string(condition.left) + std::string(" ") + db_connection->escape_string(condition.op) + std::string(" ") + db_connection->escape_string(condition.right) + std::string(")");
+            }
+        }
+
+        return write_sql(db_info, db_connection, sql);
+    }
+    catch (sys::CDBException& ex)
+    {
+        MYLOG_ERROR("[%d]%s\n", seq, ex.str().c_str());
+        throw apache::thrift::TApplicationException(ex.str());
+    }
+}
+
+// INSERT INTO tablename (tokens[0].first,tokens[1].first) VALUES (tokens[0].second,tokens[1].second)
+int32_t CDbProxyHandler::insert2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens)
+{
+    try
+    {
+        std::string sql;
+        struct DbInfo db_info;
+        CConfigLoader* config_loader = CConfigLoader::get_singleton();
+        if (!config_loader->get_db_info(database_index, &db_info))
+        {
+            MYLOG_ERROR("[%d]database_index[%d] not exists\n", seq, database_index);
+            throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("database_index(%d) not exists", database_index));
+        }
+
+        // DB连接
+        sys::DBConnection* db_connection = config_loader->get_db_connection(database_index);
+        if (NULL == db_connection)
+        {
+            MYLOG_ERROR("[%d]database_index[%d] not exists or cannot connect\n", seq, database_index);
+            throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("database_index(%d) not exists or cannot connect", database_index));
+        }
+
+        // INSERT INTO tablename (tokens[0].first,tokens[1].first
+        for (std::map<std::string, std::string>::const_iterator iter=tokens.begin(); iter!=tokens.end(); ++iter)
+        {
+            if (iter == tokens.begin())
+                sql = std::string("INSERT INTO ") + tablename + std::string(" (") + db_connection->escape_string(iter->first);
+            else
+                sql += std::string(",") + db_connection->escape_string(iter->first);
+        }
+
+        // ) VALUES (tokens[0].second,tokens[1].second
+        for (std::map<std::string, std::string>::const_iterator iter=tokens.begin(); iter!=tokens.end(); ++iter)
+        {
+            if (iter == tokens.begin())
+                sql += std::string(") VALUES (") + db_connection->escape_string(iter->second);
+            else
+                sql += std::string(",") + db_connection->escape_string(iter->second);
+        }
+
+        // )
+        sql += std::string(")");
+        return write_sql(db_info, db_connection, sql);
+    }
+    catch (sys::CDBException& ex)
+    {
+        MYLOG_ERROR("[%d]%s\n", seq, ex.str().c_str());
+        throw apache::thrift::TApplicationException(ex.str());
+    }
+}
+
+// SELECT fields[0],fields[1] FROM tablename WHERE (conditions[0].left conditions[0].op conditions[0].right) LIMIT limit_start,limit
+void CDbProxyHandler::query2(DBTable& _return, const int32_t seq, const int32_t database_index, const std::string& tablename, const std::vector<std::string> & fields, const std::vector<Condition> & conditions, const int32_t limit, const int32_t limit_start)
+{
+    try
+    {
+        std::string sql;
+        struct DbInfo db_info;
+        CConfigLoader* config_loader = CConfigLoader::get_singleton();
+        if (!config_loader->get_db_info(database_index, &db_info))
+        {
+            MYLOG_ERROR("[%d]database_index[%d] not exists\n", seq, database_index);
+            throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("database_index(%d) not exists", database_index));
+        }
+
+        // DB连接
+        sys::DBConnection* db_connection = config_loader->get_db_connection(database_index);
+        if (NULL == db_connection)
+        {
+            MYLOG_ERROR("[%d]database_index[%d] not exists or cannot connect\n", seq, database_index);
+            throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("database_index(%d) not exists or cannot connect", database_index));
+        }
+
+        // SELECT fields[0],fields[1]
+        for (std::vector<std::string>::size_type i=0; i<fields.size(); ++i)
+        {
+            if (0 == i)
+                sql = std::string("SELECT ") + db_connection->escape_string(fields[0]);
+            else
+                sql += std::string(",") + db_connection->escape_string(fields[1]);
+        }
+
+        // FROM tablename
+        sql += std::string(" FROM ") + tablename;
+
+        // WHERE (conditions[0].left conditions[0].op conditions[0].right)
+        if (!conditions.empty())
+        {
+            for (std::vector<Condition>::size_type i=0; i<conditions.size(); ++i)
+            {
+                if (0 == i)
+                    sql += std::string(" WHERE (");
+                else
+                    sql += std::string(" AND (");
+                sql += db_connection->escape_string(conditions[i].left) + std::string(" ") + db_connection->escape_string(conditions[i].op) + std::string(" ") + db_connection->escape_string(conditions[i].right) + std::string(")");
+            }
+        }
+
+        // LIMIT
+        int32_t limit_ = limit;
+        if (limit_ > MAX_LIMIT)
+            limit_ = MAX_LIMIT;
+        if (limit_start < 0)
+            sql += utils::CStringUtils::format_string(" LIMIT %d", limit_);
+        else
+            sql += utils::CStringUtils::format_string(" LIMIT %d,%d", limit_start, limit_);
+
+        db_connection->query(_return, "%s", sql.c_str());
+    }
+    catch (sys::CDBException& ex)
+    {
+        MYLOG_ERROR("[%d]%s\n", seq, ex.str().c_str());
+        throw apache::thrift::TApplicationException(ex.str());
+    }
 }
 
 void CDbProxyHandler::escape_tokens(void* db_connection, const std::vector<std::string>& tokens, std::vector<std::string>* escaped_tokens)
@@ -316,20 +439,6 @@ int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, co
     return -1;
 }
 
-void CDbProxyHandler::on_report(mooon::observer::IDataReporter* data_reporter)
-{
-    if ((_num_query_success != 0) || (_num_query_failure != 0) ||
-        (_num_update_success != 0) || (_num_update_failure != 0) ||
-        (_num_async_update_success != 0) || (_num_async_update_failure != 0))
-    {
-        data_reporter->report("[%s]%d,%d,%d,%d,%d,%d\n", sys::get_formatted_current_datetime(true).c_str(),
-            _num_query_success, _num_query_failure,
-            _num_update_success, _num_update_failure,
-            _num_async_update_success, _num_async_update_failure);
-        reset();
-    }
-}
-
 bool CDbProxyHandler::get_data_from_cache(DBTable& dbtable, const std::string& sql)
 {
     utils::CMd5Helper md5_helper;
@@ -386,14 +495,38 @@ void CDbProxyHandler::add_data_to_cache(const DBTable& dbtable, const std::strin
     }
 }
 
-void CDbProxyHandler::reset()
+int CDbProxyHandler::write_sql(const struct DbInfo& db_info, sys::DBConnection* db_connection, const std::string& sql)
 {
-    _num_query_success = 0;
-    _num_query_failure = 0;
-    _num_update_success = 0;
-    _num_update_failure = 0;
-    _num_async_update_success = 0;
-    _num_async_update_failure = 0;
+    MYLOG_DEBUG("%s", sql.c_str());
+
+    if (db_info.alias.empty())
+    {
+        // 直接入库
+        int affected_rows = db_connection->update("%s", sql.c_str());
+        MYLOG_DEBUG("[%s] affected_rows: %d\n", sql.c_str(), affected_rows);
+        return affected_rows;
+    }
+    else
+    {
+        CConfigLoader* config_loader = CConfigLoader::get_singleton();
+        CSqlLogger* sql_logger = config_loader->get_sql_logger(db_info.index);
+
+        if (NULL == sql_logger)
+        {
+            throw apache::thrift::TApplicationException("no sql logger");
+            return 0;
+        }
+        else
+        {
+            // 写入文件由dbprocess写入db
+            bool written = sql_logger->write_log(sql);
+            config_loader->release_sql_logger(sql_logger);
+            if (!written)
+                throw apache::thrift::TApplicationException("io error");
+
+            return 0;
+        }
+    }
 }
 
 } // namespace mooon

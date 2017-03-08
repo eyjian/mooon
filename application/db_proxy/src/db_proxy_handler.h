@@ -10,6 +10,8 @@
 #include <tr1/unordered_map>
 namespace mooon { namespace db_proxy {
 
+struct DbInfo;
+
 struct CachedData
 {
     time_t timestamp; // 时间戳
@@ -17,11 +19,10 @@ struct CachedData
     sys::DBTable cached_data; // 被缓存的数据
 };
 
-class CDbProxyHandler: public DbProxyServiceIf, public mooon::observer::IObservable
+class CDbProxyHandler: public DbProxyServiceIf
 {
 public:
     CDbProxyHandler();
-    ~CDbProxyHandler();
 
     // 清理缓存
     void cleanup_cache();
@@ -31,8 +32,9 @@ private: // override DbProxyServiceIf
     virtual int update(const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string> & tokens);
     virtual void async_update(const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string> & tokens);
 
-private: // override mooon::observer::IObservable
-    virtual void on_report(mooon::observer::IDataReporter* data_reporter);
+    virtual int32_t update2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens, const std::vector<Condition> & conditions);
+    virtual int32_t insert2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens);
+    virtual void query2(DBTable& _return, const int32_t seq, const int32_t database_index, const std::string& table, const std::vector<std::string> & fields, const std::vector<Condition> & conditions, const int32_t limit, const int32_t limit_start);
 
 private:
     // 对字符串进行编码，以防止SQL注入
@@ -47,14 +49,8 @@ private:
     // 添加到缓存中
     void add_data_to_cache(const DBTable& dbtable, const std::string& sql, int cached_seconds);
 
-private:
-    void reset();
-    volatile int _num_query_success;
-    volatile int _num_query_failure;
-    volatile int _num_update_success; // 成功的update次数
-    volatile int _num_update_failure;
-    volatile int _num_async_update_success;
-    volatile int _num_async_update_failure;
+    // 入加SQL或写入文件中
+    int write_sql(const struct DbInfo& db_info, sys::DBConnection* db_connection, const std::string& sql);
 
 private:
     typedef std::tr1::unordered_map<utils::CMd5Helper::Value, struct CachedData, utils::CMd5Helper::ValueHasher, utils::CMd5Helper::ValueComparer> CacheTable;

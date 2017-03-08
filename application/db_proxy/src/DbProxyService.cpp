@@ -722,6 +722,914 @@ uint32_t DbProxyService_async_update_pargs::write(::apache::thrift::protocol::TP
   return xfer;
 }
 
+uint32_t DbProxyService_update2_args::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->seq);
+          this->__isset.seq = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->database_index);
+          this->__isset.database_index = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->tablename);
+          this->__isset.tablename = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_MAP) {
+          {
+            this->tokens.clear();
+            uint32_t _size43;
+            ::apache::thrift::protocol::TType _ktype44;
+            ::apache::thrift::protocol::TType _vtype45;
+            xfer += iprot->readMapBegin(_ktype44, _vtype45, _size43);
+            uint32_t _i47;
+            for (_i47 = 0; _i47 < _size43; ++_i47)
+            {
+              std::string _key48;
+              xfer += iprot->readString(_key48);
+              std::string& _val49 = this->tokens[_key48];
+              xfer += iprot->readString(_val49);
+            }
+            xfer += iprot->readMapEnd();
+          }
+          this->__isset.tokens = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 5:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->conditions.clear();
+            uint32_t _size50;
+            ::apache::thrift::protocol::TType _etype53;
+            xfer += iprot->readListBegin(_etype53, _size50);
+            this->conditions.resize(_size50);
+            uint32_t _i54;
+            for (_i54 = 0; _i54 < _size50; ++_i54)
+            {
+              xfer += this->conditions[_i54].read(iprot);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.conditions = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t DbProxyService_update2_args::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  xfer += oprot->writeStructBegin("DbProxyService_update2_args");
+
+  xfer += oprot->writeFieldBegin("seq", ::apache::thrift::protocol::T_I32, 1);
+  xfer += oprot->writeI32(this->seq);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("database_index", ::apache::thrift::protocol::T_I32, 2);
+  xfer += oprot->writeI32(this->database_index);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("tablename", ::apache::thrift::protocol::T_STRING, 3);
+  xfer += oprot->writeString(this->tablename);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("tokens", ::apache::thrift::protocol::T_MAP, 4);
+  {
+    xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_STRING, ::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->tokens.size()));
+    std::map<std::string, std::string> ::const_iterator _iter55;
+    for (_iter55 = this->tokens.begin(); _iter55 != this->tokens.end(); ++_iter55)
+    {
+      xfer += oprot->writeString(_iter55->first);
+      xfer += oprot->writeString(_iter55->second);
+    }
+    xfer += oprot->writeMapEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("conditions", ::apache::thrift::protocol::T_LIST, 5);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->conditions.size()));
+    std::vector<Condition> ::const_iterator _iter56;
+    for (_iter56 = this->conditions.begin(); _iter56 != this->conditions.end(); ++_iter56)
+    {
+      xfer += (*_iter56).write(oprot);
+    }
+    xfer += oprot->writeListEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+uint32_t DbProxyService_update2_pargs::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  xfer += oprot->writeStructBegin("DbProxyService_update2_pargs");
+
+  xfer += oprot->writeFieldBegin("seq", ::apache::thrift::protocol::T_I32, 1);
+  xfer += oprot->writeI32((*(this->seq)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("database_index", ::apache::thrift::protocol::T_I32, 2);
+  xfer += oprot->writeI32((*(this->database_index)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("tablename", ::apache::thrift::protocol::T_STRING, 3);
+  xfer += oprot->writeString((*(this->tablename)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("tokens", ::apache::thrift::protocol::T_MAP, 4);
+  {
+    xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_STRING, ::apache::thrift::protocol::T_STRING, static_cast<uint32_t>((*(this->tokens)).size()));
+    std::map<std::string, std::string> ::const_iterator _iter57;
+    for (_iter57 = (*(this->tokens)).begin(); _iter57 != (*(this->tokens)).end(); ++_iter57)
+    {
+      xfer += oprot->writeString(_iter57->first);
+      xfer += oprot->writeString(_iter57->second);
+    }
+    xfer += oprot->writeMapEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("conditions", ::apache::thrift::protocol::T_LIST, 5);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>((*(this->conditions)).size()));
+    std::vector<Condition> ::const_iterator _iter58;
+    for (_iter58 = (*(this->conditions)).begin(); _iter58 != (*(this->conditions)).end(); ++_iter58)
+    {
+      xfer += (*_iter58).write(oprot);
+    }
+    xfer += oprot->writeListEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+uint32_t DbProxyService_update2_result::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 0:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->success);
+          this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t DbProxyService_update2_result::write(::apache::thrift::protocol::TProtocol* oprot) const {
+
+  uint32_t xfer = 0;
+
+  xfer += oprot->writeStructBegin("DbProxyService_update2_result");
+
+  if (this->__isset.success) {
+    xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_I32, 0);
+    xfer += oprot->writeI32(this->success);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+uint32_t DbProxyService_update2_presult::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 0:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32((*(this->success)));
+          this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t DbProxyService_insert2_args::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->seq);
+          this->__isset.seq = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->database_index);
+          this->__isset.database_index = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->tablename);
+          this->__isset.tablename = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_MAP) {
+          {
+            this->tokens.clear();
+            uint32_t _size59;
+            ::apache::thrift::protocol::TType _ktype60;
+            ::apache::thrift::protocol::TType _vtype61;
+            xfer += iprot->readMapBegin(_ktype60, _vtype61, _size59);
+            uint32_t _i63;
+            for (_i63 = 0; _i63 < _size59; ++_i63)
+            {
+              std::string _key64;
+              xfer += iprot->readString(_key64);
+              std::string& _val65 = this->tokens[_key64];
+              xfer += iprot->readString(_val65);
+            }
+            xfer += iprot->readMapEnd();
+          }
+          this->__isset.tokens = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t DbProxyService_insert2_args::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  xfer += oprot->writeStructBegin("DbProxyService_insert2_args");
+
+  xfer += oprot->writeFieldBegin("seq", ::apache::thrift::protocol::T_I32, 1);
+  xfer += oprot->writeI32(this->seq);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("database_index", ::apache::thrift::protocol::T_I32, 2);
+  xfer += oprot->writeI32(this->database_index);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("tablename", ::apache::thrift::protocol::T_STRING, 3);
+  xfer += oprot->writeString(this->tablename);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("tokens", ::apache::thrift::protocol::T_MAP, 4);
+  {
+    xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_STRING, ::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->tokens.size()));
+    std::map<std::string, std::string> ::const_iterator _iter66;
+    for (_iter66 = this->tokens.begin(); _iter66 != this->tokens.end(); ++_iter66)
+    {
+      xfer += oprot->writeString(_iter66->first);
+      xfer += oprot->writeString(_iter66->second);
+    }
+    xfer += oprot->writeMapEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+uint32_t DbProxyService_insert2_pargs::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  xfer += oprot->writeStructBegin("DbProxyService_insert2_pargs");
+
+  xfer += oprot->writeFieldBegin("seq", ::apache::thrift::protocol::T_I32, 1);
+  xfer += oprot->writeI32((*(this->seq)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("database_index", ::apache::thrift::protocol::T_I32, 2);
+  xfer += oprot->writeI32((*(this->database_index)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("tablename", ::apache::thrift::protocol::T_STRING, 3);
+  xfer += oprot->writeString((*(this->tablename)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("tokens", ::apache::thrift::protocol::T_MAP, 4);
+  {
+    xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_STRING, ::apache::thrift::protocol::T_STRING, static_cast<uint32_t>((*(this->tokens)).size()));
+    std::map<std::string, std::string> ::const_iterator _iter67;
+    for (_iter67 = (*(this->tokens)).begin(); _iter67 != (*(this->tokens)).end(); ++_iter67)
+    {
+      xfer += oprot->writeString(_iter67->first);
+      xfer += oprot->writeString(_iter67->second);
+    }
+    xfer += oprot->writeMapEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+uint32_t DbProxyService_insert2_result::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 0:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->success);
+          this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t DbProxyService_insert2_result::write(::apache::thrift::protocol::TProtocol* oprot) const {
+
+  uint32_t xfer = 0;
+
+  xfer += oprot->writeStructBegin("DbProxyService_insert2_result");
+
+  if (this->__isset.success) {
+    xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_I32, 0);
+    xfer += oprot->writeI32(this->success);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+uint32_t DbProxyService_insert2_presult::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 0:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32((*(this->success)));
+          this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t DbProxyService_query2_args::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->seq);
+          this->__isset.seq = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->database_index);
+          this->__isset.database_index = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->tablename);
+          this->__isset.tablename = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->fields.clear();
+            uint32_t _size68;
+            ::apache::thrift::protocol::TType _etype71;
+            xfer += iprot->readListBegin(_etype71, _size68);
+            this->fields.resize(_size68);
+            uint32_t _i72;
+            for (_i72 = 0; _i72 < _size68; ++_i72)
+            {
+              xfer += iprot->readString(this->fields[_i72]);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.fields = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 5:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->conditions.clear();
+            uint32_t _size73;
+            ::apache::thrift::protocol::TType _etype76;
+            xfer += iprot->readListBegin(_etype76, _size73);
+            this->conditions.resize(_size73);
+            uint32_t _i77;
+            for (_i77 = 0; _i77 < _size73; ++_i77)
+            {
+              xfer += this->conditions[_i77].read(iprot);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.conditions = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 6:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->limit);
+          this->__isset.limit = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 7:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->limit_start);
+          this->__isset.limit_start = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t DbProxyService_query2_args::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  xfer += oprot->writeStructBegin("DbProxyService_query2_args");
+
+  xfer += oprot->writeFieldBegin("seq", ::apache::thrift::protocol::T_I32, 1);
+  xfer += oprot->writeI32(this->seq);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("database_index", ::apache::thrift::protocol::T_I32, 2);
+  xfer += oprot->writeI32(this->database_index);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("tablename", ::apache::thrift::protocol::T_STRING, 3);
+  xfer += oprot->writeString(this->tablename);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("fields", ::apache::thrift::protocol::T_LIST, 4);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->fields.size()));
+    std::vector<std::string> ::const_iterator _iter78;
+    for (_iter78 = this->fields.begin(); _iter78 != this->fields.end(); ++_iter78)
+    {
+      xfer += oprot->writeString((*_iter78));
+    }
+    xfer += oprot->writeListEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("conditions", ::apache::thrift::protocol::T_LIST, 5);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->conditions.size()));
+    std::vector<Condition> ::const_iterator _iter79;
+    for (_iter79 = this->conditions.begin(); _iter79 != this->conditions.end(); ++_iter79)
+    {
+      xfer += (*_iter79).write(oprot);
+    }
+    xfer += oprot->writeListEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("limit", ::apache::thrift::protocol::T_I32, 6);
+  xfer += oprot->writeI32(this->limit);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("limit_start", ::apache::thrift::protocol::T_I32, 7);
+  xfer += oprot->writeI32(this->limit_start);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+uint32_t DbProxyService_query2_pargs::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  xfer += oprot->writeStructBegin("DbProxyService_query2_pargs");
+
+  xfer += oprot->writeFieldBegin("seq", ::apache::thrift::protocol::T_I32, 1);
+  xfer += oprot->writeI32((*(this->seq)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("database_index", ::apache::thrift::protocol::T_I32, 2);
+  xfer += oprot->writeI32((*(this->database_index)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("tablename", ::apache::thrift::protocol::T_STRING, 3);
+  xfer += oprot->writeString((*(this->tablename)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("fields", ::apache::thrift::protocol::T_LIST, 4);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>((*(this->fields)).size()));
+    std::vector<std::string> ::const_iterator _iter80;
+    for (_iter80 = (*(this->fields)).begin(); _iter80 != (*(this->fields)).end(); ++_iter80)
+    {
+      xfer += oprot->writeString((*_iter80));
+    }
+    xfer += oprot->writeListEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("conditions", ::apache::thrift::protocol::T_LIST, 5);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>((*(this->conditions)).size()));
+    std::vector<Condition> ::const_iterator _iter81;
+    for (_iter81 = (*(this->conditions)).begin(); _iter81 != (*(this->conditions)).end(); ++_iter81)
+    {
+      xfer += (*_iter81).write(oprot);
+    }
+    xfer += oprot->writeListEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("limit", ::apache::thrift::protocol::T_I32, 6);
+  xfer += oprot->writeI32((*(this->limit)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("limit_start", ::apache::thrift::protocol::T_I32, 7);
+  xfer += oprot->writeI32((*(this->limit_start)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+uint32_t DbProxyService_query2_result::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 0:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->success.clear();
+            uint32_t _size82;
+            ::apache::thrift::protocol::TType _etype85;
+            xfer += iprot->readListBegin(_etype85, _size82);
+            this->success.resize(_size82);
+            uint32_t _i86;
+            for (_i86 = 0; _i86 < _size82; ++_i86)
+            {
+              {
+                this->success[_i86].clear();
+                uint32_t _size87;
+                ::apache::thrift::protocol::TType _etype90;
+                xfer += iprot->readListBegin(_etype90, _size87);
+                this->success[_i86].resize(_size87);
+                uint32_t _i91;
+                for (_i91 = 0; _i91 < _size87; ++_i91)
+                {
+                  xfer += iprot->readString(this->success[_i86][_i91]);
+                }
+                xfer += iprot->readListEnd();
+              }
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t DbProxyService_query2_result::write(::apache::thrift::protocol::TProtocol* oprot) const {
+
+  uint32_t xfer = 0;
+
+  xfer += oprot->writeStructBegin("DbProxyService_query2_result");
+
+  if (this->__isset.success) {
+    xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_LIST, 0);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_LIST, static_cast<uint32_t>(this->success.size()));
+      std::vector<DBRow> ::const_iterator _iter92;
+      for (_iter92 = this->success.begin(); _iter92 != this->success.end(); ++_iter92)
+      {
+        {
+          xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>((*_iter92).size()));
+          std::vector<std::string> ::const_iterator _iter93;
+          for (_iter93 = (*_iter92).begin(); _iter93 != (*_iter92).end(); ++_iter93)
+          {
+            xfer += oprot->writeString((*_iter93));
+          }
+          xfer += oprot->writeListEnd();
+        }
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+uint32_t DbProxyService_query2_presult::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 0:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            (*(this->success)).clear();
+            uint32_t _size94;
+            ::apache::thrift::protocol::TType _etype97;
+            xfer += iprot->readListBegin(_etype97, _size94);
+            (*(this->success)).resize(_size94);
+            uint32_t _i98;
+            for (_i98 = 0; _i98 < _size94; ++_i98)
+            {
+              {
+                (*(this->success))[_i98].clear();
+                uint32_t _size99;
+                ::apache::thrift::protocol::TType _etype102;
+                xfer += iprot->readListBegin(_etype102, _size99);
+                (*(this->success))[_i98].resize(_size99);
+                uint32_t _i103;
+                for (_i103 = 0; _i103 < _size99; ++_i103)
+                {
+                  xfer += iprot->readString((*(this->success))[_i98][_i103]);
+                }
+                xfer += iprot->readListEnd();
+              }
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
 void DbProxyServiceClient::query(DBTable& _return, const std::string& sign, const int32_t seq, const int32_t query_index, const std::vector<std::string> & tokens, const int32_t limit, const int32_t limit_start)
 {
   send_query(sign, seq, query_index, tokens, limit, limit_start);
@@ -866,6 +1774,193 @@ void DbProxyServiceClient::send_async_update(const std::string& sign, const int3
   oprot_->writeMessageEnd();
   oprot_->getTransport()->writeEnd();
   oprot_->getTransport()->flush();
+}
+
+int32_t DbProxyServiceClient::update2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens, const std::vector<Condition> & conditions)
+{
+  send_update2(seq, database_index, tablename, tokens, conditions);
+  return recv_update2();
+}
+
+void DbProxyServiceClient::send_update2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens, const std::vector<Condition> & conditions)
+{
+  int32_t cseqid = 0;
+  oprot_->writeMessageBegin("update2", ::apache::thrift::protocol::T_CALL, cseqid);
+
+  DbProxyService_update2_pargs args;
+  args.seq = &seq;
+  args.database_index = &database_index;
+  args.tablename = &tablename;
+  args.tokens = &tokens;
+  args.conditions = &conditions;
+  args.write(oprot_);
+
+  oprot_->writeMessageEnd();
+  oprot_->getTransport()->writeEnd();
+  oprot_->getTransport()->flush();
+}
+
+int32_t DbProxyServiceClient::recv_update2()
+{
+
+  int32_t rseqid = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TMessageType mtype;
+
+  iprot_->readMessageBegin(fname, mtype, rseqid);
+  if (mtype == ::apache::thrift::protocol::T_EXCEPTION) {
+    ::apache::thrift::TApplicationException x;
+    x.read(iprot_);
+    iprot_->readMessageEnd();
+    iprot_->getTransport()->readEnd();
+    throw x;
+  }
+  if (mtype != ::apache::thrift::protocol::T_REPLY) {
+    iprot_->skip(::apache::thrift::protocol::T_STRUCT);
+    iprot_->readMessageEnd();
+    iprot_->getTransport()->readEnd();
+  }
+  if (fname.compare("update2") != 0) {
+    iprot_->skip(::apache::thrift::protocol::T_STRUCT);
+    iprot_->readMessageEnd();
+    iprot_->getTransport()->readEnd();
+  }
+  int32_t _return;
+  DbProxyService_update2_presult result;
+  result.success = &_return;
+  result.read(iprot_);
+  iprot_->readMessageEnd();
+  iprot_->getTransport()->readEnd();
+
+  if (result.__isset.success) {
+    return _return;
+  }
+  throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "update2 failed: unknown result");
+}
+
+int32_t DbProxyServiceClient::insert2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens)
+{
+  send_insert2(seq, database_index, tablename, tokens);
+  return recv_insert2();
+}
+
+void DbProxyServiceClient::send_insert2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens)
+{
+  int32_t cseqid = 0;
+  oprot_->writeMessageBegin("insert2", ::apache::thrift::protocol::T_CALL, cseqid);
+
+  DbProxyService_insert2_pargs args;
+  args.seq = &seq;
+  args.database_index = &database_index;
+  args.tablename = &tablename;
+  args.tokens = &tokens;
+  args.write(oprot_);
+
+  oprot_->writeMessageEnd();
+  oprot_->getTransport()->writeEnd();
+  oprot_->getTransport()->flush();
+}
+
+int32_t DbProxyServiceClient::recv_insert2()
+{
+
+  int32_t rseqid = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TMessageType mtype;
+
+  iprot_->readMessageBegin(fname, mtype, rseqid);
+  if (mtype == ::apache::thrift::protocol::T_EXCEPTION) {
+    ::apache::thrift::TApplicationException x;
+    x.read(iprot_);
+    iprot_->readMessageEnd();
+    iprot_->getTransport()->readEnd();
+    throw x;
+  }
+  if (mtype != ::apache::thrift::protocol::T_REPLY) {
+    iprot_->skip(::apache::thrift::protocol::T_STRUCT);
+    iprot_->readMessageEnd();
+    iprot_->getTransport()->readEnd();
+  }
+  if (fname.compare("insert2") != 0) {
+    iprot_->skip(::apache::thrift::protocol::T_STRUCT);
+    iprot_->readMessageEnd();
+    iprot_->getTransport()->readEnd();
+  }
+  int32_t _return;
+  DbProxyService_insert2_presult result;
+  result.success = &_return;
+  result.read(iprot_);
+  iprot_->readMessageEnd();
+  iprot_->getTransport()->readEnd();
+
+  if (result.__isset.success) {
+    return _return;
+  }
+  throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "insert2 failed: unknown result");
+}
+
+void DbProxyServiceClient::query2(DBTable& _return, const int32_t seq, const int32_t database_index, const std::string& tablename, const std::vector<std::string> & fields, const std::vector<Condition> & conditions, const int32_t limit, const int32_t limit_start)
+{
+  send_query2(seq, database_index, tablename, fields, conditions, limit, limit_start);
+  recv_query2(_return);
+}
+
+void DbProxyServiceClient::send_query2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::vector<std::string> & fields, const std::vector<Condition> & conditions, const int32_t limit, const int32_t limit_start)
+{
+  int32_t cseqid = 0;
+  oprot_->writeMessageBegin("query2", ::apache::thrift::protocol::T_CALL, cseqid);
+
+  DbProxyService_query2_pargs args;
+  args.seq = &seq;
+  args.database_index = &database_index;
+  args.tablename = &tablename;
+  args.fields = &fields;
+  args.conditions = &conditions;
+  args.limit = &limit;
+  args.limit_start = &limit_start;
+  args.write(oprot_);
+
+  oprot_->writeMessageEnd();
+  oprot_->getTransport()->writeEnd();
+  oprot_->getTransport()->flush();
+}
+
+void DbProxyServiceClient::recv_query2(DBTable& _return)
+{
+
+  int32_t rseqid = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TMessageType mtype;
+
+  iprot_->readMessageBegin(fname, mtype, rseqid);
+  if (mtype == ::apache::thrift::protocol::T_EXCEPTION) {
+    ::apache::thrift::TApplicationException x;
+    x.read(iprot_);
+    iprot_->readMessageEnd();
+    iprot_->getTransport()->readEnd();
+    throw x;
+  }
+  if (mtype != ::apache::thrift::protocol::T_REPLY) {
+    iprot_->skip(::apache::thrift::protocol::T_STRUCT);
+    iprot_->readMessageEnd();
+    iprot_->getTransport()->readEnd();
+  }
+  if (fname.compare("query2") != 0) {
+    iprot_->skip(::apache::thrift::protocol::T_STRUCT);
+    iprot_->readMessageEnd();
+    iprot_->getTransport()->readEnd();
+  }
+  DbProxyService_query2_presult result;
+  result.success = &_return;
+  result.read(iprot_);
+  iprot_->readMessageEnd();
+  iprot_->getTransport()->readEnd();
+
+  if (result.__isset.success) {
+    // _return pointer has now been filled
+    return;
+  }
+  throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "query2 failed: unknown result");
 }
 
 bool DbProxyServiceProcessor::dispatchCall(::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, const std::string& fname, int32_t seqid, void* callContext) {
@@ -1030,6 +2125,168 @@ void DbProxyServiceProcessor::process_async_update(int32_t, ::apache::thrift::pr
   }
 
   return;
+}
+
+void DbProxyServiceProcessor::process_update2(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext)
+{
+  void* ctx = NULL;
+  if (this->eventHandler_.get() != NULL) {
+    ctx = this->eventHandler_->getContext("DbProxyService.update2", callContext);
+  }
+  ::apache::thrift::TProcessorContextFreer freer(this->eventHandler_.get(), ctx, "DbProxyService.update2");
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->preRead(ctx, "DbProxyService.update2");
+  }
+
+  DbProxyService_update2_args args;
+  args.read(iprot);
+  iprot->readMessageEnd();
+  uint32_t bytes = iprot->getTransport()->readEnd();
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->postRead(ctx, "DbProxyService.update2", bytes);
+  }
+
+  DbProxyService_update2_result result;
+  try {
+    result.success = iface_->update2(args.seq, args.database_index, args.tablename, args.tokens, args.conditions);
+    result.__isset.success = true;
+  } catch (const std::exception& e) {
+    if (this->eventHandler_.get() != NULL) {
+      this->eventHandler_->handlerError(ctx, "DbProxyService.update2");
+    }
+
+    ::apache::thrift::TApplicationException x(e.what());
+    oprot->writeMessageBegin("update2", ::apache::thrift::protocol::T_EXCEPTION, seqid);
+    x.write(oprot);
+    oprot->writeMessageEnd();
+    oprot->getTransport()->writeEnd();
+    oprot->getTransport()->flush();
+    return;
+  }
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->preWrite(ctx, "DbProxyService.update2");
+  }
+
+  oprot->writeMessageBegin("update2", ::apache::thrift::protocol::T_REPLY, seqid);
+  result.write(oprot);
+  oprot->writeMessageEnd();
+  bytes = oprot->getTransport()->writeEnd();
+  oprot->getTransport()->flush();
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->postWrite(ctx, "DbProxyService.update2", bytes);
+  }
+}
+
+void DbProxyServiceProcessor::process_insert2(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext)
+{
+  void* ctx = NULL;
+  if (this->eventHandler_.get() != NULL) {
+    ctx = this->eventHandler_->getContext("DbProxyService.insert2", callContext);
+  }
+  ::apache::thrift::TProcessorContextFreer freer(this->eventHandler_.get(), ctx, "DbProxyService.insert2");
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->preRead(ctx, "DbProxyService.insert2");
+  }
+
+  DbProxyService_insert2_args args;
+  args.read(iprot);
+  iprot->readMessageEnd();
+  uint32_t bytes = iprot->getTransport()->readEnd();
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->postRead(ctx, "DbProxyService.insert2", bytes);
+  }
+
+  DbProxyService_insert2_result result;
+  try {
+    result.success = iface_->insert2(args.seq, args.database_index, args.tablename, args.tokens);
+    result.__isset.success = true;
+  } catch (const std::exception& e) {
+    if (this->eventHandler_.get() != NULL) {
+      this->eventHandler_->handlerError(ctx, "DbProxyService.insert2");
+    }
+
+    ::apache::thrift::TApplicationException x(e.what());
+    oprot->writeMessageBegin("insert2", ::apache::thrift::protocol::T_EXCEPTION, seqid);
+    x.write(oprot);
+    oprot->writeMessageEnd();
+    oprot->getTransport()->writeEnd();
+    oprot->getTransport()->flush();
+    return;
+  }
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->preWrite(ctx, "DbProxyService.insert2");
+  }
+
+  oprot->writeMessageBegin("insert2", ::apache::thrift::protocol::T_REPLY, seqid);
+  result.write(oprot);
+  oprot->writeMessageEnd();
+  bytes = oprot->getTransport()->writeEnd();
+  oprot->getTransport()->flush();
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->postWrite(ctx, "DbProxyService.insert2", bytes);
+  }
+}
+
+void DbProxyServiceProcessor::process_query2(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext)
+{
+  void* ctx = NULL;
+  if (this->eventHandler_.get() != NULL) {
+    ctx = this->eventHandler_->getContext("DbProxyService.query2", callContext);
+  }
+  ::apache::thrift::TProcessorContextFreer freer(this->eventHandler_.get(), ctx, "DbProxyService.query2");
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->preRead(ctx, "DbProxyService.query2");
+  }
+
+  DbProxyService_query2_args args;
+  args.read(iprot);
+  iprot->readMessageEnd();
+  uint32_t bytes = iprot->getTransport()->readEnd();
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->postRead(ctx, "DbProxyService.query2", bytes);
+  }
+
+  DbProxyService_query2_result result;
+  try {
+    iface_->query2(result.success, args.seq, args.database_index, args.tablename, args.fields, args.conditions, args.limit, args.limit_start);
+    result.__isset.success = true;
+  } catch (const std::exception& e) {
+    if (this->eventHandler_.get() != NULL) {
+      this->eventHandler_->handlerError(ctx, "DbProxyService.query2");
+    }
+
+    ::apache::thrift::TApplicationException x(e.what());
+    oprot->writeMessageBegin("query2", ::apache::thrift::protocol::T_EXCEPTION, seqid);
+    x.write(oprot);
+    oprot->writeMessageEnd();
+    oprot->getTransport()->writeEnd();
+    oprot->getTransport()->flush();
+    return;
+  }
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->preWrite(ctx, "DbProxyService.query2");
+  }
+
+  oprot->writeMessageBegin("query2", ::apache::thrift::protocol::T_REPLY, seqid);
+  result.write(oprot);
+  oprot->writeMessageEnd();
+  bytes = oprot->getTransport()->writeEnd();
+  oprot->getTransport()->flush();
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->postWrite(ctx, "DbProxyService.query2", bytes);
+  }
 }
 
 ::boost::shared_ptr< ::apache::thrift::TProcessor > DbProxyServiceProcessorFactory::getProcessor(const ::apache::thrift::TConnectionInfo& connInfo) {

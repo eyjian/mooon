@@ -18,6 +18,9 @@ class DbProxyServiceIf {
   virtual void query(DBTable& _return, const std::string& sign, const int32_t seq, const int32_t query_index, const std::vector<std::string> & tokens, const int32_t limit, const int32_t limit_start) = 0;
   virtual int32_t update(const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string> & tokens) = 0;
   virtual void async_update(const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string> & tokens) = 0;
+  virtual int32_t update2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens, const std::vector<Condition> & conditions) = 0;
+  virtual int32_t insert2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens) = 0;
+  virtual void query2(DBTable& _return, const int32_t seq, const int32_t database_index, const std::string& tablename, const std::vector<std::string> & fields, const std::vector<Condition> & conditions, const int32_t limit, const int32_t limit_start) = 0;
 };
 
 class DbProxyServiceIfFactory {
@@ -55,6 +58,17 @@ class DbProxyServiceNull : virtual public DbProxyServiceIf {
     return _return;
   }
   void async_update(const std::string& /* sign */, const int32_t /* seq */, const int32_t /* update_index */, const std::vector<std::string> & /* tokens */) {
+    return;
+  }
+  int32_t update2(const int32_t /* seq */, const int32_t /* database_index */, const std::string& /* tablename */, const std::map<std::string, std::string> & /* tokens */, const std::vector<Condition> & /* conditions */) {
+    int32_t _return = 0;
+    return _return;
+  }
+  int32_t insert2(const int32_t /* seq */, const int32_t /* database_index */, const std::string& /* tablename */, const std::map<std::string, std::string> & /* tokens */) {
+    int32_t _return = 0;
+    return _return;
+  }
+  void query2(DBTable& /* _return */, const int32_t /* seq */, const int32_t /* database_index */, const std::string& /* tablename */, const std::vector<std::string> & /* fields */, const std::vector<Condition> & /* conditions */, const int32_t /* limit */, const int32_t /* limit_start */) {
     return;
   }
 };
@@ -425,6 +439,447 @@ class DbProxyService_async_update_pargs {
 
 };
 
+typedef struct _DbProxyService_update2_args__isset {
+  _DbProxyService_update2_args__isset() : seq(false), database_index(false), tablename(false), tokens(false), conditions(false) {}
+  bool seq;
+  bool database_index;
+  bool tablename;
+  bool tokens;
+  bool conditions;
+} _DbProxyService_update2_args__isset;
+
+class DbProxyService_update2_args {
+ public:
+
+  DbProxyService_update2_args() : seq(0), database_index(0), tablename() {
+  }
+
+  virtual ~DbProxyService_update2_args() throw() {}
+
+  int32_t seq;
+  int32_t database_index;
+  std::string tablename;
+  std::map<std::string, std::string>  tokens;
+  std::vector<Condition>  conditions;
+
+  _DbProxyService_update2_args__isset __isset;
+
+  void __set_seq(const int32_t val) {
+    seq = val;
+  }
+
+  void __set_database_index(const int32_t val) {
+    database_index = val;
+  }
+
+  void __set_tablename(const std::string& val) {
+    tablename = val;
+  }
+
+  void __set_tokens(const std::map<std::string, std::string> & val) {
+    tokens = val;
+  }
+
+  void __set_conditions(const std::vector<Condition> & val) {
+    conditions = val;
+  }
+
+  bool operator == (const DbProxyService_update2_args & rhs) const
+  {
+    if (!(seq == rhs.seq))
+      return false;
+    if (!(database_index == rhs.database_index))
+      return false;
+    if (!(tablename == rhs.tablename))
+      return false;
+    if (!(tokens == rhs.tokens))
+      return false;
+    if (!(conditions == rhs.conditions))
+      return false;
+    return true;
+  }
+  bool operator != (const DbProxyService_update2_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const DbProxyService_update2_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class DbProxyService_update2_pargs {
+ public:
+
+
+  virtual ~DbProxyService_update2_pargs() throw() {}
+
+  const int32_t* seq;
+  const int32_t* database_index;
+  const std::string* tablename;
+  const std::map<std::string, std::string> * tokens;
+  const std::vector<Condition> * conditions;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _DbProxyService_update2_result__isset {
+  _DbProxyService_update2_result__isset() : success(false) {}
+  bool success;
+} _DbProxyService_update2_result__isset;
+
+class DbProxyService_update2_result {
+ public:
+
+  DbProxyService_update2_result() : success(0) {
+  }
+
+  virtual ~DbProxyService_update2_result() throw() {}
+
+  int32_t success;
+
+  _DbProxyService_update2_result__isset __isset;
+
+  void __set_success(const int32_t val) {
+    success = val;
+  }
+
+  bool operator == (const DbProxyService_update2_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const DbProxyService_update2_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const DbProxyService_update2_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _DbProxyService_update2_presult__isset {
+  _DbProxyService_update2_presult__isset() : success(false) {}
+  bool success;
+} _DbProxyService_update2_presult__isset;
+
+class DbProxyService_update2_presult {
+ public:
+
+
+  virtual ~DbProxyService_update2_presult() throw() {}
+
+  int32_t* success;
+
+  _DbProxyService_update2_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _DbProxyService_insert2_args__isset {
+  _DbProxyService_insert2_args__isset() : seq(false), database_index(false), tablename(false), tokens(false) {}
+  bool seq;
+  bool database_index;
+  bool tablename;
+  bool tokens;
+} _DbProxyService_insert2_args__isset;
+
+class DbProxyService_insert2_args {
+ public:
+
+  DbProxyService_insert2_args() : seq(0), database_index(0), tablename() {
+  }
+
+  virtual ~DbProxyService_insert2_args() throw() {}
+
+  int32_t seq;
+  int32_t database_index;
+  std::string tablename;
+  std::map<std::string, std::string>  tokens;
+
+  _DbProxyService_insert2_args__isset __isset;
+
+  void __set_seq(const int32_t val) {
+    seq = val;
+  }
+
+  void __set_database_index(const int32_t val) {
+    database_index = val;
+  }
+
+  void __set_tablename(const std::string& val) {
+    tablename = val;
+  }
+
+  void __set_tokens(const std::map<std::string, std::string> & val) {
+    tokens = val;
+  }
+
+  bool operator == (const DbProxyService_insert2_args & rhs) const
+  {
+    if (!(seq == rhs.seq))
+      return false;
+    if (!(database_index == rhs.database_index))
+      return false;
+    if (!(tablename == rhs.tablename))
+      return false;
+    if (!(tokens == rhs.tokens))
+      return false;
+    return true;
+  }
+  bool operator != (const DbProxyService_insert2_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const DbProxyService_insert2_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class DbProxyService_insert2_pargs {
+ public:
+
+
+  virtual ~DbProxyService_insert2_pargs() throw() {}
+
+  const int32_t* seq;
+  const int32_t* database_index;
+  const std::string* tablename;
+  const std::map<std::string, std::string> * tokens;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _DbProxyService_insert2_result__isset {
+  _DbProxyService_insert2_result__isset() : success(false) {}
+  bool success;
+} _DbProxyService_insert2_result__isset;
+
+class DbProxyService_insert2_result {
+ public:
+
+  DbProxyService_insert2_result() : success(0) {
+  }
+
+  virtual ~DbProxyService_insert2_result() throw() {}
+
+  int32_t success;
+
+  _DbProxyService_insert2_result__isset __isset;
+
+  void __set_success(const int32_t val) {
+    success = val;
+  }
+
+  bool operator == (const DbProxyService_insert2_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const DbProxyService_insert2_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const DbProxyService_insert2_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _DbProxyService_insert2_presult__isset {
+  _DbProxyService_insert2_presult__isset() : success(false) {}
+  bool success;
+} _DbProxyService_insert2_presult__isset;
+
+class DbProxyService_insert2_presult {
+ public:
+
+
+  virtual ~DbProxyService_insert2_presult() throw() {}
+
+  int32_t* success;
+
+  _DbProxyService_insert2_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+typedef struct _DbProxyService_query2_args__isset {
+  _DbProxyService_query2_args__isset() : seq(false), database_index(false), tablename(false), fields(false), conditions(false), limit(false), limit_start(false) {}
+  bool seq;
+  bool database_index;
+  bool tablename;
+  bool fields;
+  bool conditions;
+  bool limit;
+  bool limit_start;
+} _DbProxyService_query2_args__isset;
+
+class DbProxyService_query2_args {
+ public:
+
+  DbProxyService_query2_args() : seq(0), database_index(0), tablename(), limit(0), limit_start(0) {
+  }
+
+  virtual ~DbProxyService_query2_args() throw() {}
+
+  int32_t seq;
+  int32_t database_index;
+  std::string tablename;
+  std::vector<std::string>  fields;
+  std::vector<Condition>  conditions;
+  int32_t limit;
+  int32_t limit_start;
+
+  _DbProxyService_query2_args__isset __isset;
+
+  void __set_seq(const int32_t val) {
+    seq = val;
+  }
+
+  void __set_database_index(const int32_t val) {
+    database_index = val;
+  }
+
+  void __set_tablename(const std::string& val) {
+    tablename = val;
+  }
+
+  void __set_fields(const std::vector<std::string> & val) {
+    fields = val;
+  }
+
+  void __set_conditions(const std::vector<Condition> & val) {
+    conditions = val;
+  }
+
+  void __set_limit(const int32_t val) {
+    limit = val;
+  }
+
+  void __set_limit_start(const int32_t val) {
+    limit_start = val;
+  }
+
+  bool operator == (const DbProxyService_query2_args & rhs) const
+  {
+    if (!(seq == rhs.seq))
+      return false;
+    if (!(database_index == rhs.database_index))
+      return false;
+    if (!(tablename == rhs.tablename))
+      return false;
+    if (!(fields == rhs.fields))
+      return false;
+    if (!(conditions == rhs.conditions))
+      return false;
+    if (!(limit == rhs.limit))
+      return false;
+    if (!(limit_start == rhs.limit_start))
+      return false;
+    return true;
+  }
+  bool operator != (const DbProxyService_query2_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const DbProxyService_query2_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class DbProxyService_query2_pargs {
+ public:
+
+
+  virtual ~DbProxyService_query2_pargs() throw() {}
+
+  const int32_t* seq;
+  const int32_t* database_index;
+  const std::string* tablename;
+  const std::vector<std::string> * fields;
+  const std::vector<Condition> * conditions;
+  const int32_t* limit;
+  const int32_t* limit_start;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _DbProxyService_query2_result__isset {
+  _DbProxyService_query2_result__isset() : success(false) {}
+  bool success;
+} _DbProxyService_query2_result__isset;
+
+class DbProxyService_query2_result {
+ public:
+
+  DbProxyService_query2_result() {
+  }
+
+  virtual ~DbProxyService_query2_result() throw() {}
+
+  DBTable success;
+
+  _DbProxyService_query2_result__isset __isset;
+
+  void __set_success(const DBTable& val) {
+    success = val;
+  }
+
+  bool operator == (const DbProxyService_query2_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const DbProxyService_query2_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const DbProxyService_query2_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _DbProxyService_query2_presult__isset {
+  _DbProxyService_query2_presult__isset() : success(false) {}
+  bool success;
+} _DbProxyService_query2_presult__isset;
+
+class DbProxyService_query2_presult {
+ public:
+
+
+  virtual ~DbProxyService_query2_presult() throw() {}
+
+  DBTable* success;
+
+  _DbProxyService_query2_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
 class DbProxyServiceClient : virtual public DbProxyServiceIf {
  public:
   DbProxyServiceClient(boost::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) :
@@ -453,6 +908,15 @@ class DbProxyServiceClient : virtual public DbProxyServiceIf {
   int32_t recv_update();
   void async_update(const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string> & tokens);
   void send_async_update(const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string> & tokens);
+  int32_t update2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens, const std::vector<Condition> & conditions);
+  void send_update2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens, const std::vector<Condition> & conditions);
+  int32_t recv_update2();
+  int32_t insert2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens);
+  void send_insert2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens);
+  int32_t recv_insert2();
+  void query2(DBTable& _return, const int32_t seq, const int32_t database_index, const std::string& tablename, const std::vector<std::string> & fields, const std::vector<Condition> & conditions, const int32_t limit, const int32_t limit_start);
+  void send_query2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::vector<std::string> & fields, const std::vector<Condition> & conditions, const int32_t limit, const int32_t limit_start);
+  void recv_query2(DBTable& _return);
  protected:
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
@@ -471,12 +935,18 @@ class DbProxyServiceProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_query(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_update(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_async_update(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_update2(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_insert2(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_query2(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
   DbProxyServiceProcessor(boost::shared_ptr<DbProxyServiceIf> iface) :
     iface_(iface) {
     processMap_["query"] = &DbProxyServiceProcessor::process_query;
     processMap_["update"] = &DbProxyServiceProcessor::process_update;
     processMap_["async_update"] = &DbProxyServiceProcessor::process_async_update;
+    processMap_["update2"] = &DbProxyServiceProcessor::process_update2;
+    processMap_["insert2"] = &DbProxyServiceProcessor::process_insert2;
+    processMap_["query2"] = &DbProxyServiceProcessor::process_query2;
   }
 
   virtual ~DbProxyServiceProcessor() {}
@@ -531,6 +1001,34 @@ class DbProxyServiceMultiface : virtual public DbProxyServiceIf {
       ifaces_[i]->async_update(sign, seq, update_index, tokens);
     }
     ifaces_[i]->async_update(sign, seq, update_index, tokens);
+  }
+
+  int32_t update2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens, const std::vector<Condition> & conditions) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->update2(seq, database_index, tablename, tokens, conditions);
+    }
+    return ifaces_[i]->update2(seq, database_index, tablename, tokens, conditions);
+  }
+
+  int32_t insert2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->insert2(seq, database_index, tablename, tokens);
+    }
+    return ifaces_[i]->insert2(seq, database_index, tablename, tokens);
+  }
+
+  void query2(DBTable& _return, const int32_t seq, const int32_t database_index, const std::string& tablename, const std::vector<std::string> & fields, const std::vector<Condition> & conditions, const int32_t limit, const int32_t limit_start) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->query2(_return, seq, database_index, tablename, fields, conditions, limit, limit_start);
+    }
+    ifaces_[i]->query2(_return, seq, database_index, tablename, fields, conditions, limit, limit_start);
+    return;
   }
 
 };

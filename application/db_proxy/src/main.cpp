@@ -6,7 +6,6 @@
 #include "DbProxyService.h" // 执行cmake或make db_proxy_rpc时生成的文件
 #include <map>
 #include <mooon/net/thrift_helper.h>
-#include <mooon/observer/observer_manager.h>
 #include <mooon/sys/file_locker.h>
 #include <mooon/sys/main_template.h>
 #include <mooon/sys/safe_logger.h>
@@ -72,8 +71,6 @@ private:
 
 private:
     mooon::utils::ScopedPtr<mooon::sys::CSafeLogger> _data_logger;
-    mooon::utils::ScopedPtr<mooon::observer::CDefaultDataReporter> _data_reporter;
-    mooon::observer::IObserverManager* _observer_manager;
     mooon::net::CThriftServerHelper<mooon::db_proxy::CDbProxyHandler, mooon::db_proxy::DbProxyServiceProcessor> _thrift_server;
 };
 
@@ -89,7 +86,7 @@ extern "C" int main(int argc, char* argv[])
 }
 
 CMainHelper::CMainHelper()
-    : _stop_signal_thread(false), _signal_thread(NULL), _cleanup_cache_thread(NULL), _observer_manager(NULL)
+    : _stop_signal_thread(false), _signal_thread(NULL), _cleanup_cache_thread(NULL)
 {
 }
 
@@ -97,7 +94,6 @@ CMainHelper::~CMainHelper()
 {
     delete _cleanup_cache_thread;
     delete _signal_thread;
-    mooon::observer::destroy();
 }
 
 void CMainHelper::cleanup_cache_thread()
@@ -199,26 +195,6 @@ bool CMainHelper::init(int argc, char* argv[])
         const std::string port_str = mooon::utils::CStringUtils::int_tostring(port);
         mooon::sys::g_logger = mooon::sys::create_safe_logger(true, 8096, port_str);
 
-        // 只有当参数report_frequency_seconds的值大于0时才启动统计功能
-        int report_frequency_seconds = mooon::argument::report_frequency_seconds->value();
-        if (report_frequency_seconds > 0)
-        {
-            std::string data_dirpath = mooon::observer::get_data_dirpath();
-            if (data_dirpath.empty())
-                return false;
-
-            const std::string program_short_name = mooon::sys::CUtils::get_program_short_name();
-            std::string data_filename = mooon::utils::CStringUtils::remove_suffix(program_short_name);
-            data_filename += std::string("_") + port_str + std::string(".data");
-            _data_logger.reset(new mooon::sys::CSafeLogger(data_dirpath.c_str(), data_filename.c_str()));
-            _data_logger->enable_raw_log(true);
-            _data_reporter.reset(new mooon::observer::CDefaultDataReporter(_data_logger.get()));
-
-            _observer_manager = mooon::observer::create(_data_reporter.get(), report_frequency_seconds);
-            if (NULL == _observer_manager)
-                return false;
-        }
-
         std::string filepath = mooon::db_proxy::CConfigLoader::get_filepath();
         if (!mooon::db_proxy::CConfigLoader::get_singleton()->load(filepath))
         {
@@ -236,9 +212,6 @@ bool CMainHelper::init(int argc, char* argv[])
 
 bool CMainHelper::run()
 {
-    //mooon::db_proxy::CConfigLoader* config_loader = mooon::db_proxy::CConfigLoader::get_singleton();
-    //mooon::sys::CThreadEngine monitor(mooon::sys::bind(&mooon::db_proxy::CConfigLoader::monitor, config_loader));
-
     try
     {
         MYLOG_INFO("thrift will listen on port[%u]\n", mooon::argument::port->value());
@@ -276,7 +249,6 @@ void CMainHelper::fini()
 void CMainHelper::stop()
 {
     _thrift_server.stop();
-    //mooon::db_proxy::CConfigLoader::get_singleton()->stop_monitor();
     _stop_signal_thread = true;
 
     for (std::map<pid_t, mooon::db_proxy::DbInfo>::iterator iter=_db_process_table.begin(); iter!=_db_process_table.end(); ++iter)

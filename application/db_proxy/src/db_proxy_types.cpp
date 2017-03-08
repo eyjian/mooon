@@ -10,4 +10,92 @@
 
 namespace mooon { namespace db_proxy {
 
+const char* Condition::ascii_fingerprint = "AB879940BD15B6B25691265F7384B271";
+const uint8_t Condition::binary_fingerprint[16] = {0xAB,0x87,0x99,0x40,0xBD,0x15,0xB6,0xB2,0x56,0x91,0x26,0x5F,0x73,0x84,0xB2,0x71};
+
+uint32_t Condition::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->op);
+          this->__isset.op = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->left);
+          this->__isset.left = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->right);
+          this->__isset.right = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t Condition::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  xfer += oprot->writeStructBegin("Condition");
+
+  xfer += oprot->writeFieldBegin("op", ::apache::thrift::protocol::T_STRING, 1);
+  xfer += oprot->writeString(this->op);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("left", ::apache::thrift::protocol::T_STRING, 2);
+  xfer += oprot->writeString(this->left);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("right", ::apache::thrift::protocol::T_STRING, 3);
+  xfer += oprot->writeString(this->right);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(Condition &a, Condition &b) {
+  using ::std::swap;
+  swap(a.op, b.op);
+  swap(a.left, b.left);
+  swap(a.right, b.right);
+  swap(a.__isset, b.__isset);
+}
+
 }} // namespace

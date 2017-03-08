@@ -20,6 +20,65 @@ typedef std::vector<std::string>  DBRow;
 
 typedef std::vector<DBRow>  DBTable;
 
+typedef struct _Condition__isset {
+  _Condition__isset() : op(false), left(false), right(false) {}
+  bool op;
+  bool left;
+  bool right;
+} _Condition__isset;
+
+class Condition {
+ public:
+
+  static const char* ascii_fingerprint; // = "AB879940BD15B6B25691265F7384B271";
+  static const uint8_t binary_fingerprint[16]; // = {0xAB,0x87,0x99,0x40,0xBD,0x15,0xB6,0xB2,0x56,0x91,0x26,0x5F,0x73,0x84,0xB2,0x71};
+
+  Condition() : op(), left(), right() {
+  }
+
+  virtual ~Condition() throw() {}
+
+  std::string op;
+  std::string left;
+  std::string right;
+
+  _Condition__isset __isset;
+
+  void __set_op(const std::string& val) {
+    op = val;
+  }
+
+  void __set_left(const std::string& val) {
+    left = val;
+  }
+
+  void __set_right(const std::string& val) {
+    right = val;
+  }
+
+  bool operator == (const Condition & rhs) const
+  {
+    if (!(op == rhs.op))
+      return false;
+    if (!(left == rhs.left))
+      return false;
+    if (!(right == rhs.right))
+      return false;
+    return true;
+  }
+  bool operator != (const Condition &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Condition & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+void swap(Condition &a, Condition &b);
+
 }} // namespace
 
 #endif
