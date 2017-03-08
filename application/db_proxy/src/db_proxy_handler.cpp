@@ -140,7 +140,7 @@ void CDbProxyHandler::async_update(const std::string& sign, const int32_t seq, c
     (void)do_update(false, sign, seq, update_index, tokens);
 }
 
-// UPDATE tablename (tokens[0].first) VALUES (tokens[0].second) WEHRE (conditions[0].left op conditions[0].right)
+// UPDATE tablename SET tokens[0].first="tokens[0].second",tokens[1].first="tokens[1].second" WEHRE (conditions[0].left op conditions[0].right)
 int32_t CDbProxyHandler::update2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens, const std::vector<Condition> & conditions)
 {
     try
@@ -162,26 +162,14 @@ int32_t CDbProxyHandler::update2(const int32_t seq, const int32_t database_index
             throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("database_index(%d) not exists or cannot connect", database_index));
         }
 
-        // UPDATE tablename (tokens[0].first,tokens[1].first
+        // UPDATE tablename SET tokens[0].first="tokens[0].second",tokens[1].first="tokens[1].second"
         for (std::map<std::string, std::string>::const_iterator iter=tokens.begin(); iter!=tokens.end(); ++iter)
         {
             if (iter == tokens.begin())
-                sql = std::string("UPDATE ") + tablename + std::string(" (") + db_connection->escape_string(iter->first);
+                sql = std::string("UPDATE ") + tablename + std::string(" SET ") + db_connection->escape_string(iter->first) + std::string("=\"") + db_connection->escape_string(iter->second) + std::string("\"");
             else
-                sql += std::string(",") + db_connection->escape_string(iter->first);
+                sql += std::string(",") + db_connection->escape_string(iter->first) + std::string("=\"") + db_connection->escape_string(iter->second) + std::string("\"");
         }
-
-        // VALUES (tokens[0].second,tokens[1].second
-        for (std::map<std::string, std::string>::const_iterator iter=tokens.begin(); iter!=tokens.end(); ++iter)
-        {
-            if (iter == tokens.begin())
-                sql += std::string(") VALUES (") + db_connection->escape_string(iter->second);
-            else
-                sql += std::string(",") + db_connection->escape_string(iter->second);
-        }
-
-        // )
-        sql += std::string(")");
 
         // WEHRE (conditions[0].left op conditions[0].right)
         if (!conditions.empty())
@@ -247,9 +235,9 @@ int32_t CDbProxyHandler::insert2(const int32_t seq, const int32_t database_index
         for (std::map<std::string, std::string>::const_iterator iter=tokens.begin(); iter!=tokens.end(); ++iter)
         {
             if (iter == tokens.begin())
-                sql += std::string(") VALUES (") + db_connection->escape_string(iter->second);
+                sql += std::string(") VALUES (\"") + db_connection->escape_string(iter->second) + std::string("\"");
             else
-                sql += std::string(",") + db_connection->escape_string(iter->second);
+                sql += std::string(",\"") + db_connection->escape_string(iter->second) + std::string("\"");;
         }
 
         // )
