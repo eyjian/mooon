@@ -189,10 +189,17 @@ int32_t CDbProxyHandler::update2(const int32_t seq, const int32_t database_index
             for (std::vector<Condition>::size_type i=0; i<conditions.size(); ++i)
             {
                 const Condition& condition = conditions[i];
+
                 if (0 == i)
-                    sql += std::string(" WHERE (") + db_connection->escape_string(condition.left) + std::string(" ") + db_connection->escape_string(condition.op) + std::string(" ") + db_connection->escape_string(condition.right) + std::string(")");
+                    sql += std::string(" WHERE (") + db_connection->escape_string(condition.left) + std::string(" ") + db_connection->escape_string(condition.op) + std::string(" ");
                 else
-                    sql += std::string(" AND (") + db_connection->escape_string(condition.left) + std::string(" ") + db_connection->escape_string(condition.op) + std::string(" ") + db_connection->escape_string(condition.right) + std::string(")");
+                    sql += std::string(" AND (") + db_connection->escape_string(condition.left) + std::string(" ") + db_connection->escape_string(condition.op) + std::string(" ");
+
+                if (!condition.is_string)
+                    sql += db_connection->escape_string(condition.right);
+                else
+                    sql += std::string("\"") + db_connection->escape_string(condition.right) + std::string("\"");
+                sql += std::string(")");
             }
         }
 
@@ -281,10 +288,12 @@ void CDbProxyHandler::query2(DBTable& _return, const int32_t seq, const int32_t 
         // SELECT fields[0],fields[1]
         for (std::vector<std::string>::size_type i=0; i<fields.size(); ++i)
         {
+            const std::string& field = fields[i];
+
             if (0 == i)
-                sql = std::string("SELECT ") + db_connection->escape_string(fields[0]);
+                sql = std::string("SELECT ") + db_connection->escape_string(field);
             else
-                sql += std::string(",") + db_connection->escape_string(fields[1]);
+                sql += std::string(",") + db_connection->escape_string(field);
         }
 
         // FROM tablename
@@ -295,11 +304,19 @@ void CDbProxyHandler::query2(DBTable& _return, const int32_t seq, const int32_t 
         {
             for (std::vector<Condition>::size_type i=0; i<conditions.size(); ++i)
             {
+                const Condition& condition = conditions[i];
+
                 if (0 == i)
                     sql += std::string(" WHERE (");
                 else
                     sql += std::string(" AND (");
-                sql += db_connection->escape_string(conditions[i].left) + std::string(" ") + db_connection->escape_string(conditions[i].op) + std::string(" ") + db_connection->escape_string(conditions[i].right) + std::string(")");
+
+                sql += db_connection->escape_string(condition.left) + std::string(" ") + db_connection->escape_string(condition.op) + std::string(" ");
+                if (!condition.is_string)
+                    sql += db_connection->escape_string(condition.right);
+                else
+                    sql += std::string("\"") + db_connection->escape_string(condition.right) + std::string("\"");
+                sql += std::string(")");
             }
         }
 
@@ -312,6 +329,7 @@ void CDbProxyHandler::query2(DBTable& _return, const int32_t seq, const int32_t 
         else
             sql += utils::CStringUtils::format_string(" LIMIT %d,%d", limit_start, limit_);
 
+        MYLOG_DEBUG("%s", sql.c_str());
         db_connection->query(_return, "%s", sql.c_str());
     }
     catch (sys::CDBException& ex)

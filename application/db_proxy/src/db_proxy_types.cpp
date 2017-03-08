@@ -10,8 +10,8 @@
 
 namespace mooon { namespace db_proxy {
 
-const char* Condition::ascii_fingerprint = "AB879940BD15B6B25691265F7384B271";
-const uint8_t Condition::binary_fingerprint[16] = {0xAB,0x87,0x99,0x40,0xBD,0x15,0xB6,0xB2,0x56,0x91,0x26,0x5F,0x73,0x84,0xB2,0x71};
+const char* Condition::ascii_fingerprint = "557CE3E1F35DD5D74A3999FB1200CAB8";
+const uint8_t Condition::binary_fingerprint[16] = {0x55,0x7C,0xE3,0xE1,0xF3,0x5D,0xD5,0xD7,0x4A,0x39,0x99,0xFB,0x12,0x00,0xCA,0xB8};
 
 uint32_t Condition::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -57,6 +57,14 @@ uint32_t Condition::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_BOOL) {
+          xfer += iprot->readBool(this->is_string);
+          this->__isset.is_string = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -85,6 +93,10 @@ uint32_t Condition::write(::apache::thrift::protocol::TProtocol* oprot) const {
   xfer += oprot->writeString(this->right);
   xfer += oprot->writeFieldEnd();
 
+  xfer += oprot->writeFieldBegin("is_string", ::apache::thrift::protocol::T_BOOL, 4);
+  xfer += oprot->writeBool(this->is_string);
+  xfer += oprot->writeFieldEnd();
+
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
@@ -95,6 +107,7 @@ void swap(Condition &a, Condition &b) {
   swap(a.op, b.op);
   swap(a.left, b.left);
   swap(a.right, b.right);
+  swap(a.is_string, b.is_string);
   swap(a.__isset, b.__isset);
 }
 

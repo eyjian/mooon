@@ -8,12 +8,13 @@ namespace py mooon.db_proxy
 typedef list<string> DBRow
 typedef list<DBRow> DBTable
 
-// Where语句结点：left op right
+// Where语句结点：left op right（如果is_string为true，则为：left op "right"）
 struct Condition
 {
-    1: string op,
-    2: string left,
-    3: string right 
+    1: string op,             // SQL比较操作符
+    2: string left,           // 要求为字段名
+    3: string right,          // 可为字段名或字符串值或数字值
+    4: bool is_string = false // 如果为true，则会对right加引号括起来，即以字符串方式比较，否则以数字方式比较
 }
 
 // 对应的配置文件为sql.json
