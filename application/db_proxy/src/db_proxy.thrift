@@ -50,5 +50,6 @@ service DbProxyService
 
     // 根据参数自动拼接sql，不需要模版
     // conditions Where条件结点，只有AND关系，如：(conditions[0].left op conditions[0].right) AND (conditions[1].left op conditions[1].right)
-    DBTable query2(1: i32 seq, 2: i32 database_index,  3: string tablename, 4: list<string> fields, 5: list<Condition> conditions, 6: i32 limit, 7: i32 limit_start)
+    // groupby和orderby可以为空，表示不分组不排序，也可以只其中一个为空
+    DBTable query2(1: i32 seq, 2: i32 database_index,  3: string tablename, 4: list<string> fields, 5: list<Condition> conditions, 6: string groupby, 7: string orderby, 8: i32 limit, 9: i32 limit_start)
 }

@@ -34,7 +34,7 @@ private: // override DbProxyServiceIf
 
     virtual int32_t update2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens, const std::vector<Condition> & conditions);
     virtual int32_t insert2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens);
-    virtual void query2(DBTable& _return, const int32_t seq, const int32_t database_index, const std::string& table, const std::vector<std::string> & fields, const std::vector<Condition> & conditions, const int32_t limit, const int32_t limit_start);
+    virtual void query2(DBTable& _return, const int32_t seq, const int32_t database_index, const std::string& table, const std::vector<std::string> & fields, const std::vector<Condition> & conditions, const std::string& groupby, const std::string& orderby, const int32_t limit, const int32_t limit_start);
 
 private:
     // 对字符串进行编码，以防止SQL注入

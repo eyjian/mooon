@@ -251,8 +251,8 @@ int32_t CDbProxyHandler::insert2(const int32_t seq, const int32_t database_index
     }
 }
 
-// SELECT fields[0],fields[1] FROM tablename WHERE (conditions[0].left conditions[0].op conditions[0].right) LIMIT limit_start,limit
-void CDbProxyHandler::query2(DBTable& _return, const int32_t seq, const int32_t database_index, const std::string& tablename, const std::vector<std::string> & fields, const std::vector<Condition> & conditions, const int32_t limit, const int32_t limit_start)
+// SELECT fields[0],fields[1] FROM tablename WHERE (conditions[0].left conditions[0].op conditions[0].right) GROUP BY groupby ORDER BY orderby LIMIT limit_start,limit
+void CDbProxyHandler::query2(DBTable& _return, const int32_t seq, const int32_t database_index, const std::string& tablename, const std::vector<std::string> & fields, const std::vector<Condition> & conditions, const std::string& groupby, const std::string& orderby, const int32_t limit, const int32_t limit_start)
 {
     try
     {
@@ -307,6 +307,13 @@ void CDbProxyHandler::query2(DBTable& _return, const int32_t seq, const int32_t 
                 sql += std::string(")");
             }
         }
+
+        // GROUP BY groupby
+        if (!groupby.empty())
+            sql += std::string(" GROUP BY ") + groupby;
+        // ORDER BY orderby
+        if (!orderby.empty())
+            sql += std::string(" ORDER BY ") + orderby;
 
         // LIMIT
         int32_t limit_ = limit;
