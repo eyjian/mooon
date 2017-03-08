@@ -128,7 +128,7 @@ void CDbProxyHandler::query(DBTable& _return, const std::string& sign, const int
     }
 }
 
-int CDbProxyHandler::update(const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string>& tokens)
+int64_t CDbProxyHandler::update(const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string>& tokens)
 {
     return do_update(true, sign, seq, update_index, tokens);
 }
@@ -141,7 +141,7 @@ void CDbProxyHandler::async_update(const std::string& sign, const int32_t seq, c
 }
 
 // UPDATE tablename SET tokens[0].first="tokens[0].second",tokens[1].first="tokens[1].second" WEHRE (conditions[0].left op conditions[0].right)
-int32_t CDbProxyHandler::update2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens, const std::vector<Condition> & conditions)
+int64_t CDbProxyHandler::update2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens, const std::vector<Condition> & conditions)
 {
     try
     {
@@ -201,7 +201,7 @@ int32_t CDbProxyHandler::update2(const int32_t seq, const int32_t database_index
 }
 
 // INSERT INTO tablename (tokens[0].first,tokens[1].first) VALUES (tokens[0].second,tokens[1].second)
-int32_t CDbProxyHandler::insert2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens)
+int64_t CDbProxyHandler::insert2(const int32_t seq, const int32_t database_index, const std::string& tablename, const std::map<std::string, std::string> & tokens)
 {
     try
     {
@@ -242,7 +242,16 @@ int32_t CDbProxyHandler::insert2(const int32_t seq, const int32_t database_index
 
         // )
         sql += std::string(")");
-        return write_sql(db_info, db_connection, sql);
+        (void)write_sql(db_info, db_connection, sql);
+
+        // 取得insert_id
+        uint64_t insert_id = 0;
+        if (db_info.alias.empty())
+        {
+            insert_id = db_connection->get_insert_id();
+        }
+
+        return static_cast<int64_t>(insert_id);
     }
     catch (sys::CDBException& ex)
     {
@@ -353,7 +362,7 @@ void CDbProxyHandler::escape_tokens(void* db_connection, const std::vector<std::
 }
 
 // 对于异步调用，不抛异常，因为异步调用不会等待该函数执行，也就是收不到抛出的异常
-int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string>& tokens)
+int64_t CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, const int32_t seq, const int32_t update_index, const std::vector<std::string>& tokens)
 {
     CConfigLoader* config_loader = CConfigLoader::get_singleton();
     struct UpdateInfo update_info;
@@ -426,7 +435,7 @@ int CDbProxyHandler::do_update(bool throw_exception, const std::string& sign, co
                         MYLOG_DEBUG("%s\n", sql.c_str());
                         int affected_rows = db_connection->update("%s", sql.c_str());
                         MYLOG_DEBUG("[%s] affected_rows: %d\n", sql.c_str(), affected_rows);
-                        return affected_rows;
+                        return static_cast<int64_t>(affected_rows);
                     }
                 }
                 catch (sys::CDBException& db_ex)
@@ -508,16 +517,16 @@ void CDbProxyHandler::add_data_to_cache(const DBTable& dbtable, const std::strin
     }
 }
 
-int CDbProxyHandler::write_sql(const struct DbInfo& db_info, sys::DBConnection* db_connection, const std::string& sql)
+int64_t CDbProxyHandler::write_sql(const struct DbInfo& db_info, sys::DBConnection* db_connection, const std::string& sql)
 {
     MYLOG_DEBUG("%s", sql.c_str());
 
     if (db_info.alias.empty())
     {
         // 直接入库
-        int affected_rows = db_connection->update("%s", sql.c_str());
-        MYLOG_DEBUG("[%s] affected_rows: %d\n", sql.c_str(), affected_rows);
-        return affected_rows;
+        const uint64_t affected_rows = db_connection->update("%s", sql.c_str());
+        MYLOG_DEBUG("[%s] affected_rows: %" PRIu64"\n", sql.c_str(), affected_rows);
+        return static_cast<int64_t>(affected_rows);
     }
     else
     {
