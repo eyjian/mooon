@@ -85,7 +85,7 @@ void CSQLite3Connection::reopen() throw (CDBException)
     open();
 }
 
-int CSQLite3Connection::update(const char* format, ...) throw (CDBException)
+uint64_t CSQLite3Connection::update(const char* format, ...) throw (CDBException)
 {
     MOOON_ASSERT(_sqlite != NULL);
 
@@ -126,7 +126,7 @@ int CSQLite3Connection::update(const char* format, ...) throw (CDBException)
                 -1, __FILE__, __LINE__);
     }
 
-    return ret;
+    return static_cast<uint64_t>(ret);
 }
 
 std::string CSQLite3Connection::str() throw ()

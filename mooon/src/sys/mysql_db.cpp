@@ -173,7 +173,7 @@ void CMySQLConnection::reopen() throw (CDBException)
     do_open();
 }
 
-int CMySQLConnection::update(const char* format, ...) throw (CDBException)
+uint64_t CMySQLConnection::update(const char* format, ...) throw (CDBException)
 {
     MOOON_ASSERT(_mysql_handler != NULL);
 
@@ -209,7 +209,7 @@ int CMySQLConnection::update(const char* format, ...) throw (CDBException)
                 mysql_errno(mysql_handler), __FILE__, __LINE__);
     }
 
-    return static_cast<int>(mysql_affected_rows(mysql_handler));
+    return static_cast<uint64_t>(mysql_affected_rows(mysql_handler));
 }
 
 uint64_t CMySQLConnection::get_insert_id() const
