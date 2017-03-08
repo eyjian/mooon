@@ -38,6 +38,11 @@ public:
     static void library_end();
 
     static bool is_duplicate(int errcode);
+
+    // 双引号转成：\"
+    // 单引号转成：\'
+    // 单斜杠转成：\\
+    // 注意不转义#、%、,、;、&、-和_等
     static void escape_string(const std::string& str, std::string* escaped_str);
 
 public:
