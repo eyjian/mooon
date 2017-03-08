@@ -36,9 +36,9 @@ INTEGER_ARG_DEFINE(uint8_t, batch, 1, 1, std::numeric_limits<uint8_t>::max(), "n
 INTEGER_ARG_DEFINE(uint16_t, efficiency, 10, 2, std::numeric_limits<uint8_t>::max(), "interval to output efficiency (seconds)");
 
 // 缓存多少笔数据
-INTEGER_ARG_DEFINE(int32_t, cache_number, 100000, 1, 10000000, "the number of data cached");
+INTEGER_ARG_DEFINE(int32_t, cache_number, 200000, 1, 200000000, "the number of data cached");
 // 清理缓存频率，单位为秒
-INTEGER_ARG_DEFINE(int32_t, cleanup_frequency, 2, 1, 3600, "the frequency to cleanup the cached data");
+INTEGER_ARG_DEFINE(int32_t, cleanup_frequency, 10, 1, 3600, "the frequency to cleanup the cached data");
 
 class CMainHelper: public mooon::sys::IMainHelper
 {
