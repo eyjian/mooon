@@ -183,10 +183,23 @@ int64_t CDbProxyHandler::update2(const int32_t seq, const int32_t database_index
                 else
                     sql += std::string(" AND (") + db_connection->escape_string(condition.left) + std::string(" ") + db_connection->escape_string(condition.op) + std::string(" ");
 
-                if (!condition.is_string)
-                    sql += db_connection->escape_string(condition.right);
-                else
+                if (condition.is_string)
+                {
                     sql += std::string("\"") + db_connection->escape_string(condition.right) + std::string("\"");
+                }
+                else
+                {
+                    if (utils::CStringUtils::is_numeric_string(condition.right.c_str()))
+                    {
+                        sql += db_connection->escape_string(condition.right);
+                    }
+                    else
+                    {
+                        MYLOG_ERROR("invalid condition.right[%d][%s]\n", seq, condition.right.c_str());
+                        throw apache::thrift::TApplicationException("invalid condition.right");
+                    }
+                }
+
                 sql += std::string(")");
             }
         }
@@ -309,10 +322,23 @@ void CDbProxyHandler::query2(DBTable& _return, const int32_t seq, const int32_t 
                     sql += std::string(" AND (");
 
                 sql += db_connection->escape_string(condition.left) + std::string(" ") + db_connection->escape_string(condition.op) + std::string(" ");
-                if (!condition.is_string)
-                    sql += db_connection->escape_string(condition.right);
-                else
+                if (condition.is_string)
+                {
                     sql += std::string("\"") + db_connection->escape_string(condition.right) + std::string("\"");
+                }
+                else
+                {
+                    if (utils::CStringUtils::is_numeric_string(condition.right.c_str()))
+                    {
+                        sql += db_connection->escape_string(condition.right);
+                    }
+                    else
+                    {
+                        MYLOG_ERROR("invalid condition.right[SEQ:%d][DB:%d][%s]\n", seq, database_index, condition.right.c_str());
+                        throw apache::thrift::TApplicationException("invalid condition.right");
+                    }
+                }
+
                 sql += std::string(")");
             }
         }
@@ -338,7 +364,7 @@ void CDbProxyHandler::query2(DBTable& _return, const int32_t seq, const int32_t 
     }
     catch (sys::CDBException& ex)
     {
-        MYLOG_ERROR("[%d]%s\n", seq, ex.str().c_str());
+        MYLOG_ERROR("[SEQ:%d][DB:%d]%s\n", seq, database_index, ex.str().c_str());
         throw apache::thrift::TApplicationException(ex.str());
     }
 }
