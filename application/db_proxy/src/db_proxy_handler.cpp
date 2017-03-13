@@ -345,10 +345,10 @@ void CDbProxyHandler::query2(DBTable& _return, const int32_t seq, const int32_t 
 
         // GROUP BY groupby
         if (!groupby.empty())
-            sql += std::string(" GROUP BY ") + groupby;
+            sql += std::string(" GROUP BY ") + db_connection->escape_string(groupby);
         // ORDER BY orderby
         if (!orderby.empty())
-            sql += std::string(" ORDER BY ") + orderby;
+            sql += std::string(" ORDER BY ") + db_connection->escape_string(orderby);
 
         // LIMIT
         int32_t limit_ = limit;
