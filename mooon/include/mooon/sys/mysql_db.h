@@ -56,7 +56,8 @@ public:
     virtual bool is_deadlock_exception(CDBException& db_error) const;
     virtual bool is_shutdowning_exception(CDBException& db_error) const;
 
-    virtual std::string escape_string(const std::string& str) const;
+    virtual std::string escape_string(const std::string& str) const throw (CDBException);
+    virtual void change_charset(const std::string& charset) throw (CDBException);
     virtual void open() throw (CDBException);
     virtual void close() throw ();
     virtual void reopen() throw (CDBException);

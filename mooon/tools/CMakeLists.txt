@@ -62,6 +62,18 @@ if (HAVE_THRIFT)
            )      
 endif ()
 
+# mysql_escape_test
+if (HAVE_MYSQL)    
+    add_executable(mysql_escape_test mysql_escape_test.cpp)
+    target_link_libraries(mysql_escape_test libmooon_sys.a libmooon_utils.a libmysqlclient.a)
+    
+    # CMAKE_INSTALL_PREFIX
+    install(
+            TARGETS mysql_escape_test
+            DESTINATION bin
+           ) 
+endif ()
+
 # CMAKE_INSTALL_PREFIX
 install(
         TARGETS md5 disk_benchmark

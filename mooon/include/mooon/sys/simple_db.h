@@ -88,7 +88,7 @@ public:
 
     // 对字符串进行编码，以防止SQL注入
     // str 需要编码的字符串，返回被编码后的字符串
-    virtual std::string escape_string(const std::string& str) const = 0;
+    virtual std::string escape_string(const std::string& str) const throw (CDBException) = 0;
 
     /***
      * 设置需要连接的DB的IP和服务端口号
@@ -154,6 +154,12 @@ public:
      */
     virtual void set_null_value(const std::string& null_value) = 0;
     
+    /***
+     * 设置或修改连接的字符集
+     * 如果charset为空，则什么也不做
+     */
+    virtual void change_charset(const std::string& charset) throw (CDBException) {}
+
     /***
      * 建立一个DB连接
      * 出错抛出异常CDBException
@@ -243,7 +249,7 @@ public:
     CDBConnectionBase(size_t sql_size);
 
 public:
-    virtual std::string escape_string(const std::string& str) const { return str; }
+    virtual std::string escape_string(const std::string& str) const  throw (CDBException) { return str; }
     virtual void set_host(const std::string& db_ip, uint16_t db_port);
     virtual void set_db_name(const std::string& db_name);
     virtual void set_user(const std::string& db_user, const std::string& db_password);

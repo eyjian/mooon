@@ -72,7 +72,10 @@ void CMySQLConnection::escape_string(const std::string& str, std::string* escape
 {
     escaped_str->resize(str.size()*2+1, '\0');
     int escaped_string_length = mysql_escape_string(const_cast<char*>(escaped_str->data()), str.c_str(), str.length());
-    escaped_str->resize(escaped_string_length);
+    if (escaped_string_length >= 0)
+        escaped_str->resize(escaped_string_length);
+    else
+        escaped_str->resize(0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,7 +128,7 @@ bool CMySQLConnection::is_shutdowning_exception(CDBException& db_error) const
     return ER_SERVER_SHUTDOWN == errcode;
 }
 
-std::string CMySQLConnection::escape_string(const std::string& str) const
+std::string CMySQLConnection::escape_string(const std::string& str) const throw (CDBException)
 {
     MOOON_ASSERT(_mysql_handler != NULL);
 
@@ -140,12 +143,48 @@ std::string CMySQLConnection::escape_string(const std::string& str) const
     }
     else
     {
-        escaped_string_length = mysql_real_escape_string(
-            mysql_handler, const_cast<char*>(escaped_string.data()), str.c_str(), str.length());
+        // #define MYSQL_SERVER_VERSION       "5.7.12"
+        // #define MYSQL_VERSION_ID            50712
+        // #define LIBMYSQL_VERSION           "5.7.12"  // 有些版本无此定义
+        // #define LIBMYSQL_VERSION_ID         50712    // 有些版本无此定义
+        //
+        // As of MySQL 5.7.6, mysql_real_escape_string() fails and produces an CR_INSECURE_API_ERR error if the NO_BACKSLASH_ESCAPES SQL mode is enabled.
+#if MYSQL_VERSION_ID < 50706
+            escaped_string_length = mysql_real_escape_string(
+                mysql_handler, const_cast<char*>(escaped_string.data()), str.c_str(), str.length());
+#else
+            escaped_string_length = mysql_real_escape_string(
+                mysql_handler, const_cast<char*>(escaped_string.data()), str.c_str(), str.length());
+#endif // MYSQL_VERSION_ID
     }
 
-    escaped_string.resize(escaped_string_length);
-    return escaped_string;
+    if (escaped_string_length < 0)
+    {
+        escaped_string.resize(0);
+        throw CDBException(NULL,
+                           mysql_error(mysql_handler), mysql_errno(mysql_handler),
+                           __FILE__, __LINE__);
+    }
+    else
+    {
+        escaped_string.resize(escaped_string_length);
+        return escaped_string;
+    }
+}
+
+void CMySQLConnection::change_charset(const std::string& charset) throw (CDBException)
+{
+    if (!charset.empty())
+    {
+        MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
+
+        if (!mysql_set_character_set(mysql_handler, charset.c_str()))
+        {
+            throw CDBException(NULL,
+                               mysql_error(mysql_handler), mysql_errno(mysql_handler),
+                               __FILE__, __LINE__);
+        }
+    }
 }
 
 void CMySQLConnection::open() throw (CDBException)
