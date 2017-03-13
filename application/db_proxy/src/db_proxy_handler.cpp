@@ -191,7 +191,7 @@ int64_t CDbProxyHandler::update2(const int32_t seq, const int32_t database_index
                 {
                     if (utils::CStringUtils::is_numeric_string(condition.right.c_str()))
                     {
-                        sql += db_connection->escape_string(condition.right);
+                        sql += condition.right;
                     }
                     else
                     {
@@ -330,7 +330,7 @@ void CDbProxyHandler::query2(DBTable& _return, const int32_t seq, const int32_t 
                 {
                     if (utils::CStringUtils::is_numeric_string(condition.right.c_str()))
                     {
-                        sql += db_connection->escape_string(condition.right);
+                        sql += condition.right;
                     }
                     else
                     {
