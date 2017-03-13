@@ -754,14 +754,34 @@ std::string CStringUtils::format_string(const char* format, ...)
     return buffer.get();
 }
 
-bool CStringUtils::is_numeric_string(const char* str)
+bool CStringUtils::is_numeric_string(const char* str, bool enable_float)
 {
     const char* p = str;
+    bool found_dot = false;
 
     while (*p != '\0')
     {
         if (!(*p >= '0' && *p <= '9'))
-            return false;
+        {
+            if (*p != '.')
+            {
+                return false;
+            }
+            else if (!enable_float)
+            {
+                // 不允许小数
+                return false;
+            }
+            else // 可能是小数
+            {
+                if (found_dot) // 小数只会有一个点
+                    return false;
+                if (p == str) // 小数点不能为第一个字符，即不允许：“.2017”这样的小数
+                    return false;
+
+                found_dot = true;
+            }
+        }
 
         ++p;
     }

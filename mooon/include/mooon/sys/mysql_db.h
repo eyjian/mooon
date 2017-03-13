@@ -42,7 +42,7 @@ public:
     // 双引号转成：\"
     // 单引号转成：\'
     // 单斜杠转成双斜杠
-    // 注意不转义#、%、,、;、&、-和_等
+    // 注意不转义空格、|、?、<、>、{、}、:、~、@、!、(、)、`、#、%、,、;、&、-和_等
     static void escape_string(const std::string& str, std::string* escaped_str);
 
 public:

@@ -325,8 +325,8 @@ public:
       */
     static std::string format_string(const char* format, ...) __attribute__((format(printf, 1, 2)));
 
-    // 判断一个字符串是否为纯数字型字符串
-    static bool is_numeric_string(const char* str);
+    // 判断一个字符串是否为纯数字型字符串，包括小数（小数点不能是第一个字符）
+    static bool is_numeric_string(const char* str, bool enable_float=true);
 
     // 判断一个字符串是否为纯字母型字符串，而不包含数字、下划线等非字母
     static bool is_alphabetic_string(const char* str);
