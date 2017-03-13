@@ -166,7 +166,7 @@ int64_t CDbProxyHandler::update2(const int32_t seq, const int32_t database_index
         for (std::map<std::string, std::string>::const_iterator iter=tokens.begin(); iter!=tokens.end(); ++iter)
         {
             if (iter == tokens.begin())
-                sql = std::string("UPDATE ") + tablename + std::string(" SET ") + db_connection->escape_string(iter->first) + std::string("=\"") + db_connection->escape_string(iter->second) + std::string("\"");
+                sql = std::string("UPDATE ") + db_connection->escape_string(tablename) + std::string(" SET ") + db_connection->escape_string(iter->first) + std::string("=\"") + db_connection->escape_string(iter->second) + std::string("\"");
             else
                 sql += std::string(",") + db_connection->escape_string(iter->first) + std::string("=\"") + db_connection->escape_string(iter->second) + std::string("\"");
         }
@@ -226,7 +226,7 @@ int64_t CDbProxyHandler::insert2(const int32_t seq, const int32_t database_index
         for (std::map<std::string, std::string>::const_iterator iter=tokens.begin(); iter!=tokens.end(); ++iter)
         {
             if (iter == tokens.begin())
-                sql = std::string("INSERT INTO ") + tablename + std::string(" (") + db_connection->escape_string(iter->first);
+                sql = std::string("INSERT INTO ") + db_connection->escape_string(tablename) + std::string(" (") + db_connection->escape_string(iter->first);
             else
                 sql += std::string(",") + db_connection->escape_string(iter->first);
         }
@@ -294,7 +294,7 @@ void CDbProxyHandler::query2(DBTable& _return, const int32_t seq, const int32_t 
         }
 
         // FROM tablename
-        sql += std::string(" FROM ") + tablename;
+        sql += std::string(" FROM ") + db_connection->escape_string(tablename);
 
         // WHERE (conditions[0].left conditions[0].op conditions[0].right)
         if (!conditions.empty())
