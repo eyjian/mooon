@@ -48,6 +48,7 @@ public:
 public:
     CMySQLConnection(size_t sql_max=8192);
     ~CMySQLConnection();
+    void* get_mysql_handle() const { return _mysql_handle; }
 
 public:
     virtual bool is_syntax_exception(int errcode) const; // errcode值为1064
@@ -81,7 +82,7 @@ private:
     void do_open() throw (CDBException);
 
 private:
-    void* _mysql_handler; // MySQL句柄
+    void* _mysql_handle; // MySQL句柄
 };
 
 SYS_NAMESPACE_END

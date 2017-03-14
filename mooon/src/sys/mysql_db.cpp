@@ -80,7 +80,7 @@ void CMySQLConnection::escape_string(const std::string& str, std::string* escape
 
 ////////////////////////////////////////////////////////////////////////////////
 CMySQLConnection::CMySQLConnection(size_t sql_max)
-    : CDBConnectionBase(sql_max), _mysql_handler(NULL)
+    : CDBConnectionBase(sql_max), _mysql_handle(NULL)
 {
 }
 
@@ -130,13 +130,13 @@ bool CMySQLConnection::is_shutdowning_exception(CDBException& db_error) const
 
 std::string CMySQLConnection::escape_string(const std::string& str) const throw (CDBException)
 {
-    MOOON_ASSERT(_mysql_handler != NULL);
+    MOOON_ASSERT(_mysql_handle != NULL);
 
-    MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
+    MYSQL* mysql_handle = static_cast<MYSQL*>(_mysql_handle);
     int escaped_string_length = 0;
     std::string escaped_string(str.size()*2+1, '\0');
 
-    if (NULL == _mysql_handler)
+    if (NULL == _mysql_handle)
     {
         escaped_string_length = mysql_escape_string(
             const_cast<char*>(escaped_string.data()), str.c_str(), str.length());
@@ -151,10 +151,10 @@ std::string CMySQLConnection::escape_string(const std::string& str) const throw 
         // As of MySQL 5.7.6, mysql_real_escape_string() fails and produces an CR_INSECURE_API_ERR error if the NO_BACKSLASH_ESCAPES SQL mode is enabled.
 #if MYSQL_VERSION_ID < 50706
             escaped_string_length = mysql_real_escape_string(
-                mysql_handler, const_cast<char*>(escaped_string.data()), str.c_str(), str.length());
+                mysql_handle, const_cast<char*>(escaped_string.data()), str.c_str(), str.length());
 #else
             escaped_string_length = mysql_real_escape_string(
-                mysql_handler, const_cast<char*>(escaped_string.data()), str.c_str(), str.length());
+                mysql_handle, const_cast<char*>(escaped_string.data()), str.c_str(), str.length());
 #endif // MYSQL_VERSION_ID
     }
 
@@ -162,7 +162,7 @@ std::string CMySQLConnection::escape_string(const std::string& str) const throw 
     {
         escaped_string.resize(0);
         throw CDBException(NULL,
-                           mysql_error(mysql_handler), mysql_errno(mysql_handler),
+                           mysql_error(mysql_handle), mysql_errno(mysql_handle),
                            __FILE__, __LINE__);
     }
     else
@@ -176,12 +176,12 @@ void CMySQLConnection::change_charset(const std::string& charset) throw (CDBExce
 {
     if (!charset.empty())
     {
-        MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
+        MYSQL* mysql_handle = static_cast<MYSQL*>(_mysql_handle);
 
-        if (!mysql_set_character_set(mysql_handler, charset.c_str()))
+        if (!mysql_set_character_set(mysql_handle, charset.c_str()))
         {
             throw CDBException(NULL,
-                               mysql_error(mysql_handler), mysql_errno(mysql_handler),
+                               mysql_error(mysql_handle), mysql_errno(mysql_handle),
                                __FILE__, __LINE__);
         }
     }
@@ -195,13 +195,13 @@ void CMySQLConnection::open() throw (CDBException)
 
 void CMySQLConnection::close() throw ()
 {
-    if (_mysql_handler != NULL)
+    if (_mysql_handle != NULL)
     {
-        MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
+        MYSQL* mysql_handle = static_cast<MYSQL*>(_mysql_handle);
 
         _is_established = false;
-        mysql_close(mysql_handler);
-        _mysql_handler = NULL;
+        mysql_close(mysql_handle);
+        _mysql_handle = NULL;
     }
 }
 
@@ -214,9 +214,9 @@ void CMySQLConnection::reopen() throw (CDBException)
 
 uint64_t CMySQLConnection::update(const char* format, ...) throw (CDBException)
 {
-    MOOON_ASSERT(_mysql_handler != NULL);
+    MOOON_ASSERT(_mysql_handle != NULL);
 
-    MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
+    MYSQL* mysql_handle = static_cast<MYSQL*>(_mysql_handle);
     int excepted = 0;
     size_t sql_size = _sql_size;
     utils::ScopedArray<char> sql(new char[sql_size]);
@@ -242,20 +242,20 @@ uint64_t CMySQLConnection::update(const char* format, ...) throw (CDBException)
     }
 
     // 如果查询成功，返回0。如果出现错误，返回非0值
-    if (mysql_real_query(mysql_handler, sql.get(), (unsigned long)excepted) != 0)
+    if (mysql_real_query(mysql_handle, sql.get(), (unsigned long)excepted) != 0)
     {
-        throw CDBException(sql.get(), utils::StringFormatter("sql[%s] error: %s", sql.get(), mysql_error(mysql_handler)).c_str(),
-                mysql_errno(mysql_handler), __FILE__, __LINE__);
+        throw CDBException(sql.get(), utils::StringFormatter("sql[%s] error: %s", sql.get(), mysql_error(mysql_handle)).c_str(),
+                mysql_errno(mysql_handle), __FILE__, __LINE__);
     }
 
-    return static_cast<uint64_t>(mysql_affected_rows(mysql_handler));
+    return static_cast<uint64_t>(mysql_affected_rows(mysql_handle));
 }
 
 uint64_t CMySQLConnection::get_insert_id() const
 {
-    MOOON_ASSERT(_mysql_handler != NULL);
-    MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
-    return static_cast<uint64_t>(mysql_insert_id(mysql_handler));
+    MOOON_ASSERT(_mysql_handle != NULL);
+    MYSQL* mysql_handle = static_cast<MYSQL*>(_mysql_handle);
+    return static_cast<uint64_t>(mysql_insert_id(mysql_handle));
 }
 
 std::string CMySQLConnection::str() throw ()
@@ -265,59 +265,59 @@ std::string CMySQLConnection::str() throw ()
 
 void CMySQLConnection::ping() throw (CDBException)
 {
-    MOOON_ASSERT(_mysql_handler != NULL);
-    MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
+    MOOON_ASSERT(_mysql_handle != NULL);
+    MYSQL* mysql_handle = static_cast<MYSQL*>(_mysql_handle);
 
-    if (mysql_ping(mysql_handler) != 0)
-        THROW_DB_EXCEPTION(NULL, mysql_error(mysql_handler), mysql_errno(mysql_handler));
+    if (mysql_ping(mysql_handle) != 0)
+        THROW_DB_EXCEPTION(NULL, mysql_error(mysql_handle), mysql_errno(mysql_handle));
 }
 
 void CMySQLConnection::commit() throw (CDBException)
 {
-    MOOON_ASSERT(_mysql_handler != NULL);
-    MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
+    MOOON_ASSERT(_mysql_handle != NULL);
+    MYSQL* mysql_handle = static_cast<MYSQL*>(_mysql_handle);
 
-    if (mysql_commit(mysql_handler) != 0)
-        THROW_DB_EXCEPTION(NULL, mysql_error(mysql_handler), mysql_errno(mysql_handler));
+    if (mysql_commit(mysql_handle) != 0)
+        THROW_DB_EXCEPTION(NULL, mysql_error(mysql_handle), mysql_errno(mysql_handle));
 }
 
 void CMySQLConnection::rollback() throw (CDBException)
 {
-    MOOON_ASSERT(_mysql_handler != NULL);
-    MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
+    MOOON_ASSERT(_mysql_handle != NULL);
+    MYSQL* mysql_handle = static_cast<MYSQL*>(_mysql_handle);
 
-    if (mysql_rollback(mysql_handler) != 0)
-        THROW_DB_EXCEPTION(NULL, mysql_error(mysql_handler), mysql_errno(mysql_handler));
+    if (mysql_rollback(mysql_handle) != 0)
+        THROW_DB_EXCEPTION(NULL, mysql_error(mysql_handle), mysql_errno(mysql_handle));
 }
 
 void CMySQLConnection::enable_autocommit(bool enabled) throw (CDBException)
 {
-    MOOON_ASSERT(_mysql_handler != NULL);
-    MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
+    MOOON_ASSERT(_mysql_handle != NULL);
+    MYSQL* mysql_handle = static_cast<MYSQL*>(_mysql_handle);
 
     my_bool auto_mode = enabled? 1: 0;
-    if (mysql_autocommit(mysql_handler, auto_mode) != 0)
-        THROW_DB_EXCEPTION(NULL, mysql_error(mysql_handler), mysql_errno(mysql_handler));
+    if (mysql_autocommit(mysql_handle, auto_mode) != 0)
+        THROW_DB_EXCEPTION(NULL, mysql_error(mysql_handle), mysql_errno(mysql_handle));
 }
 
 void CMySQLConnection::do_query(DBTable& db_table, const char* sql, int sql_length) throw (CDBException)
 {
-    MOOON_ASSERT(_mysql_handler != NULL);
-    MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
+    MOOON_ASSERT(_mysql_handle != NULL);
+    MYSQL* mysql_handle = static_cast<MYSQL*>(_mysql_handle);
 
     // 如果查询成功，返回0。如果出现错误，返回非0值
-    if (mysql_real_query(mysql_handler, sql, (unsigned long)sql_length) != 0)
+    if (mysql_real_query(mysql_handle, sql, (unsigned long)sql_length) != 0)
     {
-        throw CDBException(NULL, utils::StringFormatter("sql[%s] error: %s", sql, mysql_error(mysql_handler)).c_str(),
-                mysql_errno(mysql_handler), __FILE__, __LINE__);
+        throw CDBException(NULL, utils::StringFormatter("sql[%s] error: %s", sql, mysql_error(mysql_handle)).c_str(),
+                mysql_errno(mysql_handle), __FILE__, __LINE__);
     }
 
     // 取结果集
-    MYSQL_RES* result_set = mysql_store_result(mysql_handler);
+    MYSQL_RES* result_set = mysql_store_result(mysql_handle);
     if (NULL == result_set)
     {
-        throw CDBException(sql, utils::StringFormatter("sql[%s] error: %s", sql, mysql_error(mysql_handler)).c_str(),
-                mysql_errno(mysql_handler), __FILE__, __LINE__);
+        throw CDBException(sql, utils::StringFormatter("sql[%s] error: %s", sql, mysql_error(mysql_handle)).c_str(),
+                mysql_errno(mysql_handle), __FILE__, __LINE__);
     }
     else
     {
@@ -352,7 +352,7 @@ void CMySQLConnection::do_query(DBTable& db_table, const char* sql, int sql_leng
 
 void CMySQLConnection::do_open() throw (CDBException)
 {
-    MOOON_ASSERT(NULL == _mysql_handler);
+    MOOON_ASSERT(NULL == _mysql_handle);
 
     // 低版本不支持MYSQL_OPT_RECONNECT
     // 指示是否自动重连接
@@ -361,32 +361,32 @@ void CMySQLConnection::do_open() throw (CDBException)
     // 分配或初始化与mysql_real_connect()相适应的MYSQL对象。如果mysql是NULL指针，该函数将分配、初始化、并返
     // 回新对象。否则，将初始化对象，并返回对象的地址。如果mysql_init()分配了新的对象，当调用mysql_close()来关闭
     // 连接时，将释放该对象。
-    _mysql_handler = mysql_init(NULL);
-    MYSQL* mysql_handler = static_cast<MYSQL*>(_mysql_handler);
-    MOOON_ASSERT(mysql_handler != NULL);
+    _mysql_handle = mysql_init(NULL);
+    MYSQL* mysql_handle = static_cast<MYSQL*>(_mysql_handle);
+    MOOON_ASSERT(mysql_handle != NULL);
 
     // 设置超时时长
-    mysql_options(mysql_handler, MYSQL_OPT_CONNECT_TIMEOUT, reinterpret_cast<char*>(&_connect_timeout_seconds));
-    mysql_options(mysql_handler, MYSQL_OPT_READ_TIMEOUT, reinterpret_cast<char*>(&_read_timeout_seconds));
-    mysql_options(mysql_handler, MYSQL_OPT_WRITE_TIMEOUT, reinterpret_cast<char*>(&_write_timeout_seconds));
+    mysql_options(mysql_handle, MYSQL_OPT_CONNECT_TIMEOUT, reinterpret_cast<char*>(&_connect_timeout_seconds));
+    mysql_options(mysql_handle, MYSQL_OPT_READ_TIMEOUT, reinterpret_cast<char*>(&_read_timeout_seconds));
+    mysql_options(mysql_handle, MYSQL_OPT_WRITE_TIMEOUT, reinterpret_cast<char*>(&_write_timeout_seconds));
 
     // 设置自动重连接
-    mysql_options(mysql_handler, MYSQL_OPT_RECONNECT, &reconnect);
+    mysql_options(mysql_handle, MYSQL_OPT_RECONNECT, &reconnect);
 
     if (!_charset.empty())
     {
         // 设置字符集
-        mysql_options(mysql_handler, MYSQL_SET_CHARSET_NAME, _charset.c_str());
+        mysql_options(mysql_handle, MYSQL_SET_CHARSET_NAME, _charset.c_str());
     }
 
     try
     {
-        if (NULL == mysql_real_connect(mysql_handler,
+        if (NULL == mysql_real_connect(mysql_handle,
                                        _db_ip.c_str(), _db_user.c_str(), _db_password.c_str(),
                                        _db_name.c_str(), _db_port, NULL, 0))
         {
             throw CDBException(NULL,
-                               mysql_error(mysql_handler), mysql_errno(mysql_handler),
+                               mysql_error(mysql_handle), mysql_errno(mysql_handle),
                                __FILE__, __LINE__);
         }
 
