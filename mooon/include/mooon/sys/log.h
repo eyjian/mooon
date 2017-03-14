@@ -300,5 +300,26 @@ do { \
 #define MYLOG_DEBUG(format, ...)     __MYLOG_DEBUG(::mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
 #define MYLOG_DETAIL(format, ...)    __MYLOG_DETAIL(::mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
 
+#define MYLOG_DETAIL_ENABLE() \
+        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_detail()))
+#define MYLOG_DEBUG_ENABLE() \
+        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_debug()))
+#define MYLOG_INFO_ENABLE() \
+        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_info()))
+#define MYLOG_ERROR_ENABLE() \
+        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_error()))
+#define MYLOG_WARN_ENABLE() \
+        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_warn()))
+#define MYLOG_FATAL_ENABLE() \
+        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_fatal()))
+#define MYLOG_STATE_ENABLE() \
+        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_state()))
+#define MYLOG_TRACE_ENABLE() \
+        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_trace()))
+#define MYLOG_RAW_ENABLE() \
+        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_raw()))
+#define MYLOG_BIN_ENABLE() \
+        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_bin()))
+
 SYS_NAMESPACE_END
 #endif // MOOON_SYS_LOG_H
