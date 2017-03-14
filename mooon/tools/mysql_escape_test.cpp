@@ -22,8 +22,71 @@
 #endif // HAVE_MYSQL
 #include <mooon/utils/tokener.h>
 
+static void usage()
+{
+    fprintf(stderr, "usage1: mysql_escape_test 'username@IP:port#password' 'sql'\n");
+    fprintf(stderr, "usage2: mysql_escape_test 'username@IP:port#password' 'sql' 'charset'\n");
+}
+
+static std::string escape_string(MYSQL* mysql, const std::string& src)
+{
+#if HAVE_MYSQL==1
+#if MYSQL_VERSION_ID >= 50706
+    unsigned long n = 0;
+    std::string from = src;
+    std::string to(from.size()*2+1, '\0');
+
+    // \'
+    n = mysql_real_escape_string_quote(mysql, const_cast<char*>(to.c_str()), from.c_str(), static_cast<unsigned long>(from.size()),'\'');
+    if (n < 0)
+    {
+        to.resize(0);
+    }
+    else
+    {
+        to.resize(n);
+        fprintf(stdout, "['] %s\n", to.c_str());
+    }
+
+    // \"
+    from = to;
+    to.resize(from.size()*2+1, '\0');
+    n = mysql_real_escape_string_quote(mysql, const_cast<char*>(to.c_str()), from.c_str(), static_cast<unsigned long>(from.size()),'"');
+    if (n < 0)
+    {
+        to.resize(0);
+    }
+    else
+    {
+        to.resize(n);
+        fprintf(stdout, "[\"] %s\n", to.c_str());
+    }
+
+    from = to;
+    to.resize(from.size()*2+1, '\0');
+    n = mysql_real_escape_string_quote(mysql, const_cast<char*>(to.c_str()), from.c_str(), static_cast<unsigned long>(from.size()),'\\');
+    if (n < 0)
+    {
+        to.resize(0);
+    }
+    else
+    {
+        to.resize(n);
+        fprintf(stdout, "[\\] %s\n", to.c_str());
+    }
+
+    return to;
+#endif // MYSQL_VERSION_ID
+#endif // HAVE_MYSQL
+
+    return src;
+}
+
 // 参数1：DB连接字符串
 // 参数2：需要转义的字符串
+//
+// 示例：
+// mysql_escape_test 'root@127.0.0.1' 'SELECT Host,User FROM mysql.user WHERE User=root'
 int main(int argc, char* argv[])
 {
 #if HAVE_MYSQL==1
@@ -31,29 +94,54 @@ int main(int argc, char* argv[])
 
     if ((argc != 3) && (argc != 4))
     {
-        fprintf(stderr, "usage1: mysql_escape_test 'username@IP:port#password' 'string'\n");
-        fprintf(stderr, "usage2: mysql_escape_test 'username@IP:port#password' 'string' 'charset'\n");
+        usage();
         exit(1);
     }
 
     std::vector<struct mooon::utils::CLoginTokener::LoginInfo> login_infos;
     if (mooon::utils::CLoginTokener::parse(&login_infos, argv[1], "") != 1)
     {
-        fprintf(stderr, "usage: mysql_escape_test 'username@IP:port#password' 'string'\n");
+        fprintf(stderr, "invalid first parameter: %s\n", argv[1]);
+        usage();
         exit(1);
+    }
+
+
+    mooon::sys::DBTable dbtable;
+    mooon::sys::CMySQLConnection mysql;
+    const struct mooon::utils::CLoginTokener::LoginInfo& login_info = login_infos[0];
+    mysql.set_host(login_info.ip, login_info.port);
+    mysql.set_user(login_info.username, login_info.password);
+    if (4 == argc)
+        mysql.set_charset(argv[3]);
+
+    try
+    {
+        mysql.open();
+        fprintf(stdout, "[1] %s\n", mysql.escape_string(argv[2]).c_str());
+
+        mysql.update("%s", "SET sql_mode='NO_BACKSLASH_ESCAPES'");
+        fprintf(stdout, "[2] %s\n", mysql.escape_string(argv[2]).c_str());
+    }
+    catch (mooon::sys::CDBException& ex)
+    {
+        fprintf(stderr, "%s\n", ex.str().c_str());
     }
 
     try
     {
-        mooon::sys::CMySQLConnection mysql;
-        const struct mooon::utils::CLoginTokener::LoginInfo& login_info = login_infos[0];
-        mysql.set_host(login_info.ip, login_info.port);
-        mysql.set_user(login_info.username, login_info.password);
-        if (4 == argc)
-            mysql.set_charset(argv[3]);
+        MYSQL* mysql_handle = static_cast<MYSQL*>(mysql.get_mysql_handle());
+        fprintf(stdout, "[3] %s\n", escape_string(mysql_handle, argv[2]).c_str());
+        fprintf(stdout, "\n");
 
-        mysql.open();
-        printf("%s\n", mysql.escape_string(argv[2]).c_str());
+        mysql.query(dbtable, "%s", escape_string(mysql_handle, argv[2]).c_str());
+        for (mooon::sys::DBTable::size_type row=0; row<dbtable.size(); ++row)
+        {
+            const mooon::sys::DBRow& dbrow = dbtable[row];
+            for (mooon::sys::DBTable::size_type col=0; col<dbrow.size(); ++col)
+                printf("%s\b\n", dbrow[col].c_str());
+            printf("\n");
+        }
     }
     catch (mooon::sys::CDBException& ex)
     {
