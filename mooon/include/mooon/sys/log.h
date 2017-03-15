@@ -182,12 +182,15 @@ public:
 //////////////////////////////////////////////////////////////////////////
 // 日志宏，方便记录日志
 extern ILogger* g_logger; // 只是声明，不是定义，不能赋值哦！
+extern bool g_null_print_screen; // 当g_logger为空时是否打屏
 
 #define __MYLOG_DETAIL(logger, module_name, format, ...) \
 do { \
 	if (NULL == logger) { \
-	    printf("[DETAIL][%s:%d]", __FILE__, __LINE__); \
-		printf(format, ##__VA_ARGS__); \
+	    if (::mooon::sys::g_null_print_screen) { \
+	        fprintf(stderr, "[DETAIL][%s:%d]", __FILE__, __LINE__); \
+	        fprintf(stderr, format, ##__VA_ARGS__); \
+	    } \
 	} \
 	else if (logger->enabled_detail()) { \
 		logger->log_detail(__FILE__, __LINE__, module_name, format, ##__VA_ARGS__); \
@@ -199,8 +202,10 @@ do { \
 #define __MYLOG_DEBUG(logger, module_name, format, ...) \
 do { \
 	if (NULL == logger) { \
-	    printf(PRINT_COLOR_DARY_GRAY "[DEBUG][%s:%d]" PRINT_COLOR_NONE, __FILE__, __LINE__); \
-		printf(format, ##__VA_ARGS__); \
+	    if (::mooon::sys::g_null_print_screen) { \
+            fprintf(stderr, PRINT_COLOR_DARY_GRAY "[DEBUG][%s:%d]" PRINT_COLOR_NONE, __FILE__, __LINE__); \
+            fprintf(stderr, format, ##__VA_ARGS__); \
+	    } \
 	} \
 	else if (logger->enabled_debug()) { \
 		logger->log_debug(__FILE__, __LINE__, module_name, format, ##__VA_ARGS__); \
@@ -210,8 +215,10 @@ do { \
 #define __MYLOG_INFO(logger, module_name, format, ...) \
 do { \
 	if (NULL == logger) { \
-	    printf("[INFO][%s:%d]", __FILE__, __LINE__); \
-		printf(format, ##__VA_ARGS__); \
+	    if (::mooon::sys::g_null_print_screen) { \
+            fprintf(stderr, "[INFO][%s:%d]", __FILE__, __LINE__); \
+            fprintf(stderr, format, ##__VA_ARGS__); \
+	    } \
 	} \
 	else if (logger->enabled_info()) { \
 		logger->log_info(__FILE__, __LINE__, module_name, format, ##__VA_ARGS__); \
@@ -221,8 +228,10 @@ do { \
 #define __MYLOG_WARN(logger, module_name, format, ...) \
 do { \
 	if (NULL == logger) { \
-	    printf(PRINT_COLOR_YELLOW "[WARN][%s:%d]" PRINT_COLOR_NONE, __FILE__, __LINE__); \
-		printf(format, ##__VA_ARGS__); \
+	    if (::mooon::sys::g_null_print_screen) { \
+            fprintf(stderr, PRINT_COLOR_YELLOW "[WARN][%s:%d]" PRINT_COLOR_NONE, __FILE__, __LINE__); \
+            fprintf(stderr, format, ##__VA_ARGS__); \
+	    } \
 	} \
 	else if (logger->enabled_warn()) { \
 		logger->log_warn(__FILE__, __LINE__, module_name, format, ##__VA_ARGS__); \
@@ -232,8 +241,10 @@ do { \
 #define __MYLOG_ERROR(logger, module_name, format, ...) \
 do { \
 	if (NULL == logger) { \
-	    printf(PRINT_COLOR_RED "[ERROR][%s:%d]" PRINT_COLOR_NONE, __FILE__, __LINE__); \
-		printf(format, ##__VA_ARGS__); \
+	    if (::mooon::sys::g_null_print_screen) { \
+            fprintf(stderr, PRINT_COLOR_RED "[ERROR][%s:%d]" PRINT_COLOR_NONE, __FILE__, __LINE__); \
+            fprintf(stderr, format, ##__VA_ARGS__); \
+	    } \
 	} \
 	else if (logger->enabled_error()) { \
 		logger->log_error(__FILE__, __LINE__, module_name, format, ##__VA_ARGS__); \
@@ -243,8 +254,10 @@ do { \
 #define __MYLOG_FATAL(logger, module_name, format, ...) \
 do { \
 	if (NULL == logger) { \
-	    printf(PRINT_COLOR_BROWN "[FATAL][%s:%d]" PRINT_COLOR_NONE, __FILE__, __LINE__); \
-		printf(format, ##__VA_ARGS__); \
+	    if (::mooon::sys::g_null_print_screen) { \
+            fprintf(stderr, PRINT_COLOR_BROWN "[FATAL][%s:%d]" PRINT_COLOR_NONE, __FILE__, __LINE__); \
+            fprintf(stderr, format, ##__VA_ARGS__); \
+	    } \
 	} \
 	else if (logger->enabled_fatal()) { \
 		logger->log_fatal(__FILE__, __LINE__, module_name, format, ##__VA_ARGS__); \
@@ -254,8 +267,10 @@ do { \
 #define __MYLOG_STATE(logger, module_name, format, ...) \
 do { \
 	if (NULL == logger) { \
-	    printf("[STATE][%s:%d]", __FILE__, __LINE__); \
-		printf(format, ##__VA_ARGS__); \
+	    if (::mooon::sys::g_null_print_screen) { \
+            fprintf(stderr, "[STATE][%s:%d]", __FILE__, __LINE__); \
+            fprintf(stderr, format, ##__VA_ARGS__); \
+	    } \
 	} \
 	else if (logger->enabled_state()) { \
 		logger->log_state(__FILE__, __LINE__, module_name, format, ##__VA_ARGS__); \
@@ -265,8 +280,10 @@ do { \
 #define __MYLOG_TRACE(logger, module_name, format, ...) \
 do { \
 	if (NULL == logger) { \
-	    printf("[TRACE][%s:%d]", __FILE__, __LINE__); \
-		printf(format, ##__VA_ARGS__); \
+	    if (::mooon::sys::g_null_print_screen) { \
+            fprintf(stderr, "[TRACE][%s:%d]", __FILE__, __LINE__); \
+            fprintf(stderr, format, ##__VA_ARGS__); \
+	    } \
 	} \
 	else if (logger->enabled_trace()) { \
 		logger->log_trace(__FILE__, __LINE__, module_name, format, ##__VA_ARGS__); \
@@ -276,7 +293,9 @@ do { \
 #define __MYLOG_RAW(logger, format, ...) \
 do { \
     if (NULL == logger) { \
-        printf(format, ##__VA_ARGS__); \
+        if (::mooon::sys::g_null_print_screen) { \
+            fprintf(stderr, format, ##__VA_ARGS__); \
+        } \
     } \
     else if (logger->enabled_raw()) { \
         logger->log_raw(format, ##__VA_ARGS__); \
@@ -289,6 +308,17 @@ do { \
         logger->log_bin(__FILE__, __LINE__, module_name, log, size); \
 } while(false)
 
+#define __MYLOG_DETAIL_ENABLE(logger) (((NULL == logger) && ::mooon::sys::g_null_print_screen) || ((logger != NULL) && (logger->enabled_detail())))
+#define __MYLOG_DEBUG_ENABLE(logger) (((NULL == logger) && ::mooon::sys::g_null_print_screen) || ((logger != NULL) && (logger->enabled_debug())))
+#define __MYLOG_INFO_ENABLE(logger) (((NULL == logger) && ::mooon::sys::g_null_print_screen) || ((logger != NULL) && (logger->enabled_info())))
+#define __MYLOG_ERROR_ENABLE(logger) (((NULL == logger) && ::mooon::sys::g_null_print_screen) || ((logger != NULL) && (logger->enabled_error())))
+#define __MYLOG_WARN_ENABLE(logger) (((NULL == logger) && ::mooon::sys::g_null_print_screen) || ((logger != NULL) && (logger->enabled_warn())))
+#define __MYLOG_FATAL_ENABLE(logger) (((NULL == logger) && ::mooon::sys::g_null_print_screen) || ((logger != NULL) && (logger->enabled_fatal())))
+#define __MYLOG_STATE_ENABLE(logger) (((NULL == logger) && ::mooon::sys::g_null_print_screen) || ((logger != NULL) && (logger->enabled_state())))
+#define __MYLOG_TRACE_ENABLE(logger) (((NULL == logger) && ::mooon::sys::g_null_print_screen) || ((logger != NULL) && (logger->enabled_trace())))
+#define __MYLOG_RAW_ENABLE(logger) (((NULL == logger) && ::mooon::sys::g_null_print_screen) || ((logger != NULL) && (logger->enabled_raw())))
+#define __MYLOG_BIN_ENABLE(logger) (((NULL == logger) && ::mooon::sys::g_null_print_screen) || ((logger != NULL) && (logger->enabled_bin())))
+
 #define MYLOG_BIN(log, size)         __MYLOG_BIN(::mooon::sys::g_logger, NULL, log, size)
 #define MYLOG_RAW(format, ...)       __MYLOG_RAW(::mooon::sys::g_logger, format, ##__VA_ARGS__)
 #define MYLOG_TRACE(format, ...)     __MYLOG_TRACE(::mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
@@ -300,26 +330,16 @@ do { \
 #define MYLOG_DEBUG(format, ...)     __MYLOG_DEBUG(::mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
 #define MYLOG_DETAIL(format, ...)    __MYLOG_DETAIL(::mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
 
-#define MYLOG_DETAIL_ENABLE() \
-        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_detail()))
-#define MYLOG_DEBUG_ENABLE() \
-        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_debug()))
-#define MYLOG_INFO_ENABLE() \
-        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_info()))
-#define MYLOG_ERROR_ENABLE() \
-        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_error()))
-#define MYLOG_WARN_ENABLE() \
-        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_warn()))
-#define MYLOG_FATAL_ENABLE() \
-        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_fatal()))
-#define MYLOG_STATE_ENABLE() \
-        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_state()))
-#define MYLOG_TRACE_ENABLE() \
-        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_trace()))
-#define MYLOG_RAW_ENABLE() \
-        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_raw()))
-#define MYLOG_BIN_ENABLE() \
-        ((NULL == ::mooon::sys::g_logger) || (::mooon::sys::g_logger->enabled_bin()))
+#define MYLOG_DETAIL_ENABLE() __MYLOG_DETAIL_ENABLE(::mooon::sys::g_logger)
+#define MYLOG_DEBUG_ENABLE() __MYLOG_DEBUG_ENABLE(::mooon::sys::g_logger)
+#define MYLOG_INFO_ENABLE() __MYLOG_INFO_ENABLE(::mooon::sys::g_logger)
+#define MYLOG_ERROR_ENABLE() __MYLOG_ERROR_ENABLE(::mooon::sys::g_logger)
+#define MYLOG_WARN_ENABLE() __MYLOG_WARN_ENABLE(::mooon::sys::g_logger)
+#define MYLOG_FATAL_ENABLE() __MYLOG_FATAL_ENABLE(::mooon::sys::g_logger)
+#define MYLOG_STATE_ENABLE() __MYLOG_STATE_ENABLE(::mooon::sys::g_logger)
+#define MYLOG_TRACE_ENABLE() __MYLOG_TRACE_ENABLE(::mooon::sys::g_logger)
+#define MYLOG_RAW_ENABLE() __MYLOG_RAW_ENABLE(::mooon::sys::g_logger)
+#define MYLOG_BIN_ENABLE() __MYLOG_BIN_ENABLE(::mooon::sys::g_logger)
 
 SYS_NAMESPACE_END
 #endif // MOOON_SYS_LOG_H
