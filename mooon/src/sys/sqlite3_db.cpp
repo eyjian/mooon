@@ -123,7 +123,7 @@ uint64_t CSQLite3Connection::update(const char* format, ...) throw (CDBException
         sqlite3_free(errmsg);
 
         throw CDBException(sql.get(), utils::StringFormatter("sql[%s] error: %s", sql.get(), errmsg_.c_str()).c_str(),
-                -1, __FILE__, __LINE__);
+                ret, __FILE__, __LINE__);
     }
 
     return static_cast<uint64_t>(ret);
@@ -158,7 +158,7 @@ void CSQLite3Connection::do_query(DBTable& db_table, const char* sql, int sql_le
         sqlite3_free(errmsg);
         throw CDBException(sql,
                 utils::StringFormatter("sql[%s] error: %s", sql, errmsg_.c_str()).c_str(),
-                -1, __FILE__, __LINE__);
+                ret, __FILE__, __LINE__);
     }
     else
     {
