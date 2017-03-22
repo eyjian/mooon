@@ -67,7 +67,7 @@ public:
     virtual ~CObject() {}
     void set_type_name(const std::string& type_name);
     const std::string& get_type_name() const { return _type_name; }
-    
+
 private:
     std::string _type_name; // 对象类型名，每类对象的类型名要求唯一
 
@@ -102,15 +102,15 @@ public:
 
 public:
     ~CObjectFacotry();
-    
+
     // type_name 对象类型名，每类对象的类型名要求唯一，如果类型名不唯一，则debug模式编译后运行会触发abort()
     // object_creator 实现了create_object()，用来创建对象
     void register_object_creater(const std::string& type_name, CObjectCreator* object_creator);
-    
+
     // 根据类型名type_name得到它的CObjectCreator
     // 返回NULL表示type_name对应的CObjectCreator不存在或未被注册
     CObjectCreator* get_object_creator(const std::string& type_name) const;
-    
+
     // 根据类型创建一个对象
     CObject* create_object(const std::string& type_name) const;
 

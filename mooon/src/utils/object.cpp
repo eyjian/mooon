@@ -34,7 +34,7 @@ CObjectFacotry::~CObjectFacotry()
         CObjectCreator* object_creator = iter->second;
         delete object_creator;
     }
-    
+
     _object_creator_table.clear();
 }
 
@@ -49,7 +49,7 @@ CObjectCreator* CObjectFacotry::get_object_creator(const std::string& type_name)
 {
     CObjectCreator* object_creator = NULL;
     ObjectCreatorTable::const_iterator iter = _object_creator_table.find(type_name);
-    
+
     if (iter != _object_creator_table.end())
         object_creator = iter->second;
     return object_creator;
