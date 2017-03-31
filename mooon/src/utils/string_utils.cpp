@@ -123,14 +123,15 @@ std::string CStringUtils::reverse_string(const std::string& str)
     return reversed_str;
 }
 
-void CStringUtils::remove_last(std::string& source, char c)
+std::string& CStringUtils::remove_last(std::string& source, char c)
 {
     std::string::size_type pos = source.rfind(c);
     if (pos+1 != source.length())
         source.erase(pos);
+    return source;
 }
 
-void CStringUtils::remove_last(std::string& source, const std::string& sep)
+std::string& CStringUtils::remove_last(std::string& source, const std::string& sep)
 {
     // std: $HOME/bin/exe
     // sep: /bin/
@@ -138,9 +139,10 @@ void CStringUtils::remove_last(std::string& source, const std::string& sep)
     std::string::size_type pos = source.rfind(sep);
     if (pos != std::string::npos)
         source.erase(pos);
+    return source;
 }
 
-void CStringUtils::to_upper(char* source)
+char* CStringUtils::to_upper(char* source)
 {
     char* tmp_source = source;
     while (*tmp_source != '\0')
@@ -150,9 +152,11 @@ void CStringUtils::to_upper(char* source)
 
         ++tmp_source;
     }
+
+    return source;
 }
 
-void CStringUtils::to_lower(char* source)
+char* CStringUtils::to_lower(char* source)
 {
     char* tmp_source = source;
     while (*tmp_source != '\0')
@@ -162,20 +166,24 @@ void CStringUtils::to_lower(char* source)
 
         ++tmp_source;
     }
+
+    return source;
 }
 
-void CStringUtils::to_upper(std::string& source)
+std::string& CStringUtils::to_upper(std::string& source)
 {
     // 只修改大小写，可以这样做
     char* tmp_source = (char *)source.c_str();
     to_upper(tmp_source);
+    return source;
 }
 
-void CStringUtils::to_lower(std::string& source)
+std::string& CStringUtils::to_lower(std::string& source)
 {
     // 只修改大小写，可以这样做
     char* tmp_source = (char *)source.c_str();
     to_lower(tmp_source);
+    return source;
 }
 
 /** 判断指定字符是否为空格或TAB符(\t)或回车符(\r)或换行符(\n) */
@@ -263,7 +271,7 @@ void CStringUtils::trim(std::string& source)
     trim_right(source);
 }
 
-void CStringUtils::trim_left(std::string& source)
+std::string& CStringUtils::trim_left(std::string& source)
 {
     // 不能直接对c_str()进行修改，因为长度发生了变化
     size_t length = source.length();
@@ -275,9 +283,10 @@ void CStringUtils::trim_left(std::string& source)
 
     trim_left(tmp_source);
     source = tmp_source;
+    return source;
 }
 
-void CStringUtils::trim_right(std::string& source)
+std::string& CStringUtils::trim_right(std::string& source)
 {
     // 不能直接对c_str()进行修改，因为长度发生了变化
     size_t length = source.length();
@@ -289,6 +298,7 @@ void CStringUtils::trim_right(std::string& source)
 
     trim_right(tmp_source);
     source = tmp_source;
+    return source;
 }
 
 bool CStringUtils::string2double(const char* source, double& result)
