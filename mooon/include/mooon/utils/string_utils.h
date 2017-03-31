@@ -46,6 +46,7 @@ public:
       *            则处理后str变成“/usr/local/test/bin”
       */
     static std::string& remove_last(std::string& source, char c);
+    static std::string remove_last(const std::string& source, char c);
 
     /** 删除字符串尾部从指定字符串开始的内容
       * @source: 需要处理的字符串
@@ -54,29 +55,35 @@ public:
       *           则处理后str变成“/usr/local/test
       */
     static std::string& remove_last(std::string& source, const std::string& sep);
+    static std::string remove_last(const std::string& source, const std::string& sep);
 
     /** 将字符串中的所有小写字符转换成大写 */
     static char* to_upper(char* source);
     static std::string& to_upper(std::string& source);
+    static std::string to_upper(const std::string& source);
 
     /** 将字符串中的所有大写字符转换成小写 */
     static char* to_lower(char* source);
     static std::string& to_lower(std::string& source);
+    static std::string to_lower(const std::string& source);
 
     /** 判断指定字符是否为空格或TAB符(\t)或回车符(\r)或换行符(\n) */
     static bool is_space(char c);
     
     /** 删除字符串首尾空格或TAB符(\t)或回车符(\r)或换行符(\n) */
     static void trim(char* source);
-    static void trim(std::string& source);
+    static std::string& trim(std::string& source);
+    static std::string trim(const std::string& source);
 
     /** 删除字符串首部空格或TAB符(\t)或回车符(\r)或换行符(\n) */
     static void trim_left(char* source);
     static std::string& trim_left(std::string& source);
+    static std::string trim_left(const std::string& source);
 
     /** 删除字符串尾部空格或TAB符(\t)或回车符(\r)或换行符(\n) */
     static void trim_right(char* source);        
     static std::string& trim_right(std::string& source);
+    static std::string trim_right(const std::string& source);
 
     /**
      * 字符串转双精度浮点类型
