@@ -193,7 +193,7 @@ std::string& CStringUtils::to_upper(std::string& source)
 std::string CStringUtils::to_upper(const std::string& source)
 {
     std::string str;
-    return to_upper(str.c_str());
+    return to_upper(str);
 }
 
 std::string& CStringUtils::to_lower(std::string& source)
@@ -207,7 +207,7 @@ std::string& CStringUtils::to_lower(std::string& source)
 std::string CStringUtils::to_lower(const std::string& source)
 {
     std::string str;
-    return to_lower(str.c_str());
+    return to_lower(str);
 }
 
 /** 判断指定字符是否为空格或TAB符(\t)或回车符(\r)或换行符(\n) */
@@ -322,7 +322,7 @@ std::string& CStringUtils::trim_left(std::string& source)
 std::string CStringUtils::trim_left(const std::string& source)
 {
     std::string str = source;
-    trim_left(str.c_str());
+    trim_left(str);
     return str;
 }
 
@@ -344,7 +344,7 @@ std::string& CStringUtils::trim_right(std::string& source)
 std::string CStringUtils::trim_right(const std::string& source)
 {
     std::string str = source;
-    trim_right(str.c_str());
+    trim_right(str);
     return str;
 }
 
