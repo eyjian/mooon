@@ -20,6 +20,10 @@
 // 使用示例：
 // ./mooon_upload -h=192.168.10.11,192.168.10.12 -p=6000 -u=root -P='root123' -s=./abc -d=/tmp/
 // 表示将本地的文件./abc上传到两台机器192.168.10.11和192.168.10.12的/tmp/目录
+//
+// 可环境变量HOSTS替代参数“-h”
+// 可环境变量USER替代参数“-u”
+// 可环境变量PASSWORD替代参数“-p”
 #include "mooon/net/libssh2.h"
 #include "mooon/sys/stop_watch.h"
 #include "mooon/utils/args_parser.h"
@@ -73,6 +77,9 @@ inline std::ostream& operator <<(std::ostream& out, const struct ResultInfo& res
     return out;
 }
 
+// 可环境变量HOSTS替代参数“-h”
+// 可环境变量USER替代参数“-u”
+// 可环境变量PASSWORD替代参数“-p”
 int main(int argc, char* argv[])
 {
 #if HAVE_LIBSSH2 == 1
@@ -137,17 +144,44 @@ int main(int argc, char* argv[])
     // 检查参数（-u）
     if (user.empty())
     {
-        fprintf(stderr, "parameter[-u]'s value not set\n");
-        fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
-        exit(1);
+        // 尝试从环境变量取值
+        const char* user_ = getenv("USER");
+        if (NULL == user_)
+        {
+            fprintf(stderr, "parameter[-u] or environment `USER` not set\n");
+            fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
+            exit(1);
+        }
+
+        user= user_;
+        mooon::utils::CStringUtils::trim(user);
+        if (user.empty())
+        {
+            fprintf(stderr, "parameter[-u] or environment `USER` not set\n");
+            fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
+            exit(1);
+        }
     }
 
     // 检查参数（-p）
     if (password.empty())
     {
-        fprintf(stderr, "parameter[-p]'s value not set\n");
-        fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
-        exit(1);
+        // 尝试从环境变量取值
+        const char* password_ = getenv("PASSWORD");
+        if (NULL == password_)
+        {
+            fprintf(stderr, "parameter[-p] or environment `PASSWORD` not set\n");
+            fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
+            exit(1);
+        }
+
+        password= password_;
+        if (password.empty())
+        {
+            fprintf(stderr, "parameter[-p] or environment `PASSWORD` not set\n");
+            fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
+            exit(1);
+        }
     }
 
     std::vector<std::string> source_files;

@@ -19,6 +19,10 @@
 // 批量远程执行shell命令工具
 // 使用示例（-p指定端口，-P指定密码）：
 // mooon_ssh -u=root -P=test -p=2016 -h="127.0.0.1,192.168.0.1" -c='ls /tmp&&ps aux|grep -c test'
+//
+// 可环境变量HOSTS替代参数“-h”
+// 可环境变量USER替代参数“-u”
+// 可环境变量PASSWORD替代参数“-p”
 #include "mooon/net/libssh2.h" // 提供远程执行命令接口
 #include "mooon/sys/error.h"
 #include "mooon/sys/stop_watch.h"
@@ -35,9 +39,9 @@ STRING_ARG_DEFINE(h, "", "remote hosts separated by comma, e.g., -h='192.168.1.1
 // 远程主机的sshd端口号
 INTEGER_ARG_DEFINE(uint16_t, P, 36000, 10, 65535, "remote hosts port, e.g., -P=22");
 // 用户名
-STRING_ARG_DEFINE(u, "root", "remote host user name, e.g., -u=root");
+STRING_ARG_DEFINE(u, "root", "remote host user name, e.g., -u=root. You can also set environment `USER` instead of `-u`, e.g., export USER=zhangsan");
 // 密码
-STRING_ARG_DEFINE(p, "", "remote host password, e.g., -p='password'");
+STRING_ARG_DEFINE(p, "", "remote host password, e.g., -p='password'. You can also set environment `PASSWORD` instead of `-p`, e.g., export PASSWORD=123456");
 
 // 连接超时，单位为秒
 INTEGER_ARG_DEFINE(uint16_t, t, 60, 1, 65535, "timeout seconds to remote host, e.g., -t=100");
@@ -70,6 +74,10 @@ inline std::ostream& operator <<(std::ostream& out, const struct ResultInfo& res
 
 // 使用示例：
 // mooon_ssh -u=root -P=test -p=2016 -h="127.0.0.1,192.168.0.1" -c='ls /tmp&&ps aux|grep -c test'
+//
+// 可环境变量HOSTS替代参数“-h”
+// 可环境变量USER替代参数“-u”
+// 可环境变量PASSWORD替代参数“-p”
 int main(int argc, char* argv[])
 {
 #if HAVE_LIBSSH2 == 1
@@ -124,17 +132,44 @@ int main(int argc, char* argv[])
     // 检查参数（-u）
     if (user.empty())
     {
-        fprintf(stderr, "parameter[-u]'s value not set\n");
-        fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
-        exit(1);
+        // 尝试从环境变量取值
+        const char* user_ = getenv("USER");
+        if (NULL == user_)
+        {
+            fprintf(stderr, "parameter[-u] or environment `USER` not set\n");
+            fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
+            exit(1);
+        }
+
+        user= user_;
+        mooon::utils::CStringUtils::trim(user);
+        if (user.empty())
+        {
+            fprintf(stderr, "parameter[-u] or environment `USER` not set\n");
+            fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
+            exit(1);
+        }
     }
 
     // 检查参数（-p）
     if (password.empty())
     {
-        fprintf(stderr, "parameter[-p]'s value not set\n");
-        fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
-        exit(1);
+        // 尝试从环境变量取值
+        const char* password_ = getenv("PASSWORD");
+        if (NULL == password_)
+        {
+            fprintf(stderr, "parameter[-p] or environment `PASSWORD` not set\n");
+            fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
+            exit(1);
+        }
+
+        password= password_;
+        if (password.empty())
+        {
+            fprintf(stderr, "parameter[-p] or environment `PASSWORD` not set\n");
+            fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
+            exit(1);
+        }
     }
 
     std::vector<std::string> hosts_ip;
