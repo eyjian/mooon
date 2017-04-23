@@ -210,7 +210,13 @@ void write_thread(uint16_t index, std::string hbase_ip, uint16_t hbase_port)
 
                 hbase->put(mooon::argument::table->value(), put);
                 //const time_t end = time(NULL);
-                atomic_inc(&sg_success_count);
+                //atomic_inc(&sg_success_count);
+				const uint32_t success_count = static_cast<uint32_t>(atomic_add_return(1, &sg_success_count));
+				if (0 == success_count%10000)
+				{
+					MYLOG_INFO("number of write: %u\n", success_count);
+				}
+
                 break;
             }
             catch (apache::thrift::transport::TTransportException& ex)
