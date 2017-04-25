@@ -126,7 +126,7 @@ class MMapHelper
 {
 public:
     /** 构造一个CMmap帮助类 */
-    MMapHelper(mmap_t*& ptr)
+    MMapHelper(mmap_t* ptr)
         :_ptr(ptr)
     {        
     }
@@ -134,8 +134,8 @@ public:
     /** 析构函数，用来自动卸载已经映射的文件 */
     ~MMapHelper()
     {
-        CMMap::unmap(_ptr);
-        _ptr = NULL;
+        if (_ptr != NULL)
+            CMMap::unmap(_ptr);
     }
 
     mmap_t* operator ->()
@@ -144,7 +144,7 @@ public:
     }
 
 private:
-    mmap_t*& _ptr;
+    mmap_t* _ptr;
 };
 
 SYS_NAMESPACE_END
