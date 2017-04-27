@@ -285,7 +285,7 @@ void CDatetimeUtils::decompose(time_t t, std::string* year, std::string* month, 
 }
 
 // 要求t为YYYY-MM-DD hh:mm:ss格式
-void CDatetimeUtils::decompose(const std::string& t, std::string* year, std::string* month, std::string* day, std::string* hour, std::string* minute, std::string* second)
+void CDatetimeUtils::decompose_datetime(const std::string& t, std::string* year, std::string* month, std::string* day, std::string* hour, std::string* minute, std::string* second)
 {
     if (t.size() == sizeof("YYYY-MM-DD hh:mm:ss")-1)
     {
@@ -304,9 +304,45 @@ void CDatetimeUtils::decompose(const std::string& t, std::string* year, std::str
     }
 }
 
-void CDatetimeUtils::decompose(const char* t, std::string* year, std::string* month, std::string* day, std::string* hour, std::string* minute, std::string* second)
+void CDatetimeUtils::decompose_datetime(const char* t, std::string* year, std::string* month, std::string* day, std::string* hour, std::string* minute, std::string* second)
 {
-    decompose(std::string(t), year, month, day, hour, minute, second);
+    decompose_datetime(std::string(t), year, month, day, hour, minute, second);
+}
+
+void CDatetimeUtils::decompose_date(const std::string& t, std::string* year, std::string* month, std::string* day)
+{
+    if (t.size() == sizeof("YYYY-MM-DD")-1)
+    {
+        if (year != NULL)
+            *year = t.substr(0, 4);
+        if (month != NULL)
+            *month = t.substr(5, 2);
+        if (day != NULL)
+            *day = t.substr(8, 2);
+    }
+}
+
+void CDatetimeUtils::decompose_date(const char* t, std::string* year, std::string* month, std::string* day)
+{
+    decompose_date(std::string(t), year, month, day);
+}
+
+void CDatetimeUtils::decompose_time(const std::string& t, std::string* hour, std::string* minute, std::string* second)
+{
+    if (t.size() == sizeof("hh:mm:ss")-1)
+    {
+        if (hour != NULL)
+            *hour = t.substr(0, 2);
+        if (minute != NULL)
+            *minute = t.substr(3, 2);
+        if (second != NULL)
+            *second = t.substr(6, 2);
+    }
+}
+
+void CDatetimeUtils::decompose_time(const char* t, std::string* hour, std::string* minute, std::string* second)
+{
+    decompose_time(std::string(t), hour, minute, second);
 }
 
 std::string CDatetimeUtils::to_str_long_year(const struct tm& t, const char* prefix)
