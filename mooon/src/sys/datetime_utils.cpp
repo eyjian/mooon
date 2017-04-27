@@ -22,6 +22,7 @@
 #include <strings.h>
 #include <sys/time.h>
 #include <utils/string_utils.h>
+#include <utils/tokener.h>
 SYS_NAMESPACE_BEGIN
 
 bool CDatetimeUtils::is_same_day(time_t t1, time_t t2)
@@ -281,6 +282,31 @@ void CDatetimeUtils::decompose(time_t t, std::string* year, std::string* month, 
     struct tm tm;
     localtime_r(&t, &tm);
     decompose(&tm, year, month, day, hour, minute, second);
+}
+
+// 要求t为YYYY-MM-DD hh:mm:ss格式
+void CDatetimeUtils::decompose(const std::string& t, std::string* year, std::string* month, std::string* day, std::string* hour, std::string* minute, std::string* second)
+{
+    if (t.size() == sizeof("YYYY-MM-DD hh:mm:ss")-1)
+    {
+        if (year != NULL)
+            *year = t.substr(0, 4);
+        if (month != NULL)
+            *month = t.substr(5, 2);
+        if (day != NULL)
+            *day = t.substr(8, 2);
+        if (hour != NULL)
+            *hour = t.substr(11, 2);
+        if (minute != NULL)
+            *minute = t.substr(14, 2);
+        if (second != NULL)
+            *second = t.substr(17, 2);
+    }
+}
+
+void CDatetimeUtils::decompose(const char* t, std::string* year, std::string* month, std::string* day, std::string* hour, std::string* minute, std::string* second)
+{
+    decompose(std::string(t), year, month, day, hour, minute, second);
 }
 
 std::string CDatetimeUtils::to_str_long_year(const struct tm& t, const char* prefix)

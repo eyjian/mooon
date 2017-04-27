@@ -108,6 +108,10 @@ public:
     static void decompose(time_t t, int* year=NULL, int* month=NULL, int* day=NULL, int64_t* hour=NULL, int64_t* minute=NULL, int64_t* second=NULL);
     static void decompose(time_t t, std::string* year=NULL, std::string* month=NULL, std::string* day=NULL, std::string* hour=NULL, std::string* minute=NULL, std::string* second=NULL);
 
+    // 要求t为YYYY-MM-DD hh:mm:ss格式，不做错误检查，如果长度不够或超出，则什么也不做。
+    static void decompose(const std::string& t, std::string* year=NULL, std::string* month=NULL, std::string* day=NULL, std::string* hour=NULL, std::string* minute=NULL, std::string* second=NULL);
+    static void decompose(const char* t, std::string* year=NULL, std::string* month=NULL, std::string* day=NULL, std::string* hour=NULL, std::string* minute=NULL, std::string* second=NULL);
+
     /* 转成格式为“YYYY-01-01 00:00:00”格式的值，如果指定了前缀prefix，如PREFIX为y，则输出格式为“yYYYY-01-01 00:00:00” */
     static std::string to_str_long_year(const struct tm& t, const char* prefix=NULL);
     /* 转成格式为“YYYY-MM-01 00:00:00”格式的值 */
