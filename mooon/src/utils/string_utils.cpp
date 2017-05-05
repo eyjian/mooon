@@ -192,7 +192,7 @@ std::string& CStringUtils::to_upper(std::string& source)
 
 std::string CStringUtils::to_upper(const std::string& source)
 {
-    std::string str;
+    std::string str = source;
     return to_upper(str);
 }
 
@@ -206,7 +206,7 @@ std::string& CStringUtils::to_lower(std::string& source)
 
 std::string CStringUtils::to_lower(const std::string& source)
 {
-    std::string str;
+    std::string str = source;
     return to_lower(str);
 }
 
