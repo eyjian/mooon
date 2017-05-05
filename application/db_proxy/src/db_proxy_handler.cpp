@@ -328,15 +328,7 @@ void CDbProxyHandler::query2(DBTable& _return, const int32_t seq, const int32_t 
                 }
                 else
                 {
-                    if (utils::CStringUtils::is_numeric_string(condition.right.c_str()))
-                    {
-                        sql += condition.right;
-                    }
-                    else
-                    {
-                        MYLOG_ERROR("invalid condition.right[SEQ:%d][DB:%d][%s]\n", seq, database_index, condition.right.c_str());
-                        throw apache::thrift::TApplicationException("invalid condition.right");
-                    }
+                    sql += db_connection->escape_string(condition.right);
                 }
 
                 sql += std::string(")");
