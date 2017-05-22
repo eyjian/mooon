@@ -33,7 +33,7 @@
 #include <fstream>
 #include <iostream>
 
-// 逗号分隔的远程主机列表
+// 逗号分隔的远程主机IP列表
 STRING_ARG_DEFINE(h, "", "remote hosts separated by comma, e.g., -h='192.168.1.10,192.168.1.11'. You can also set environment `H` instead of `-h`, e.g., export H=192.168.1.10,192.168.1.11");
 // 远程主机的sshd端口号
 INTEGER_ARG_DEFINE(uint16_t, P, 22, 10, 65535, "remote hosts port, e.g., -P=22. You can also set environment `PORT` instead of `-P`, e.g., export PORT=1998");
