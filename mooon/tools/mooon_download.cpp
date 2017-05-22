@@ -21,9 +21,9 @@
 // ./mooon_download -h=192.168.10.11 -p=6000 -u=root -P='root123' -s=/etc/hosts,/etc/passwd -d=/tmp/
 // 表示将192.168.10.11机器上的文件/etc/hosts和/etc/passwd两个文件下载到本地的/tmp目录下
 //
-// 可环境变量HOSTS替代参数“-h”
-// 可环境变量USER替代参数“-u”
-// 可环境变量PASSWORD替代参数“-p”
+// 可环境变量H替代参数“-h”
+// 可环境变量U替代参数“-u”
+// 可环境变量P替代参数“-p”
 #include "mooon/net/libssh2.h"
 #include "mooon/sys/stop_watch.h"
 #include "mooon/utils/args_parser.h"
@@ -34,13 +34,13 @@
 #include <iostream>
 
 // 逗号分隔的远程主机列表
-STRING_ARG_DEFINE(h, "", "remote hosts separated by comma, e.g., -h='192.168.1.10,192.168.1.11'. You can also set environment `HOSTS` instead of `-h`, e.g., export HOSTS=192.168.1.10,192.168.1.11");
+STRING_ARG_DEFINE(h, "", "one remote host, e.g., -h='192.168.1.10'. You can also set environment `H` instead of `-h`, e.g., export H=192.168.1.10");
 // 远程主机的sshd端口号
-INTEGER_ARG_DEFINE(uint16_t, P, 22, 10, 65535, "remote hosts port, e.g., -P=22. You can also set environment `PORT` instead of `-P`, e.g., export PORT=1998");
+INTEGER_ARG_DEFINE(uint16_t, P, 22, 10, 65535, "remote host port, e.g., -P=22. You can also set environment `PORT` instead of `-P`, e.g., export PORT=1998");
 // 用户名
-STRING_ARG_DEFINE(u, "", "remote host user name, e.g., -u=root. You can also set environment `USER` instead of `-u`, e.g., export USER=zhangsan");
+STRING_ARG_DEFINE(u, "", "remote host user name, e.g., -u=root. You can also set environment `U` instead of `-u`, e.g., export U=zhangsan");
 // 密码
-STRING_ARG_DEFINE(p, "", "remote host password, e.g., -p='password'. You can also set environment `PASSWORD` instead of `-p`, e.g., export PASSWORD=123456");
+STRING_ARG_DEFINE(p, "", "remote host password, e.g., -p='password'. You can also set environment `P` instead of `-p`, e.g., export P=123456");
 
 // 被上传的文件路径
 STRING_ARG_DEFINE(s, "", "the remote source files to download, separated by comma, e.g., -s='/tmp/x1.txt,/tmp/x2.txt'");
@@ -77,9 +77,9 @@ inline std::ostream& operator <<(std::ostream& out, const struct ResultInfo& res
     return out;
 }
 
-// 可环境变量HOSTS替代参数“-h”
-// 可环境变量USER替代参数“-u”
-// 可环境变量PASSWORD替代参数“-p”
+// 可环境变量H替代参数“-h”
+// 可环境变量U替代参数“-u”
+// 可环境变量P替代参数“-p”
 int main(int argc, char* argv[])
 {
 #if HAVE_LIBSSH2 == 1
@@ -131,10 +131,10 @@ int main(int argc, char* argv[])
     if (host.empty())
     {
         // 尝试从环境变量取值
-        const char* host_ = getenv("HOSTS");
+        const char* host_ = getenv("H");
         if (NULL == host_)
         {
-            fprintf(stderr, "parameter[-h]'s or environment `HOSTS` not set\n");
+            fprintf(stderr, "parameter[-h]'s or environment `H` not set\n");
             fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
             exit(1);
         }
@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
         mooon::utils::CStringUtils::trim(host);
         if (host.empty())
         {
-            fprintf(stderr, "parameter[-h] or environment `HOSTS` not set\n");
+            fprintf(stderr, "parameter[-h] or environment `H` not set\n");
             fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
             exit(1);
         }
@@ -153,10 +153,10 @@ int main(int argc, char* argv[])
     if (user.empty())
     {
         // 尝试从环境变量取值
-        const char* user_ = getenv("USER");
+        const char* user_ = getenv("U");
         if (NULL == user_)
         {
-            fprintf(stderr, "parameter[-u] or environment `USER` not set\n");
+            fprintf(stderr, "parameter[-u] or environment `U` not set\n");
             fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
             exit(1);
         }
@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
         mooon::utils::CStringUtils::trim(user);
         if (user.empty())
         {
-            fprintf(stderr, "parameter[-u] or environment `USER` not set\n");
+            fprintf(stderr, "parameter[-u] or environment `U` not set\n");
             fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
             exit(1);
         }
@@ -175,10 +175,10 @@ int main(int argc, char* argv[])
     if (password.empty())
     {
         // 尝试从环境变量取值
-        const char* password_ = getenv("PASSWORD");
+        const char* password_ = getenv("P");
         if (NULL == password_)
         {
-            fprintf(stderr, "parameter[-p] or environment `PASSWORD` not set\n");
+            fprintf(stderr, "parameter[-p] or environment `P` not set\n");
             fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
             exit(1);
         }
@@ -186,14 +186,14 @@ int main(int argc, char* argv[])
         password= password_;
         if (password.empty())
         {
-            fprintf(stderr, "parameter[-p] or environment `PASSWORD` not set\n");
+            fprintf(stderr, "parameter[-p] or environment `P` not set\n");
             fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
             exit(1);
         }
     }
 
     std::vector<std::string> source_files;
-    int num_source_files = mooon::utils::CTokener::split(&source_files, sources, ",", true);
+    const int num_source_files = mooon::utils::CTokener::split(&source_files, sources, ",", true);
 
     std::vector<struct ResultInfo> results(num_source_files);
     for (int j=0; j<num_source_files; ++j)
