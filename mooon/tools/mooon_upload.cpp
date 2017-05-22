@@ -38,7 +38,7 @@ STRING_ARG_DEFINE(h, "", "remote hosts separated by comma, e.g., -h='192.168.1.1
 // 远程主机的sshd端口号
 INTEGER_ARG_DEFINE(uint16_t, P, 36000, 10, 65535, "remote hosts port, e.g., -P=22");
 // 用户名
-STRING_ARG_DEFINE(u, "root", "remote host user name, e.g., -u=root");
+STRING_ARG_DEFINE(u, "", "remote host user name, e.g., -u=root");
 // 密码
 STRING_ARG_DEFINE(p, "", "remote host password, e.g., -p='password'");
 
