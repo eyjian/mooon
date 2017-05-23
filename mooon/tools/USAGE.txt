@@ -52,3 +52,8 @@ export P='mypassword'
 mooon_ssh -c='whoami' -h=192.168.31.2
 
 mooon_upload和mooon_download使用方法类似。
+
+远程批量添加一条crontab方法：
+mooon_ssh -c='echo -e "`crontab -l`\n* * * * * touch /tmp/x.txt" | crontab -'
+完成后，crontab中将添加如下一行：
+* * * * * touch /tmp/x.txt
