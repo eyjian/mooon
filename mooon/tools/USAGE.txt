@@ -1,0 +1,42 @@
+Linux批量远程命令和上传下载工具
+
+mooon_ssh：批量远程命令工具，在多台机器上执行指定命令
+mooon_upload：批量远程上传工具，上传单个或多个文件到单台或多台机器
+mooon_download：批量远程下载工具，从指定机器下载一个或多个文件
+
+可以通过环境变量或参数方式指定连接远程机器的用户名、密码和IP地址或IP地址列表，但环境变量优先：
+1) 环境变量H等同参数-h，用于指定远程机器的IP或IP列表，多个IP间以逗号分隔，但mooon_download只能指定一个IP
+2) 环境变量U等同参数-u，用于指定连接远程机器的用户名
+3) 环境变量P等同参数-p，用于指定远程机器的用户密码
+4) 环境变量PORT等同参数-P，用于指定远程机器的端口号
+
+环境变量方式和参数方式可以混合使用，即部分通过环境变量设置值，部分以参数方式指定值。
+并建议，参数值尽可能使用单引号，以避免需要对值进行转义处理，除非值本身已包含了单引号。
+
+参数无顺序要求，不带任何参数执行即可查看使用帮助，如：
+$ mooon_ssh 
+parameter[-c]'s value not set
+usage:
+-P[22/10,65535]: remote hosts port, e.g., -P=22. You can also set environment `PORT` instead of `-P`, e.g., export PORT=1998
+-c[]: command to execute remotely, e.g., -c='grep ERROR /tmp/*.log'
+-h[]: remote hosts separated by comma, e.g., -h='192.168.1.10,192.168.1.11'. You can also set environment `H` instead of `-h`, e.g., export H=192.168.1.10,192.168.1.11
+-p[]: remote host password, e.g., -p='password'. You can also set environment `P` instead of `-p`, e.g., export P=123456
+-t[60/1,65535]: timeout seconds to remote host, e.g., -t=100
+-u[]: remote host user name, e.g., -u=root. You can also set environment `U` instead of `-u`, e.g., export U=zhangsan
+
+对于整数类型的参数，均设有默认值和取值范围，如“-P[22/10,65535]”表示默认值为，取值范围为10~65535。对于字符串类型参数，如果为空中括号“[]”，则表示无默认值，否则中括号“[]”中的内容为默认值，如“-u[root]”表示参数“-u”的默认值为root。
+
+mooon_ssh使用示例：
+1) 参数方式
+mooon_ssh -u=root -p='mypassword' -h=192.168.31.2,192.168.31.3 -c='whoami'
+2) 环境变量方式
+export U=root
+export P='mypassword'
+export H=192.168.31.2,192.168.31.3
+mooon_ssh -c='whoami'
+3) 混合方式
+export U=root
+export P='mypassword'
+mooon_ssh -c='whoami' -h=192.168.31.2
+
+mooon_upload和mooon_download使用方法类似。
