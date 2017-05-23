@@ -7,6 +7,8 @@ mooon_download：批量远程下载工具，从指定机器下载一个或多个
 mooon-tools-glibc2.17.tar.gz 64位版本，glibc为2.17
 mooon-tools-glibc2.4.tar.gz 32位版本，glibc2.4，常常可用于64位版本glibc2.17环境。
 
+建议复制到目录/usr/local/bin，或在/usr/local/bin目录下解压，以方便所有用户直接使用，而不用指定文件路径。
+
 可以通过环境变量或参数方式指定连接远程机器的用户名、密码和IP地址或IP地址列表，但参数方式优先：
 1) 环境变量H等同参数-h，用于指定远程机器的IP或IP列表，多个IP间以逗号分隔，但mooon_download只能指定一个IP
 2) 环境变量U等同参数-u，用于指定连接远程机器的用户名
