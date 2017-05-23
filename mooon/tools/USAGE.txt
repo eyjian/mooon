@@ -4,6 +4,9 @@ mooon_ssh：批量远程命令工具，在多台机器上执行指定命令
 mooon_upload：批量远程上传工具，上传单个或多个文件到单台或多台机器
 mooon_download：批量远程下载工具，从指定机器下载一个或多个文件
 
+mooon-tools-glibc2.17.tar.gz 64位版本，glibc为2.17
+mooon-tools-glibc2.4.tar.gz 32位版本，glibc2.4，常常可用于64位版本glibc2.17环境。
+
 可以通过环境变量或参数方式指定连接远程机器的用户名、密码和IP地址或IP地址列表，但环境变量优先：
 1) 环境变量H等同参数-h，用于指定远程机器的IP或IP列表，多个IP间以逗号分隔，但mooon_download只能指定一个IP
 2) 环境变量U等同参数-u，用于指定连接远程机器的用户名
@@ -12,6 +15,13 @@ mooon_download：批量远程下载工具，从指定机器下载一个或多个
 
 环境变量方式和参数方式可以混合使用，即部分通过环境变量设置值，部分以参数方式指定值。
 并建议，参数值尽可能使用单引号，以避免需要对值进行转义处理，除非值本身已包含了单引号。
+
+如果使用双引号，则需要做转义，如批量kill掉java进程：
+mooon_ssh -c="kill \$(/usr/local/jdk/bin/jps|awk /DataNode/'{print \$1}')"
+
+另外，低版本glibc不兼容高版本的glibc，因此glibc2.4的不能用于glibc2.17环境，64位版本也不能用于32位环境。
+64位系统上查看glibc版本方法：/lib64/libc.so.6
+32位系统上查看glibc版本方法：/lib/libc.so.6
 
 参数无顺序要求，不带任何参数执行即可查看使用帮助，如：
 $ mooon_ssh 
