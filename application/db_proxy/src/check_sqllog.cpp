@@ -1,7 +1,6 @@
 // Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 #include "config_loader.h"
 #include <mooon/net/thrift_helper.h>
-#include <mooon/observer/observer_manager.h>
 #include <mooon/sys/close_helper.h>
 #include <mooon/sys/dir_utils.h>
 #include <mooon/sys/main_template.h>

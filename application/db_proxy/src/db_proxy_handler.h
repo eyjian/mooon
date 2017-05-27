@@ -2,7 +2,6 @@
 #ifndef MOOON_DB_PROXY_HANDLER_H
 #define MOOON_DB_PROXY_HANDLER_H
 #include "DbProxyService.h" // 执行cmake或make rpc时生成的文件
-#include <mooon/observer/observable.h>
 #include <mooon/sys/atomic.h>
 #include <mooon/sys/mysql_db.h>
 #include <mooon/sys/read_write_lock.h>

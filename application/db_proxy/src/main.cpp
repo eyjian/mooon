@@ -18,9 +18,6 @@
 // 服务端口
 INTEGER_ARG_DEFINE(uint16_t, port, 4077, 1000, 65535, "listen port of db proxy");
 
-// 数据上报频率（单位为秒），如果值为0表示禁止收集数据
-INTEGER_ARG_DEFINE(uint16_t, report_frequency_seconds, 0, 0, 3600, "frequency seconds to report data");
-
 // IO线程数
 INTEGER_ARG_DEFINE(uint8_t, num_io_threads, 1, 1, 50, "number of IO threads");
 // 工作线程数

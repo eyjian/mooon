@@ -2,7 +2,6 @@
 #include "db_proxy_handler.h"
 #include "config_loader.h"
 #include "sql_logger.h"
-#include <mooon/observer/observer_manager.h>
 #include <mooon/sys/datetime_utils.h>
 #include <mooon/sys/log.h>
 #include <mooon/utils/args_parser.h>
