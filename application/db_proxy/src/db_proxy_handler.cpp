@@ -414,9 +414,9 @@ int64_t CDbProxyHandler::do_update(bool throw_exception, const std::string& sign
                 const std::string& sql = utils::format_string(update_info.sql_template.c_str(), escaped_tokens);
                 if (sql.empty())
                 {
-                    MYLOG_ERROR("input error tokens or template error: update_index=%d\n", update_index);
+                    MYLOG_ERROR("tokens number or template error: update_index=%d\n", update_index);
                     if (throw_exception)
-                        throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("input error tokens or template error: update_index=%d", update_index));
+                        throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("tokens number or template error: update_index=%d", update_index));
                 }
                 else
                 {
