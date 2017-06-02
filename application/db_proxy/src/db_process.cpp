@@ -306,7 +306,12 @@ bool CDbProcess::handle_file(const std::string& filename)
                     if (!update_progress(filename, offset))
                         return false;
 
-                    if (0 == ++_num_sqls%10000)
+                    // rows为0可能是失败，比如update时没有满足where条件的记录存在时
+                    if (0 == rows)
+                    {
+                        MYLOG_WARN("[UPDATE_WARNING][%s] ok: %d, %" PRIu64"\n", sql.c_str(), rows, _num_sqls);
+                    }
+                    else if (0 == ++_num_sqls%10000)
                     {
                         MYLOG_INFO("[%s] ok: %d, %" PRIu64"\n", sql.c_str(), rows, _num_sqls);
                     }
