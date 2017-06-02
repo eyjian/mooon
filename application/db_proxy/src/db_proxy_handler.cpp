@@ -407,16 +407,27 @@ int64_t CDbProxyHandler::do_update(bool throw_exception, const std::string& sign
             }
             else
             {
-                // 写入文件由dbprocess写入db
+                // 转义，以防止SQL注入
                 escape_tokens(NULL, tokens, &escaped_tokens);
-                std::string sql = utils::format_string(update_info.sql_template.c_str(), escaped_tokens);
-                MYLOG_DEBUG("%s\n", sql.c_str());
-                //sql.append(";\n");
 
-                bool written = sql_logger->write_log(sql);
-                config_loader->release_sql_logger(sql_logger);
-                if (!written && throw_exception)
-                    throw apache::thrift::TApplicationException("io error");
+                // 根据模板生成SQL
+                const std::string& sql = utils::format_string(update_info.sql_template.c_str(), escaped_tokens);
+                if (sql.empty())
+                {
+                    MYLOG_ERROR("input error tokens or template error: update_index=%d\n", update_index);
+                    if (throw_exception)
+                        throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("input error tokens or template error: update_index=%d", update_index));
+                }
+                else
+                {
+                    MYLOG_DEBUG("[update_index=%d] %s\n", update_index, sql.c_str());
+
+                    bool written = sql_logger->write_log(sql);
+                    config_loader->release_sql_logger(sql_logger);
+                    if (!written && throw_exception)
+                        throw apache::thrift::TApplicationException("io error");
+                }
+
                 return 0;
             }
         }

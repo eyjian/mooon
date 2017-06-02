@@ -256,6 +256,7 @@ bool CDbProcess::handle_file(const std::string& filename)
             }
 
             // 操作DB异常时不断重试
+            MYLOG_DEBUG("%s\n", sql.c_str());
             while (!_stop_signal_thread)
             {
                 if (parent_process_not_exists())
