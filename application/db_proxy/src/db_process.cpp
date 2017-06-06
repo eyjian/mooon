@@ -179,7 +179,8 @@ bool CDbProcess::handle_file(const std::string& filename)
         MYLOG_DEBUG("handling: %s\n", filename.c_str());
     }
 
-    const std::string log_filepath = _log_dirpath + std::string("/") + filename;
+    const std::string& log_tag = _dbinfo.alias + std::string("/") + filename;
+    const std::string& log_filepath = _log_dirpath + std::string("/") + filename;
     uint32_t offset = 0;
     int fd = open(log_filepath.c_str(), O_RDONLY);
     if (-1 == fd)
@@ -194,12 +195,12 @@ bool CDbProcess::handle_file(const std::string& filename)
         {
             if (-1 == lseek(fd, _progress.offset, SEEK_SET))
             {
-                MYLOG_ERROR("lseek %s error: %s\n", _progress.str().c_str(), sys::Error::to_string().c_str());
+                MYLOG_ERROR("lseek %s error(%s): %s\n", _progress.str().c_str(), log_filepath.c_str(), sys::Error::to_string().c_str());
                 return false;
             }
 
             offset = _progress.offset;
-            MYLOG_INFO("lseek %s to %u\n", _progress.str().c_str(), _progress.offset);
+            MYLOG_INFO("lseek %s to %u offset: %s\n", _progress.str().c_str(), _progress.offset, log_filepath.c_str());
         }
 
         int count = 0; // 入库的条数
@@ -215,14 +216,14 @@ bool CDbProcess::handle_file(const std::string& filename)
             bytes = read(fd, &length, sizeof(length));
             if (-1 == bytes)
             {
-                MYLOG_ERROR("read %s error: %s\n", log_filepath.c_str(), sys::Error::to_string().c_str());
+                MYLOG_ERROR("read %s:%u error: %s\n", log_filepath.c_str(), offset, sys::Error::to_string().c_str());
                 return false;
             }
             else if (0 == bytes)
             {
                 if (0 == consecutive_nodata++%1000)
                 {
-                    MYLOG_INFO("no data to sleep: %s\n", _progress.str().c_str());
+                    MYLOG_INFO("[%s:%u]no data to sleep: %s\n", log_filepath.c_str(), offset, _progress.str().c_str());
                 }
 
                 // 可以考虑引入inotify，改轮询为监听方式
@@ -232,7 +233,7 @@ bool CDbProcess::handle_file(const std::string& filename)
             if (0 == length)
             {
                 // END
-                MYLOG_INFO("%s ENDED: %d\n", _progress.str().c_str(), count);
+                MYLOG_INFO("[%s:%u]%s ENDED(%u): %d\n", log_filepath.c_str(), offset, _progress.str().c_str(), count);
                 // 归档
                 archive_file(filename);
                 break;
@@ -247,7 +248,7 @@ bool CDbProcess::handle_file(const std::string& filename)
             bytes = read(fd, const_cast<char*>(sql.data()), length);
             if (-1 == bytes)
             {
-                MYLOG_ERROR("read %s error: %s\n", log_filepath.c_str(), sys::Error::to_string().c_str());
+                MYLOG_ERROR("read %s:%u error: %s\n", log_filepath.c_str(), offset, sys::Error::to_string().c_str());
                 return false;
             }
             if (bytes > 0)
@@ -276,7 +277,7 @@ bool CDbProcess::handle_file(const std::string& filename)
 
                         if (interval >= mooon::argument::efficiency->value())
                         {
-                            MYLOG_INFO("efficiency: %d (%d, %ds)\n", _interval_count/interval, _interval_count, interval);
+                            MYLOG_INFO("[%s:%u]efficiency(%u): %d (%d, %ds)\n", log_tag.c_str(), offset, _interval_count/interval, _interval_count, interval);
                             _begin_time = end_time;
                             _interval_count = 0;
                         }
@@ -295,7 +296,7 @@ bool CDbProcess::handle_file(const std::string& filename)
 
                             if (interval >= mooon::argument::efficiency->value())
                             {
-                                MYLOG_INFO("efficiency: %d (%d, %ds)\n", _interval_count/interval, _interval_count, interval);
+                                MYLOG_INFO("[%s:%u] efficiency(%u): %d (%d, %ds)\n", log_tag.c_str(), offset, _interval_count/interval, _interval_count, interval);
                                 _begin_time = end_time;
                                 _interval_count = 0;
                             }
@@ -309,22 +310,22 @@ bool CDbProcess::handle_file(const std::string& filename)
                     // rows为0可能是失败，比如update时没有满足where条件的记录存在时
                     if (0 == rows)
                     {
-                        MYLOG_WARN("[UPDATE_WARNING][%s] ok: %d, %" PRIu64"\n", sql.c_str(), rows, _num_sqls);
+                        MYLOG_WARN("[UPDATE_WARNING][%s:%u][%s] ok: %d, %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(), rows, _num_sqls);
                     }
                     else if (0 == ++_num_sqls%10000)
                     {
-                        MYLOG_INFO("[%s] ok: %d, %" PRIu64"\n", sql.c_str(), rows, _num_sqls);
+                        MYLOG_INFO("[%s:%u][%s] ok: %d, %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(), rows, _num_sqls);
                     }
                     else
                     {
-                        MYLOG_DEBUG("[%s] ok: %d, %" PRIu64"\n", sql.c_str(), rows, _num_sqls);
+                        MYLOG_DEBUG("[%s:%u][%s] ok: %d, %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(),  rows, _num_sqls);
                     }
 
                     break;
                 }
                 catch (sys::CDBException& ex)
                 {
-                    MYLOG_ERROR("%s\n", ex.str().c_str());
+                    MYLOG_ERROR("[%s:%u]%s\n", log_tag.c_str(), offset, ex.str().c_str());
 
                     // 网络类需要重试，直到成功
                     if (!_mysql.is_disconnected_exception(ex))
