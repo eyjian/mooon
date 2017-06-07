@@ -69,6 +69,11 @@ private:
     void archive_file(const std::string& filename) const;
 
 private:
+    std::string get_filepath(const std::string& filename) const;
+    std::string get_archived_filepath(const std::string& filename) const;
+    std::string get_history_dirpath() const;
+
+private:
     int _progess_fd; // 进度文件句柄
     struct Progress _progress;
     struct DbInfo _dbinfo;

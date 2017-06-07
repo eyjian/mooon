@@ -233,7 +233,7 @@ bool CDbProcess::handle_file(const std::string& filename)
             if (0 == length)
             {
                 // END
-                MYLOG_INFO("[%s:%u]%s ENDED(%u): %d\n", log_filepath.c_str(), offset, _progress.str().c_str(), count);
+                MYLOG_INFO("[%s:%u]%s ENDED: %d\n", log_filepath.c_str(), offset, _progress.str().c_str(), count);
                 // 归档
                 archive_file(filename);
                 break;
@@ -277,7 +277,7 @@ bool CDbProcess::handle_file(const std::string& filename)
 
                         if (interval >= mooon::argument::efficiency->value())
                         {
-                            MYLOG_INFO("[%s:%u]efficiency(%u): %d (%d, %ds)\n", log_tag.c_str(), offset, _interval_count/interval, _interval_count, interval);
+                            MYLOG_INFO("[%s:%u]efficiency: %d (%d, %ds)\n", log_tag.c_str(), offset, _interval_count/interval, _interval_count, interval);
                             _begin_time = end_time;
                             _interval_count = 0;
                         }
@@ -296,7 +296,7 @@ bool CDbProcess::handle_file(const std::string& filename)
 
                             if (interval >= mooon::argument::efficiency->value())
                             {
-                                MYLOG_INFO("[%s:%u] efficiency(%u): %d (%d, %ds)\n", log_tag.c_str(), offset, _interval_count/interval, _interval_count, interval);
+                                MYLOG_INFO("[%s:%u] efficiency: %d (%d, %ds)\n", log_tag.c_str(), offset, _interval_count/interval, _interval_count, interval);
                                 _begin_time = end_time;
                                 _interval_count = 0;
                             }
@@ -484,8 +484,8 @@ bool CDbProcess::open_progress()
 
 void CDbProcess::archive_file(const std::string& filename) const
 {
-    const std::string filepath = _log_dirpath + std::string("/") + filename;
-    const std::string archived_filepath = _log_dirpath + std::string("/history/") + filename;
+    const std::string& filepath = get_filepath(filename);
+    const std::string& archived_filepath = get_archived_filepath(filename);
     if (-1 == rename(filepath.c_str(), archived_filepath.c_str()))
     {
         MYLOG_ERROR("archived %s to %s failed: %s\n", filepath.c_str(), archived_filepath.c_str(), sys::Error::to_string().c_str());
@@ -494,6 +494,22 @@ void CDbProcess::archive_file(const std::string& filename) const
     {
         MYLOG_INFO("archived %s to %s ok\n", filepath.c_str(), archived_filepath.c_str());
     }
+}
+
+std::string CDbProcess::get_filepath(const std::string& filename) const
+{
+    return _log_dirpath + std::string("/") + filename;
+}
+
+std::string CDbProcess::get_archived_filepath(const std::string& filename) const
+{
+    const std::string& history_dirpath = get_history_dirpath();
+    return history_dirpath + std::string("/") + filename;
+}
+
+std::string CDbProcess::get_history_dirpath() const
+{
+    return _log_dirpath + std::string("/history");
 }
 
 }} // namespace mooon { namespace db_proxy {
