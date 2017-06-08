@@ -14,9 +14,7 @@ struct Progress
 
     Progress()
     {
-        crc32 = 0;
-        offset = 0;
-        memset(filename, sizeof(filename), 0);
+        memset(this, sizeof(*this), 0);
     }
 
     bool empty() const
