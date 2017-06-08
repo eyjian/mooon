@@ -20,6 +20,10 @@ set(RPC DbProxyService.cpp db_proxy_constants.cpp db_proxy_types.cpp)
 add_executable(check_sqllog check_sqllog.cpp)
 target_link_libraries(check_sqllog libmooon.a)
 
+# db_proxy_tool
+add_executable(db_proxy_tool db_proxy_tool.cpp)
+target_link_libraries(db_proxy_tool libmooon.a)
+
 # dbproxy客户端工具
 add_executable(db_proxy_client db_proxy_client.cpp ${RPC})
 target_link_libraries(db_proxy_client libjsoncpp.a libthriftnb.a libthrift.a libevent.a)

@@ -52,7 +52,7 @@ void CDbProcess::run()
 
     delete sys::g_logger; // 不共享父进程的日志文件
     sys::g_logger = sys::create_safe_logger(log_dirpath, db_process_title, SIZE_8K);
-    MYLOG_INFO("db_process(%u): %s\n", getpid(), db_process_title.c_str());
+    MYLOG_INFO("db_process(%u) started: %s\n", getpid(), db_process_title.c_str());
 
     if (create_history_directory())
     {

@@ -2,40 +2,11 @@
 #ifndef MOOON_DB_PROXY_DB_PROCESS_H
 #define MOOON_DB_PROXY_DB_PROCESS_H
 #include "config_loader.h"
+#include "sql_progress.h"
 #include <mooon/sys/mysql_db.h>
 #include <mooon/sys/thread_engine.h>
 #include <zlib.h>
 namespace mooon { namespace db_proxy {
-
-struct Progress
-{
-    uint32_t crc32;
-    uint32_t offset;
-    char filename[sizeof("sql.0123456789AB.123456")]; // 包含结尾符'\0'
-
-    Progress()
-    {
-        crc32 = 0;
-        offset = 0;
-        memset(filename, sizeof(filename), 0);
-    }
-
-    bool empty() const
-    {
-        return '\0' == filename[0];
-    }
-
-    std::string str() const
-    {
-        return utils::CStringUtils::format_string("progress://C%u/O%u/F%s", crc32, offset, filename);
-    }
-
-    uint32_t get_crc32() const
-    {
-        const std::string crc32_str = utils::CStringUtils::format_string("%u%s", offset, filename);
-        return ::crc32(0L, (const unsigned char*)crc32_str.data(), crc32_str.size());
-    }
-};
 
 // 父进程不在时自动退出
 class CDbProcess

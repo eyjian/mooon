@@ -14,6 +14,7 @@
 #include <mooon/sys/utils.h>
 #include <mooon/utils/args_parser.h>
 #include <mooon/utils/scoped_ptr.h>
+#include <string.h>
 
 // 服务端口
 INTEGER_ARG_DEFINE(uint16_t, port, 4077, 1000, 65535, "listen port of db proxy");
@@ -29,7 +30,7 @@ INTEGER_ARG_DEFINE(int, sql_file_size, (1024*1024*500), (1024*10), std::numeric_
 // 批量提交SQL数
 INTEGER_ARG_DEFINE(uint8_t, batch, 1, 1, std::numeric_limits<uint8_t>::max(), "number of batch commit");
 // 效率数据定时输出间隔，单位为秒
-INTEGER_ARG_DEFINE(uint16_t, efficiency, 10, 2, std::numeric_limits<uint8_t>::max(), "interval to output efficiency (seconds)");
+INTEGER_ARG_DEFINE(uint16_t, efficiency, 60, 2, std::numeric_limits<uint8_t>::max(), "interval to output efficiency (seconds)");
 
 // 缓存多少笔数据
 INTEGER_ARG_DEFINE(int32_t, cache_number, 200000, 1, 200000000, "the number of data cached");
@@ -40,6 +41,9 @@ INTEGER_ARG_DEFINE(int32_t, cleanup_frequency, 10, 1, 3600, "the frequency to cl
 INTEGER_ARG_DEFINE(uint16_t, history_days, 60, 1, std::numeric_limits<uint16_t>::max(), "days to keep history files");
 // 删除过老历史文件时间点
 INTEGER_ARG_DEFINE(uint8_t, history_hour, 2, 0, 23, "hour to delete history files");
+
+// 重启入库进入频率，单位为秒
+INTEGER_ARG_DEFINE(uint16_t, restart_frequency, 10, 1, std::numeric_limits<uint16_t>::max(), "the frequency (seconds) to restart db process");
 
 class CMainHelper: public mooon::sys::IMainHelper
 {
@@ -144,8 +148,35 @@ void CMainHelper::on_child_end(pid_t child_pid, int child_exited_status)
     }
     else
     {
-        MYLOG_INFO("db process(%u) exit with code(%d)\n", static_cast<unsigned int>(child_pid), child_exited_status);
+        const mooon::db_proxy::DbInfo dbinfo = iter->second;
+
+        MYLOG_INFO("db process(%u) exit with code(%d): %s\n", static_cast<unsigned int>(child_pid), child_exited_status, dbinfo.str().c_str());
         _db_process_table.erase(iter);
+
+        if (WIFSTOPPED(child_exited_status))
+        {
+            const int child_exit_code = WSTOPSIG(child_exited_status);
+            MYLOG_INFO("db process(%u) exit by %d\n", child_pid, child_exit_code);
+        }
+        else if (WIFEXITED(child_exited_status))
+        {
+            const int child_exit_code = WEXITSTATUS(child_exited_status);
+            MYLOG_INFO("db process(%u) exit with %d\n", child_pid, child_exit_code);
+        }
+        else if (WIFSIGNALED(child_exited_status))
+        {
+            const int signo = WTERMSIG(child_exited_status);
+            MYLOG_INFO("db process(%u) exit by signal: (%d)%s\n", child_pid, signo, strsignal(signo));
+
+            // 异常退出才重启，而且需要控制重启频率
+            if ((signo != SIGINT) && (signo != SIGTERM))
+            {
+                const uint32_t restart_frequency = mooon::argument::restart_frequency->value();
+                MYLOG_INFO("to restart db process(%u) after %us: %s\n", child_pid, restart_frequency, dbinfo.str().c_str());
+                mooon::sys::CUtils::millisleep(1000*restart_frequency);
+                (void)create_db_process(dbinfo);
+            }
+        }
     }
 }
 
