@@ -63,7 +63,7 @@ private:
 
 private:
     void stop();
-    bool create_db_process();
+    bool create_db_processes();
 
 private:
     std::map<pid_t, mooon::db_proxy::DbInfo> _db_process_table; // key为入库进程ID
@@ -203,7 +203,7 @@ bool CMainHelper::init(int argc, char* argv[])
             return false;
         }
 
-        return create_db_process();
+        return create_db_processes();
     }
     catch (mooon::sys::CSyscallException& syscall_ex)
     {
@@ -266,7 +266,7 @@ void CMainHelper::stop()
     mooon::sys::CUtils::millisleep(200);
 }
 
-bool CMainHelper::create_db_process()
+bool CMainHelper::create_db_processes()
 {
     for (int index=0; index<mooon::db_proxy::MAX_DB_CONNECTION; ++index)
     {
