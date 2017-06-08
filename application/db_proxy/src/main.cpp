@@ -24,7 +24,7 @@ INTEGER_ARG_DEFINE(uint8_t, num_io_threads, 1, 1, 50, "number of IO threads");
 INTEGER_ARG_DEFINE(uint8_t, num_work_threads, 1, 1, 50, "number of work threads");
 
 // sql日志文件大小，建议大小不小于（1024*1024*100），更小的值是为了方便开发时的测试
-INTEGER_ARG_DEFINE(int, sql_file_size, (1024*1024*300), (1024*10), std::numeric_limits<int>::max(), "size of single sql log file");
+INTEGER_ARG_DEFINE(int, sql_file_size, (1024*1024*500), (1024*10), std::numeric_limits<int>::max(), "size of single sql log file");
 
 // 批量提交SQL数
 INTEGER_ARG_DEFINE(uint8_t, batch, 1, 1, std::numeric_limits<uint8_t>::max(), "number of batch commit");
@@ -64,6 +64,7 @@ private:
 private:
     void stop();
     bool create_db_processes();
+    bool create_db_process(const struct mooon::db_proxy::DbInfo& dbinfo);
 
 private:
     std::map<pid_t, mooon::db_proxy::DbInfo> _db_process_table; // key为入库进程ID
@@ -273,32 +274,40 @@ bool CMainHelper::create_db_processes()
         struct mooon::db_proxy::DbInfo dbinfo;
         if (mooon::db_proxy::CConfigLoader::get_singleton()->get_db_info(index, &dbinfo))
         {
-            if (dbinfo.alias.empty())
-            {
-                MYLOG_INFO("alias empty, no dbprocess(%s)\n", dbinfo.str().c_str());
-            }
-            else
-            {
-                pid_t db_pid = fork();
-                if (-1 == db_pid)
-                {
-                    MYLOG_ERROR("create dbprocess(%s) error: %s\n", dbinfo.str().c_str(), mooon::sys::Error::to_string().c_str());
-                    return false;
-                }
-                else if (0 == db_pid)
-                {
-                    // 入库进程
-                    mooon::db_proxy::CDbProcess db_process(dbinfo);
-                    db_process.run();
-                    MYLOG_INFO("dbprocess(%u, %s) exit\n", static_cast<unsigned int>(getpid()), dbinfo.str().c_str());
-                    exit(0);
-                }
-                else
-                {
-                    _db_process_table.insert(std::make_pair(db_pid, dbinfo));
-                    MYLOG_INFO("add dbprocess(%u, %s)\n", static_cast<unsigned int>(db_pid), dbinfo.str().c_str());
-                }
-            }
+            if (!create_db_process(dbinfo))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool CMainHelper::create_db_process(const struct mooon::db_proxy::DbInfo& dbinfo)
+{
+    if (dbinfo.alias.empty())
+    {
+        MYLOG_INFO("alias empty, no dbprocess(%s)\n", dbinfo.str().c_str());
+    }
+    else
+    {
+        pid_t db_pid = fork();
+        if (-1 == db_pid)
+        {
+            MYLOG_ERROR("create dbprocess(%s) error: %s\n", dbinfo.str().c_str(), mooon::sys::Error::to_string().c_str());
+            return false;
+        }
+        else if (0 == db_pid)
+        {
+            // 入库进程
+            mooon::db_proxy::CDbProcess db_process(dbinfo);
+            db_process.run();
+            MYLOG_INFO("dbprocess(%u, %s) exit\n", static_cast<unsigned int>(getpid()), dbinfo.str().c_str());
+            exit(0);
+        }
+        else
+        {
+            _db_process_table.insert(std::make_pair(db_pid, dbinfo));
+            MYLOG_INFO("add dbprocess(%u, %s)\n", static_cast<unsigned int>(db_pid), dbinfo.str().c_str());
         }
     }
 
