@@ -17,6 +17,14 @@
 INTEGER_ARG_DECLARE(uint16_t, port);
 namespace mooon { namespace db_proxy {
 
+// 文件名组成结构
+struct FilenameStruct
+{
+    std::string prefix;
+    time_t timestamp;
+    int suffix;
+};
+
 inline bool is_sql_log_filename(const std::string& filename)
 {
     std::vector<std::string> tokens;
@@ -32,6 +40,33 @@ inline std::string get_log_dirpath(const std::string& alias)
 {
     const std::string program_path = sys::CUtils::get_program_path();
     return utils::CStringUtils::format_string("%s/../%s_%d/%s", program_path.c_str(), SQLLOG_DIRNAME, argument::port->value(), alias.c_str());
+}
+
+inline bool extract_filename(const std::string& filename, struct FilenameStruct* filename_struct)
+{
+    do
+    {
+        std::vector<std::string> tokens;
+        const int num_tokens = mooon::utils::CTokener::split(&tokens, filename, ".");
+        if (num_tokens != 3)
+            break;
+
+        const std::string& prefix_str = tokens[0];
+        const std::string& timestamp_str = tokens[1];
+        const std::string& suffix_str = tokens[2];
+
+        if (prefix_str != "sql")
+            break;
+        if (!mooon::utils::CStringUtils::string2time_t(timestamp_str.c_str(), filename_struct->timestamp))
+            break;
+        if (!mooon::utils::CStringUtils::string2int(suffix_str.c_str(), filename_struct->suffix))
+            break;
+
+        return true;
+    } while(false);
+
+    MYLOG_DEBUG("is not sql log file: %s\n", filename.c_str());
+    return false;
 }
 
 // 定义常量

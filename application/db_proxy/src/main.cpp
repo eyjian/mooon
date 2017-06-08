@@ -36,6 +36,11 @@ INTEGER_ARG_DEFINE(int32_t, cache_number, 200000, 1, 200000000, "the number of d
 // 清理缓存频率，单位为秒
 INTEGER_ARG_DEFINE(int32_t, cleanup_frequency, 10, 1, 3600, "the frequency to cleanup the cached data");
 
+// 历史文件保存天数
+INTEGER_ARG_DEFINE(uint16_t, history_days, 60, 1, std::numeric_limits<uint16_t>::max(), "days to keep history files");
+// 删除过老历史文件时间点
+INTEGER_ARG_DEFINE(uint8_t, history_hour, 2, 0, 23, "hour to delete history files");
+
 class CMainHelper: public mooon::sys::IMainHelper
 {
 public:

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <mooon/sys/close_helper.h>
 #include <mooon/sys/dir_utils.h>
+#include <mooon/sys/file_utils.h>
 #include <mooon/sys/safe_logger.h>
 #include <mooon/sys/signal_handler.h>
 #include <mooon/sys/stop_watch.h>
@@ -12,14 +13,15 @@
 #include <sys/uio.h>
 
 INTEGER_ARG_DECLARE(uint16_t, port);
-INTEGER_ARG_DECLARE(int, sql_file_size);
 INTEGER_ARG_DECLARE(uint8_t, batch);
 INTEGER_ARG_DECLARE(uint16_t, efficiency);
+INTEGER_ARG_DECLARE(uint16_t, history_days);
+INTEGER_ARG_DECLARE(uint8_t, history_hour);
 namespace mooon { namespace db_proxy {
 
 CDbProcess::CDbProcess(const struct DbInfo& dbinfo)
     : _progess_fd(-1), _dbinfo(dbinfo), _stop_signal_thread(false), _signal_thread(NULL),
-      _consecutive_failures(0), _num_sqls(0), _db_connected(false)
+      _consecutive_failures(0), _num_sqls(0), _db_connected(false), _old_history_files_deleted_today(false)
 {
     const std::string program_path = sys::CUtils::get_program_path();
     _log_dirpath = get_log_dirpath(_dbinfo.alias);
@@ -59,6 +61,7 @@ void CDbProcess::run()
             _signal_thread = new sys::CThreadEngine(sys::bind(&CDbProcess::signal_thread, this));
             while (!_stop_signal_thread)
             {
+                delete_old_history_files();
                 if (parent_process_not_exists())
                     break;
 
@@ -510,6 +513,53 @@ std::string CDbProcess::get_archived_filepath(const std::string& filename) const
 std::string CDbProcess::get_history_dirpath() const
 {
     return _log_dirpath + std::string("/history");
+}
+
+void CDbProcess::delete_old_history_files()
+{
+    const time_t current_seconds = time(NULL);
+    struct tm current_struct;
+    (void)localtime_r(&current_seconds, &current_struct);
+
+    if (current_struct.tm_hour != mooon::argument::history_hour->value())
+    {
+        _old_history_files_deleted_today = false;
+    }
+    else
+    {
+        if (!_old_history_files_deleted_today)
+        {
+            _old_history_files_deleted_today = true;
+
+            std::vector<std::string> file_names;
+            std::vector<std::string>* subdir_names = NULL;
+            std::vector<std::string>* link_names= NULL;
+            const std::string& history_dirpath = get_history_dirpath();
+
+            mooon::sys::CDirUtils::list(history_dirpath, subdir_names, &file_names, link_names);
+            for (std::vector<std::string>::size_type i=0; !_stop_signal_thread&&i<file_names.size(); ++i)
+            {
+                struct FilenameStruct filename_struct;
+                const std::string& filename = file_names[i];
+
+                if (extract_filename(filename, &filename_struct))
+                {
+                    if (current_seconds < filename_struct.timestamp + 3600*24*mooon::argument::history_days->value())
+                    {
+                        try
+                        {
+                            MYLOG_INFO("to remove history sql log: %s\n", filename.c_str());
+                            mooon::sys::CFileUtils::remove(filename.c_str());
+                        }
+                        catch (mooon::sys::CSyscallException& ex)
+                        {
+                            MYLOG_ERROR("remove %s failed: %s\n", filename.c_str(), ex.str().c_str());
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 }} // namespace mooon { namespace db_proxy {

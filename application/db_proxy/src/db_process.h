@@ -72,6 +72,7 @@ private:
     std::string get_filepath(const std::string& filename) const;
     std::string get_archived_filepath(const std::string& filename) const;
     std::string get_history_dirpath() const;
+    void delete_old_history_files(); // 删除过老的历史文件
 
 private:
     int _progess_fd; // 进度文件句柄
@@ -84,6 +85,7 @@ private:
     uint32_t _consecutive_failures; // 用于减少连接DB失败时的重复日志
     uint64_t _num_sqls; // 启动以来总共处理过的SQL条数
     bool _db_connected; // 是否连接了DB
+    bool _old_history_files_deleted_today; // 今日是否已执行过删除老的历史文件
 
 private:
     time_t _begin_time; // 效率统计开始时间
