@@ -26,8 +26,7 @@ int main(int argc, char* argv[])
     std::string errmsg;
     if (!mooon::utils::parse_arguments(argc, argv, &errmsg))
     {
-        std::cerr << errmsg << std::endl
-                  << mooon::utils::g_help_string << std::endl;
+        std::cerr << errmsg << std::endl;
         exit(1);
     }
     if (mooon::argument::tokens->value().empty())
