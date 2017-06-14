@@ -45,6 +45,9 @@ INTEGER_ARG_DEFINE(uint8_t, history_hour, 2, 0, 23, "hour to delete history file
 // 重启入库进入频率，单位为秒
 INTEGER_ARG_DEFINE(uint16_t, restart_frequency, 10, 1, std::numeric_limits<uint16_t>::max(), "the frequency (seconds) to restart db process");
 
+// 当父进程不存在时是否自动退出
+INTEGER_ARG_DEFINE(uint8_t, auto_exit, 1, 0, 1, "mdbp will exit when it's parent not exist");
+
 class CMainHelper: public mooon::sys::IMainHelper
 {
 public:

@@ -17,6 +17,7 @@ INTEGER_ARG_DECLARE(uint8_t, batch);
 INTEGER_ARG_DECLARE(uint16_t, efficiency);
 INTEGER_ARG_DECLARE(uint16_t, history_days);
 INTEGER_ARG_DECLARE(uint8_t, history_hour);
+INTEGER_ARG_DECLARE(uint8_t, auto_exit);
 namespace mooon { namespace db_proxy {
 
 CDbProcess::CDbProcess(const struct DbInfo& dbinfo)
@@ -112,15 +113,23 @@ void CDbProcess::on_exception(int errcode) throw ()
 
 bool CDbProcess::parent_process_not_exists() const
 {
-    pid_t ppid = getppid();
-    if (1 == ppid)
+    if (0 == mooon::argument::auto_exit->value())
     {
-        // 父进程不在则自动退出
-        MYLOG_INFO("dbprocess(%u, %s) will exit for parent process not exit\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str());
-        return true;
+        // 不自动退出
+        return false;
     }
+    else
+    {
+        pid_t ppid = getppid();
+        if (1 == ppid)
+        {
+            // 父进程不在则自动退出
+            MYLOG_INFO("dbprocess(%u, %s) will exit for parent process not exit\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str());
+            return true;
+        }
 
-    return false;
+        return false;
+    }
 }
 
 bool CDbProcess::create_history_directory() const
