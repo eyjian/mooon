@@ -548,21 +548,32 @@ void CDbProcess::delete_old_history_files()
             mooon::sys::CDirUtils::list(history_dirpath, subdir_names, &file_names, link_names);
             for (std::vector<std::string>::size_type i=0; !_stop_signal_thread&&i<file_names.size(); ++i)
             {
-                struct FilenameStruct filename_struct;
+                struct stat st;
                 const std::string& filename = file_names[i];
+                const std::string& filepath = history_dirpath + std::string("/") + filename;
 
-                if (extract_filename(filename, &filename_struct))
+                if (-1 == stat(filepath.c_str(), &st))
                 {
-                    if (current_seconds < filename_struct.timestamp + 3600*24*mooon::argument::history_days->value())
+                    MYLOG_ERROR("stat %s error: %s\n", filepath.c_str(), sys::Error::to_string().c_str());
+                }
+                else
+                {
+                    const int64_t interval_seconds = static_cast<int64_t>(current_seconds - st.st_mtime);
+
+                    if (interval_seconds < 3600*24*mooon::argument::history_days->value())
+                    {
+                        MYLOG_DEBUG("keep %s: %" PRId64", %" PRId64", %" PRId64"\n", filepath.c_str(), interval_seconds, (int64_t)current_seconds, (int64_t)st.st_mtime);
+                    }
+                    else
                     {
                         try
                         {
-                            MYLOG_INFO("to remove history sql log: %s\n", filename.c_str());
-                            mooon::sys::CFileUtils::remove(filename.c_str());
+                            MYLOG_INFO("to remove history sql log(%" PRId64", %" PRId64", %" PRId64"): %s\n", interval_seconds, (int64_t)current_seconds, (int64_t)st.st_mtime, filepath.c_str());
+                            mooon::sys::CFileUtils::remove(filepath.c_str());
                         }
                         catch (mooon::sys::CSyscallException& ex)
                         {
-                            MYLOG_ERROR("remove %s failed: %s\n", filename.c_str(), ex.str().c_str());
+                            MYLOG_ERROR("remove %s failed: %s\n", filepath.c_str(), ex.str().c_str());
                         }
                     }
                 }
