@@ -26,6 +26,7 @@ public:
     void on_exception(int errcode) throw ();
 
 private:
+    bool is_over(uint32_t offset) const;
     bool parent_process_not_exists() const;
     bool create_history_directory() const;
     void handle_directory();

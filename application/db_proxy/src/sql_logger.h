@@ -19,22 +19,22 @@ public:
     bool write_log(const std::string& sql);
 
 private:
-    bool need_rotate_by_filesize() const;
-    bool need_rotate_by_filename() const;
-    void write_endtag();
+    bool need_rotate() const;
     void rotate_log();
-    void open_log();
     std::string get_log_filepath();
     std::string get_last_log_filepath(); // 取得启动之前最新的一个日志文件，如果不存在则等同于get_log_filepath()
-    bool has_endtag(const std::string& log_filepath) const;
 
 private:
-    volatile time_t _log_file_timestamp; // 创建日志文件的时间
-    volatile int _log_file_suffix; // 为防止同一秒内创建的文件超出1个，设一suffix
+    sys::CLock _lock;
     int _database_index;
     struct DbInfo* _dbinfo;
-    sys::CLock _lock;
     std::string _log_filepath; // 须受_lock保护
+
+private:
+    volatile int _log_fd; // SQL日志文件句柄
+    volatile time_t _log_file_timestamp; // 创建日志文件的时间
+    volatile int _log_file_suffix; // 为防止同一秒内创建的文件超出1个，设一suffix
+    volatile int32_t _num_lines; // 连续写入的行数
 };
 
 } // namespace db_proxy

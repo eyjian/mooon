@@ -25,7 +25,9 @@ INTEGER_ARG_DEFINE(uint8_t, num_io_threads, 1, 1, 50, "number of IO threads");
 INTEGER_ARG_DEFINE(uint8_t, num_work_threads, 1, 1, 50, "number of work threads");
 
 // sql日志文件大小，建议大小不小于（1024*1024*100），更小的值是为了方便开发时的测试
-INTEGER_ARG_DEFINE(int, sql_file_size, (1024*1024*500), (1024*10), std::numeric_limits<int>::max(), "size of single sql log file");
+INTEGER_ARG_DEFINE(int32_t, sql_file_size, (1024*1024*500), (1024*10), std::numeric_limits<int>::max(), "size of single sql log file");
+// 多少行刷新一次，如果值为0则由Linux系统控制
+INTEGER_ARG_DEFINE(int32_t, lines, 1, 0, 1000000, "flush sql log after N lines");
 
 // 批量提交SQL数
 INTEGER_ARG_DEFINE(uint8_t, batch, 1, 1, std::numeric_limits<uint8_t>::max(), "number of batch commit");

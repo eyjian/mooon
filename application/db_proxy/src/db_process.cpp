@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sys/uio.h>
 
+INTEGER_ARG_DECLARE(int32_t, sql_file_size);
 INTEGER_ARG_DECLARE(uint16_t, port);
 INTEGER_ARG_DECLARE(uint8_t, batch);
 INTEGER_ARG_DECLARE(uint16_t, efficiency);
@@ -63,9 +64,11 @@ void CDbProcess::run()
             while (!_stop_signal_thread)
             {
                 delete_old_history_files();
-                if (parent_process_not_exists())
-                    break;
 
+                if (parent_process_not_exists())
+                {
+                    break;
+                }
                 if (!_db_connected && !connect_db())
                 {
                     sys::CUtils::millisleep(1000);
@@ -73,8 +76,6 @@ void CDbProcess::run()
                 }
 
                 handle_directory();
-                if (!_stop_signal_thread)
-                    sys::CUtils::millisleep(1000);
             }
         }
     }
@@ -109,6 +110,11 @@ void CDbProcess::on_signal_handler(int signo)
 void CDbProcess::on_exception(int errcode) throw ()
 {
     MYLOG_ERROR("dbprocess(%u, %s) error: (%d)%s\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str(), errcode, sys::Error::to_string(errcode).c_str());
+}
+
+bool CDbProcess::is_over(uint32_t offset) const
+{
+    return offset >= static_cast<uint32_t>(argument::sql_file_size->value());
 }
 
 bool CDbProcess::parent_process_not_exists() const
@@ -160,7 +166,14 @@ void CDbProcess::handle_directory()
     std::vector<std::string> file_names;
 
     sys::CDirUtils::list(_log_dirpath, subdir_names, &file_names, link_names);
-    if (!file_names.empty())
+    if (file_names.empty())
+    {
+        if (!_stop_signal_thread)
+        {
+            sys::CUtils::millisleep(1000);
+        }
+    }
+    else
     {
         // 文件名格式为：
         // sql.timestamp.suffix，需要按timespamp从小到大排充，如果timestamp相同则按suffix从小到大排序
@@ -168,182 +181,189 @@ void CDbProcess::handle_directory()
 
         for (std::vector<std::string>::size_type i=0; !_stop_signal_thread&&i<file_names.size(); ++i)
         {
-            if (parent_process_not_exists())
-                break;
-
             const std::string& filename = file_names[i];
-            if (is_sql_log_filename(filename))
-                handle_file(filename);
-            if (_stop_signal_thread)
+
+            if (parent_process_not_exists())
+            {
                 break;
+            }
+            if (is_sql_log_filename(filename))
+            {
+                if (file_handled(filename))
+                    archive_file(filename);
+                else
+                    handle_file(filename);
+            }
+            if (_stop_signal_thread)
+            {
+                break;
+            }
         }
     }
 }
 
 bool CDbProcess::handle_file(const std::string& filename)
 {
-    if (file_handled(filename))
-    {
-        MYLOG_INFO("handled: %s\n", filename.c_str());
-    }
-    else
-    {
-        MYLOG_DEBUG("handling: %s\n", filename.c_str());
-    }
-
+    uint32_t offset = 0;
     const std::string& log_tag = _dbinfo.alias + std::string("/") + filename;
     const std::string& log_filepath = _log_dirpath + std::string("/") + filename;
-    uint32_t offset = 0;
+
+    MYLOG_INFO("handling: %s\n", log_filepath.c_str());
     int fd = open(log_filepath.c_str(), O_RDONLY);
     if (-1 == fd)
     {
         MYLOG_ERROR("open %s error: %s\n", log_filepath.c_str(), sys::Error::to_string().c_str());
         return false;
     }
-    else
-    {
-        sys::CloseHelper<int> close_helper(fd);
-        if (is_current_file(filename))
-        {
-            if (-1 == lseek(fd, _progress.offset, SEEK_SET))
-            {
-                MYLOG_ERROR("lseek %s error(%s): %s\n", _progress.str().c_str(), log_filepath.c_str(), sys::Error::to_string().c_str());
-                return false;
-            }
 
+    sys::CloseHelper<int> close_helper(fd);
+    if (is_current_file(filename))
+    {
+        if (-1 == lseek(fd, _progress.offset, SEEK_SET))
+        {
+            MYLOG_ERROR("lseek %s error(%s): %s\n", _progress.str().c_str(), log_filepath.c_str(), sys::Error::to_string().c_str());
+            return false;
+        }
+        else
+        {
             offset = _progress.offset;
             MYLOG_INFO("lseek %s to %u offset: %s\n", _progress.str().c_str(), _progress.offset, log_filepath.c_str());
         }
+    }
 
-        int count = 0; // 入库的条数
-        int consecutive_nodata = 0; // 连续无data的次数
-        while (!_stop_signal_thread)
+    int count = 0; // 入库的条数
+    int consecutive_nodata = 0; // 连续无data的次数
+    while (!_stop_signal_thread)
+    {
+        int bytes = 0;
+        int32_t length = 0;
+        if (parent_process_not_exists())
         {
-            int bytes = 0;
-            int32_t length = 0;
-            if (parent_process_not_exists())
-                break;
+            break;
+        }
 
-            // 读取SQL语句长度
-            bytes = read(fd, &length, sizeof(length));
-            if (-1 == bytes)
+        // 读取SQL语句长度
+        bytes = read(fd, &length, sizeof(length));
+        if (-1 == bytes)
+        {
+            MYLOG_ERROR("read %s:%u error: %s\n", log_filepath.c_str(), offset, sys::Error::to_string().c_str());
+            return false;
+        }
+        else if (0 == bytes)
+        {
+            if (is_over(offset))
             {
-                MYLOG_ERROR("read %s:%u error: %s\n", log_filepath.c_str(), offset, sys::Error::to_string().c_str());
-                return false;
-            }
-            else if (0 == bytes)
-            {
-                if (0 == consecutive_nodata++%1000)
-                {
-                    MYLOG_INFO("[%s:%u]no data to sleep: %s\n", log_filepath.c_str(), offset, _progress.str().c_str());
-                }
-
-                // 可以考虑引入inotify，改轮询为监听方式
-                sys::CUtils::millisleep(1000);
-                continue;
-            }
-            if (0 == length)
-            {
-                // END
-                MYLOG_INFO("[%s:%u]%s ENDED: %d\n", log_filepath.c_str(), offset, _progress.str().c_str(), count);
-                // 归档
                 archive_file(filename);
                 break;
             }
-
-            consecutive_nodata = 0; // reset
-            if (bytes > 0)
-                offset += static_cast<uint32_t>(bytes);
-
-            // 读取SQL语句
-            std::string sql(length, '\0');
-            bytes = read(fd, const_cast<char*>(sql.data()), length);
-            if (-1 == bytes)
+            if (0 == consecutive_nodata++%1000)
             {
-                MYLOG_ERROR("read %s:%u error: %s\n", log_filepath.c_str(), offset, sys::Error::to_string().c_str());
-                return false;
-            }
-            if (bytes > 0)
-            {
-                offset += static_cast<uint32_t>(bytes);
+                MYLOG_INFO("[%s:%u]no data to sleep: %s\n", log_filepath.c_str(), offset, _progress.str().c_str());
             }
 
-            // 操作DB异常时不断重试
-            MYLOG_DEBUG("%s\n", sql.c_str());
-            while (!_stop_signal_thread)
-            {
-                if (parent_process_not_exists())
-                    break;
+            // 可以考虑引入inotify，改轮询为监听方式
+            sys::CUtils::millisleep(1000);
+            continue;
+        }
 
-                try
+        consecutive_nodata = 0; // reset
+        if (bytes > 0)
+        {
+            offset += static_cast<uint32_t>(bytes);
+        }
+
+        // 读取SQL语句
+        std::string sql(length, '\0');
+        bytes = read(fd, const_cast<char*>(sql.data()), length);
+        if (-1 == bytes)
+        {
+            MYLOG_ERROR("read %s:%u error: %s\n", log_filepath.c_str(), offset, sys::Error::to_string().c_str());
+            return false;
+        }
+        if (bytes > 0)
+        {
+            offset += static_cast<uint32_t>(bytes);
+        }
+
+        // 操作DB异常时不断重试
+        MYLOG_DEBUG("%s\n", sql.c_str());
+        while (!_stop_signal_thread)
+        {
+            if (parent_process_not_exists())
+            {
+                break;
+            }
+
+            try
+            {
+                const int rows = _mysql.update("%s", sql.c_str());
+                const time_t end_time = time(NULL);
+                const int interval = static_cast<int>(end_time - _begin_time);
+
+                if (mooon::argument::batch->value() <= 1)
                 {
-                    const int rows = _mysql.update("%s", sql.c_str());
-                    const time_t end_time = time(NULL);
-                    const int interval = static_cast<int>(end_time - _begin_time);
+                    // 非批量提交
+                    ++count;
+                    ++_interval_count;
 
-                    if (mooon::argument::batch->value() <= 1)
+                    if (interval >= mooon::argument::efficiency->value())
                     {
-                        // 非批量提交
-                        ++count;
-                        ++_interval_count;
+                        MYLOG_INFO("[%s:%u]efficiency: %d (%d, %ds)\n", log_tag.c_str(), offset, _interval_count/interval, _interval_count, interval);
+                        _begin_time = end_time;
+                        _interval_count = 0;
+                    }
+                }
+                else
+                {
+                    ++_batch;
+
+                    // 批量提交
+                    if (_batch >= mooon::argument::batch->value() || (interval > 1))
+                    {
+                        _mysql.commit();
+                        count += _batch;
+                        _interval_count += _batch;
+                        _batch = 0;
 
                         if (interval >= mooon::argument::efficiency->value())
                         {
-                            MYLOG_INFO("[%s:%u]efficiency: %d (%d, %ds)\n", log_tag.c_str(), offset, _interval_count/interval, _interval_count, interval);
+                            MYLOG_INFO("[%s:%u] efficiency: %d (%d, %ds)\n", log_tag.c_str(), offset, _interval_count/interval, _interval_count, interval);
                             _begin_time = end_time;
                             _interval_count = 0;
                         }
                     }
-                    else
-                    {
-                        ++_batch;
-
-                        // 批量提交
-                        if (_batch >= mooon::argument::batch->value() || (interval > 1))
-                        {
-                            _mysql.commit();
-                            count += _batch;
-                            _interval_count += _batch;
-                            _batch = 0;
-
-                            if (interval >= mooon::argument::efficiency->value())
-                            {
-                                MYLOG_INFO("[%s:%u] efficiency: %d (%d, %ds)\n", log_tag.c_str(), offset, _interval_count/interval, _interval_count, interval);
-                                _begin_time = end_time;
-                                _interval_count = 0;
-                            }
-                        }
-                    }
-
-                    // 更新进度
-                    if (!update_progress(filename, offset))
-                        return false;
-
-                    // rows为0可能是失败，比如update时没有满足where条件的记录存在时
-                    if (0 == rows)
-                    {
-                        MYLOG_WARN("[UPDATE_WARNING][%s:%u][%s] ok: %d, %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(), rows, _num_sqls);
-                    }
-                    else if (0 == ++_num_sqls%10000)
-                    {
-                        MYLOG_INFO("[%s:%u][%s] ok: %d, %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(), rows, _num_sqls);
-                    }
-                    else
-                    {
-                        MYLOG_DEBUG("[%s:%u][%s] ok: %d, %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(),  rows, _num_sqls);
-                    }
-
-                    break;
                 }
-                catch (sys::CDBException& ex)
+
+                // 更新进度
+                if (!update_progress(filename, offset))
                 {
-                    MYLOG_ERROR("[%s:%u]%s\n", log_tag.c_str(), offset, ex.str().c_str());
-
-                    // 网络类需要重试，直到成功
-                    if (!_mysql.is_disconnected_exception(ex))
-                        break;
-                    sys::CUtils::millisleep(1000);
+                    return false;
                 }
+
+                // rows为0可能是失败，比如update时没有满足where条件的记录存在时
+                if (0 == rows)
+                {
+                    MYLOG_WARN("[UPDATE_WARNING][%s:%u][%s] ok: %d, %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(), rows, _num_sqls);
+                }
+                else if (0 == ++_num_sqls%10000)
+                {
+                    MYLOG_INFO("[%s:%u][%s] ok: %d, %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(), rows, _num_sqls);
+                }
+                else
+                {
+                    MYLOG_DEBUG("[%s:%u][%s] ok: %d, %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(),  rows, _num_sqls);
+                }
+
+                break;
+            }
+            catch (sys::CDBException& ex)
+            {
+                MYLOG_ERROR("[%s:%u]%s\n", log_tag.c_str(), offset, ex.str().c_str());
+
+                // 网络类需要重试，直到成功
+                if (!_mysql.is_disconnected_exception(ex))
+                    break;
+                sys::CUtils::millisleep(1000);
             }
         }
     }
