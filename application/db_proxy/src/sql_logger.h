@@ -35,6 +35,7 @@ private:
     volatile time_t _log_file_timestamp; // 创建日志文件的时间
     volatile int _log_file_suffix; // 为防止同一秒内创建的文件超出1个，设一suffix
     volatile int32_t _num_lines; // 连续写入的行数
+    volatile uint64_t _total_lines; // 自启动以来总的写入行数
 };
 
 } // namespace db_proxy

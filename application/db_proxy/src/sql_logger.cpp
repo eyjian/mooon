@@ -24,6 +24,7 @@ CSqlLogger::CSqlLogger(int database_index, const struct DbInfo* dbinfo)
     _log_file_timestamp = 0;
     _log_file_suffix = 0;
     _num_lines = 0;
+    _total_lines = 0;
     _dbinfo = new struct DbInfo(dbinfo);
 }
 
@@ -62,7 +63,12 @@ bool CSqlLogger::write_log(const std::string& sql)
         if (bytes_written != static_cast<int>(iov[0].iov_len+iov[1].iov_len))
         {
             const int errcode = errno;
-            THROW_SYSCALL_EXCEPTION(sys::Error::to_string(errcode), errcode, "writev");
+            THROW_SYSCALL_EXCEPTION(utils::CStringUtils::format_string("writev %s error: %s", _log_filepath.c_str(), sys::Error::to_string(errcode).c_str()), errcode, "writev");
+        }
+
+        if (0 == ++_total_lines%1000)
+        {
+            MYLOG_INFO("lines: %" PRIu64"\n", _total_lines);
         }
 
         const int32_t lines = argument::lines->value();
@@ -72,7 +78,7 @@ bool CSqlLogger::write_log(const std::string& sql)
             if (-1 == fdatasync(_log_fd))
             {
                 const int errcode = errno;
-                MYLOG_ERROR("fdatasync %s error: (%d)%s\n", _log_filepath.c_str(), errcode, sys::Error::to_string(errcode).c_str());
+                THROW_SYSCALL_EXCEPTION(utils::CStringUtils::format_string("fdatasync %s error: %s", _log_filepath.c_str(), sys::Error::to_string(errcode).c_str()), errno, "fdatasync");
             }
         }
 
