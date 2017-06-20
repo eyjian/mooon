@@ -61,56 +61,63 @@ int main(int argc, char* argv[])
 
 void stress_thread()
 {
-    std::string db_proxy_ip = mooon::argument::ip->value();
-    uint16_t db_proxy_port = mooon::argument::port->value();
-    mooon::net::CThriftClientHelper<mooon::db_proxy::DbProxyServiceClient> db_proxy(db_proxy_ip, db_proxy_port);
-    db_proxy.connect();
-
-    int limit_start = 0;
-    int limit = 10;
-    int index = mooon::argument::index->value();
-    std::string sign;
-    std::vector<std::string> tokens;
-
-    mooon::utils::CTokener::split(&tokens, mooon::argument::tokens->value(), ",");
-    for (uint32_t i=0; i<mooon::argument::number->value(); ++i)
+    try
     {
-        try
+        std::string db_proxy_ip = mooon::argument::ip->value();
+        uint16_t db_proxy_port = mooon::argument::port->value();
+        mooon::net::CThriftClientHelper<mooon::db_proxy::DbProxyServiceClient> db_proxy(db_proxy_ip, db_proxy_port);
+        db_proxy.connect();
+
+        int limit_start = 0;
+        int limit = 10;
+        int index = mooon::argument::index->value();
+        std::string sign;
+        std::vector<std::string> tokens;
+
+        mooon::utils::CTokener::split(&tokens, mooon::argument::tokens->value(), ",");
+        for (uint32_t i=0; i<mooon::argument::number->value(); ++i)
         {
-            int seq = static_cast<int>(i);
-            if (index > 0)
-            {
-                db_proxy->update(sign, seq, index, tokens);
-                atomic_inc(&sg_success_num);
-            }
-            else
-            {
-                mooon::db_proxy::DBTable dbtable;
-                db_proxy->query(dbtable, sign, seq, -index, tokens, limit, limit_start);
-                atomic_inc(&sg_success_num);
-            }
-        }
-        catch (apache::thrift::transport::TTransportException& ex)
-        {
-            atomic_inc(&sg_failure_num);
-            std::cerr << "TransportException(read): " << ex.what() << std::endl;
-            db_proxy.close();
             try
             {
-                db_proxy.connect();
+                int seq = static_cast<int>(i);
+                if (index > 0)
+                {
+                    db_proxy->update(sign, seq, index, tokens);
+                    atomic_inc(&sg_success_num);
+                }
+                else
+                {
+                    mooon::db_proxy::DBTable dbtable;
+                    db_proxy->query(dbtable, sign, seq, -index, tokens, limit, limit_start);
+                    atomic_inc(&sg_success_num);
+                }
             }
             catch (apache::thrift::transport::TTransportException& ex)
             {
-                std::cerr << "TransportException(connect): " << ex.what() << std::endl;
-                break;
+                atomic_inc(&sg_failure_num);
+                std::cerr << "TransportException(read): " << ex.what() << std::endl;
+                db_proxy.close();
+                try
+                {
+                    db_proxy.connect();
+                }
+                catch (apache::thrift::transport::TTransportException& ex)
+                {
+                    std::cerr << "TransportException(connect): " << ex.what() << std::endl;
+                    break;
+                }
+            }
+            catch (apache::thrift::TApplicationException& ex)
+            {
+                atomic_inc(&sg_failure_num);
+                std::cerr << "ApplicationException: " << ex.what() << std::endl;
             }
         }
-        catch (apache::thrift::TApplicationException& ex)
-        {
-            atomic_inc(&sg_failure_num);
-            std::cerr << "ApplicationException: " << ex.what() << std::endl;
-        }
-    }
 
-    db_proxy.close();
+        db_proxy.close();
+    }
+    catch (apache::thrift::TException& ex)
+    {
+        std::cerr << "TException: " << ex.what() << std::endl;
+    }
 }
