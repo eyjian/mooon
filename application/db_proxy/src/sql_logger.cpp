@@ -68,7 +68,7 @@ bool CSqlLogger::write_log(const std::string& sql)
 
         if (0 == ++_total_lines%1000)
         {
-            MYLOG_INFO("lines: %" PRIu64"\n", _total_lines);
+            MYLOG_INFO("[%s] lines: %" PRIu64"\n", _dbinfo->str().c_str(), _total_lines);
         }
 
         const int32_t lines = argument::lines->value();
