@@ -50,6 +50,9 @@ INTEGER_ARG_DEFINE(uint16_t, restart_frequency, 10, 1, std::numeric_limits<uint1
 // 当父进程不存在时是否自动退出
 INTEGER_ARG_DEFINE(uint8_t, auto_exit, 1, 0, 1, "mdbp will exit when it's parent not exist");
 
+// 日志文件备份数，如果值为0表示使用默认的或环境变量MOOON_LOG_BACKUP指定的
+INTEGER_ARG_DEFINE(uint16_t, num_logs, 0, 0, std::numeric_limits<uint16_t>::max(), "number of logs backup");
+
 class CMainHelper: public mooon::sys::IMainHelper
 {
 public:
@@ -230,9 +233,14 @@ bool CMainHelper::init(int argc, char* argv[])
     try
     {
         // 日志文件名加上端口作为后缀，这样同一份即可以启动多端口服务
+        const uint16_t num_logs = mooon::argument::num_logs->value();
         const uint16_t port = mooon::argument::port->value();
         const std::string port_str = mooon::utils::CStringUtils::int_tostring(port);
         mooon::sys::g_logger = mooon::sys::create_safe_logger(true, 8096, port_str);
+        if (num_logs > 0)
+        {
+            mooon::sys::g_logger->set_backup_number(num_logs);
+        }
 
         std::string filepath = mooon::db_proxy::CConfigLoader::get_filepath();
         if (!mooon::db_proxy::CConfigLoader::get_singleton()->load(filepath))

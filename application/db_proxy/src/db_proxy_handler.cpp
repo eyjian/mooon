@@ -424,8 +424,12 @@ int64_t CDbProxyHandler::do_update(bool throw_exception, const std::string& sign
 
                     bool written = sql_logger->write_log(sql);
                     config_loader->release_sql_logger(sql_logger);
-                    if (!written && throw_exception)
-                        throw apache::thrift::TApplicationException("io error");
+                    if (!written)
+                    {
+                        MYLOG_ERROR("[%s]write log failed: %s\n", db_info.str().c_str(), sql.c_str());
+                        if (throw_exception)
+                            throw apache::thrift::TApplicationException("io error");
+                    }
                 }
 
                 return 0;
@@ -462,7 +466,7 @@ int64_t CDbProxyHandler::do_update(bool throw_exception, const std::string& sign
 
                         MYLOG_DEBUG("%s\n", sql.c_str());
                         int affected_rows = db_connection->update("%s", sql.c_str());
-                        MYLOG_DEBUG("[%s] affected_rows: %d\n", sql.c_str(), affected_rows);
+                        MYLOG_INFO("[%s] affected_rows: %d\n", sql.c_str(), affected_rows);
                         return static_cast<int64_t>(affected_rows);
                     }
                 }
@@ -470,14 +474,14 @@ int64_t CDbProxyHandler::do_update(bool throw_exception, const std::string& sign
                 {
                     if (!db_connection->is_disconnected_exception(db_ex) || (retries==max_retries-1))
                     {
-                        MYLOG_ERROR("[%d]%s\n", seq, db_ex.str().c_str());
+                        MYLOG_ERROR("[%d][%s]%s\n", seq, db_ex.sql(), db_ex.str().c_str());
                         if (throw_exception)
                             throw apache::thrift::TApplicationException(db_ex.str());
                         break;
                     }
                     else
                     {
-                        MYLOG_ERROR("[retry][%d]%s\n", seq, db_ex.str().c_str());
+                        MYLOG_ERROR("[RETRY][%d][%s]%s\n", seq, db_ex.sql(), db_ex.str().c_str());
                         config_loader->release_db_connection(update_info.database_index);
                         mooon::sys::CUtils::millisleep(100); // 网络类原因稍后重试
                     }
