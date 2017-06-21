@@ -6,6 +6,8 @@
 #include "DbProxyService.h" // 执行cmake或make db_proxy_rpc时生成的文件
 #include <map>
 #include <mooon/net/thrift_helper.h>
+#include <mooon/observer/observer_manager.h>
+#include <mooon/sys/dir_utils.h>
 #include <mooon/sys/file_locker.h>
 #include <mooon/sys/main_template.h>
 #include <mooon/sys/safe_logger.h>
@@ -53,6 +55,9 @@ INTEGER_ARG_DEFINE(uint8_t, auto_exit, 1, 0, 1, "mdbp will exit when it's parent
 // 日志文件备份数，如果值为0表示使用默认的或环境变量MOOON_LOG_BACKUP指定的
 INTEGER_ARG_DEFINE(uint16_t, num_logs, 0, 0, std::numeric_limits<uint16_t>::max(), "number of logs backup");
 
+// 数据上报频率（单位为秒），如果值为0表示禁止收集数据
+INTEGER_ARG_DEFINE(uint16_t, report_frequency_seconds, 0, 0, 3600, "frequency seconds to report data");
+
 class CMainHelper: public mooon::sys::IMainHelper
 {
 public:
@@ -86,6 +91,8 @@ private:
 
 private:
     mooon::utils::ScopedPtr<mooon::sys::CSafeLogger> _data_logger;
+    mooon::utils::ScopedPtr<mooon::observer::CDefaultDataReporter> _data_reporter;
+    mooon::observer::IObserverManager* _observer_manager;
     mooon::net::CThriftServerHelper<mooon::db_proxy::CDbProxyHandler, mooon::db_proxy::DbProxyServiceProcessor> _thrift_server;
 };
 
@@ -101,7 +108,7 @@ extern "C" int main(int argc, char* argv[])
 }
 
 CMainHelper::CMainHelper()
-    : _stop_signal_thread(false), _signal_thread(NULL), _cleanup_cache_thread(NULL)
+    : _stop_signal_thread(false), _signal_thread(NULL), _cleanup_cache_thread(NULL), _observer_manager(NULL)
 {
 }
 
@@ -109,6 +116,7 @@ CMainHelper::~CMainHelper()
 {
     delete _cleanup_cache_thread;
     delete _signal_thread;
+    mooon::observer::destroy();
 }
 
 void CMainHelper::cleanup_cache_thread()
@@ -240,6 +248,23 @@ bool CMainHelper::init(int argc, char* argv[])
         if (num_logs > 0)
         {
             mooon::sys::g_logger->set_backup_number(num_logs);
+        }
+
+        // 只有当参数report_frequency_seconds的值大于0时才启动统计功能
+        int report_frequency_seconds = mooon::argument::report_frequency_seconds->value();
+        if (report_frequency_seconds > 0)
+        {
+            std::string data_dirpath = mooon::observer::get_data_dirpath();
+            if (data_dirpath.empty())
+                return false;
+
+            _data_logger.reset(new mooon::sys::CSafeLogger(data_dirpath.c_str(), "db_proxy.data"));
+            _data_logger->enable_raw_log(true);
+            _data_reporter.reset(new mooon::observer::CDefaultDataReporter(_data_logger.get()));
+
+            _observer_manager = mooon::observer::create(_data_reporter.get(), report_frequency_seconds);
+            if (NULL == _observer_manager)
+                return false;
         }
 
         std::string filepath = mooon::db_proxy::CConfigLoader::get_filepath();

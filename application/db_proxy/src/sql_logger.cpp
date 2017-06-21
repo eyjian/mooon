@@ -3,6 +3,7 @@
 #include "config_loader.h"
 #include <algorithm>
 #include <fcntl.h>
+#include <mooon/observer/observer_manager.h>
 #include <mooon/sys/close_helper.h>
 #include <mooon/sys/datetime_utils.h>
 #include <mooon/sys/dir_utils.h>
@@ -25,11 +26,20 @@ CSqlLogger::CSqlLogger(int database_index, const struct DbInfo* dbinfo)
     _log_file_suffix = 0;
     _num_lines = 0;
     _total_lines = 0;
+    _last_total_lines = 0;
     _dbinfo = new struct DbInfo(dbinfo);
+
+    mooon::observer::IObserverManager* observer_mananger = mooon::observer::get();
+    if (observer_mananger != NULL)
+        observer_mananger->register_observee(this);
 }
 
 CSqlLogger::~CSqlLogger()
 {
+    mooon::observer::IObserverManager* observer_mananger = mooon::observer::get();
+    if (observer_mananger != NULL)
+        observer_mananger->deregister_objservee(this);
+
     delete _dbinfo;
 }
 
@@ -66,10 +76,8 @@ bool CSqlLogger::write_log(const std::string& sql)
             THROW_SYSCALL_EXCEPTION(utils::CStringUtils::format_string("writev %s error: %s", _log_filepath.c_str(), sys::Error::to_string(errcode).c_str()), errcode, "writev");
         }
 
-        if (0 == ++_total_lines%1000)
-        {
-            MYLOG_INFO("[%s] %s-lines: %" PRIu64"\n", _dbinfo->str().c_str(), _dbinfo->alias.c_str(), _total_lines);
-        }
+        // 计数
+        ++_total_lines;
 
         const int32_t lines = argument::lines->value();
         if ((lines > 0) && (++_num_lines >= lines))
@@ -86,8 +94,17 @@ bool CSqlLogger::write_log(const std::string& sql)
     }
     catch (sys::CSyscallException& ex)
     {
-        MYLOG_ERROR("[%s] write %s failed: %s\n", _dbinfo->str().c_str(), _log_filepath.c_str(), ex.str().c_str());
+        MYLOG_ERROR("[%s] write [%s] to %s failed: %s\n", _dbinfo->str().c_str(), sql.c_str(), _log_filepath.c_str(), ex.str().c_str());
         return false;
+    }
+}
+
+void CSqlLogger::on_report(mooon::observer::IDataReporter* data_reporter, const std::string& current_datetime)
+{
+    if ((_total_lines > 0) && (_total_lines > _last_total_lines))
+    {
+        _last_total_lines = _total_lines;
+        data_reporter->report("[%s][D]%d,%" PRIu64"\n", current_datetime.c_str(), _database_index, _total_lines);
     }
 }
 

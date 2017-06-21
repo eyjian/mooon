@@ -8,7 +8,7 @@ endif ()
 
 include_directories(.)
 include_directories(../..)
-link_libraries(libmooon.a)
+link_libraries(libmooon_observer.a libmooon.a)
 
 # 执行cmake时，就编译好thrift文件
 exec_program(${THRIFT_HOME}/bin/thrift ARGS --gen cpp -r -out ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/db_proxy.thrift)

@@ -1,6 +1,7 @@
 // Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 #ifndef MOOON_DB_PROXY_SQL_LOGGER_H
 #define MOOON_DB_PROXY_SQL_LOGGER_H
+#include <mooon/observer/observable.h>
 #include <mooon/sys/lock.h>
 #include <mooon/sys/ref_countable.h>
 namespace mooon { namespace db_proxy {
@@ -9,14 +10,18 @@ struct DbInfo;
 
 // 实现关键点：
 // 需要确保一个线程能够区分文件是否被其它线程滚动了，这可以通过大小是否变小了，fd值是否变化了来判断
-class CSqlLogger: public sys::CRefCountable
+class CSqlLogger: public sys::CRefCountable, public mooon::observer::IObservable
 {
 public:
     CSqlLogger(int database_index, const struct DbInfo* dbinfo);
     ~CSqlLogger();
+
     std::string str() const;
     int get_database_index() const { return _database_index; }
     bool write_log(const std::string& sql);
+
+private: // override mooon::observer::IObservable
+    virtual void on_report(mooon::observer::IDataReporter* data_reporter, const std::string& current_datetime);
 
 private:
     bool need_rotate() const;
@@ -36,6 +41,7 @@ private:
     volatile int _log_file_suffix; // 为防止同一秒内创建的文件超出1个，设一suffix
     volatile int32_t _num_lines; // 连续写入的行数
     volatile uint64_t _total_lines; // 自启动以来总的写入行数
+    volatile uint64_t _last_total_lines; // 上一次report时的总数
 };
 
 } // namespace db_proxy
