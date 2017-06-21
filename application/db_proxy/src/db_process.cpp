@@ -82,6 +82,7 @@ void CDbProcess::run()
         {
             _data_logger.reset(new mooon::sys::CSafeLogger(data_dirpath.c_str(), utils::CStringUtils::format_string("%s.data", _dbinfo.alias.c_str()).c_str()));
             _data_logger->enable_raw_log(true);
+            _data_logger->set_backup_number(2);
             _data_reporter.reset(new mooon::observer::CDefaultDataReporter(_data_logger.get()));
 
             observer::IObserverManager* observer_mananger = mooon::observer::create(_data_reporter.get(), _report_frequency_seconds);

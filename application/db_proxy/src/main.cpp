@@ -263,6 +263,7 @@ bool CMainHelper::init(int argc, char* argv[])
 
             _data_logger.reset(new mooon::sys::CSafeLogger(data_dirpath.c_str(), "db_proxy.data"));
             _data_logger->enable_raw_log(true);
+            _data_logger->set_backup_number(2);
             _data_reporter.reset(new mooon::observer::CDefaultDataReporter(_data_logger.get()));
 
             _observer_manager = mooon::observer::create(_data_reporter.get(), report_frequency_seconds);
