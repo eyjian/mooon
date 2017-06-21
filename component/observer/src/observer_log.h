@@ -23,14 +23,14 @@ OBSERVER_NAMESPACE_BEGIN
 
 #define OBSERVER_MODULE_NAME "OBSERVER"
 
-#define OBSERVER_LOG_BIN(log, size)         __MYLOG_BIN(observer::logger, log, size)
-#define OBSERVER_LOG_TRACE(format, ...)     __MYLOG_TRACE(observer::logger, OBSERVER_MODULE_NAME, format, ##__VA_ARGS__)
-#define OBSERVER_LOG_FATAL(format, ...)     __MYLOG_FATAL(observer::logger, OBSERVER_MODULE_NAME, format, ##__VA_ARGS__)
-#define OBSERVER_LOG_ERROR(format, ...)     __MYLOG_ERROR(observer::logger, OBSERVER_MODULE_NAME, format, ##__VA_ARGS__)
-#define OBSERVER_LOG_WARN(format, ...)      __MYLOG_WARN(observer::logger, OBSERVER_MODULE_NAME, format, ##__VA_ARGS__)
-#define OBSERVER_LOG_INFO(format, ...)      __MYLOG_INFO(observer::logger, OBSERVER_MODULE_NAME, format, ##__VA_ARGS__)
-#define OBSERVER_LOG_DEBUG(format, ...)     __MYLOG_DEBUG(observer::logger, OBSERVER_MODULE_NAME, format, ##__VA_ARGS__)
-#define OBSERVER_LOG_DETAIL(format, ...)    __MYLOG_DETAIL(observer::logger, OBSERVER_MODULE_NAME, format, ##__VA_ARGS__)
+#define OBSERVER_LOG_BIN(log, size)         __MYLOG_BIN(observer::observer_logger, log, size)
+#define OBSERVER_LOG_TRACE(format, ...)     __MYLOG_TRACE(observer::observer_logger, OBSERVER_MODULE_NAME, format, ##__VA_ARGS__)
+#define OBSERVER_LOG_FATAL(format, ...)     __MYLOG_FATAL(observer::observer_logger, OBSERVER_MODULE_NAME, format, ##__VA_ARGS__)
+#define OBSERVER_LOG_ERROR(format, ...)     __MYLOG_ERROR(observer::observer_logger, OBSERVER_MODULE_NAME, format, ##__VA_ARGS__)
+#define OBSERVER_LOG_WARN(format, ...)      __MYLOG_WARN(observer::observer_logger, OBSERVER_MODULE_NAME, format, ##__VA_ARGS__)
+#define OBSERVER_LOG_INFO(format, ...)      __MYLOG_INFO(observer::observer_logger, OBSERVER_MODULE_NAME, format, ##__VA_ARGS__)
+#define OBSERVER_LOG_DEBUG(format, ...)     __MYLOG_DEBUG(observer::observer_logger, OBSERVER_MODULE_NAME, format, ##__VA_ARGS__)
+#define OBSERVER_LOG_DETAIL(format, ...)    __MYLOG_DETAIL(observer::observer_logger, OBSERVER_MODULE_NAME, format, ##__VA_ARGS__)
 
 OBSERVER_NAMESPACE_END
 #endif // MOOON_OBSERVER_LOG_H

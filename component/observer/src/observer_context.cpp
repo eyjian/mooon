@@ -35,6 +35,8 @@ bool CObserverContext::create()
 	try
 	{
 		_observer_thread->start();
+		OBSERVER_LOG_INFO("observer thread started\n");
+		return true;
 	}
 	catch (sys::CSyscallException& syscall_ex)
 	{
@@ -42,12 +44,11 @@ bool CObserverContext::create()
         _observer_thread->dec_refcount();
 		return false;
 	}
-
-	return true;
 }
 
 void CObserverContext::destroy()
 {
+    OBSERVER_LOG_INFO("to stop observer thread\n");
 	_observer_thread->stop();
 	_observer_thread->dec_refcount();
 }
@@ -78,7 +79,7 @@ void CObserverContext::collect()
 
 //////////////////////////////////////////////////////////////////////////
 // 全局函数
-sys::ILogger* logger = NULL;
+sys::ILogger* observer_logger = NULL;
 static CObserverContext* g_observer_context = NULL;
 
 void destroy()
@@ -89,6 +90,12 @@ void destroy()
         delete g_observer_context;
         g_observer_context = NULL;
     }
+}
+
+void reset()
+{
+    delete g_observer_context;
+    g_observer_context = NULL;
 }
 
 IObserverManager* get()
@@ -123,7 +130,7 @@ std::string get_data_dirpath()
     }
     catch (mooon::sys::CSyscallException& syscall_ex)
     {
-        MYLOG_ERROR("[%s]%s\n", data_dirpath.c_str(), syscall_ex.str().c_str());
+        OBSERVER_LOG_ERROR("[%s]%s\n", data_dirpath.c_str(), syscall_ex.str().c_str());
         return std::string("");
     }
 }

@@ -40,14 +40,15 @@ void CObserverThread::run()
     sys::CUtils::set_process_name(thread_name.c_str());
 #endif // ENABLE_SET_OBSERVER_THREAD_NAME
 
-    uint16_t report_frequency_seconds = _observer_context->get_report_frequency_seconds();
-    int milliseconds = report_frequency_seconds * 1000;
-
+    const uint16_t report_frequency_seconds = _observer_context->get_report_frequency_seconds();
+    const int milliseconds = report_frequency_seconds * 1000;
 	while (!is_stop())
 	{
         do_millisleep(milliseconds);
 		_observer_context->collect();
 	}
+
+	OBSERVER_LOG_INFO("observer thread exit\n");
 }
 
 OBSERVER_NAMESPACE_END

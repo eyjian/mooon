@@ -48,10 +48,13 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 /** observer日志器 */
-extern sys::ILogger* logger;
+extern sys::ILogger* observer_logger;
 
 /** 销毁观察者管理器 */
 extern void destroy();
+
+/** 重置，主要用于父子进程，当父进程创建了ObserverManager，子进程也需要创建时，需要先调用reset才可以创建 */
+extern void reset();
 
 /** 获得观察者管理器 */
 extern IObserverManager* get();
