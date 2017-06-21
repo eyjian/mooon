@@ -391,7 +391,7 @@ bool CDbProcess::handle_file(const std::string& filename)
                 }
                 else if (0 == ++_success_num_sqls%1000)
                 {
-                    MYLOG_INFO("[%s:%u][%s][ROWS:%d] %s-lines: %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(), rows, _dbinfo.alias.c_str(), _success_num_sqls);
+                    MYLOG_DEBUG("[%s:%u][%s][ROWS:%d] %s-lines: %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(), rows, _dbinfo.alias.c_str(), _success_num_sqls);
                 }
                 else
                 {
