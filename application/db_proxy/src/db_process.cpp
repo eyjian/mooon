@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sys/uio.h>
 
+INTEGER_ARG_DECLARE(uint16_t, report_frequency_seconds);
 INTEGER_ARG_DECLARE(int32_t, sql_file_size);
 INTEGER_ARG_DECLARE(uint16_t, port);
 INTEGER_ARG_DECLARE(uint8_t, batch);
@@ -22,8 +23,9 @@ INTEGER_ARG_DECLARE(uint8_t, auto_exit);
 namespace mooon { namespace db_proxy {
 
 CDbProcess::CDbProcess(const struct DbInfo& dbinfo)
-    : _progess_fd(-1), _dbinfo(dbinfo), _stop_signal_thread(false), _signal_thread(NULL),
-      _consecutive_failures(0), _num_sqls(0), _db_connected(false), _old_history_files_deleted_today(false)
+    : _report_frequency_seconds(mooon::argument::report_frequency_seconds->value()),
+      _progess_fd(-1), _dbinfo(dbinfo), _stop_signal_thread(false), _signal_thread(NULL),
+      _consecutive_failures(0), _success_num_sqls(0), _last_success_num_sqls(0), _db_connected(false), _old_history_files_deleted_today(false)
 {
     const std::string program_path = sys::CUtils::get_program_path();
     _log_dirpath = get_log_dirpath(_dbinfo.alias);
@@ -35,6 +37,14 @@ CDbProcess::CDbProcess(const struct DbInfo& dbinfo)
 
 CDbProcess::~CDbProcess()
 {
+    if (_report_frequency_seconds > 0)
+    {
+        mooon::observer::IObserverManager* observer_mananger = mooon::observer::get();
+        if (observer_mananger != NULL)
+            observer_mananger->deregister_objservee(this);
+        mooon::observer::destroy();
+    }
+
     if (_progess_fd != -1)
         close(_progess_fd);
     if (_signal_thread != NULL)
@@ -54,7 +64,36 @@ void CDbProcess::run()
 
     delete sys::g_logger; // 不共享父进程的日志文件
     sys::g_logger = sys::create_safe_logger(log_dirpath, db_process_title, SIZE_8K);
-    MYLOG_INFO("db_process(%u) started: %s\n", getpid(), db_process_title.c_str());
+    MYLOG_INFO("db_process(%u) started: %s, report_frequency_seconds: %d\n", getpid(), db_process_title.c_str(), _report_frequency_seconds);
+
+    if (_report_frequency_seconds > 0)
+    {
+        observer::observer_logger = sys::g_logger;
+        observer::reset(); // 得先释放父进程的
+
+        std::string data_dirpath = mooon::observer::get_data_dirpath();
+        if (data_dirpath.empty())
+        {
+            MYLOG_WARN("datadir not exists\n");
+        }
+        else
+        {
+            _data_logger.reset(new mooon::sys::CSafeLogger(data_dirpath.c_str(), utils::CStringUtils::format_string("%s.data", _dbinfo.alias.c_str()).c_str()));
+            _data_logger->enable_raw_log(true);
+            _data_reporter.reset(new mooon::observer::CDefaultDataReporter(_data_logger.get()));
+
+            observer::IObserverManager* observer_mananger = mooon::observer::create(_data_reporter.get(), _report_frequency_seconds);
+            if (NULL == observer_mananger)
+            {
+                MYLOG_WARN("create observer mananger failed\n");
+            }
+            else
+            {
+                MYLOG_INFO("create observer mananger ok\n");
+                observer_mananger->register_observee(this);
+            }
+        }
+    }
 
     if (create_history_directory())
     {
@@ -95,6 +134,8 @@ void CDbProcess::on_terminated()
 {
     _stop_signal_thread = true;
     MYLOG_INFO("dbprocess(%u, %s) will exit\n", static_cast<unsigned int>(getpid()), _dbinfo.str().c_str());
+    if (_report_frequency_seconds > 0)
+        mooon::observer::destroy();
 }
 
 void CDbProcess::on_child_end(pid_t child_pid, int child_exited_status)
@@ -343,15 +384,15 @@ bool CDbProcess::handle_file(const std::string& filename)
                 // rows为0可能是失败，比如update时没有满足where条件的记录存在时
                 if (0 == rows)
                 {
-                    MYLOG_WARN("[UPDATE_WARNING][%s:%u][%s] ok: %d, %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(), rows, _num_sqls);
+                    MYLOG_WARN("[UPDATE_WARNING][%s:%u][%s] ok: %d, %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(), rows, _success_num_sqls);
                 }
-                else if (0 == ++_num_sqls%1000)
+                else if (0 == ++_success_num_sqls%1000)
                 {
-                    MYLOG_INFO("[%s:%u][%s][ROWS:%d] %s-lines: %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(), rows, _dbinfo.alias.c_str(), _num_sqls);
+                    MYLOG_INFO("[%s:%u][%s][ROWS:%d] %s-lines: %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(), rows, _dbinfo.alias.c_str(), _success_num_sqls);
                 }
                 else
                 {
-                    MYLOG_DEBUG("[%s:%u][%s] ok: %d, %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(),  rows, _num_sqls);
+                    MYLOG_DEBUG("[%s:%u][%s] ok: %d, %" PRIu64"\n", log_tag.c_str(), offset, sql.c_str(),  rows, _success_num_sqls);
                 }
 
                 break;
@@ -599,6 +640,15 @@ void CDbProcess::delete_old_history_files()
                 }
             }
         }
+    }
+}
+
+void CDbProcess::on_report(mooon::observer::IDataReporter* data_reporter, const std::string& current_datetime)
+{
+    if ((_success_num_sqls > 0) && (_success_num_sqls > _last_success_num_sqls))
+    {
+        _last_success_num_sqls = _success_num_sqls;
+        data_reporter->report("[%s]%" PRIu64"\n", current_datetime.c_str(), _success_num_sqls);
     }
 }
 

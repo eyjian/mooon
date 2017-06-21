@@ -20,14 +20,14 @@ public:
     int get_database_index() const { return _database_index; }
     bool write_log(const std::string& sql);
 
-private: // override mooon::observer::IObservable
-    virtual void on_report(mooon::observer::IDataReporter* data_reporter, const std::string& current_datetime);
-
 private:
     bool need_rotate() const;
     void rotate_log();
     std::string get_log_filepath();
     std::string get_last_log_filepath(); // 取得启动之前最新的一个日志文件，如果不存在则等同于get_log_filepath()
+
+private: // override mooon::observer::IObservable
+    virtual void on_report(mooon::observer::IDataReporter* data_reporter, const std::string& current_datetime);
 
 private:
     sys::CLock _lock;

@@ -251,9 +251,12 @@ bool CMainHelper::init(int argc, char* argv[])
         }
 
         // 只有当参数report_frequency_seconds的值大于0时才启动统计功能
-        int report_frequency_seconds = mooon::argument::report_frequency_seconds->value();
+        const int report_frequency_seconds = mooon::argument::report_frequency_seconds->value();
+        MYLOG_INFO("report_frequency_seconds: %d\n", report_frequency_seconds);
         if (report_frequency_seconds > 0)
         {
+            mooon::observer::observer_logger = mooon::sys::g_logger;
+
             std::string data_dirpath = mooon::observer::get_data_dirpath();
             if (data_dirpath.empty())
                 return false;

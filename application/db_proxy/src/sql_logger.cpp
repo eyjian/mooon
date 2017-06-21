@@ -99,15 +99,6 @@ bool CSqlLogger::write_log(const std::string& sql)
     }
 }
 
-void CSqlLogger::on_report(mooon::observer::IDataReporter* data_reporter, const std::string& current_datetime)
-{
-    if ((_total_lines > 0) && (_total_lines > _last_total_lines))
-    {
-        _last_total_lines = _total_lines;
-        data_reporter->report("[%s][D]%d,%" PRIu64"\n", current_datetime.c_str(), _database_index, _total_lines);
-    }
-}
-
 bool CSqlLogger::need_rotate() const
 {
     const int32_t file_size = static_cast<int32_t>(sys::CFileUtils::get_file_size(_log_fd));
@@ -219,6 +210,15 @@ std::string CSqlLogger::get_last_log_filepath()
     {
         std::string last_log_filepath = log_dirpath + std::string("/") + log_filename;
         return last_log_filepath;
+    }
+}
+
+void CSqlLogger::on_report(mooon::observer::IDataReporter* data_reporter, const std::string& current_datetime)
+{
+    if ((_total_lines > 0) && (_total_lines > _last_total_lines))
+    {
+        _last_total_lines = _total_lines;
+        data_reporter->report("[%s][D]%d,%" PRIu64"\n", current_datetime.c_str(), _database_index, _total_lines);
     }
 }
 
