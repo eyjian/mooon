@@ -34,7 +34,7 @@ public:
       * 上报通知方法，由Observer定时回调
       * @data_reporter: 数据上报器
       */
-	virtual void on_report(IDataReporter* data_reporter) = 0;    
+	virtual void on_report(IDataReporter* data_reporter, const std::string& current_datetime) = 0;
 };
 
 OBSERVER_NAMESPACE_END
