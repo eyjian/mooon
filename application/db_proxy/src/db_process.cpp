@@ -25,8 +25,10 @@ namespace mooon { namespace db_proxy {
 CDbProcess::CDbProcess(const struct DbInfo& dbinfo)
     : _report_frequency_seconds(mooon::argument::report_frequency_seconds->value()),
       _progess_fd(-1), _dbinfo(dbinfo), _stop_signal_thread(false), _signal_thread(NULL),
-      _consecutive_failures(0), _success_num_sqls(0), _last_success_num_sqls(0), _db_connected(false), _old_history_files_deleted_today(false)
+      _consecutive_failures(0), _db_connected(false), _old_history_files_deleted_today(false)
 {
+    reset();
+
     const std::string program_path = sys::CUtils::get_program_path();
     _log_dirpath = get_log_dirpath(_dbinfo.alias);
 
@@ -403,7 +405,12 @@ bool CDbProcess::handle_file(const std::string& filename)
 
                 // 网络类需要重试，直到成功
                 if (!_mysql.is_disconnected_exception(ex))
+                {
+                    ++_failure_num_sqls;
                     break;
+                }
+
+                ++_retry_times;
                 sys::CUtils::millisleep(1000);
             }
         }
@@ -645,11 +652,26 @@ void CDbProcess::delete_old_history_files()
 
 void CDbProcess::on_report(mooon::observer::IDataReporter* data_reporter, const std::string& current_datetime)
 {
-    if ((_success_num_sqls > 0) && (_success_num_sqls > _last_success_num_sqls))
+    if (((_success_num_sqls > 0) && (_success_num_sqls > _last_success_num_sqls)) ||
+        ((_failure_num_sqls > 0) && (_failure_num_sqls > _last_failure_num_sqls)) ||
+        ((_retry_times > 0) && (_retry_times > _last_retry_times)))
     {
         _last_success_num_sqls = _success_num_sqls;
-        data_reporter->report("[%s]%" PRIu64"\n", current_datetime.c_str(), _success_num_sqls);
+        _last_failure_num_sqls = _failure_num_sqls;
+        _last_retry_times = _retry_times;
+
+        data_reporter->report("[%s]%" PRIu64",%" PRIu64",%" PRIu64"\n", current_datetime.c_str(), _success_num_sqls, _failure_num_sqls, _retry_times);
     }
+}
+
+void CDbProcess::reset()
+{
+    _success_num_sqls = 0;
+    _last_success_num_sqls = 0;
+    _failure_num_sqls = 0;
+    _last_failure_num_sqls = 0;
+    _retry_times = 0;
+    _last_retry_times = 0;
 }
 
 }} // namespace mooon { namespace db_proxy {

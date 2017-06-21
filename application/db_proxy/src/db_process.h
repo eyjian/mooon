@@ -64,8 +64,6 @@ private:
     sys::CThreadEngine* _signal_thread;
     sys::CMySQLConnection _mysql;
     uint32_t _consecutive_failures; // 用于减少连接DB失败时的重复日志
-    uint64_t _success_num_sqls; // 启动以来总共处理过的SQL条数
-    uint64_t _last_success_num_sqls; // 上一次记录的
     bool _db_connected; // 是否连接了DB
     bool _old_history_files_deleted_today; // 今日是否已执行过删除老的历史文件
 
@@ -73,6 +71,15 @@ private:
     time_t _begin_time; // 效率统计开始时间
     int _interval_count; // 效率统计时间段内发生的数目
     int _batch; // 当前事务已写的条数
+
+private:
+    void reset();
+    uint64_t _success_num_sqls; // 启动以来总共处理过的SQL条数
+    uint64_t _last_success_num_sqls; // 上一次记录的
+    uint64_t _failure_num_sqls;
+    uint64_t _last_failure_num_sqls;
+    uint64_t _retry_times; // 重试次数
+    uint64_t _last_retry_times;
 };
 
 }} // namespace mooon { namespace db_proxy {
