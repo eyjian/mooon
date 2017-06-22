@@ -261,7 +261,7 @@ bool CMainHelper::init(int argc, char* argv[])
             if (data_dirpath.empty())
                 return false;
 
-            _data_logger.reset(new mooon::sys::CSafeLogger(data_dirpath.c_str(), "db_proxy.data"));
+            _data_logger.reset(new mooon::sys::CSafeLogger(data_dirpath.c_str(), mooon::utils::CStringUtils::format_string("db_proxy_%d.data", mooon::argument::port->value()).c_str()));
             _data_logger->enable_raw_log(true);
             _data_logger->set_backup_number(2);
             _data_reporter.reset(new mooon::observer::CDefaultDataReporter(_data_logger.get()));

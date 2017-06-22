@@ -28,6 +28,12 @@ static void init_query_info_array(struct QueryInfo* query_info_array[])
         query_info_array[index] = NULL;
 }
 
+static void init_sql_logger_array(CSqlLogger* sql_logger_array[])
+{
+    for (int index=0; index<MAX_DB_CONNECTION; ++index)
+        sql_logger_array[index] = NULL;
+}
+
 static void init_update_info_array(struct UpdateInfo* update_info_array[])
 {
     for (int index=0; index<MAX_SQL_TEMPLATE; ++index)
@@ -109,6 +115,7 @@ void CConfigLoader::stop_monitor()
 CConfigLoader::CConfigLoader()
     : _stop_monitor(false)
 {
+    init_sql_logger_array(_sql_logger_array);
     init_db_info_array(_db_info_array);
     init_query_info_array(_query_info_array);
     init_update_info_array(_update_info_array);

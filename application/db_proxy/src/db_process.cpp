@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sys/uio.h>
 
+INTEGER_ARG_DECLARE(uint16_t, port);
 INTEGER_ARG_DECLARE(uint16_t, report_frequency_seconds);
 INTEGER_ARG_DECLARE(int32_t, sql_file_size);
 INTEGER_ARG_DECLARE(uint16_t, port);
@@ -80,7 +81,7 @@ void CDbProcess::run()
         }
         else
         {
-            _data_logger.reset(new mooon::sys::CSafeLogger(data_dirpath.c_str(), utils::CStringUtils::format_string("%s.data", _dbinfo.alias.c_str()).c_str()));
+            _data_logger.reset(new mooon::sys::CSafeLogger(data_dirpath.c_str(), utils::CStringUtils::format_string("%s_%d.data", _dbinfo.alias.c_str(), argument::port->value()).c_str()));
             _data_logger->enable_raw_log(true);
             _data_logger->set_backup_number(2);
             _data_reporter.reset(new mooon::observer::CDefaultDataReporter(_data_logger.get()));
