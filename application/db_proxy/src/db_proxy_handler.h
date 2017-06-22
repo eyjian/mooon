@@ -54,7 +54,7 @@ private:
     void add_data_to_cache(const DBTable& dbtable, const std::string& sql, int cached_seconds);
 
     // 入加SQL或写入文件中
-    int64_t write_sql(int32_t seq, const struct DbInfo& db_info, sys::DBConnection* db_connection, const std::string& sql);
+    int64_t write_sql(const char* tag, int32_t seq, const struct DbInfo& db_info, sys::DBConnection* db_connection, const std::string& sql);
 
 private:
     typedef std::tr1::unordered_map<utils::CMd5Helper::Value, struct CachedData, utils::CMd5Helper::ValueHasher, utils::CMd5Helper::ValueComparer> CacheTable;
@@ -70,10 +70,14 @@ private:
     volatile int _num_query2_failure;
     volatile int _num_update_success; // 成功执行DBProxy的update次数
     volatile int _num_update_failure;
-    volatile int _num_update2_success; // 成功执行MySQL的update次数
+    volatile int _num_update2_success;
     volatile int _num_update2_failure;
+    volatile int _num_update_success_sql; // 成功执行MySQL的update次数
+    volatile int _num_update_failure_sql;
     volatile int _num_async_update_success;
     volatile int _num_async_update_failure;
+    volatile int _num_insert2_success; // insert2操作成功次数
+    volatile int _num_insert2_failure;
     volatile int _num_write_success; // write_log成功次数
     volatile int _num_write_failure;
     volatile int _num_error_update_sql; // 错误的update类SQL数

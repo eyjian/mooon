@@ -173,6 +173,7 @@ int64_t CDbProxyHandler::update2(const int32_t seq, const int32_t database_index
         CConfigLoader* config_loader = CConfigLoader::get_singleton();
         if (!config_loader->get_db_info(database_index, &db_info))
         {
+            ++_num_update2_failure;
             MYLOG_ERROR("[%d]database_index[%d] not exists\n", seq, database_index);
             throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("database_index(%d) not exists", database_index));
         }
@@ -181,6 +182,7 @@ int64_t CDbProxyHandler::update2(const int32_t seq, const int32_t database_index
         sys::DBConnection* db_connection = config_loader->get_db_connection(database_index);
         if (NULL == db_connection)
         {
+            ++_num_update2_failure;
             MYLOG_ERROR("[%d]database_index[%d] not exists or cannot connect\n", seq, database_index);
             throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("database_index(%d) not exists or cannot connect", database_index));
         }
@@ -218,6 +220,7 @@ int64_t CDbProxyHandler::update2(const int32_t seq, const int32_t database_index
                     }
                     else
                     {
+                        ++_num_update2_failure;
                         MYLOG_ERROR("invalid condition.right[%d][%s]\n", seq, condition.right.c_str());
                         throw apache::thrift::TApplicationException("invalid condition.right");
                     }
@@ -227,10 +230,16 @@ int64_t CDbProxyHandler::update2(const int32_t seq, const int32_t database_index
             }
         }
 
-        return write_sql(seq, db_info, db_connection, sql);
+        const int64_t num_rows = write_sql("U2", seq, db_info, db_connection, sql);
+        if (num_rows >= 0)
+            ++_num_update2_success;
+        else
+            ++_num_update2_failure;
+        return num_rows;
     }
     catch (sys::CDBException& ex)
     {
+        ++_num_update2_failure;
         MYLOG_ERROR("[%d]%s\n", seq, ex.str().c_str());
         throw apache::thrift::TApplicationException(ex.str());
     }
@@ -246,6 +255,7 @@ int64_t CDbProxyHandler::insert2(const int32_t seq, const int32_t database_index
         CConfigLoader* config_loader = CConfigLoader::get_singleton();
         if (!config_loader->get_db_info(database_index, &db_info))
         {
+            ++_num_insert2_failure;
             MYLOG_ERROR("[%d]database_index[%d] not exists\n", seq, database_index);
             throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("database_index(%d) not exists", database_index));
         }
@@ -254,6 +264,7 @@ int64_t CDbProxyHandler::insert2(const int32_t seq, const int32_t database_index
         sys::DBConnection* db_connection = config_loader->get_db_connection(database_index);
         if (NULL == db_connection)
         {
+            ++_num_insert2_failure;
             MYLOG_ERROR("[%d]database_index[%d] not exists or cannot connect\n", seq, database_index);
             throw apache::thrift::TApplicationException(utils::CStringUtils::format_string("database_index(%d) not exists or cannot connect", database_index));
         }
@@ -278,19 +289,29 @@ int64_t CDbProxyHandler::insert2(const int32_t seq, const int32_t database_index
 
         // )
         sql += std::string(")");
-        (void)write_sql(seq, db_info, db_connection, sql);
 
-        // 取得insert_id
         uint64_t insert_id = 0;
-        if (db_info.alias.empty())
+        const int64_t num_rows = write_sql("I2", seq, db_info, db_connection, sql);
+        if (num_rows >= 0)
         {
-            insert_id = db_connection->get_insert_id();
+            ++_num_insert2_success;
+
+            // 取得insert_id
+            if (db_info.alias.empty())
+            {
+                insert_id = db_connection->get_insert_id();
+            }
+        }
+        else
+        {
+            ++_num_insert2_failure;
         }
 
         return static_cast<int64_t>(insert_id);
     }
     catch (sys::CDBException& ex)
     {
+        ++_num_insert2_failure;
         MYLOG_ERROR("[%d]%s\n", seq, ex.str().c_str());
         throw apache::thrift::TApplicationException(ex.str());
     }
@@ -451,7 +472,7 @@ int64_t CDbProxyHandler::do_update(bool throw_exception, const std::string& sign
                 }
                 else
                 {
-                    return write_sql(seq, db_info, db_connection, sql);
+                    return write_sql("U1", seq, db_info, db_connection, sql);
                 }
             }
         }
@@ -516,7 +537,7 @@ void CDbProxyHandler::add_data_to_cache(const DBTable& dbtable, const std::strin
     }
 }
 
-int64_t CDbProxyHandler::write_sql(int32_t seq, const struct DbInfo& db_info, sys::DBConnection* db_connection, const std::string& sql)
+int64_t CDbProxyHandler::write_sql(const char* tag, int32_t seq, const struct DbInfo& db_info, sys::DBConnection* db_connection, const std::string& sql)
 {
     if (db_info.alias.empty())
     {
@@ -528,23 +549,23 @@ int64_t CDbProxyHandler::write_sql(int32_t seq, const struct DbInfo& db_info, sy
             try
             {
                 const uint64_t affected_rows = db_connection->update("%s", sql.c_str());
-                MYLOG_INFO("[WRITE_SQL][SEQ:%d][%" PRIu64"] %s", seq, affected_rows, sql.c_str());
-                ++_num_update2_success;
+                MYLOG_INFO("[%s][WRITE_SQL][SEQ:%d][%" PRIu64"] %s", tag, seq, affected_rows, sql.c_str());
+                ++_num_update_success_sql;
                 return static_cast<int64_t>(affected_rows);
             }
             catch (sys::CDBException& db_ex)
             {
-                ++_num_update2_failure;
+                ++_num_update_failure_sql;
 
                 if (!db_connection->is_disconnected_exception(db_ex) || (retries==max_retries-1))
                 {
                     ++_num_error_update_sql;
-                    MYLOG_ERROR("[ERROR_SQL][SEQ:%d][%s]%s\n", seq, db_ex.sql(), db_ex.str().c_str());
+                    MYLOG_ERROR("[%s][ERROR_SQL][SEQ:%d][%s]%s\n", tag, seq, db_ex.sql(), db_ex.str().c_str());
                     break;
                 }
                 else
                 {
-                    MYLOG_ERROR("[RETRY_SQL_%d][SEQ:%d][%s]%s\n", retries, seq, sql.c_str(), db_ex.str().c_str());
+                    MYLOG_ERROR("[%s][RETRY_SQL_%d][SEQ:%d][%s]%s\n", tag, retries, seq, sql.c_str(), db_ex.str().c_str());
                     mooon::sys::CUtils::millisleep(100); // 网络类原因稍后重试
                 }
             }
@@ -554,14 +575,14 @@ int64_t CDbProxyHandler::write_sql(int32_t seq, const struct DbInfo& db_info, sy
     }
     else
     {
-        MYLOG_DEBUG("[SEQ:%d] %s", seq, sql.c_str());
+        MYLOG_DEBUG("[%s][SEQ:%d] %s", tag, seq, sql.c_str());
 
         CConfigLoader* config_loader = CConfigLoader::get_singleton();
         CSqlLogger* sql_logger = config_loader->get_sql_logger(db_info.index);
 
         if (NULL == sql_logger)
         {
-            MYLOG_ERROR("[%s] no sql logger: %s\n", db_info.str().c_str(), sql.c_str());
+            MYLOG_ERROR("[%s][%s] no sql logger: %s\n", tag, db_info.str().c_str(), sql.c_str());
             throw apache::thrift::TApplicationException("no sql logger");
             return -1;
         }
@@ -573,16 +594,15 @@ int64_t CDbProxyHandler::write_sql(int32_t seq, const struct DbInfo& db_info, sy
             if (written)
             {
                 ++_num_write_success;
+                return 0;
             }
             else
             {
                 ++_num_write_failure;
-                MYLOG_ERROR("[%s] write sql log error: %s\n", db_info.str().c_str(), sql.c_str());
+                MYLOG_ERROR("[%s][%s] write sql log error: %s\n", tag, db_info.str().c_str(), sql.c_str());
                 throw apache::thrift::TApplicationException("io error");
                 return -1;
             }
-
-            return 0;
         }
     }
 }
@@ -593,16 +613,20 @@ void CDbProxyHandler::on_report(mooon::observer::IDataReporter* data_reporter, c
         (_num_query2_success != 0) || (_num_query2_failure != 0) ||
         (_num_update_success != 0) || (_num_update_failure != 0) ||
         (_num_update2_success != 0) || (_num_update2_failure != 0) ||
+        (_num_update_success_sql != 0) || (_num_update_failure_sql != 0) ||
         (_num_async_update_success != 0) || (_num_async_update_failure != 0) ||
+        (_num_insert2_success != 0) || (_num_insert2_failure != 0) ||
         (_num_write_success != 0) || (_num_write_failure != 0) ||
         (_num_error_update_sql != 0))
     {
-        data_reporter->report("[%s][B]%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", current_datetime.c_str(),
+        data_reporter->report("[%s][B]%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", current_datetime.c_str(),
             _num_query_success, _num_query_failure,
             _num_query2_success, _num_query2_failure,
             _num_update_success, _num_update_failure,
             _num_update2_success, _num_update2_failure,
+            _num_update_success_sql, _num_update_failure_sql,
             _num_async_update_success, _num_async_update_failure,
+            _num_insert2_success, _num_insert2_failure,
             _num_write_success, _num_write_failure,
             _num_error_update_sql);
         reset();
@@ -620,9 +644,14 @@ void CDbProxyHandler::reset()
     _num_update_failure = 0;
     _num_update2_success = 0;
     _num_update2_failure = 0;
-
+    _num_update_success_sql = 0;
+    _num_update_failure_sql = 0;
     _num_async_update_success = 0;
     _num_async_update_failure = 0;
+
+    _num_insert2_success = 0;
+    _num_insert2_failure = 0;
+
     _num_write_success = 0;
     _num_write_failure = 0;
 
