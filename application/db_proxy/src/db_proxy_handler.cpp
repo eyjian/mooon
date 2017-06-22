@@ -592,6 +592,7 @@ void CDbProxyHandler::on_report(mooon::observer::IDataReporter* data_reporter, c
     if ((_num_query_success != 0) || (_num_query_failure != 0) ||
         (_num_query2_success != 0) || (_num_query2_failure != 0) ||
         (_num_update_success != 0) || (_num_update_failure != 0) ||
+        (_num_update2_success != 0) || (_num_update2_failure != 0) ||
         (_num_async_update_success != 0) || (_num_async_update_failure != 0) ||
         (_num_write_success != 0) || (_num_write_failure != 0) ||
         (_num_error_update_sql != 0))
