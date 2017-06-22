@@ -376,9 +376,11 @@ void CDbProxyHandler::query2(DBTable& _return, const int32_t seq, const int32_t 
 
         MYLOG_DEBUG("%s", sql.c_str());
         db_connection->query(_return, "%s", sql.c_str());
+        ++_num_query2_success;
     }
     catch (sys::CDBException& ex)
     {
+        --_num_query2_success;
         MYLOG_ERROR("[SEQ:%d][DB:%d]%s\n", seq, database_index, ex.str().c_str());
         throw apache::thrift::TApplicationException(ex.str());
     }
@@ -527,12 +529,16 @@ int64_t CDbProxyHandler::write_sql(int32_t seq, const struct DbInfo& db_info, sy
             {
                 const uint64_t affected_rows = db_connection->update("%s", sql.c_str());
                 MYLOG_INFO("[WRITE_SQL][SEQ:%d][%" PRIu64"] %s", seq, affected_rows, sql.c_str());
+                ++_num_update2_success;
                 return static_cast<int64_t>(affected_rows);
             }
             catch (sys::CDBException& db_ex)
             {
+                ++_num_update2_failure;
+
                 if (!db_connection->is_disconnected_exception(db_ex) || (retries==max_retries-1))
                 {
+                    ++_num_error_update_sql;
                     MYLOG_ERROR("[ERROR_SQL][SEQ:%d][%s]%s\n", seq, db_ex.sql(), db_ex.str().c_str());
                     break;
                 }
@@ -584,15 +590,20 @@ int64_t CDbProxyHandler::write_sql(int32_t seq, const struct DbInfo& db_info, sy
 void CDbProxyHandler::on_report(mooon::observer::IDataReporter* data_reporter, const std::string& current_datetime)
 {
     if ((_num_query_success != 0) || (_num_query_failure != 0) ||
+        (_num_query2_success != 0) || (_num_query2_failure != 0) ||
         (_num_update_success != 0) || (_num_update_failure != 0) ||
         (_num_async_update_success != 0) || (_num_async_update_failure != 0) ||
-        (_num_write_success != 0) || (_num_write_failure != 0))
+        (_num_write_success != 0) || (_num_write_failure != 0) ||
+        (_num_error_update_sql != 0))
     {
-        data_reporter->report("[%s][B]%d,%d,%d,%d,%d,%d,%d,%d\n", current_datetime.c_str(),
+        data_reporter->report("[%s][B]%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", current_datetime.c_str(),
             _num_query_success, _num_query_failure,
+            _num_query2_success, _num_query2_failure,
             _num_update_success, _num_update_failure,
+            _num_update2_success, _num_update2_failure,
             _num_async_update_success, _num_async_update_failure,
-            _num_write_success, _num_write_failure);
+            _num_write_success, _num_write_failure,
+            _num_error_update_sql);
         reset();
     }
 }
@@ -601,12 +612,20 @@ void CDbProxyHandler::reset()
 {
     _num_query_success = 0;
     _num_query_failure = 0;
+    _num_query2_success = 0;
+    _num_query2_failure = 0;
+
     _num_update_success = 0;
     _num_update_failure = 0;
+    _num_update2_success = 0;
+    _num_update2_failure = 0;
+
     _num_async_update_success = 0;
     _num_async_update_failure = 0;
     _num_write_success = 0;
     _num_write_failure = 0;
+
+    _num_error_update_sql = 0;
 }
 
 } // namespace mooon

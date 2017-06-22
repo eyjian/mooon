@@ -66,12 +66,17 @@ private:
     void reset();
     volatile int _num_query_success;
     volatile int _num_query_failure;
-    volatile int _num_update_success; // 成功的update次数
+    volatile int _num_query2_success;
+    volatile int _num_query2_failure;
+    volatile int _num_update_success; // 成功执行DBProxy的update次数
     volatile int _num_update_failure;
+    volatile int _num_update2_success; // 成功执行MySQL的update次数
+    volatile int _num_update2_failure;
     volatile int _num_async_update_success;
     volatile int _num_async_update_failure;
     volatile int _num_write_success; // write_log成功次数
     volatile int _num_write_failure;
+    volatile int _num_error_update_sql; // 错误的update类SQL数
 };
 
 } // namespace mooon
