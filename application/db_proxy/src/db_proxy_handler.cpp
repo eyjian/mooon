@@ -519,27 +519,26 @@ int64_t CDbProxyHandler::write_sql(int32_t seq, const struct DbInfo& db_info, sy
     if (db_info.alias.empty())
     {
         // 直接入库
-        MYLOG_INFO("[SEQ:%d] %s", seq, sql.c_str());
-
         const int max_retries = 5;
+
         for (int retries=0; retries<max_retries; ++retries)
         {
             try
             {
                 const uint64_t affected_rows = db_connection->update("%s", sql.c_str());
-                MYLOG_DEBUG("[%s] affected_rows: %" PRIu64"\n", sql.c_str(), affected_rows);
+                MYLOG_INFO("[WRITE_SQL][SEQ:%d][%" PRIu64"] %s", seq, affected_rows, sql.c_str());
                 return static_cast<int64_t>(affected_rows);
             }
             catch (sys::CDBException& db_ex)
             {
                 if (!db_connection->is_disconnected_exception(db_ex) || (retries==max_retries-1))
                 {
-                    MYLOG_ERROR("[%s]%s\n", db_ex.sql(), db_ex.str().c_str());
+                    MYLOG_ERROR("[ERROR_SQL][SEQ:%d][%s]%s\n", seq, db_ex.sql(), db_ex.str().c_str());
                     break;
                 }
                 else
                 {
-                    MYLOG_ERROR("[RETRY][%s]%s\n", db_ex.sql(), db_ex.str().c_str());
+                    MYLOG_ERROR("[RETRY_SQL_%d][SEQ:%d][%s]%s\n", retries, seq, sql.c_str(), db_ex.str().c_str());
                     mooon::sys::CUtils::millisleep(100); // 网络类原因稍后重试
                 }
             }
