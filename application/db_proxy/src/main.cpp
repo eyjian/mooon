@@ -58,6 +58,9 @@ INTEGER_ARG_DEFINE(uint16_t, num_logs, 0, 0, std::numeric_limits<uint16_t>::max(
 // 数据上报频率（单位为秒），如果值为0表示禁止收集数据
 INTEGER_ARG_DEFINE(uint16_t, report_frequency_seconds, 0, 0, 3600, "frequency seconds to report data");
 
+// 是否启动dbprocess
+INTEGER_ARG_DEFINE(uint8_t, dbprocess ,1, 0, 1, "whether to start the db process");
+
 class CMainHelper: public mooon::sys::IMainHelper
 {
 public:
@@ -187,10 +190,17 @@ void CMainHelper::on_child_end(pid_t child_pid, int child_exited_status)
             // 异常退出才重启，而且需要控制重启频率
             if ((signo != SIGINT) && (signo != SIGTERM))
             {
-                const uint32_t restart_frequency = mooon::argument::restart_frequency->value();
-                MYLOG_INFO("to restart db process(%u) after %us: %s\n", child_pid, restart_frequency, dbinfo.str().c_str());
-                mooon::sys::CUtils::millisleep(1000*restart_frequency);
-                (void)create_db_process(dbinfo);
+                if (mooon::argument::dbprocess->value() != 1)
+                {
+                    MYLOG_INFO("not restart db process\n");
+                }
+                else
+                {
+                    const uint32_t restart_frequency = mooon::argument::restart_frequency->value();
+                    MYLOG_INFO("to restart db process(%u) after %us: %s\n", child_pid, restart_frequency, dbinfo.str().c_str());
+                    mooon::sys::CUtils::millisleep(1000*restart_frequency);
+                    (void)create_db_process(dbinfo);
+                }
             }
         }
     }
@@ -342,6 +352,12 @@ void CMainHelper::stop()
 
 bool CMainHelper::create_db_processes()
 {
+    if (mooon::argument::dbprocess->value() != 1)
+    {
+        MYLOG_INFO("not start db process\n");
+        return true;
+    }
+
     for (int index=0; index<mooon::db_proxy::MAX_DB_CONNECTION; ++index)
     {
         struct mooon::db_proxy::DbInfo dbinfo;
