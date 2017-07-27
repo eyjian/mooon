@@ -688,6 +688,25 @@ int64_t CDatetimeUtils::get_current_microseconds()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool is_valid_datetime(const std::string& str)
+{
+    struct tm datetime_struct;
+    return (str.size() == sizeof("YYYY-MM-DD hh:mm:ss")-1) &&
+            CDatetimeUtils::datetime_struct_from_string(str.c_str(), &datetime_struct);
+}
+
+bool is_valid_date(const std::string& str)
+{
+    const std::string& datetime = str + std::string(" 00:00:00");
+    return is_valid_datetime(datetime);
+}
+
+bool is_valid_time(const std::string& str)
+{
+    const std::string& datetime = std::string("2017-07-27 ") + str;
+    return is_valid_datetime(datetime);
+}
+
 uint64_t current_seconds()
 {
     return static_cast<uint64_t>(time(NULL));

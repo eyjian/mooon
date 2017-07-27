@@ -195,6 +195,15 @@ public:
     static int64_t get_current_microseconds();
 };
 
+// 是否为有效的日期时间，str格式要求为“YYYY-MM-DD hh:mm:ss”
+extern bool is_valid_datetime(const std::string& str);
+
+// 是否为有效的日期，str格式要求为“YYYY-MM-DD”
+extern bool is_valid_date(const std::string& str);
+
+// 是否为有效的时间，str格式要求为“hh:mm:ss”
+extern bool is_valid_time(const std::string& str);
+
 // 返回从1970-01-01 00:00:00以来的秒，返回值和time(NULL)的返回值相等
 extern uint64_t current_seconds();
 
