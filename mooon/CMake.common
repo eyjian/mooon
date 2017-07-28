@@ -198,6 +198,13 @@ if (CMAKE_SIZEOF_VOID_P EQUAL 4)
     add_definitions("-march=pentium4")    
 endif ()
 
+# 如果编译环境支持C++11，则打开C++11开关
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+if (COMPILER_SUPPORTS_CXX11)
+    add_definitions("-std=c++11")
+endif()
+
 link_libraries(dl pthread rt z)
 
 # 为指定的源文件添加编译属性，示例：
@@ -215,3 +222,6 @@ link_libraries(dl pthread rt z)
 # set_directory_properties
 # 在给定的作用域内设置一个命名的属性  
 # set_property
+
+# 设置依赖
+# ADD_DEPENDENCIES(Target 被依赖的Target)
