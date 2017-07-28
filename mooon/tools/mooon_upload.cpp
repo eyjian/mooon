@@ -73,7 +73,7 @@ struct ResultInfo
 inline std::ostream& operator <<(std::ostream& out, const struct ResultInfo& result)
 {
     std::string tag = result.success? "SUCCESS": "FAILURE";
-    out << "["PRINT_COLOR_YELLOW << result.ip << PRINT_COLOR_NONE" " << tag << "] " << result.seconds << " seconds (" << result.source << ")";
+    out << "[" PRINT_COLOR_YELLOW << result.ip << PRINT_COLOR_NONE" " << tag << "] " << result.seconds << " seconds (" << result.source << ")";
     return out;
 }
 
@@ -218,7 +218,7 @@ int main(int argc, char* argv[])
 			results[k].source = source_files[j];
 			results[k].success = false;
 
-			fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"]\n", remote_host_ip.c_str());
+			fprintf(stdout, "[" PRINT_COLOR_YELLOW"%s" PRINT_COLOR_NONE"]\n", remote_host_ip.c_str());
 			fprintf(stdout, PRINT_COLOR_GREEN);
 
 			mooon::sys::CStopWatch stop_watch;
@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
 				mooon::net::CLibssh2 libssh2(remote_host_ip, port, user, password, mooon::argument::t->value());
 				libssh2.upload(source_files[j], remote_filepath, &file_size);
 
-				fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"] SUCCESS: %d bytes (%s)\n", remote_host_ip.c_str(), file_size, source_files[j].c_str());
+				fprintf(stdout, "[" PRINT_COLOR_YELLOW"%s" PRINT_COLOR_NONE"] SUCCESS: %d bytes (%s)\n", remote_host_ip.c_str(), file_size, source_files[j].c_str());
 				results[k].success = true;
 			}
 			catch (mooon::sys::CSyscallException& ex)
@@ -236,14 +236,14 @@ int main(int argc, char* argv[])
 				if (color)
 					fprintf(stdout, PRINT_COLOR_NONE); // color = true;
 
-				fprintf(stderr, "["PRINT_COLOR_RED"%s"PRINT_COLOR_NONE"] failed: %s (%s)\n", remote_host_ip.c_str(), ex.str().c_str(), source_files[j].c_str());
+				fprintf(stderr, "[" PRINT_COLOR_RED"%s" PRINT_COLOR_NONE"] failed: %s (%s)\n", remote_host_ip.c_str(), ex.str().c_str(), source_files[j].c_str());
 			}
 			catch (mooon::utils::CException& ex)
 			{
 				if (color)
 					fprintf(stdout, PRINT_COLOR_NONE); // color = true;
 
-				fprintf(stderr, "["PRINT_COLOR_RED"%s"PRINT_COLOR_NONE"] failed: %s (%s)\n", remote_host_ip.c_str(), ex.str().c_str(), source_files[j].c_str());
+				fprintf(stderr, "[" PRINT_COLOR_RED"%s" PRINT_COLOR_NONE"] failed: %s (%s)\n", remote_host_ip.c_str(), ex.str().c_str(), source_files[j].c_str());
 			}
 
 			std::cout << std::endl;

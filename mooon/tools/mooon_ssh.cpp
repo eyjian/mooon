@@ -68,7 +68,7 @@ struct ResultInfo
 inline std::ostream& operator <<(std::ostream& out, const struct ResultInfo& result)
 {
     std::string tag = result.success? "SUCCESS": "FAILURE";
-    out << "["PRINT_COLOR_YELLOW << result.ip << PRINT_COLOR_NONE" " << tag << "] " << result.seconds << " seconds";
+    out << "[" PRINT_COLOR_YELLOW << result.ip << PRINT_COLOR_NONE" " << tag << "] " << result.seconds << " seconds";
     return out;
 }
 
@@ -201,7 +201,7 @@ int main(int argc, char* argv[])
         const std::string& remote_host_ip = hosts_ip[i];
         results[i].ip = remote_host_ip;
 
-        fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"]\n", remote_host_ip.c_str());
+        fprintf(stdout, "[" PRINT_COLOR_YELLOW"%s" PRINT_COLOR_NONE"]\n", remote_host_ip.c_str());
         fprintf(stdout, PRINT_COLOR_GREEN);
 
         mooon::sys::CStopWatch stop_watch;
@@ -216,7 +216,7 @@ int main(int argc, char* argv[])
             if ((0 == exitcode) && exitsignal.empty())
             {
                 results[i].success = true;
-                fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"] SUCCESS\n", remote_host_ip.c_str());
+                fprintf(stdout, "[" PRINT_COLOR_YELLOW"%s" PRINT_COLOR_NONE"] SUCCESS\n", remote_host_ip.c_str());
             }
             else
             {
@@ -246,14 +246,14 @@ int main(int argc, char* argv[])
             if (color)
                 fprintf(stdout, PRINT_COLOR_NONE); // color = true;
 
-            fprintf(stderr, "["PRINT_COLOR_RED"%s"PRINT_COLOR_NONE"] failed: %s\n", remote_host_ip.c_str(), ex.str().c_str());
+            fprintf(stderr, "[" PRINT_COLOR_RED"%s" PRINT_COLOR_NONE"] failed: %s\n", remote_host_ip.c_str(), ex.str().c_str());
         }
         catch (mooon::utils::CException& ex)
         {
             if (color)
                 fprintf(stdout, PRINT_COLOR_NONE); // color = true;
 
-            fprintf(stderr, "["PRINT_COLOR_RED"%s"PRINT_COLOR_NONE"] failed: %s\n", remote_host_ip.c_str(), ex.str().c_str());
+            fprintf(stderr, "[" PRINT_COLOR_RED"%s" PRINT_COLOR_NONE"] failed: %s\n", remote_host_ip.c_str(), ex.str().c_str());
         }
 
         results[i].seconds = stop_watch.get_elapsed_microseconds() / 1000000;

@@ -210,6 +210,15 @@ extern uint64_t current_seconds();
 // 返回从1970-01-01 00:00:00以来的毫秒
 extern uint64_t current_milliseconds();
 
+// 取得当前的日期时间
+extern void get_current_datetime(int* year=NULL, int* month=NULL, int* day=NULL, int* hour=NULL, int* minute=NULL, int* second=NULL, int* week=NULL);
+extern int get_current_year();
+extern int get_current_month();
+extern int get_current_day();
+extern int get_current_hour();
+extern int get_current_minute();
+extern int get_current_second();
+
 // 返回今天
 extern std::string today(const char* format="%04d-%02d-%02d");
 // 返回昨天

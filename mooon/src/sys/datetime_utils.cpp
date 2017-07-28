@@ -719,6 +719,84 @@ uint64_t current_milliseconds()
     return (now.tv_sec*1000) + (now.tv_usec/1000);
 }
 
+void get_current_datetime(int* year, int* month, int* day, int* hour, int* minute, int* second, int* week)
+{
+    struct tm tm;
+    CDatetimeUtils::get_current_datetime_struct(&tm);
+
+    if (year != NULL)
+        *year = tm.tm_year + 1900;
+    if (month != NULL)
+        *month = tm.tm_mon + 1;
+    if (day != NULL)
+        *day = tm.tm_mday;
+    if (hour != NULL)
+        *hour = tm.tm_hour;
+    if (minute != NULL)
+        *minute = tm.tm_min;
+    if (second != NULL)
+        *second = tm.tm_sec;
+    if (week != NULL)
+        *week = tm.tm_wday;
+}
+
+int get_current_year()
+{
+    int year = 0;
+    get_current_datetime(&year);
+    return year;
+}
+
+int get_current_month()
+{
+    int* year = NULL;
+    int month = 0;
+    get_current_datetime(year, &month);
+    return month;
+}
+
+int get_current_day()
+{
+    int* year = NULL;
+    int* month = NULL;
+    int day = 0;
+    get_current_datetime(year, month, &day);
+    return day;
+}
+
+int get_current_hour()
+{
+    int* year = NULL;
+    int* month = NULL;
+    int* day = NULL;
+    int hour = 0;
+    get_current_datetime(year, month, day, &hour);
+    return hour;
+}
+
+int get_current_minute()
+{
+    int* year = NULL;
+    int* month = NULL;
+    int* day = NULL;
+    int* hour = NULL;
+    int minute = 0;
+    get_current_datetime(year, month, day, hour, &minute);
+    return minute;
+}
+
+int get_current_second()
+{
+    int* year = NULL;
+    int* month = NULL;
+    int* day = NULL;
+    int* hour = NULL;
+    int* minute = NULL;
+    int second = 0;
+    get_current_datetime(year, month, day, hour, minute, &second);
+    return second;
+}
+
 std::string today(const char* format)
 {
     return CDatetimeUtils::get_current_date(format);

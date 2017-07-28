@@ -73,7 +73,7 @@ struct ResultInfo
 inline std::ostream& operator <<(std::ostream& out, const struct ResultInfo& result)
 {
     std::string tag = result.success? "SUCCESS": "FAILURE";
-    out << "["PRINT_COLOR_YELLOW << result.ip << PRINT_COLOR_NONE" " << tag << "] " << result.seconds << " seconds (" << result.source << ")";
+    out << "[" PRINT_COLOR_YELLOW << result.ip << PRINT_COLOR_NONE" " << tag << "] " << result.seconds << " seconds (" << result.source << ")";
     return out;
 }
 
@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
             mooon::net::CLibssh2 libssh2(host, port, user, password, mooon::argument::t->value());
             libssh2.download(source_files[j], local_fs, &file_size);
 
-            fprintf(stdout, "["PRINT_COLOR_YELLOW"%s"PRINT_COLOR_NONE"] SUCCESS: %d bytes (%s)\n", host.c_str(), file_size, source_files[j].c_str());
+            fprintf(stdout, "[" PRINT_COLOR_YELLOW"%s" PRINT_COLOR_NONE"] SUCCESS: %d bytes (%s)\n", host.c_str(), file_size, source_files[j].c_str());
             results[j].success = true;
         }
         catch (mooon::sys::CSyscallException& ex)
@@ -221,14 +221,14 @@ int main(int argc, char* argv[])
             if (color)
                 fprintf(stdout, PRINT_COLOR_NONE); // color = true;
 
-            fprintf(stderr, "["PRINT_COLOR_RED"%s"PRINT_COLOR_NONE"] failed: %s (%s)\n", host.c_str(), ex.str().c_str(), source_files[j].c_str());
+            fprintf(stderr, "[" PRINT_COLOR_RED"%s" PRINT_COLOR_NONE"] failed: %s (%s)\n", host.c_str(), ex.str().c_str(), source_files[j].c_str());
         }
         catch (mooon::utils::CException& ex)
         {
             if (color)
                 fprintf(stdout, PRINT_COLOR_NONE); // color = true;
 
-            fprintf(stderr, "["PRINT_COLOR_RED"%s"PRINT_COLOR_NONE"] failed: %s (%s)\n", host.c_str(), ex.str().c_str(), source_files[j].c_str());
+            fprintf(stderr, "[" PRINT_COLOR_RED"%s" PRINT_COLOR_NONE"] failed: %s (%s)\n", host.c_str(), ex.str().c_str(), source_files[j].c_str());
         }
 
         results[j].seconds = stop_watch.get_elapsed_microseconds() / 1000000;
