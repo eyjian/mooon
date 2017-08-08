@@ -79,7 +79,7 @@ void CObserverContext::collect()
 
 //////////////////////////////////////////////////////////////////////////
 // 全局函数
-sys::ILogger* observer_logger = NULL;
+sys::ILogger* observer_logger = sys::g_logger;
 static CObserverContext* g_observer_context = NULL;
 
 void destroy()
