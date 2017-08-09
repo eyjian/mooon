@@ -846,7 +846,11 @@ std::string get_formatted_current_datetime(bool with_milliseconds)
     size_t datetime_buffer_size = sizeof(datetime_buffer);
     get_formatted_current_datetime(datetime_buffer, datetime_buffer_size, with_milliseconds);
 
-    return datetime_buffer;
+#if __cplusplus < 201103L
+    return std::string(datetime_buffer);
+#else
+    return std::move(std::string(datetime_buffer));
+#endif
 }
 
 SYS_NAMESPACE_END
