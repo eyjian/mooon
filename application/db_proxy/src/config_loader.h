@@ -38,7 +38,7 @@ inline bool is_sql_log_filename(const std::string& filename)
 
 inline std::string get_log_dirpath(const std::string& alias)
 {
-    const std::string program_path = sys::CUtils::get_program_path();
+    const std::string& program_path = sys::CUtils::get_program_path();
     return utils::CStringUtils::format_string("%s/../%s_%d/%s", program_path.c_str(), SQLLOG_DIRNAME, argument::port->value(), alias.c_str());
 }
 

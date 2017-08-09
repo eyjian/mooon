@@ -94,7 +94,7 @@ bool CSqlLogger::write_log(const std::string& sql)
     }
     catch (sys::CSyscallException& ex)
     {
-        MYLOG_ERROR("[%s] write [%s] to %s failed: %s\n", _dbinfo->str().c_str(), sql.c_str(), _log_filepath.c_str(), ex.str().c_str());
+        MYLOG_ERROR("[%s] write [%s] to [%s] failed: %s\n", _dbinfo->str().c_str(), sql.c_str(), _log_filepath.c_str(), ex.str().c_str());
         return false;
     }
 }
@@ -129,7 +129,10 @@ void CSqlLogger::rotate_log()
         MYLOG_INFO("%s\n", _log_filepath.c_str());
     }
 
-    if (!_log_filepath.empty())
+    if (_log_filepath.empty())
+    {
+    }
+    else
     {
         _log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM); // O_EXCL
         if (-1 == _log_fd)
@@ -155,14 +158,14 @@ std::string CSqlLogger::get_log_filepath()
     }
     else
     {
-        const std::string log_dirpath = get_log_dirpath(_dbinfo->alias);
+        const std::string& log_dirpath = get_log_dirpath(_dbinfo->alias);
         if (!sys::CDirUtils::exist(log_dirpath))
         {
             MYLOG_INFO("to create sqllog dir[%s]: %s\n", log_dirpath.c_str(), _dbinfo->str().c_str());
             sys::CDirUtils::create_directory_recursive(log_dirpath.c_str(), DIRECTORY_DEFAULT_PERM);
         }
 
-        time_t now = time(NULL);
+        const time_t now = time(NULL);
         if (now == _log_file_timestamp)
         {
             ++_log_file_suffix;
@@ -185,7 +188,14 @@ std::string CSqlLogger::get_last_log_filepath()
     std::vector<std::string>* link_names = NULL;
     std::vector<std::string> file_names;
     std::string log_filename;
-    const std::string log_dirpath = get_log_dirpath(_dbinfo->alias);
+    const std::string& log_dirpath = get_log_dirpath(_dbinfo->alias);
+
+    // 如果目录不存在，则自动创建
+    if (!sys::CDirUtils::exist(log_dirpath))
+    {
+        MYLOG_INFO("to create sqllog dir[%s]: %s\n", log_dirpath.c_str(), _dbinfo->str().c_str());
+        sys::CDirUtils::create_directory_recursive(log_dirpath.c_str(), DIRECTORY_DEFAULT_PERM);
+    }
 
     sys::CDirUtils::list(log_dirpath, subdir_names, &file_names, link_names);
     if (!file_names.empty())
