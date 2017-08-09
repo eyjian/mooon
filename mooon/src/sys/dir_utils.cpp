@@ -17,6 +17,7 @@
  * Author: eyjian@qq.com or eyjian@gmail.com
  */
 #include "sys/dir_utils.h"
+#include "sys/error.h"
 #include "utils/string_utils.h"
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -28,19 +29,24 @@ void CDirUtils::list(const std::string& dirpath
                   , std::vector<std::string>* file_names
                   , std::vector<std::string>* link_names) throw (CSyscallException)
 {
+    int errcode = 0;
     DIR* dir = opendir(dirpath.c_str());
     if (NULL == dir)
-        THROW_SYSCALL_EXCEPTION(NULL, errno, "opendir");
+    {
+        errcode = errno;
+        THROW_SYSCALL_EXCEPTION(utils::CStringUtils::format_string("open `%s` error: %s", dirpath.c_str(), Error::to_string(errcode).c_str()), errno, "opendir");
+    }
 
     for (;;)
     {
         errno = 0;
-        struct dirent* ent = readdir(dir);
+
+        const struct dirent* ent = readdir(dir);
         if (NULL == ent)
         {
             if (errno != 0)
             {
-                int errcode = errno;
+                errcode = errno;
                 if (EACCES == errcode)
                 {
                     // 忽略无权限的
@@ -93,12 +99,13 @@ bool CDirUtils::exist(const std::string& dirpath) throw (CSyscallException)
 
     if (-1 == stat(dirpath.c_str(), &buf))
     {
-        if (ENOENT == errno) // A component of the path path does not exist, or the path is an empty string.
+        const int errcode = errno;
+        if (ENOENT == errcode) // A component of the path path does not exist, or the path is an empty string.
             return false;
-        if (ENOTDIR == errno) // A component of the path is not a directory.
+        if (ENOTDIR == errcode) // A component of the path is not a directory.
             return false;
 
-        THROW_SYSCALL_EXCEPTION(NULL, errno, "stat");
+        THROW_SYSCALL_EXCEPTION(utils::CStringUtils::format_string("stat `%s` error: %s", dirpath.c_str(), Error::to_string(errcode).c_str()), errcode, "stat");
     }
 
     return S_ISDIR(buf.st_mode);
@@ -107,8 +114,13 @@ bool CDirUtils::exist(const std::string& dirpath) throw (CSyscallException)
 void CDirUtils::create_directory(const char* dirpath, mode_t permissions)
 {
     if (-1 == mkdir(dirpath, permissions))
-        if (errno != EEXIST)
-            THROW_SYSCALL_EXCEPTION(NULL, errno, "mkdir");
+    {
+        const int errcode = errno;
+        if (errcode != EEXIST)
+        {
+            THROW_SYSCALL_EXCEPTION(utils::CStringUtils::format_string("mkdir `%s` error: %s", dirpath, Error::to_string(errcode).c_str()), errcode, "mkdir");
+        }
+    }
 }
 
 void CDirUtils::create_directory_recursive(const char* dirpath, mode_t permissions)
@@ -116,6 +128,7 @@ void CDirUtils::create_directory_recursive(const char* dirpath, mode_t permissio
     char* slash;
     char* pathname = strdupa(dirpath); // _GNU_SOURCE
     char* pathname_p = pathname;
+    int errcode = 0;
 
     // 过滤掉头部的斜杠
     while ('/' == *pathname_p) ++pathname_p;
@@ -128,12 +141,16 @@ void CDirUtils::create_directory_recursive(const char* dirpath, mode_t permissio
             if (0 == mkdir(pathname, permissions)) break;
             if (EEXIST == errno) break;
 
-            THROW_SYSCALL_EXCEPTION(NULL, errno, "mkdir");
+            errcode = errno;
+            THROW_SYSCALL_EXCEPTION(utils::CStringUtils::format_string("mkdir `%s` error: %s", pathname, Error::to_string(errcode).c_str()), errcode, "mkdir");
         }
 
         *slash = '\0';
         if ((-1 == mkdir(pathname, permissions)) && (errno != EEXIST))
-            THROW_SYSCALL_EXCEPTION(NULL, errno, "mkdir");
+        {
+            errcode = errno;
+            THROW_SYSCALL_EXCEPTION(utils::CStringUtils::format_string("mkdir `%s` error: %s", pathname, Error::to_string(errcode).c_str()), errcode, "mkdir");
+        }
 
         *slash++ = '/';
         while ('/' == *slash) ++slash; // 过滤掉相连的斜杠
