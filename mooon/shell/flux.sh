@@ -1,17 +1,25 @@
 #!/bin/sh
 # Writed by yijian on 2008-3-20
 # 流量统计工具
-# 可带一个参数：网卡名，如eth0或eth1等
+# 可带一个两个：
+# 参数1：网卡名，如eth0或eth1等
+# 参数2：统计次数
 # 输出格式：统计时间,入流量(Kbps),入流量(Mbps),出流量(Kbps),出流量(Mbps)
 
 # Please edit the followings
-EthXname=eth0 # Interface name
+EthXname=eth1 # Interface name
 StatFreq=2 # Seconds
+StatTimes=0 # 统计几次后退出，0表示永远循环
+i=0
 
-if test $# -eq 1; then
+if test $# -ge 1; then
 	EthXname=$1
 fi
 echo "Destination: $EthXname"
+
+if test $# -ge 2; then
+	StatTimes=$2
+fi
 
 # Don't change
 influx_kbps=0
@@ -24,8 +32,8 @@ unsigned_long_max=4294967295
 Ethname=`cat /proc/net/dev|grep $EthXname|awk -F"[: ]+" '{ printf("%s", $2); }'`
 if test "$EthXname" != "$Ethname"; then
 	echo "Please set EthXname first before running"
-	echo "Usage: flux.sh ethX"
-	echo "Example: flux.sh eth0"
+	echo "Usage: flux.sh ethX times"
+	echo "Example: flux.sh eth1 2"
 	exit 1
 fi
 # 进一步检查是否存在EthXname
@@ -88,4 +96,12 @@ do
 	
 	let influx1_byte=influx2_byte
 	let outflux1_byte=outflux2_byte
+    
+    # 执行指定次数后退出
+    if test $StatTimes -gt 0; then
+        i=$(($i+1))
+        if test $i -ge $StatTimes; then
+            break
+        fi
+    fi
 done
