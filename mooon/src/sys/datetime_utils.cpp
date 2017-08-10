@@ -686,6 +686,163 @@ int64_t CDatetimeUtils::get_current_microseconds()
     return static_cast<int64_t>(tv.tv_sec) * 1000000 + static_cast<int64_t>(tv.tv_usec);
 }
 
+void CDatetimeUtils::get_datetime_number(const struct tm* tm, int* year, int* month, int* day, int* hour, int* minute, int* second, int* week)
+{
+    struct tm t_;
+    const struct tm* tm_;
+
+    if (tm != NULL)
+    {
+        tm_ = tm;
+    }
+    else
+    {
+        get_current_datetime_struct(&t_);
+        tm_ = &t_;
+    }
+
+    if (year != NULL)
+        *year = tm_->tm_year + 1900;
+    if (month != NULL)
+        *month = tm_->tm_mon + 1;
+    if (day != NULL)
+        *day = tm_->tm_mday;
+    if (hour != NULL)
+        *hour = tm_->tm_hour;
+    if (minute != NULL)
+        *minute = tm_->tm_min;
+    if (second != NULL)
+        *second = tm_->tm_sec;
+    if (week != NULL)
+        *week = tm_->tm_wday;
+}
+
+void CDatetimeUtils::get_datetime_number(const time_t* t, int* year, int* month, int* day, int* hour, int* minute, int* second, int* week)
+{
+    struct tm tm;
+    struct tm* tm_ = NULL;
+    if (t != NULL)
+    {
+        tm.tm_isdst = 0;
+        localtime_r(t, &tm);
+        tm_ = &tm;
+    }
+
+    get_datetime_number(tm_, year, month, day, hour, minute, second, week);
+}
+
+int CDatetimeUtils::get_year_number(const struct tm* tm)
+{
+    int year = 0;
+    get_datetime_number(tm, &year);
+    return year;
+}
+
+int CDatetimeUtils::get_month_number(const struct tm* tm)
+{
+    int* year = NULL;
+    int month = 0;
+    get_datetime_number(tm, year, &month);
+    return month;
+}
+
+int CDatetimeUtils::get_day_number(const struct tm* tm)
+{
+    int* year = NULL;
+    int* month = NULL;
+    int day = 0;
+    get_datetime_number(tm, year, month, &day);
+    return day;
+}
+
+int CDatetimeUtils::get_hour_number(const struct tm* tm)
+{
+    int* year = NULL;
+    int* month = NULL;
+    int* day = NULL;
+    int hour = 0;
+    get_datetime_number(tm, year, month, day, &hour);
+    return hour;
+}
+
+int CDatetimeUtils::get_minute_number(const struct tm* tm)
+{
+    int* year = NULL;
+    int* month = NULL;
+    int* day = NULL;
+    int* hour = NULL;
+    int minute = 0;
+    get_datetime_number(tm, year, month, day, hour, &minute);
+    return minute;
+}
+
+int CDatetimeUtils::get_second_number(const struct tm* tm)
+{
+    int* year = NULL;
+    int* month = NULL;
+    int* day = NULL;
+    int* hour = NULL;
+    int* minute = NULL;
+    int second = 0;
+    get_datetime_number(tm, year, month, day, hour, minute, &second);
+    return second;
+}
+
+int CDatetimeUtils::get_week_number(const struct tm* tm)
+{
+    int* year = NULL;
+    int* month = NULL;
+    int* day = NULL;
+    int* hour = NULL;
+    int* minute = NULL;
+    int* second = NULL;
+    int week = 0;
+    get_datetime_number(tm, year, month, day, hour, minute, NULL, &week);
+    return week;
+}
+
+int CDatetimeUtils::get_dayofmonth_array(const std::string& startdate, const std::string& enddate, std::vector<int>* dayofmonth_array)
+{
+    time_t st, et;
+    int* year = NULL;
+    int* month = NULL;
+    int* hour = NULL;
+    int* minute = NULL;
+    int* second = NULL;
+    int* week = NULL;
+    int day = 0;
+
+    if ((startdate.size() != sizeof("YYYY-MM-DD")-1) ||
+        (enddate.size() != sizeof("YYYY-MM-DD")-1))
+    {
+        return 0;
+    }
+    else
+    {
+        const std::string& starttime = startdate + std::string(" 00:00:00");
+        const std::string& endtime = enddate + std::string(" 23:59:59");
+        if (!datetime_struct_from_string(starttime.c_str(), &st) ||
+            !datetime_struct_from_string(endtime.c_str(), &et))
+        {
+            return 0;
+        }
+        if (et < st)
+        {
+            return 0;
+        }
+
+        // 1天24小时
+        dayofmonth_array->clear();
+        for (time_t t=st; t<=et; t+=(3600*24))
+        {
+            get_datetime_number(&t, year, month, &day, hour, minute, second, week);
+            dayofmonth_array->push_back(day);
+        }
+
+        return static_cast<int>(dayofmonth_array->size());
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool is_valid_datetime(const std::string& str)
@@ -717,84 +874,6 @@ uint64_t current_milliseconds()
     struct timeval now;
     (void)gettimeofday(&now, NULL);
     return (now.tv_sec*1000) + (now.tv_usec/1000);
-}
-
-void get_current_datetime(int* year, int* month, int* day, int* hour, int* minute, int* second, int* week)
-{
-    struct tm tm;
-    CDatetimeUtils::get_current_datetime_struct(&tm);
-
-    if (year != NULL)
-        *year = tm.tm_year + 1900;
-    if (month != NULL)
-        *month = tm.tm_mon + 1;
-    if (day != NULL)
-        *day = tm.tm_mday;
-    if (hour != NULL)
-        *hour = tm.tm_hour;
-    if (minute != NULL)
-        *minute = tm.tm_min;
-    if (second != NULL)
-        *second = tm.tm_sec;
-    if (week != NULL)
-        *week = tm.tm_wday;
-}
-
-int get_current_year()
-{
-    int year = 0;
-    get_current_datetime(&year);
-    return year;
-}
-
-int get_current_month()
-{
-    int* year = NULL;
-    int month = 0;
-    get_current_datetime(year, &month);
-    return month;
-}
-
-int get_current_day()
-{
-    int* year = NULL;
-    int* month = NULL;
-    int day = 0;
-    get_current_datetime(year, month, &day);
-    return day;
-}
-
-int get_current_hour()
-{
-    int* year = NULL;
-    int* month = NULL;
-    int* day = NULL;
-    int hour = 0;
-    get_current_datetime(year, month, day, &hour);
-    return hour;
-}
-
-int get_current_minute()
-{
-    int* year = NULL;
-    int* month = NULL;
-    int* day = NULL;
-    int* hour = NULL;
-    int minute = 0;
-    get_current_datetime(year, month, day, hour, &minute);
-    return minute;
-}
-
-int get_current_second()
-{
-    int* year = NULL;
-    int* month = NULL;
-    int* day = NULL;
-    int* hour = NULL;
-    int* minute = NULL;
-    int second = 0;
-    get_current_datetime(year, month, day, hour, minute, &second);
-    return second;
 }
 
 std::string today(const char* format)
