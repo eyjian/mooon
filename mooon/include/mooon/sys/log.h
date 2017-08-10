@@ -148,6 +148,7 @@ public:
     virtual bool enabled_raw() { return false; }
 
     virtual void log_detail(const char* filename, int lineno, const char* module_name, const char* format, va_list& args) {}
+    // 由于隐含了this参数（总是1个参数），所以format为第5个参数，...从第6个参数开始
     virtual void log_detail(const char* filename, int lineno, const char* module_name, const char* format, ...)  __attribute__((format(printf, 5, 6))) {}
 
     virtual void log_debug(const char* filename, int lineno, const char* module_name, const char* format, va_list& args)  {}
