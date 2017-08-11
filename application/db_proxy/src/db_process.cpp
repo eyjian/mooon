@@ -224,6 +224,7 @@ void CDbProcess::handle_directory()
         // sql.timestamp.suffix，需要按timespamp从小到大排充，如果timestamp相同则按suffix从小到大排序
         std::sort(file_names.begin(), file_names.end());
 
+        int valid_log_count = 0; // 有效的log文件数
         for (std::vector<std::string>::size_type i=0; !_stop_signal_thread&&i<file_names.size(); ++i)
         {
             const std::string& filename = file_names[i];
@@ -234,6 +235,8 @@ void CDbProcess::handle_directory()
             }
             if (is_sql_log_filename(filename))
             {
+                ++valid_log_count;
+
                 if (file_handled(filename))
                     archive_file(filename);
                 else
@@ -243,6 +246,12 @@ void CDbProcess::handle_directory()
             {
                 break;
             }
+        }
+
+        // empty
+        if (0 == valid_log_count)
+        {
+            sys::CUtils::millisleep(1000);
         }
     }
 }
