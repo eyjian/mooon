@@ -76,7 +76,7 @@ struct MessageHead
 
     std::string str() const
     {
-        return utils::CStringUtils::format_string("message://V%d.%d/L%d/T%d/E%u/M%u/%u/%u/%"PRIu64, (int)major_ver.to_int(), (int)minor_ver.to_int(), (int)len.to_int(), (int)type.to_int(), echo.to_int(), magic.to_int(), value1.to_int(), value2.to_int(), value3.to_int());
+        return utils::CStringUtils::format_string("message://V%d.%d/L%d/T%d/E%u/M%u/%u/%u/%" PRIu64, (int)major_ver.to_int(), (int)minor_ver.to_int(), (int)len.to_int(), (int)type.to_int(), echo.to_int(), magic.to_int(), value1.to_int(), value2.to_int(), value3.to_int());
     }
 };
 
