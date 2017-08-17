@@ -70,12 +70,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#if HAVE_LIBSSH2 == 1
+#if MOOON_HAVE_LIBSSH2 == 1
 #include <libssh2.h>
-#endif // HAVE_LIBSSH2
+#endif // MOOON_HAVE_LIBSSH2
 
 NET_NAMESPACE_BEGIN
-#if HAVE_LIBSSH2 == 1
+#if MOOON_HAVE_LIBSSH2 == 1
 
 void CLibssh2::init() throw (utils::CException)
 {
@@ -656,5 +656,5 @@ void CLibssh2::write_channel(void* channel, const char *buffer, size_t buffer_si
     }
 }
 
-#endif // HAVE_LIBSSH2
+#endif // MOOON_HAVE_LIBSSH2
 NET_NAMESPACE_END

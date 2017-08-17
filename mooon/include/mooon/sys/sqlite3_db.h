@@ -26,7 +26,7 @@
 // 头文件sqlite3.h和sqlite3ext.h放到目录：<安装目录>/include/sqlite3
 // 亦即需要在include目录下新建一个sqlite3子目录，然后将sqlite3.h和sqlite3ext.h两个头文件移至到这个目录
 
-#if HAVE_SQLITE3==1
+#if MOOON_HAVE_SQLITE3==1
 SYS_NAMESPACE_BEGIN
 
 /**
@@ -57,5 +57,5 @@ private:
 };
 
 SYS_NAMESPACE_END
-#endif // HAVE_SQLITE3
+#endif // MOOON_HAVE_SQLITE3
 #endif // MOOON_SYS_SQLITE3_DB_H

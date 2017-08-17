@@ -23,7 +23,7 @@
 #include <stdarg.h>
 #include <strings.h>
 
-#if HAVE_SQLITE3==1
+#if MOOON_HAVE_SQLITE3==1
 #include <sqlite3/sqlite3.h>
 SYS_NAMESPACE_BEGIN
 
@@ -185,4 +185,4 @@ void CSQLite3Connection::do_query(DBTable& db_table, const char* sql, int sql_le
 }
 
 SYS_NAMESPACE_END
-#endif // HAVE_SQLITE3
+#endif // MOOON_HAVE_SQLITE3

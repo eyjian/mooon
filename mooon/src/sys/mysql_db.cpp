@@ -21,7 +21,7 @@
 #include "utils/string_formatter.h"
 #include "utils/string_utils.h"
 
-#if HAVE_MYSQL==1
+#if MOOON_HAVE_MYSQL==1
 //#include <my_global.h> // 有些版本的MySQL可能需要包含此头文件
 //#include <my_sys.h>    // 有些版本的MySQL可能需要包含此头文件
 #include <mysql/errmsg.h> // CR_SERVER_GONE_ERROR
@@ -400,4 +400,4 @@ void CMySQLConnection::do_open() throw (CDBException)
 }
 
 SYS_NAMESPACE_END
-#endif // HAVE_MYSQL
+#endif // MOOON_HAVE_MYSQL

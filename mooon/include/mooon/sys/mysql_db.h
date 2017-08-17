@@ -22,7 +22,7 @@
 #include "mooon/utils/object.h"
 #include <stdarg.h>
 
-#if HAVE_MYSQL==1
+#if MOOON_HAVE_MYSQL==1
 SYS_NAMESPACE_BEGIN
 
 /**
@@ -86,5 +86,5 @@ private:
 };
 
 SYS_NAMESPACE_END
-#endif // HAVE_MYSQL
+#endif // MOOON_HAVE_MYSQL
 #endif // MOOON_SYS_MYSQL_DB_H

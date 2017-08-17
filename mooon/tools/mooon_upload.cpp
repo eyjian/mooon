@@ -82,7 +82,7 @@ inline std::ostream& operator <<(std::ostream& out, const struct ResultInfo& res
 // 可环境变量P替代参数“-p”
 int main(int argc, char* argv[])
 {
-#if HAVE_LIBSSH2 == 1
+#if MOOON_HAVE_LIBSSH2 == 1
     // 解析命令行参数
     std::string errmsg;
     if (!mooon::utils::parse_arguments(argc, argv, &errmsg))
@@ -270,7 +270,7 @@ int main(int argc, char* argv[])
     std::cout << "SUCCESS: " << num_success << ", FAILURE: " << num_failure << std::endl;
 #else
     fprintf(stderr, "NOT IMPLEMENT! please install libssh2 (https://www.libssh2.org/) into /usr/local/libssh2 and recompile.\n");
-#endif // HAVE_LIBSSH2 == 1
+#endif // MOOON_HAVE_LIBSSH2 == 1
 
     return 0;
 }

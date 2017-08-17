@@ -2,7 +2,7 @@
 #include "sys/curl_wrapper.h"
 #include "utils/string_utils.h"
 
-#if HAVE_CURL==1
+#if MOOON_HAVE_CURL==1
 #include <curl/curl.h>
 SYS_NAMESPACE_BEGIN
 
@@ -461,4 +461,4 @@ extern "C" int main(int argc, char* argv[])
 #endif
 
 SYS_NAMESPACE_END
-#endif // HAVE_CURL
+#endif // MOOON_HAVE_CURL

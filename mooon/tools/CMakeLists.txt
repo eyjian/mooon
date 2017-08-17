@@ -15,7 +15,7 @@ target_link_libraries(md5 libmooon_utils.a)
 add_executable(disk_benchmark disk_benchmark.cpp)
 target_link_libraries(disk_benchmark libmooon_sys.a libmooon_utils.a)
 
-if (HAVE_LIBSSH2)
+if (MOOON_HAVE_LIBSSH2)
 	# 远程命令工具
 	add_executable(mooon_ssh mooon_ssh.cpp)
 	target_link_libraries(mooon_ssh libmooon_net.a libmooon_sys.a libmooon_utils.a libssh2.a libcrypto.a)
@@ -36,7 +36,7 @@ if (HAVE_LIBSSH2)
 endif ()
 
 # r3c_stress
-if (HAVE_R3C)
+if (MOOON_HAVE_R3C)
     add_executable(r3c_stress r3c_stress.cpp)
     target_link_libraries(r3c_stress libmooon_sys.a libmooon_utils.a libr3c.a libhiredis.a)
     
@@ -48,7 +48,7 @@ if (HAVE_R3C)
 endif ()
 
 # hbase_stress
-if (HAVE_THRIFT)
+if (MOOON_HAVE_THRIFT)
     exec_program(${THRIFT_HOME}/bin/thrift ARGS --gen cpp -r -out ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/hbase.thrift)
     exec_program(rm ARGS ${CMAKE_CURRENT_SOURCE_DIR}/THBaseService_server.skeleton.cpp)
 
@@ -63,7 +63,7 @@ if (HAVE_THRIFT)
 endif ()
 
 # mysql_escape_test
-if (HAVE_MYSQL)    
+if (MOOON_HAVE_MYSQL)    
     add_executable(mysql_escape_test mysql_escape_test.cpp)
     target_link_libraries(mysql_escape_test libmooon_sys.a libmooon_utils.a libmysqlclient.a)
     

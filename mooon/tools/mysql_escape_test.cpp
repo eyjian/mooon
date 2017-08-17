@@ -16,10 +16,10 @@
  *
  * Author: JianYi, eyjian@qq.com or eyjian@gmail.com
  */
-#if HAVE_MYSQL==1
+#if MOOON_HAVE_MYSQL==1
 #include <mysql/mysql.h>
 #include <mooon/sys/mysql_db.h>
-#endif // HAVE_MYSQL
+#endif // MOOON_HAVE_MYSQL
 #include <mooon/utils/tokener.h>
 
 static void usage()
@@ -30,7 +30,7 @@ static void usage()
 
 static std::string escape_string(MYSQL* mysql, const std::string& src)
 {
-#if HAVE_MYSQL==1
+#if MOOON_HAVE_MYSQL==1
 #if MYSQL_VERSION_ID >= 50706
     unsigned long n = 0;
     std::string from = src;
@@ -77,7 +77,7 @@ static std::string escape_string(MYSQL* mysql, const std::string& src)
 
     return to;
 #endif // MYSQL_VERSION_ID
-#endif // HAVE_MYSQL
+#endif // MOOON_HAVE_MYSQL
 
     return src;
 }
@@ -89,7 +89,7 @@ static std::string escape_string(MYSQL* mysql, const std::string& src)
 // mysql_escape_test 'root@127.0.0.1' 'SELECT Host,User FROM mysql.user WHERE User=root'
 int main(int argc, char* argv[])
 {
-#if HAVE_MYSQL==1
+#if MOOON_HAVE_MYSQL==1
     printf("MYSQL_SERVER_VERSION: %s\n", MYSQL_SERVER_VERSION);
 
     if ((argc != 3) && (argc != 4))
@@ -148,6 +148,6 @@ int main(int argc, char* argv[])
         fprintf(stderr, "%s\n", ex.str().c_str());
         exit(1);
     }
-#endif // HAVE_MYSQL
+#endif // MOOON_HAVE_MYSQL
     return 0;
 }
