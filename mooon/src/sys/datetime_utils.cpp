@@ -797,7 +797,7 @@ int CDatetimeUtils::get_week_number(const struct tm* tm)
     int* minute = NULL;
     int* second = NULL;
     int week = 0;
-    get_datetime_number(tm, year, month, day, hour, minute, NULL, &week);
+    get_datetime_number(tm, year, month, day, hour, minute, second, &week);
     return week;
 }
 
