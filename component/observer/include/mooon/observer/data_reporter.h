@@ -35,7 +35,7 @@ public:
     virtual ~IDataReporter() {}
 
     /** 上报或记录日志 */
-	virtual void report(const char* format, ...) __attribute__((format(printf, 2, 3))) {}
+    virtual void report(const char* format, ...) __attribute__((format(printf, 2, 3))) {}
 
 	/** 上报或记录日志 */
     virtual void report(const void* data, uint32_t data_size) {}
