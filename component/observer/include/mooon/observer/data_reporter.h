@@ -35,7 +35,7 @@ public:
     virtual ~IDataReporter() {}
 
     /** 上报或记录日志 */
-	virtual void report(const char* format, ...) {}
+	virtual void report(const char* format, ...) __attribute__((format(printf, 2, 3))) {}
 
 	/** 上报或记录日志 */
     virtual void report(const void* data, uint32_t data_size) {}
@@ -54,7 +54,7 @@ public:
     }
 
 private:
-    virtual void report(const char* format, ...)
+    virtual void report(const char* format, ...) __attribute__((format(printf, 2, 3)))
     {
         va_list ap;
         utils::ScopedArray<char> line(new char[_line_length+1]);
