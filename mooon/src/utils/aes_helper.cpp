@@ -18,16 +18,16 @@
  * Author: JianYi, eyjian@qq.com or eyjian@gmail.com
  */
 #include "utils/aes_helper.h"
-#if HAVE_OPENSSL == 1
+#if MOOON_HAVE_OPENSSL == 1
 #   include <openssl/aes.h>
-#endif // HAVE_OPENSSL
+#endif // MOOON_HAVE_OPENSSL
 UTILS_NAMESPACE_BEGIN
 
-#if HAVE_OPENSSL == 1
+#if MOOON_HAVE_OPENSSL == 1
 int CAESHelper::aes_block_size = AES_BLOCK_SIZE; // 16
 #else
 int CAESHelper::aes_block_size = 0;
-#endif // HAVE_OPENSSL
+#endif // MOOON_HAVE_OPENSSL
 
 CAESHelper::CAESHelper(const std::string& key)
 {
@@ -38,15 +38,15 @@ CAESHelper::CAESHelper(const std::string& key)
 
 CAESHelper::~CAESHelper()
 {
-#if HAVE_OPENSSL == 1
+#if MOOON_HAVE_OPENSSL == 1
     delete (AES_KEY*)_encrypt_key;
     delete (AES_KEY*)_decrypt_key;
-#endif // HAVE_OPENSSL
+#endif // MOOON_HAVE_OPENSSL
 }
 
 void CAESHelper::encrypt(const std::string& in, std::string* out)
 {
-#if HAVE_OPENSSL == 1
+#if MOOON_HAVE_OPENSSL == 1
     if (NULL == _encrypt_key)
     {
         _encrypt_key = new AES_KEY;
@@ -54,12 +54,12 @@ void CAESHelper::encrypt(const std::string& in, std::string* out)
     }
 
     aes(true, in, out, _encrypt_key);
-#endif // HAVE_OPENSSL
+#endif // MOOON_HAVE_OPENSSL
 }
 
 void CAESHelper::decrypt(const std::string& in, std::string* out)
 {
-#if HAVE_OPENSSL == 1
+#if MOOON_HAVE_OPENSSL == 1
     if (NULL == _decrypt_key)
     {
         _decrypt_key = new AES_KEY;
@@ -67,12 +67,12 @@ void CAESHelper::decrypt(const std::string& in, std::string* out)
     }
 
     aes(false, in, out, _decrypt_key);
-#endif // HAVE_OPENSSL
+#endif // MOOON_HAVE_OPENSSL
 }
 
 void CAESHelper::aes(bool flag, const std::string& in, std::string* out, void* aes_key)
 {
-#if HAVE_OPENSSL == 1
+#if MOOON_HAVE_OPENSSL == 1
     AES_KEY* aes_key_ = (AES_KEY*)aes_key;
 
     std::string in_tmp = in;
@@ -100,7 +100,7 @@ void CAESHelper::aes(bool flag, const std::string& in, std::string* out, void* a
     }
 #else
     *out = '\0'; // 需要加上这一句，不然难区分HAVE_OPENSSL值是否为1或不为1的情况
-#endif // HAVE_OPENSSL
+#endif // MOOON_HAVE_OPENSSL
 }
 
 UTILS_NAMESPACE_END
