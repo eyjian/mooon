@@ -164,6 +164,7 @@ void move_thread_proc(uint8_t i)
             if (!src_redis.rpop(src_key, &value))
             {
                 mooon::sys::CUtils::millisleep(interval);
+                continue;
             }
         }
         catch (r3c::CRedisException& ex)
