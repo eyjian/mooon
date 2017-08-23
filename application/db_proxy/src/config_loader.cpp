@@ -6,11 +6,15 @@
 #include <mooon/net/utils.h>
 #include <mooon/sys/file_utils.h>
 #include <mooon/sys/mysql_db.h>
+#include <mooon/utils/args_parser.h>
 #include <mooon/utils/md5_helper.h>
 #include <mooon/utils/string_utils.h>
 #include <set>
 #include <sys/inotify.h> // 一些低版本内核没有实现
 #include <vector>
+
+STRING_ARG_DECLARE(conf);
+
 namespace mooon { namespace db_proxy {
 
 // 线程级DB连接
@@ -84,13 +88,17 @@ SINGLETON_IMPLEMENT(CConfigLoader);
 
 std::string CConfigLoader::get_filepath()
 {
-    std::string program_path = sys::CUtils::get_program_path();
-    std::string filepath = program_path + "/../conf/sql.json";
-
-    if (access(filepath.c_str(), F_OK) != 0)
+    std::string filepath = mooon::argument::conf->value();
+    if (filepath.empty())
     {
-        MYLOG_DETAIL("%s not exist\n", filepath.c_str());
-        filepath = program_path + "/sql.json";
+        const std::string program_path = sys::CUtils::get_program_path();
+        filepath = program_path + "/../conf/sql.json";
+
+        if (access(filepath.c_str(), F_OK) != 0)
+        {
+            MYLOG_DETAIL("%s not exist\n", filepath.c_str());
+            filepath = program_path + "/sql.json";
+        }
     }
 
     return filepath;

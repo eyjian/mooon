@@ -61,6 +61,9 @@ INTEGER_ARG_DEFINE(uint16_t, report_frequency_seconds, 0, 0, 3600, "frequency se
 // 是否启动dbprocess
 INTEGER_ARG_DEFINE(uint8_t, dbprocess ,1, 0, 1, "whether to start the db process");
 
+// 配置文件，如果不指定则使用默认的
+STRING_ARG_DEFINE(conf, "", "the configuration file, e.g., --conf=/tmp/sql.json");
+
 class CMainHelper: public mooon::sys::IMainHelper
 {
 public:
