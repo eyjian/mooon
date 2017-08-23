@@ -40,9 +40,12 @@ if (MOOON_HAVE_R3C)
     add_executable(r3c_stress r3c_stress.cpp)
     target_link_libraries(r3c_stress libmooon_sys.a libmooon_utils.a libr3c.a libhiredis.a)
     
+    add_executable(redis_queue_mover redis_queue_mover.cpp)
+    target_link_libraries(redis_queue_mover libmooon_sys.a libmooon_utils.a libr3c.a libhiredis.a)
+    
     # CMAKE_INSTALL_PREFIX
     install(
-            TARGETS r3c_stress
+            TARGETS r3c_stress redis_queue_mover
             DESTINATION bin
            )    
 endif ()
