@@ -14,6 +14,19 @@
 # 4.不管是监控脚本还是被监控进程，总是只针对属于当前用户下的进程
 #
 # 如果本脚本手工运行正常，但在crontab中运行不正常，则可考虑检查下ps等命令是否可在crontab中正常运行
+#
+#
+# 如何监控脚本？
+# 不同环境可能存在差异，需要具体测试，下面是一个示例，但不保证所有环境都是如此。
+# 假设有一需要监控脚本：/home/zhangsan/bin/mem.sh
+# 则crontab可配置为：
+# * * * * * /usr/local/bin/process_monitor.sh "mem.sh" "/home/zhangsan/bin/mem.sh &"
+#
+# 下面的用法可能导致监控失效，mem.sh被反复大量拉起：
+# * * * * * /usr/local/bin/process_monitor.sh "/home/zhangsan/bin/mem.sh" "/home/zhangsan/bin/mem.sh &"
+#
+# 当然如果不以“&”的后台方式运行也是可以的，但不推荐这样，因为这阻塞了process_monitor.sh，
+# 实际相当于process_monitor.sh直接在运行。
 
 # 实际中，遇到脚本在crontab中运行时，找不到ls和ps等命令
 # 原来是有些环境ls和ps位于/usr/bin目录下，而不是常规的/bin目录
