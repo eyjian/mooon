@@ -15,14 +15,14 @@
 #
 # 如果本脚本手工运行正常，但在crontab中运行不正常，则可考虑检查下ps等命令是否可在crontab中正常运行
 #
-#
 # 如何监控脚本？
-# 不同环境可能存在差异，需要具体测试，下面是一个示例，但不保证所有环境都是如此。
+# 不同环境可能存在差异，需要具体测试，下面是一个示例，但不同环境可能存在差异。
 # 假设有一需要监控脚本：/home/zhangsan/bin/mem.sh
 # 则crontab可配置为：
 # * * * * * /usr/local/bin/process_monitor.sh "mem.sh" "/home/zhangsan/bin/mem.sh &"
 #
-# 下面的用法可能导致监控失效，mem.sh被反复大量拉起：
+# 下面带路径的用法可能导致监控失效，mem.sh被反复大量拉起，
+# 而监控对象非脚本时，则需要带上路径，这是监控脚本和程序的不同之处：
 # * * * * * /usr/local/bin/process_monitor.sh "/home/zhangsan/bin/mem.sh" "/home/zhangsan/bin/mem.sh &"
 #
 # 当然如果不以“&”的后台方式运行也是可以的，但不推荐这样，因为这阻塞了process_monitor.sh，
@@ -132,13 +132,18 @@ while true; do
             # 执行重启脚本，要求这个脚本能够将指定的进程拉起来
             log "\033[0;32;34m[`date +'%Y-%m-%d %H:%M:%S'`]restart \"$process_cmdline\"\033[m\n"
             sh -c "$restart_script" >> $log_filepath 2>&1 # 注意一定要以“sh -c”方式执行
+			
+			# sleep时间得长一点，原因是启动可能没那么快，以防止启动多个进程
+			# 在某些环境遇到sleep无效，正常sleep后“$?”值为0，则异常时变成“141”，
+			# 这个是因为收到了信号13，可以使用“trap '' SIGPIPE”忽略SIGPIPE。
+			sleep $start_seconds
+		else
+			sleep $monitor_interval
         fi
+	else
+		sleep $monitor_interval
     fi
 
     active=1
-    # sleep时间得长一点，原因是启动可能没那么快，以防止启动多个进程
-    # 在某些环境遇到sleep无效，正常sleep后“$?”值为0，则异常时变成“141”，
-    # 这个是因为收到了信号13，可以使用“trap '' SIGPIPE”忽略SIGPIPE。
-    sleep $start_seconds
 done
 exit 0
