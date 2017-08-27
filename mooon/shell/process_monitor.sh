@@ -27,6 +27,14 @@
 #
 # 当然如果不以“&”的后台方式运行也是可以的，但不推荐这样，因为这阻塞了process_monitor.sh，
 # 实际相当于process_monitor.sh直接在运行。
+#
+# 如果不同路径下，有相同名称的脚本，则需要借助参数进行区分，如：
+# * * * * * /usr/local/bin/process_monitor.sh "mem.sh eth1" "/home/wangwu/bin/mem.sh eth1 &"
+# * * * * * /usr/local/bin/process_monitor.sh "mem.sh eth0" "/home/zhangsan/bin/mem.sh eth0 &"
+#
+# 而程序则可直接路径区分，如（mem为一可执行程序，非脚本文件）：
+# * * * * * /usr/local/bin/process_monitor.sh "/home/wangwu/bin/mem" "/home/wangwu/bin/mem eth1 &"
+# * * * * * /usr/local/bin/process_monitor.sh "/home/zhangsan/bin/mem" "/home/zhangsan/bin/mem eth0 &"
 
 # 实际中，遇到脚本在crontab中运行时，找不到ls和ps等命令
 # 原来是有些环境ls和ps位于/usr/bin目录下，而不是常规的/bin目录
