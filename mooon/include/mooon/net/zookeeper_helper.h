@@ -26,12 +26,12 @@
 #include <mooon/utils/exception.h>
 #include <mooon/utils/string_utils.h>
 
-#if HAVE_ZOOKEEPER == 1
+#if MOOON_HAVE_ZOOKEEPER == 1
 #include <zookeeper/zookeeper.h>
-#endif // HAVE_ZOOKEEPER
+#endif // MOOON_HAVE_ZOOKEEPER
 
 NET_NAMESPACE_BEGIN
-#if HAVE_ZOOKEEPER == 1
+#if MOOON_HAVE_ZOOKEEPER == 1
 
 // 默认zookeeper日志输出到stderr，
 // 可以调用zoo_set_log_stream(FILE*)设置输出到文件中
@@ -546,6 +546,6 @@ inline void CZookeeperHelper::zookeeper_event(int type, int state, const char *p
     this->on_zookeeper_event(type, state, path);
 }
 
-#endif // HAVE_ZOOKEEPER == 1
+#endif // MOOON_HAVE_ZOOKEEPER == 1
 NET_NAMESPACE_END
 #endif // MOOON_NET_ZOOKEEPER_HELPER_H
