@@ -32,7 +32,7 @@ enum
 {
     LOG_LINE_SIZE_MIN              = 256,        /** 日志行最小长度 */
     LOG_LINE_SIZE_MAX              = 32768,      /** 日志行最大长度(32K) ，最大不能超过64K，因为使用2字节无符号整数存储的 */
-    DEFAULT_LOG_FILE_SIZE          = 314572800,  /** 默认的单个日志文件大小(300MB) */
+    DEFAULT_LOG_FILE_SIZE          = 524288000,  /** 默认的单个日志文件大小(500MB) */
     DEFAULT_LOG_FILE_BACKUP_NUMBER = 10          /** 默认的日志文件备份个数 */
 };
 
