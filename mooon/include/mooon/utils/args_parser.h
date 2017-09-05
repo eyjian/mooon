@@ -28,7 +28,7 @@
 //
 // STRING_ARG_DEFINE(ip, "127.0.0.1", "listen IP address");
 // INTEGER_ARG_DEFINE(uint16_t, port, 2015, 1000, 5000, "listen port");
-// DATE_STRING_ARG_DEFINE(startdate, "2017-09-05", "start date, format: YYYY-MM-DD");
+// DATE_STRING_ARG_DEFINE(startdate, "2017-09-05", "start date, format: YYYY-MM-DD", true);
 //
 // int main(int argc, char* argv[])
 // {
@@ -67,29 +67,40 @@
     }}
 
 // 日期格式的参数定义，要求值格式为：YYYY-MM-DD
-#define DATE_STRING_ARG_DEFINE(param_name, default_value, help_string) \
+// enable_empty 是否允许空字符串值，比如：--startdate=""，如果enable_empty为true则允许，为false则不允许
+#define DATE_STRING_ARG_DEFINE(param_name, default_value, help_string, enable_empty) \
     namespace mooon { namespace argument \
     { \
         utils::CDateStringArgument* param_name = \
             new utils::CDateStringArgument( \
-                #param_name, default_value, help_string); \
+                #param_name, default_value, help_string, enable_empty); \
     }}
 
 // 时间格式的参数定义，要求值格式为：hh:mm:ss
-#define TIME_STRING_ARG_DEFINE(param_name, default_value, help_string) \
+#define TIME_STRING_ARG_DEFINE(param_name, default_value, help_string, enable_empty) \
     namespace mooon { namespace argument \
     { \
         utils::CTimeStringArgument* param_name = \
             new utils::CTimeStringArgument( \
-                #param_name, default_value, help_string); \
+                #param_name, default_value, help_string, enable_empty); \
     }}
 
 // 日期时间格式的参数定义，要求值格式为：YYYY-MM-DD hh:mm:ss
-#define DATETIME_STRING_ARG_DEFINE(param_name, default_value, help_string) \
+#define DATETIME_STRING_ARG_DEFINE(param_name, default_value, help_string, enable_empty) \
     namespace mooon { namespace argument \
     { \
         utils::CDatetimeStringArgument* param_name = \
             new utils::CDatetimeStringArgument( \
+                #param_name, default_value, help_string, enable_empty); \
+    }}
+
+// 布尔类型参数定义，值只能为false或true
+// 注意default_value值必须为false或true
+#define BOOL_STRING_ARG_DEFINE(param_name, default_value, help_string) \
+    namespace mooon { namespace argument \
+    { \
+        utils::CBoolStringArgument* param_name = \
+            new utils::CBoolStringArgument( \
                 #param_name, default_value, help_string); \
     }}
 
@@ -174,6 +185,14 @@
         extern utils::CDatetimeStringArgument* param_name; \
     }}
 
+// 注意不用要在其它namespace内调用
+// 整数类型参数声明（供非main()函数所在文件中调用）
+#define BOOL_STRING_ARG_DECLARE(param_name) \
+    namespace mooon { namespace argument /** 保证不污染全局空间 */ \
+    { \
+        extern utils::CBoolStringArgument* param_name; \
+    }}
+
 ////////////////////////////////////////////////////////////////////////////////
 UTILS_NAMESPACE_BEGIN
 
@@ -192,6 +211,8 @@ public:
     virtual ~CArgumentBase() {}
     virtual bool set_value(const std::string& new_value, std::string* errmsg) = 0;
     virtual std::string usage_string() const { return std::string(""); }
+    virtual bool is_true() const { return true; }
+    virtual bool is_false() const { return false; }
 
 public:
     const std::string& name() const
@@ -236,8 +257,8 @@ private:
 class CStringArgument: public CArgumentBase
 {
 public:
-    CStringArgument(const std::string& name, const std::string& default_value, const std::string& help_string)
-        : CArgumentBase(name, help_string), _default_value(default_value), _value(default_value)
+    CStringArgument(const std::string& name, const std::string& default_value, const std::string& help_string, bool enable_empty=true)
+        : CArgumentBase(name, help_string), _enable_empty(enable_empty), _default_value(default_value), _value(default_value)
     {
         CArgumentContainer::get_singleton()->add_argument(this);
     }
@@ -262,7 +283,22 @@ public:
         return _value.c_str();
     }
 
+    bool enable_empty() const
+    {
+        return _enable_empty;
+    }
+
 public:
+    virtual bool is_true() const
+    {
+        return !_value.empty();
+    }
+
+    virtual bool is_false() const
+    {
+        return _value.empty();
+    }
+
     virtual bool set_value(const std::string& new_value, std::string* errmsg)
     {
         _value = new_value;
@@ -282,6 +318,29 @@ public:
     }
 
 protected:
+    bool handle_empty_value(std::string* errmsg) const
+    {
+        if (enable_empty())
+        {
+            return true;
+        }
+        else
+        {
+            if (name().size() < 2)
+            {
+                *errmsg = CStringUtils::format_string("parameter[-%s] not set\n", name().c_str());
+            }
+            else
+            {
+                *errmsg = CStringUtils::format_string("parameter[--%s] not set\n", name().c_str());
+            }
+
+            return false;
+        }
+    }
+
+protected:
+    bool _enable_empty;
     std::string _default_value;
     std::string _value;
 };
@@ -290,8 +349,8 @@ protected:
 class CDateStringArgument: public CStringArgument
 {
 public:
-    CDateStringArgument(const std::string& name, const std::string& default_value, const std::string& help_string)
-        : CStringArgument(name, default_value, help_string)
+    CDateStringArgument(const std::string& name, const std::string& default_value, const std::string& help_string, bool enable_empty)
+        : CStringArgument(name, default_value, help_string, enable_empty)
     {
         CArgumentContainer::get_singleton()->add_argument(this);
     }
@@ -300,7 +359,7 @@ public:
     {
         if (new_value.empty())
         {
-            return true;
+            return handle_empty_value(errmsg);
         }
         if (new_value.size() != sizeof("YYYY-MM-DD")-1)
         {
@@ -363,8 +422,8 @@ public:
 class CTimeStringArgument: public CStringArgument
 {
 public:
-    CTimeStringArgument(const std::string& name, const std::string& default_value, const std::string& help_string)
-        : CStringArgument(name, default_value, help_string)
+    CTimeStringArgument(const std::string& name, const std::string& default_value, const std::string& help_string, bool enable_empty)
+        : CStringArgument(name, default_value, help_string, enable_empty)
     {
         CArgumentContainer::get_singleton()->add_argument(this);
     }
@@ -373,7 +432,7 @@ public:
     {
         if (new_value.empty())
         {
-            return true;
+            return handle_empty_value(errmsg);
         }
         if (new_value.size() != sizeof("hh:mm:ss")-1)
         {
@@ -431,8 +490,8 @@ public:
 class CDatetimeStringArgument: public CStringArgument
 {
 public:
-    CDatetimeStringArgument(const std::string& name, const std::string& default_value, const std::string& help_string)
-        : CStringArgument(name, default_value, help_string)
+    CDatetimeStringArgument(const std::string& name, const std::string& default_value, const std::string& help_string, bool enable_empty)
+        : CStringArgument(name, default_value, help_string, enable_empty)
     {
         CArgumentContainer::get_singleton()->add_argument(this);
     }
@@ -441,7 +500,7 @@ public:
     {
         if (new_value.empty())
         {
-            return true;
+            return handle_empty_value(errmsg);
         }
         if (new_value.size() != sizeof("YYYY-MM-DD hh:mm:ss")-1)
         {
@@ -516,6 +575,50 @@ public:
     }
 };
 
+// 值取值只能为false或true
+class CBoolStringArgument: public CStringArgument
+{
+public:
+    CBoolStringArgument(const std::string& name, const std::string& default_value, const std::string& help_string)
+        : CStringArgument(name, default_value, help_string, false), _bool_value(false)
+    {
+        CArgumentContainer::get_singleton()->add_argument(this);
+    }
+
+    virtual bool is_true() const
+    {
+        return _bool_value;
+    }
+
+    virtual bool is_false() const
+    {
+        return _bool_value;
+    }
+
+    virtual bool set_value(const std::string& new_value, std::string* errmsg)
+    {
+        if (new_value.empty())
+        {
+            return handle_empty_value(errmsg);
+        }
+        if ((new_value != "false") && (new_value != "true"))
+        {
+            *errmsg = CStringUtils::format_string("invalid value (valid: true or false): %s", new_value.c_str());
+            return false;
+        }
+
+        _value = new_value;
+        if (new_value == "true")
+            _bool_value = true;
+        else
+            _bool_value = false;
+        return true;
+    }
+
+private:
+    bool _bool_value;
+};
+
 template <typename IntType>
 class CIntArgument: public CArgumentBase
 {
@@ -553,6 +656,16 @@ public:
     }
 
 public:
+    virtual bool is_true() const
+    {
+        return _value != 0;
+    }
+
+    virtual bool is_false() const
+    {
+        return 0 == _value;
+    }
+
     virtual bool set_value(const std::string& new_value, std::string* errmsg)
     {
         IntType value = 0;
@@ -646,6 +759,16 @@ public:
     }
 
 public:
+    virtual bool is_true() const
+    {
+        return _value != 0.0;
+    }
+
+    virtual bool is_false() const
+    {
+        return 0.0 == _value;
+    }
+
     virtual bool set_value(const std::string& new_value, std::string* errmsg)
     {
         double value = 0.0;
