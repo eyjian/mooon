@@ -11,7 +11,7 @@ add_library(mooon_uniq STATIC uniq_id.cpp)
 add_executable(uniq_agent agent.cpp)
 target_link_libraries(uniq_agent libmooon.a)
 
-if (HAVE_MYSQL)
+if (MOOON_HAVE_MYSQL)
 	# uniq_master
 	add_executable(uniq_master master.cpp)
 	target_link_libraries(uniq_master libmooon.a libmysqlclient.a)
@@ -44,7 +44,7 @@ install(
         DESTINATION include/mooon
         PATTERN "uniq_id.h"
        )
-if (HAVE_MYSQL)
+if (MOOON_HAVE_MYSQL)
     install(
             TARGETS uniq_master
             DESTINATION bin

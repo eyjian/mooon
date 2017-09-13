@@ -1,7 +1,7 @@
 # Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 
 # 依赖thrift，必须存在
-if (NOT HAVE_THRIFT)
+if (NOT MOOON_HAVE_THRIFT)
     message("${Yellow}please set `-DTHIRFT_HOME=` value${ColourReset}")
     return ()
 endif ()
@@ -55,7 +55,7 @@ else ()
 endif ()
 
 # DBConnection依赖于SQLite3，虽然db_proxy并未使用SQLite3
-if (HAVE_SQLITE3)
+if (MOOON_HAVE_SQLITE3)
     target_link_libraries(db_proxy libsqlite3.a)
 endif ()
 
