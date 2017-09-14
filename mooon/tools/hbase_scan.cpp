@@ -74,7 +74,10 @@ int main(int argc, char* argv[])
 
     try
     {
-        mooon::sys::g_logger = mooon::sys::create_safe_logger(true);
+        mooon::sys::g_logger = mooon::sys::create_safe_logger("/tmp", "hbase_scan.log");
+        mooon::sys::g_logger->set_backup_number(2);
+        mooon::sys::g_logger->set_single_filesize(1024*1024);
+
         mooon::net::CThriftClientHelper<apache::hadoop::hbase::thrift2::THBaseServiceClient> hbase(mooon::argument::hbase_ip->value(), mooon::argument::hbase_port->value(), mooon::argument::timeout->value()*1000, mooon::argument::timeout->value()*1000, mooon::argument::timeout->value()*1000);
         std::vector<hbase::thrift2::TResult> results;
         hbase::thrift2::TScan scan;
