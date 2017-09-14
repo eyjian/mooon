@@ -33,7 +33,7 @@ STRING_ARG_DEFINE(table, "test", "hbase table name");
 STRING_ARG_DEFINE(family, "cf1", "hbase column family name");
 STRING_ARG_DEFINE(startrow, "", "hbase row key");
 STRING_ARG_DEFINE(stoprow, "", "hbase row key");
-INTEGER_ARG_DEFINE(int, num, 1, 1, 100000, "number of rows to scan");
+INTEGER_ARG_DEFINE(int, num, 1, 1, 100000000, "number of rows to scan");
 INTEGER_ARG_DEFINE(int, timeout, 10, 1, 3600, "timeout seconds of thrift");
 
 using namespace apache::hadoop;
