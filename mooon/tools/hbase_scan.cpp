@@ -109,7 +109,10 @@ int main(int argc, char* argv[])
             hbase->getScannerResults(results, mooon::argument::table->value(), scan, batch);
             for (std::vector<hbase::thrift2::TResult>::size_type row=0; row<results.size(); ++row)
             {
-                ++total;
+                if (0 == ++total%10000)
+                {
+                    MYLOG_INFO("[%" PRId64"] %s\n", total, startrow.c_str());
+                }
 
                 const hbase::thrift2::TResult& result = results[row];
                 startrow = result.row;
