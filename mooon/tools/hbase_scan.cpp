@@ -33,7 +33,8 @@ STRING_ARG_DEFINE(table, "test", "hbase table name");
 STRING_ARG_DEFINE(family, "cf1", "hbase column family name");
 STRING_ARG_DEFINE(startrow, "", "hbase row key");
 STRING_ARG_DEFINE(stoprow, "", "hbase row key");
-INTEGER_ARG_DEFINE(int, num, 1, 1, 100000000, "number of rows to scan");
+INTEGER_ARG_DEFINE(int, batch, 1, 1, 10000, "number of rows to scan");
+INTEGER_ARG_DEFINE(int, num, 1, 1, 1000000000, "number of rows to scan");
 INTEGER_ARG_DEFINE(int, timeout, 10, 1, 3600, "timeout seconds of thrift");
 
 using namespace apache::hadoop;
@@ -74,42 +75,63 @@ int main(int argc, char* argv[])
 
     try
     {
+        const int num = mooon::argument::num->value();
+        const int batch = mooon::argument::batch->value();
         mooon::sys::g_logger = mooon::sys::create_safe_logger("/tmp", "hbase_scan.log");
         mooon::sys::g_logger->set_backup_number(2);
         mooon::sys::g_logger->set_single_filesize(1024*1024);
 
-        mooon::net::CThriftClientHelper<apache::hadoop::hbase::thrift2::THBaseServiceClient> hbase(mooon::argument::hbase_ip->value(), mooon::argument::hbase_port->value(), mooon::argument::timeout->value()*1000, mooon::argument::timeout->value()*1000, mooon::argument::timeout->value()*1000);
-        std::vector<hbase::thrift2::TResult> results;
-        hbase::thrift2::TScan scan;
-
-        hbase.connect();
-        MYLOG_INFO("connect hbase ok\n");
-
-        scan.startRow = mooon::argument::startrow->value();
-        if (!mooon::argument::stoprow->value().empty())
-            scan.stopRow = mooon::argument::stoprow->value();
-
-        hbase->getScannerResults(results, mooon::argument::table->value(), scan, mooon::argument::num->value());
-        for (std::vector<hbase::thrift2::TResult>::size_type row=0; row<results.size(); ++row)
+        // 输出小量时，日志级别自动降为DEBUG，并且自动打开打屏
+        if ((1 == num) && (batch < 10))
         {
-            const hbase::thrift2::TResult& result = results[row];
-            MYLOG_INFO("ROWKEY[%s] =>\n", result.row.c_str());
-            printf("ROWKEY[%s] =>\n", result.row.c_str());
+            mooon::sys::g_logger->set_log_level(mooon::sys::LOG_LEVEL_DEBUG);
+            mooon::sys::g_logger->enable_screen(true);
+        }
 
-            for (std::vector<hbase::thrift2::TColumnValue>::size_type col=0; col<result.columnValues.size(); ++col)
+        int64_t total = 0; // 总的行数
+        const std::string& stoprow = mooon::argument::stoprow->value();
+        std::string startrow = mooon::argument::startrow->value();
+        mooon::net::CThriftClientHelper<apache::hadoop::hbase::thrift2::THBaseServiceClient> hbase(mooon::argument::hbase_ip->value(), mooon::argument::hbase_port->value(), mooon::argument::timeout->value()*1000, mooon::argument::timeout->value()*1000, mooon::argument::timeout->value()*1000);
+        hbase.connect();
+        MYLOG_INFO("connect hbase ok, starting to scan\n");
+
+        for (int i=0; i<num; ++i)
+        {
+            std::vector<hbase::thrift2::TResult> results;
+            hbase::thrift2::TScan scan;
+
+            scan.startRow = startrow;
+            if (!stoprow.empty())
             {
-                const hbase::thrift2::TColumnValue& column = result.columnValues[col];
-                MYLOG_INFO("\tfamily => %s\n", column.family.c_str());
-                MYLOG_INFO("\t\tqualifier => %s\n", column.qualifier.c_str());
-                MYLOG_INFO("\t\t\tvalue => %s\n", column.value.c_str());
-                MYLOG_INFO("\t\t\t\ttimestamp => %" PRId64"\n", column.timestamp);
+                scan.stopRow = stoprow;
+            }
 
-                printf("\tfamily => %s\n", column.family.c_str());
-                printf("\t\tqualifier => %s\n", column.qualifier.c_str());
-                printf("\t\t\tvalue => %s\n", column.value.c_str());
-                printf("\t\t\t\ttimestamp => %" PRId64"\n", column.timestamp);
+            hbase->getScannerResults(results, mooon::argument::table->value(), scan, batch);
+            for (std::vector<hbase::thrift2::TResult>::size_type row=0; row<results.size(); ++row)
+            {
+                ++total;
+
+                const hbase::thrift2::TResult& result = results[row];
+                startrow = result.row;
+                MYLOG_DEBUG("ROWKEY[%s] =>\n", startrow.c_str());
+
+                for (std::vector<hbase::thrift2::TColumnValue>::size_type col=0; col<result.columnValues.size(); ++col)
+                {
+                    const hbase::thrift2::TColumnValue& column = result.columnValues[col];
+                    MYLOG_DEBUG("\tfamily => %s\n", column.family.c_str());
+                    MYLOG_DEBUG("\t\tqualifier => %s\n", column.qualifier.c_str());
+                    MYLOG_DEBUG("\t\t\tvalue => %s\n", column.value.c_str());
+                    MYLOG_DEBUG("\t\t\t\ttimestamp => %" PRId64"\n", column.timestamp);
+                }
+            }
+
+            if (static_cast<int>(results.size()) < batch)
+            {
+                break;
             }
         }
+
+        MYLOG_INFO("[FINISH][%s] number of rows: %" PRId64"\n", startrow.c_str(), total);
     }
     catch (hbase::thrift2::TIOError& ex)
     {
