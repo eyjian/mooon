@@ -94,6 +94,7 @@ int main(int argc, char* argv[])
         {
             const hbase::thrift2::TResult& result = results[row];
             MYLOG_INFO("ROWKEY[%s] =>\n", result.row.c_str());
+            printf("ROWKEY[%s] =>\n", result.row.c_str());
 
             for (std::vector<hbase::thrift2::TColumnValue>::size_type col=0; col<result.columnValues.size(); ++col)
             {
