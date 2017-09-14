@@ -99,6 +99,11 @@ int main(int argc, char* argv[])
                 MYLOG_INFO("\t\tqualifier => %s\n", column.qualifier.c_str());
                 MYLOG_INFO("\t\t\tvalue => %s\n", column.value.c_str());
                 MYLOG_INFO("\t\t\t\ttimestamp => %" PRId64"\n", column.timestamp);
+
+                printf("\tfamily => %s\n", column.family.c_str());
+                printf("\t\tqualifier => %s\n", column.qualifier.c_str());
+                printf("\t\t\tvalue => %s\n", column.value.c_str());
+                printf("\t\t\t\ttimestamp => %" PRId64"\n", column.timestamp);
             }
         }
     }
