@@ -58,9 +58,12 @@ if (MOOON_HAVE_THRIFT)
     add_executable(hbase_stress hbase_stress.cpp THBaseService.cpp hbase_constants.cpp hbase_types.cpp)
     target_link_libraries(hbase_stress libmooon_sys.a libmooon_utils.a libthrift.a)
     
+    add_executable(hbase_scan hbase_scan.cpp THBaseService.cpp hbase_constants.cpp hbase_types.cpp)
+    target_link_libraries(hbase_scan libmooon_sys.a libmooon_utils.a libthrift.a)
+    
     # CMAKE_INSTALL_PREFIX
     install(
-            TARGETS hbase_stress
+            TARGETS hbase_stress hbase_scan
             DESTINATION bin
            )      
 endif ()
