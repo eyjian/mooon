@@ -1,6 +1,9 @@
 #!/bin/sh
-# http://code.google.com/p/mooon
+# https://github.com/eyjian/mooon/blob/master/mooon/shell/log_rotater.sh
 # Writed by yijian on 2012/7/22
+#
+# Linux自带的工具logrotate使用稍复杂，但功能强大
+#
 # 本脚本功能：
 # 1) 实现一个通用的按大小的日志滚动
 # 2) 要求日志文件扩展名为“.log”，否则请稍修改代码
