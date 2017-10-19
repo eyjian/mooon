@@ -116,7 +116,7 @@ log()
 # 以死循环方式，定时检测指定的进程是否存在
 # 一个重要原因是crontab最高频率为1分钟，不满足秒级的监控要求
 while true; do
-    self_count=`ps -C $self_name h -o euser,args| awk 'BEGIN { num=0; } { if (($1==uid || $1==cur_user) && match($0, self_cmdline)) {++num;}} END { printf("%d",num); }' uid=$uid cur_user=$cur_user self_cmdline="$self_cmdline"`
+    self_count=`ps -C $self_name h -o euid,args| awk 'BEGIN { num=0; } { if (($1==uid) && match($0, self_cmdline)) {++num;}} END { printf("%d",num); }' uid=$uid cur_user=$cur_user self_cmdline="$self_cmdline"`
     if test ! -z "$self_count"; then 
         if test $self_count -gt 2; then 
             log "\033[0;32;31m[`date +'%Y-%m-%d %H:%M:%S'`]$0 is running[$self_count/active:$active], current user is $cur_user.\033[m\n"
@@ -131,9 +131,9 @@ while true; do
 
     # 检查被监控的进程是否存在，如果不存在则重启
     if test -z "$process_match"; then
-        process_count=`ps -C $process_name h -o euser,args| awk 'BEGIN { num=0; } { if (($1==uid || $1==cur_user)) {++num;}} END { printf("%d",num); }' uid=$uid cur_user=$cur_user`
+        process_count=`ps -C $process_name h -o euid,args| awk 'BEGIN { num=0; } { if ($1==uid) {++num;}} END { printf("%d",num); }' uid=$uid cur_user=$cur_user`
     else
-        process_count=`ps -C $process_name h -o euser,args| awk 'BEGIN { num=0; } { if (($1==uid || $1==cur_user) && match($0, process_match)) {++num;}} END { printf("%d",num); }' uid=$uid cur_user=$cur_user process_match="$process_match"`
+        process_count=`ps -C $process_name h -o euid,args| awk 'BEGIN { num=0; } { if (($1==uid) && match($0, process_match)) {++num;}} END { printf("%d",num); }' uid=$uid cur_user=$cur_user process_match="$process_match"`
     fi
     if test ! -z "$process_count"; then
         if test $process_count -lt 1; then
