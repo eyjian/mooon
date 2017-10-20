@@ -60,6 +60,13 @@ cur_user=`whoami`    # 执行本监控脚本的用户名
 # 取指定网卡上的IP地址
 #eth=1&&netstat -ie|awk -F'[: ]' 'begin{found=0;} { if (match($0,"eth'"$eth"'")) found=1; else if ((1==found) && match($0,"eth")) found=0; if ((1==found) && match($0,"inet addr:") && match($0,"Bcast:")) print $13; }'
 
+# 依赖命令id取得当前用户的用户ID
+which id >/dev/null 2>&1
+if test $? -ne 0; then
+    printf "\033[1;33mcommand 'id' not exists\033[m\n"
+    exit 1
+fi
+
 # 下面这段脚本，用来阻止多个监控脚本进程出现
 uid=`id -u $cur_user`
 self_name=`basename $0`
