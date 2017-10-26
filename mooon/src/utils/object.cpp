@@ -72,4 +72,9 @@ CObject* CObjectFacotry::create_object(const std::string& type_name) const
     }
 }
 
+bool CObjectFacotry::object_type_exists(const std::string& type_name) const
+{
+    return _object_creator_table.count(type_name) > 0;
+}
+
 UTILS_NAMESPACE_END

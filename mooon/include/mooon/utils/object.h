@@ -114,6 +114,9 @@ public:
     // 根据类型创建一个对象
     CObject* create_object(const std::string& type_name) const;
 
+    // 指定的对象类型是否存在
+    bool object_type_exists(const std::string& type_name) const;
+
 private:
     ObjectCreatorTable _object_creator_table;
 };
