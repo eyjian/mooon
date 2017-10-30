@@ -160,12 +160,12 @@ std::string CDatetimeUtils::extract_year(const std::string& date)
 
 std::string CDatetimeUtils::extract_standard_month(const std::string& date)
 {
-    return date.substr(0, sizeof("YYYY-MM")-1) + std::string("-01 00:00:00");
+    return date.substr(0, sizeof("YYYY-MM")-1) + std::string("-01");
 }
 
 std::string CDatetimeUtils::extract_standard_year(const std::string& date)
 {
-    return date.substr(0, sizeof("YYYY")-1) + std::string("-01-01 00:00:00");
+    return date.substr(0, sizeof("YYYY")-1) + std::string("-01-01");
 }
 
 void CDatetimeUtils::get_current_datetime(char* datetime_buffer, size_t datetime_buffer_size, const char* format)
