@@ -68,6 +68,22 @@ public:
     static void extract_datetime(const char* datetime, std::string* date, std::string* time);
     static void extract_datetime(const std::string& datetime, std::string* date, std::string* time);
 
+    // 不对date做检查，调用者需要保证它的格式以“YYYY-MM”打头
+    // 提取月，返回格式为：YYYY-MM，假设date为2017-10-30，则返回2017-10
+    static std::string extract_month(const std::string& date);
+
+    // 不对date做检查，调用者需要保证它的格式以“YYYY”打头
+    // 提取年，返回格式为：YYYY，假设date为2017-10-30，则返回2017
+    static std::string extract_year(const std::string& date);
+
+    // 不对date做检查，调用者需要保证它的格式以“YYYY-MM”打头
+    // 提取月，返回格式为：YYYY-MM-01，假设date为2017-10-30，则返回2017-10-01
+    static std::string extract_standard_month(const std::string& date);
+
+    // 不对date做检查，调用者需要保证它的格式以“YYYY”打头
+    // 提取年，返回格式为：YYYY-01-01，假设date为2017-10-30，则返回2017-01-01
+    static std::string extract_standard_year(const std::string& date);
+
     /** 得到当前日期和时间，返回格式由参数format决定，默认为: YYYY-MM-DD HH:SS:MM
       * @datetime_buffer: 用来存储当前日期和时间的缓冲区
       * @datetime_buffer_size: datetime_buffer的字节大小，不应当于小“YYYY-MM-DD HH:SS:MM”
