@@ -105,6 +105,7 @@ CCurlWrapper::CCurlWrapper(int data_timeout_seconds, int connect_timeout_seconds
     CURL* curl = curl_easy_init();
     if (NULL == curl)
         THROW_EXCEPTION("curl_easy_init failed", -1);
+    _head_list = NULL;
 
     try
     {
@@ -124,15 +125,29 @@ CCurlWrapper::~CCurlWrapper() throw ()
     CURL* curl = (CURL*)_curl;
     curl_easy_cleanup(curl);
     _curl = NULL;
+
+    curl_slist* head_list = static_cast<curl_slist*>(_head_list);
+    if (_head_list != NULL)
+    {
+        curl_slist_free_all(head_list);
+        _head_list = NULL;
+    }
 }
 
 void CCurlWrapper::reset() throw (utils::CException)
 {
     CURLcode errcode;
     CURL* curl = (CURL*)_curl;
+    curl_slist* head_list = static_cast<curl_slist*>(_head_list);
     
     // 重置
     curl_easy_reset(curl);
+    if (_head_list != NULL)
+    {
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, NULL);
+        curl_slist_free_all(head_list);
+        _head_list = NULL;
+    }
 
     // CURLOPT_NOSIGNAL
     // If onoff is 1, libcurl will not use any functions that install signal handlers or any functions that cause signals to be sent to the process.
@@ -179,6 +194,21 @@ void CCurlWrapper::reset() throw (utils::CException)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 }
 
+bool CCurlWrapper::add_request_header(const std::string& name_value_pair)
+{
+    curl_slist* head_list = static_cast<curl_slist*>(_head_list);
+
+    _head_list = curl_slist_append(head_list, name_value_pair.c_str());
+    if (NULL == _head_list)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
 void CCurlWrapper::http_get(std::string& response_header, std::string& response_body, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
 {
     CURLcode errcode;
@@ -188,6 +218,15 @@ void CCurlWrapper::http_get(std::string& response_header, std::string& response_
     errcode = curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    // CURLOPT_HTTPHEADER
+    if (_head_list != NULL)
+    {
+        curl_slist* head_list = static_cast<curl_slist*>(_head_list);
+        errcode = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, head_list);
+        if (errcode != CURLE_OK)
+            THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+    }
 
     // CURLOPT_HEADERFUNCTION
     errcode = curl_easy_setopt(curl, CURLOPT_HEADERDATA, &response_header);
@@ -260,6 +299,15 @@ void CCurlWrapper::http_post(const std::string& data, std::string& response_head
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
+    // CURLOPT_HTTPHEADER
+    if (_head_list != NULL)
+    {
+        curl_slist* head_list = static_cast<curl_slist*>(_head_list);
+        errcode = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, head_list);
+        if (errcode != CURLE_OK)
+            THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+    }
+
     // CURLOPT_POSTFIELDS
     errcode = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
     if (errcode != CURLE_OK)
@@ -311,6 +359,15 @@ void CCurlWrapper::http_post(const CHttpPostData* http_post_data, std::string& r
     errcode = curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    // CURLOPT_HTTPHEADER
+    if (_head_list != NULL)
+    {
+        curl_slist* head_list = static_cast<curl_slist*>(_head_list);
+        errcode = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, head_list);
+        if (errcode != CURLE_OK)
+            THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+    }
 
     // CURLOPT_HEADERFUNCTION
     errcode = curl_easy_setopt(curl, CURLOPT_HEADERDATA, &response_header);

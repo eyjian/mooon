@@ -55,7 +55,11 @@ public:
     CCurlWrapper(int data_timeout_seconds=2, int connect_timeout_seconds=2, bool nosignal=false) throw (utils::CException);
     ~CCurlWrapper() throw ();
 
+    // 重置操作
     void reset() throw (utils::CException);
+
+    // 添加http请求头名字对
+    bool add_request_header(const std::string& name_value_pair);
 
     // HTTP GET请求
     // response_header 输出参数，存放响应的HTTP头
@@ -79,6 +83,7 @@ public:
 
 private:
     void* _curl;
+    void* _head_list;
     int _data_timeout_seconds;
     int _connect_timeout_seconds;
     bool _nosignal;
