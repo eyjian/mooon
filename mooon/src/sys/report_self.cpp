@@ -156,7 +156,9 @@ bool CReportSelf::init()
 
 void CReportSelf::stop()
 {
-    _stop = false;
+    LockHelper<CLock> lh(_lock);
+    _stop = true;
+    _event.signal();
 }
 
 void CReportSelf::run()
