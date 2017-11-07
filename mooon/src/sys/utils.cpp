@@ -169,20 +169,33 @@ std::string CUtils::get_program_dirpath()
 
 std::string CUtils::get_program_full_cmdline()
 {
+    char* raw_full_cmdline_buf = new char[PATH_MAX];
     char* full_cmdline_buf = new char[PATH_MAX];
-    FILE* fp = fopen("/proc/self/cmdline", "r");
-    if (fp != NULL)
+    char* p_full_cmdline_buf = full_cmdline_buf;
+    const int fd = open("/proc/self/cmdline", O_RDONLY);
+
+    if (fd != -1)
     {
-        if (NULL == fgets(full_cmdline_buf, PATH_MAX-1, fp))
-            *full_cmdline_buf = '\0';
-    }
-    else
-    {
-        *full_cmdline_buf = '\0';
+        const int n = read(fd, raw_full_cmdline_buf, PATH_MAX-1);
+        if (n > -1)
+        {
+            raw_full_cmdline_buf[n] = '\0';
+        }
+
+        for (int i=0; i<n; ++i)
+        {
+            if (isprint(raw_full_cmdline_buf[i]))
+            {
+                *p_full_cmdline_buf = raw_full_cmdline_buf[i];
+                ++p_full_cmdline_buf;
+            }
+        }
+
+        close(fd);
     }
 
     const std::string full_cmdline = full_cmdline_buf;
-    fclose(fp);
+    delete []raw_full_cmdline_buf;
     delete []full_cmdline_buf;
     return full_cmdline;
 }
