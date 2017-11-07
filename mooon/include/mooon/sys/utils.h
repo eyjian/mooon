@@ -50,11 +50,28 @@ public:
     static int get_last_error_code();
 
     /** 得到当前进程号 */
-    static int get_current_process_id();
+    static uint32_t get_current_process_id();
 
-    /** 得到当前进程所属可执行文件所在的绝对路径，结尾符不含反斜杠 */
-    static std::string get_program_path();
+    /** 得到当前用户ID */
+    static uint32_t get_current_userid();
+
+    /** 得到当前用户名 */
+    static std::string get_current_username();
+
+    /** 得到当前进程所属可执行文件所在的全路径，包括文件名部分 */
+    static std::string get_program_fullpath();
+
+    /** 得到当前进程所属可执行文件所在的绝对路径，不包括文件名部分，并且结尾符不含反斜杠 */
+    static std::string get_program_dirpath();
+    static std::string get_program_path(); // 新的代码请使用get_program_dirpath，不要使用get_program_path
     
+    /**
+     * 取得当前进程的整个命令行
+     * 假设运行命令：cat /proc/self/cmdline 1 2 3 4 5，
+     * 那么返回结果将是：cat/proc/self/cmdline12345
+     */
+    static std::string get_program_full_cmdline();
+
     /** 得到与指定fd相对应的文件名，包括路径部分
       * @fd: 文件描述符
       * @return: 文件名，包括路径部分，如果失败则返回空字符串
