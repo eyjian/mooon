@@ -102,7 +102,7 @@ CSafeLogger::CSafeLogger(const char* log_dir, const char* log_filename, uint16_t
         if (_sys_log_enabled)
             syslog(LOG_ERR, "[%s:%d][%u][%" PRIu64"][%s] open failed: %s\n", __FILE__, __LINE__, getpid(), get_current_thread_id(), _log_filepath.c_str(), strerror(errcode));
 
-        THROW_SYSCALL_EXCEPTION(NULL, errcode, "open");
+        THROW_SYSCALL_EXCEPTION(_log_filepath, errcode, "open");
     }
 }
 

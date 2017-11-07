@@ -138,11 +138,11 @@ std::string CUtils::get_program_dirpath()
 {
     const size_t bufsize = PATH_MAX;
     char* buf = new char[bufsize];
-    const int retval = readlink("/proc/self/exe", buf, sizeof(buf)-1);
+    const int n = readlink("/proc/self/exe", buf, bufsize-1);
 
-    if (retval > 0)
+    if (n > 0)
     {
-        buf[retval] = '\0';
+        buf[n] = '\0';
 
 #if 0 // 保留这段废代码，以牢记deleted的存在，但由于这里只取路径部分，所以不关心它的存在
         if (!strcmp(buf+retval-10," (deleted)"))
