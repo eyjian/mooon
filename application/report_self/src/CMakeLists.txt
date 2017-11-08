@@ -25,7 +25,7 @@ target_link_libraries(report_self_example ${CMAKE_CURRENT_SOURCE_DIR}/libmooon_r
 
 # 设置依赖关系
 # report_self_example依赖libreport_self.a
-ADD_DEPENDENCIES(report_self_example report_self)
+ADD_DEPENDENCIES(report_self_example mooon_report_self)
 
 # 安装
 install(
