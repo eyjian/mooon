@@ -8,11 +8,11 @@ DROP TABLE IF EXISTS t_program_deployment;
 CREATE TABLE t_program_deployment (
     f_id BIGINT NOT NULL AUTO_INCREMENT, # 自增ID
     f_md5 VARCHAR(32) NOT NULL PRIMARY KEY, # f_full_cmdline的MD5值
-    f_ip VARCHAR(24) NOT NULL, # 进程所在机器的IP
-    f_user VARCHAR(16) NOT NULL, # 进程的当前系统用户名
+    f_ip VARCHAR(32) NOT NULL, # 进程所在机器的IP
+    f_user VARCHAR(24) NOT NULL, # 进程的当前系统用户名
     f_shortname VARCHAR(64) NOT NULL, # 进程的短名称
     f_dirpath VARCHAR(256) NOT NULL, # 程序所在目录
-    f_full_cmdline VARCHAR(8192) NOT NULL, # 进程的完全命令行
+    f_full_cmdline VARCHAR(2048) NOT NULL, # 进程的完全命令行
     f_firsttime DATETIME NOT NULL, # 最近一次上报时间
     f_lasttime DATETIME NOT NULL, # 最近一次上报时间
     f_interval INT UNSIGNED NOT NULL DEFAULT 0, # 上报间隔，单位为秒
