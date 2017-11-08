@@ -287,7 +287,7 @@ std::string CReportSelfHandler::make_insert_sql(const std::vector<std::string>& 
         const std::string& vsz = utils::CStringUtils::trim(tokens[9]);
         const std::string& rss = utils::CStringUtils::trim(tokens[10]);
         const std::string& firsttime = lasttime;
-        const std::string& full_cmdline_md5_ = utils::CMd5Helper::md5("%s", full_cmdline.c_str());
+        const std::string& full_cmdline_md5_ = utils::CMd5Helper::md5("%s%s%s", ip.c_str(), user.c_str(), full_cmdline.c_str());
 
         // 检查关键字段
         if (full_cmdline_md5_ != full_cmdline_md5)
@@ -351,16 +351,16 @@ std::string CReportSelfHandler::make_update_sql(const std::vector<std::string>& 
         const std::string& pid = utils::CStringUtils::trim(tokens[8]);
         const std::string& vsz = utils::CStringUtils::trim(tokens[9]);
         const std::string& rss = utils::CStringUtils::trim(tokens[10]);
-        const std::string& full_cmdline_md5_ = utils::CMd5Helper::md5("%s", full_cmdline.c_str());
+        const std::string& full_cmdline_md5_ = utils::CMd5Helper::md5("%s%s%s", ip.c_str(), user.c_str(), full_cmdline.c_str());
 
         // 检查关键字段
-        if (full_cmdline_md5_ != full_cmdline_md5)
-        {
-            MYLOG_ERROR("invalid tokens: md5 check error\n");
-        }
-        else if (full_cmdline_md5.empty())
+        if (full_cmdline_md5.empty())
         {
             MYLOG_ERROR("invalid tokens: empty `md5`\n");
+        }
+        else if (full_cmdline_md5_ != full_cmdline_md5)
+        {
+            MYLOG_ERROR("md5 check error: %s => %s\n", full_cmdline_md5_.c_str(), full_cmdline_md5.c_str());
         }
         else if (ip.empty())
         {

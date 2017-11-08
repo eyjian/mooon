@@ -272,7 +272,6 @@ bool CReportSelf::init_info()
     _shortname = sys::CUtils::get_program_short_name();
     _dirpath = sys::CUtils::get_program_dirpath();
     _full_cmdline = sys::CUtils::get_program_full_cmdline();
-    _full_cmdline_md5 = utils::CMd5Helper::md5("%s", _full_cmdline.c_str());
 
     // 取本地IP
     net::string_ip_array_t ip_array;
@@ -282,6 +281,7 @@ bool CReportSelf::init_info()
     if (_ip == "127.0.0.1")
         _ip = "";
 
+    _full_cmdline_md5 = utils::CMd5Helper::md5("%s%s%s", _ip.c_str(), _user.c_str(), _full_cmdline.c_str());
     return !_user.empty() && !_ip.empty() &&
            !_shortname.empty() && !_dirpath.empty() &&
            !_full_cmdline.empty() && !_full_cmdline_md5.empty();
