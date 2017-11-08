@@ -189,6 +189,7 @@ void CMainHelper::on_terminated()
     // 优雅退出
     MYLOG_INFO("will exit by SIGTERM\n");
     _stop = true;
+    _thrift_server.stop();
 }
 
 void CMainHelper::on_child_end(pid_t child_pid, int child_exited_status)

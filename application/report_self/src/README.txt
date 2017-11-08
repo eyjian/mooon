@@ -1,3 +1,6 @@
+ReportSelfServer的结果存储在MySQL表t_program_deployment中，
+在运行之前需要创建好此表，而数据库名等信息通过命令行参数指定。
+
 表名t_program_deployment结构：
 f_md5,f_ip,f_user,f_shortname,f_dirpath,f_full_cmdline,f_lasttime,f_interval,f_pid,f_vsz,f_rss,f_firsttime
 
