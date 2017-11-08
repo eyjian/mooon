@@ -196,6 +196,8 @@ template <class ThriftHandler,
 class CThriftServerHelper
 {
 public:
+    CThriftServerHelper(apache::thrift::server::TServerEventHandler* server_event_handler=NULL);
+
     // 启动rpc服务，请注意该调用是同步阻塞的，所以需放最后调用
     // port thrift服务端的监听端口号
     // num_threads thrift服务端开启的线程数
@@ -235,6 +237,7 @@ private:
     void init(const std::string &ip, uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads, bool set_log_function);
 
 private:
+    boost::shared_ptr<apache::thrift::server::TServerEventHandler> _server_event_handler;
     boost::shared_ptr<ThriftHandler> _handler;
     boost::shared_ptr<apache::thrift::TProcessor> _processor;
     boost::shared_ptr<apache::thrift::protocol::TProtocolFactory> _protocol_factory;
@@ -388,6 +391,12 @@ uint16_t CThriftClientHelper<ThriftClient, Protocol, Transport>::get_port() cons
 
 ////////////////////////////////////////////////////////////////////////////////
 template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
+CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::CThriftServerHelper(apache::thrift::server::TServerEventHandler* server_event_handler)
+{
+    _server_event_handler.reset(server_event_handler);
+}
+
+template <class ThriftHandler, class ServiceProcessor, class ProtocolFactory>
 void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::serve(uint16_t port, uint8_t num_worker_threads, uint8_t num_io_threads, bool set_log_function)
 {
     serve("0.0.0.0", port, num_worker_threads, num_io_threads, set_log_function);
@@ -460,6 +469,7 @@ void CThriftServerHelper<ThriftHandler, ServiceProcessor, ProtocolFactory>::init
 
     apache::thrift::server::TNonblockingServer* server = new apache::thrift::server::TNonblockingServer(_processor, _protocol_factory, port, _thread_manager);
     server->setNumIOThreads(num_io_threads);
+    server->setServerEventHandler(_server_event_handler);
     _server.reset(server);
 
     // 不要调用_server->run()，交给serve()来调用，

@@ -167,36 +167,65 @@ std::string CUtils::get_program_dirpath()
     return dirpath;
 }
 
-std::string CUtils::get_program_full_cmdline()
+int CUtils::get_program_parameters(std::vector<std::string>* parameters, uint32_t pid)
 {
     char* raw_full_cmdline_buf = new char[PATH_MAX];
-    char* full_cmdline_buf = new char[PATH_MAX];
-    char* p_full_cmdline_buf = full_cmdline_buf;
-    const int fd = open("/proc/self/cmdline", O_RDONLY);
 
+    std::string cmdline_filepath;
+    if (0 == pid)
+        cmdline_filepath = "/proc/self/cmdline";
+    else
+        cmdline_filepath = utils::CStringUtils::format_string("/proc/%u/cmdline", pid);
+
+    const int fd = open(cmdline_filepath.c_str(), O_RDONLY);
     if (fd != -1)
     {
         const int n = read(fd, raw_full_cmdline_buf, PATH_MAX-1);
-        if (n > -1)
+        if (n != -1)
         {
             raw_full_cmdline_buf[n] = '\0';
-        }
 
-        for (int i=0; i<n; ++i)
-        {
-            if (isprint(raw_full_cmdline_buf[i]))
+            std::string parameter;
+            for (int i=0; i<n; ++i)
             {
-                *p_full_cmdline_buf = raw_full_cmdline_buf[i];
-                ++p_full_cmdline_buf;
+                if ('\0' == raw_full_cmdline_buf[i])
+                {
+                    parameters->push_back(parameter);
+                    parameter.clear();
+                }
+                else
+                {
+                    parameter.push_back(raw_full_cmdline_buf[i]);
+                }
             }
         }
 
         close(fd);
     }
 
-    const std::string full_cmdline = full_cmdline_buf;
     delete []raw_full_cmdline_buf;
-    delete []full_cmdline_buf;
+    return static_cast<int>(parameters->size());
+}
+
+std::string CUtils::get_program_full_cmdline(char separator, uint32_t pid)
+{
+    std::string full_cmdline;
+    std::vector<std::string> parameters;
+
+    const int n = get_program_parameters(&parameters, pid);
+    for (int i=0; i<n; ++i)
+    {
+        if (full_cmdline.empty())
+        {
+            full_cmdline = parameters[i];
+        }
+        else
+        {
+            full_cmdline.push_back(separator);
+            full_cmdline.append(parameters[i]);
+        }
+    }
+
     return full_cmdline;
 }
 

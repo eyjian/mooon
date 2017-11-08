@@ -66,11 +66,23 @@ public:
     static std::string get_program_path(); // 新的代码请使用get_program_dirpath，不要使用get_program_path
     
     /**
-     * 取得当前进程的整个命令行
+     * 取得指定进程的命令行参数
+     * pid 如果为0表示取当前进程的
+     * parameters 存储命令行参数
+     *
+     * 返回命令行参数个数
+     */
+    static int get_program_parameters(std::vector<std::string>* parameters, uint32_t pid=0);
+
+    /**
+     * 取得指定进程的整个命令行
      * 假设运行命令：cat /proc/self/cmdline 1 2 3 4 5，
      * 那么返回结果将是：cat/proc/self/cmdline12345
+     *
+     * 如果pid值为0则表示取当前进程的
+     * separator 指定各参数间的分隔字符
      */
-    static std::string get_program_full_cmdline();
+    static std::string get_program_full_cmdline(char separator='|', uint32_t pid=0);
 
     /** 得到与指定fd相对应的文件名，包括路径部分
       * @fd: 文件描述符
