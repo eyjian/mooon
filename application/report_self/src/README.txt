@@ -27,5 +27,6 @@ CREATE TABLE t_program_deployment (
     INDEX idx_shortname (f_shortname),
     INDEX idx_firsttime (f_firsttime),
     INDEX idx_lasttime (f_lasttime),
-    INDEX idx_state (f_state)
+    INDEX idx_state (f_state),
+    FULLTEXT INDEX idx_full_cmdline (f_full_cmdline)
 );
