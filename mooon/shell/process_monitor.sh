@@ -242,7 +242,7 @@ while true; do
     fi
     if test ! -z "$self_count"; then 
         if test $self_count -gt 2; then 
-            log "\033[0;32;31m[`date +'%Y-%m-%d %H:%M:%S'`]$0 is running[$self_count/active:$active], current user is $cur_user.\033[m\n"
+            log "$0 is running[$self_count/active:$active], current user is $cur_user\n"
             # 经测试，正常情况下一般为2，
             # 但运行一段时间后，会出现值为3，因此放在crontab中非常必要
             # 如果监控脚本已经运行，则退出不重复运行
@@ -277,7 +277,7 @@ while true; do
     if test ! -z "$process_count"; then
         if test $process_count -lt 1; then
             # 执行重启脚本，要求这个脚本能够将指定的进程拉起来
-            log "\033[0;32;34m[`date +'%Y-%m-%d %H:%M:%S'`]restart \"$process_cmdline\"\033[m\n"
+            log "restart \"$process_cmdline\"\n"
             sh -c "$restart_script" >> $log_filepath 2>&1 # 注意一定要以“sh -c”方式执行
 
             # sleep时间得长一点，原因是启动可能没那么快，以防止启动多个进程
