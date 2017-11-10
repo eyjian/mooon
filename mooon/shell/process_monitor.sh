@@ -17,8 +17,11 @@
 # 如果本脚本手工运行正常，但在crontab中运行不正常，
 # 则可考虑检查下ps等命令是否可在crontab中正常运行。
 #
-# 假设有一程序或脚本文件/usr/local/bin/test，则使用方法如下：
-# /usr/local/bin/process_monitor.sh "/usr/local/bin/test" "/usr/local/bin/test"
+# 假设有一程序或脚本文件/home/zhangsan/test，则有如下两个使用方式：
+# 1) /usr/local/bin/process_monitor.sh "/home/zhangsan/test" "/home/zhangsan/test"
+# 2) /usr/local/bin/process_monitor.sh "test" "/home/zhangsan/test"
+#
+# 不建议第2种使用方式，推荐总是使用第1种方式，因为第1种更为严格。
 #
 # 如果需要运行test的多个实例且分别监控，
 # 则要求每个实例的参数必须可区分，否则无法独立监控，如：
@@ -29,11 +32,6 @@
 # 不管是监控脚本还是可执行程序，
 # 均要求使用绝对路径，即必须以“/”打头的路径。
 #
-
-# 实际中，遇到脚本在crontab中运行时，找不到ls和ps等命令
-# 原来是有些环境ls和ps位于/usr/bin目录下，而不是常规的/bin目录
-export PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:$PATH
-trap "" SIGPIPE # 忽略SIGPIPE
 
 # 需要指定个数的命令行参数
 # 参数1：被监控的进程名（可以包含命令行参数，而且必须包含绝对路径方式）
@@ -49,88 +47,78 @@ fi
 # 可设置同名的环境变量ONLY_TEST来控制
 ONLY_TEST=${ONLY_TEST:-0}
 
-process_cmdline="$1" # 需要监控的进程名，或完整的命令行，也可以为部分命令行
-restart_script="$2"  # 用来重启进程的脚本，要求具有可执行权限
-monitor_interval=2   # 定时检测时间间隔，单位为秒
-start_seconds=5      # 被监控进程启动需要花费多少秒
-cur_user=`whoami`    # 执行本监控脚本的用户名
+# 实际中，遇到脚本在crontab中运行时，找不到ls和ps等命令
+# 原来是有些环境ls和ps位于/usr/bin目录下，而不是常规的/bin目录
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:$PATH
+trap "" SIGPIPE # 忽略SIGPIPE
 
-# 取指定网卡上的IP地址
-#eth=1&&netstat -ie|awk -F'[: ]' 'begin{found=0;} { if (match($0,"eth'"$eth"'")) found=1; else if ((1==found) && match($0,"eth")) found=0; if ((1==found) && match($0,"inet addr:") && match($0,"Bcast:")) print $13; }'
-
-# 依赖命令id取得当前用户的用户ID
-which id >/dev/null 2>&1
+#
+# 前置条件判断，
+# 所依赖的命令必须可用
+#
+which id >/dev/null 2>&1 # 依赖命令id取得当前用户的用户ID
 if test $? -ne 0; then
     printf "\033[1;33mcommand 'id' not exists\033[m\n"
     exit 1
 fi
-
-# 依赖命令ps求进程数
-which ps >/dev/null 2>&1
+which ps >/dev/null 2>&1 # 依赖命令ps求进程数
 if test $? -ne 0; then
     printf "\033[1;33mcommand 'ps' not exists\033[m\n"
     exit 1
 fi
-
-# 依赖命令awk求进程数
-which awk >/dev/null 2>&1
+which awk >/dev/null 2>&1 # 依赖命令awk求进程数
 if test $? -ne 0; then
     printf "\033[1;33mcommand 'awk' not exists\033[m\n"
     exit 1
 fi
-
-# 依赖命令ls计算日志文件大小
-which ls >/dev/null 2>&1
+which ls >/dev/null 2>&1 # 依赖命令ls计算日志文件大小
 if test $? -ne 0; then
     printf "\033[1;33mcommand 'ls' not exists\033[m\n"
     exit 1
 fi
-
-# 依赖命令cut计算日志文件大小
-which cut >/dev/null 2>&1
+which cut >/dev/null 2>&1 # 依赖命令cut计算日志文件大小
 if test $? -ne 0; then
     printf "\033[1;33mcommand 'cut' not exists\033[m\n"
     exit 1
 fi
-
-# 依赖命令tee写日志
-which tee >/dev/null 2>&1
+which tee >/dev/null 2>&1 # 依赖命令tee写日志
 if test $? -ne 0; then
     printf "\033[1;33mcommand 'tee' not exists\033[m\n"
     exit 1
 fi
-
-# 依赖命令mv备份日志文件
-which mv >/dev/null 2>&1
+which mv >/dev/null 2>&1 # 依赖命令mv备份日志文件
 if test $? -ne 0; then
     printf "\033[1;33mcommand 'mv' not exists\033[m\n"
     exit 1
 fi
-
-# 依赖命令sleep
-which sleep >/dev/null 2>&1
+which sleep >/dev/null 2>&1 # 依赖命令sleep
 if test $? -ne 0; then
     printf "\033[1;33mcommand 'sleep' not exists\033[m\n"
     exit 1
 fi
-
-# 依赖命令sh重启脚本
-which sh >/dev/null 2>&1
+which sh >/dev/null 2>&1 # 依赖命令sh重启脚本
 if test $? -ne 0; then
     printf "\033[1;33mcommand 'sh' not exists\033[m\n"
     exit 1
 fi
 
-# 下面这段脚本，用来阻止多个监控脚本进程出现
-uid=`id -u $cur_user`
-self_name=`basename $0`
+process_cmdline="$1" # 需要监控的进程名，或完整的命令行，也可以为部分命令行
+restart_script="$2"  # 用来重启进程的脚本，要求具有可执行权限
+monitor_interval=2   # 定时检测时间间隔，单位为秒
+start_seconds=5      # 被监控进程启动需要花费多少秒
+cur_user=`whoami`    # 执行本监控脚本的用户名
+# 取指定网卡上的IP地址
+#eth=1&&netstat -ie|awk -F'[: ]' 'begin{found=0;} { if (match($0,"eth'"$eth"'")) found=1; else if ((1==found) && match($0,"eth")) found=0; if ((1==found) && match($0,"inet addr:") && match($0,"Bcast:")) print $13; }'
+
+uid=`id -u $cur_user` # 当前用户ID
+self_name=`basename $0` # 本脚本名
 self_cmdline="$0 $*"
-self_dirpath=$(dirname "$0")
-self_filepath=$self_dirpath/$self_name
+self_dirpath=$(dirname "$0") # 脚本所在的目录
+self_full_filepath=$self_dirpath/$self_name
 process_raw_filepath=`echo "$process_cmdline"|cut -d" " -f1`
 process_name=$(basename $process_raw_filepath)
 process_dirpath=$(dirname "$process_cmdline")
-process_filepath=$process_dirpath/$process_name
+process_full_filepath=$process_dirpath/$process_name
 process_match="${process_cmdline#* }" # 只保留用来匹配的参数部分
 process_match=$(echo $process_match) # 去掉前后的空格
 
@@ -197,39 +185,45 @@ log()
 # 显示调试信息
 if test $ONLY_TEST -eq 1; then
     log "self_dirpath: $self_dirpath\n"
-    log "self_filepath: $self_filepath\n"
+    log "self_full_filepath: $self_full_filepath\n"
 
     log "process_raw_filepath: $process_raw_filepath\n"
     log "process_name: $process_name\n"
     log "process_dirpath: $process_dirpath\n"
-    log "process_filepath: $process_filepath\n"
-    log "process_match$process_match\n"
+    log "process_full_filepath: $process_full_filepath\n"
+    log "process_match: $process_match\n"
 fi
 
 # 必须使用全路径，即必须以“/”打头
-s1=${self_filepath:0:1}
-p1=${process_filepath:0:1}
+s1=${self_full_filepath:0:1}
+p1=${process_full_filepath:0:1}
 if test $s1 != "/"; then
     log "illegal, is not an absolute path: $self_cmdline"
     exit 1
 fi
-if test $p1 != "/"; then
-    log "illegal, is not an absolute path: $process_cmdline"
-    exit 1
-fi
+#if test $p1 != "/"; then
+#    log "illegal, is not an absolute path: $process_cmdline"
+#    exit 1
+#fi
 
 # 取得文件类型
+# process_filetype取值0表示为可执行脚本文件
 # process_filetype取值1表示为可执行程序文件
-# process_filetype取值0表示为脚本文件
-file $process_filepath|grep ELF >/dev/null
-if test $? -eq 0; then    
-    process_filetype=1
+# process_filetype取值2表示为未知类型文件
+if test $p1 != "/"; then
+    process_filetype=2
 else
-    file $process_filepath|grep script >/dev/null
-    if test $? -eq 0; then        
-        process_filetype=0
+    file $process_full_filepath |grep ELF >/dev/null
+    if test $? -eq 0; then    
+        process_filetype=1
     else
-        exit 1
+        file $process_full_filepath |grep script >/dev/null
+        if test $? -eq 0; then        
+            process_filetype=0
+        else
+            echo "unknown file type: process_raw_filepath\n"
+            exit 1
+        fi
     fi
 fi
 
@@ -242,7 +236,7 @@ fi
 # 以死循环方式，定时检测指定的进程是否存在
 # 一个重要原因是crontab最高频率为1分钟，不满足秒级的监控要求
 while true; do
-    self_count=`ps -C $self_name h -o euid,args| awk 'BEGIN { num=0; } { if (($1==uid) && ($3==self_filepath) && match($0, self_cmdline)) {++num;}} END { printf("%d",num); }' uid=$uid self_filepath=$self_filepath self_cmdline="$self_cmdline"`
+    self_count=`ps -C $self_name h -o euid,args| awk 'BEGIN { num=0; } { if (($1==uid) && ($3==self_full_filepath) && match($0, self_cmdline)) {++num;}} END { printf("%d",num); }' uid=$uid self_full_filepath=$self_full_filepath self_cmdline="$self_cmdline"`
     if test $ONLY_TEST -eq 1; then
         log "self_count: $self_count\n"
     fi
@@ -260,9 +254,21 @@ while true; do
 
     # 检查被监控的进程是否存在，如果不存在则重启
     if test -z "$process_match"; then
-        process_count=`ps -C $process_name h -o euid,args| awk 'BEGIN { num=0; } { if ($1==uid) if ((0==process_filetype) && ($3==process_filepath)) ++num; else if ((1==process_filetype) && ($2==process_filepath)) ++num; } END { printf("%d",num); }' uid=$uid process_filepath=$process_filepath process_filetype=$process_filetype`
+        if test $process_filetype -eq 0; then # 可执行脚本文件
+            process_count=`ps -C $process_name h -o euid,args| awk 'BEGIN { num=0; } { if ($1==uid) && ($3==process_full_filepath)) ++num; } END { printf("%d",num); }' uid=$uid process_full_filepath=$process_full_filepath`
+        elif test $process_filetype -eq 1; then # 可执行程序文件
+            process_count=`ps -C $process_name h -o euid,args| awk 'BEGIN { num=0; } { if ($1==uid) && ($2==process_full_filepath)) ++num; } END { printf("%d",num); }' uid=$uid process_full_filepath=$process_full_filepath`
+        else # 未知类型文件
+            process_count=`ps -C $process_name h -o euid,args| awk 'BEGIN { num=0; } { if ($1==uid) ++num; } END { printf("%d",num); }' uid=$uid`
+        fi        
     else
-        process_count=`ps -C $process_name h -o euid,args| awk 'BEGIN { num=0; } { if (($1==uid) && match($0, process_match)) if ((0==process_filetype) && ($3==process_filepath)) ++num; else if ((1==process_filetype) && ($2==process_filepath)) ++num; } END { printf("%d",num); }' uid=$uid process_filepath=$process_filepath process_filetype=$process_filetype process_match="$process_match"`
+        if test $process_filetype -eq 0; then # 可执行脚本文件
+            process_count=`ps -C $process_name h -o euid,args| awk 'BEGIN { num=0; } { if (($1==uid) && match($0, process_match) && ($3==process_full_filepath)) ++num; } END { printf("%d",num); }' uid=$uid process_full_filepath=$process_full_filepath process_match="$process_match"`
+        elif test $process_filetype -eq 1; then # 可执行程序文件
+            process_count=`ps -C $process_name h -o euid,args| awk 'BEGIN { num=0; } { if (($1==uid) && match($0, process_match) && ($2==process_full_filepath)) ++num; } END { printf("%d",num); }' uid=$uid process_full_filepath=$process_full_filepath process_match="$process_match"`
+        else # 未知类型文件
+            process_count=`ps -C $process_name h -o euid,args| awk 'BEGIN { num=0; } { if (($1==uid) && match($0, process_match)) ++num; } END { printf("%d",num); }' uid=$uid process_match="$process_match"`
+        fi        
     fi
     
     if test $ONLY_TEST -eq 1; then
