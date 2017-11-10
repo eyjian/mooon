@@ -17,6 +17,14 @@
 # 如果本脚本手工运行正常，但在crontab中运行不正常，
 # 则可考虑检查下ps等命令是否可在crontab中正常运行。
 #
+# 假设有一程序或脚本文件/usr/local/bin/test，则使用方法如下：
+# /usr/local/bin/process_monitor.sh "/usr/local/bin/test" "/usr/local/bin/test"
+#
+# 如果需要运行test的多个实例且分别监控，
+# 则要求每个实例的参数必须可区分，否则无法独立监控，如：
+# /usr/local/bin/process_monitor.sh "/usr/local/bin/test wangwu" "/usr/local/bin/test --name=wangwu"
+# /usr/local/bin/process_monitor.sh "/usr/local/bin/test zhangsan" "/usr/local/bin/test --name=zhangsan"
+
 # 注意事项：
 # 不管是监控脚本还是可执行程序，
 # 均要求使用绝对路径，即必须以“/”打头的路径。
@@ -119,7 +127,8 @@ self_name=`basename $0`
 self_cmdline="$0 $*"
 self_dirpath=$(dirname "$0")
 self_filepath=$self_dirpath/$self_name
-process_name=$(basename `echo "$process_cmdline"|cut -d" " -f1`)
+process_raw_filepath=`echo "$process_cmdline"|cut -d" " -f1`
+process_name=$(basename $process_raw_filepath)
 process_dirpath=$(dirname "$process_cmdline")
 process_filepath=$process_dirpath/$process_name
 process_match="${process_cmdline#* }" # 只保留用来匹配的参数部分
@@ -190,6 +199,7 @@ if test $ONLY_TEST -eq 1; then
     log "self_dirpath: $self_dirpath\n"
     log "self_filepath: $self_filepath\n"
 
+    log "process_raw_filepath: $process_raw_filepath\n"
     log "process_name: $process_name\n"
     log "process_dirpath: $process_dirpath\n"
     log "process_filepath: $process_filepath\n"
