@@ -120,6 +120,12 @@ log()
     fi
 }
 
+# 命令“ps -C $process_name h -o euid,args”输出示例：
+# 1）目标为非脚本时（process_name值为test）：
+#    1001 /home/zhangsan/bin/test -a=1 -b=2
+# 2）目标为脚本时（process_name值为process_monitor.sh）：
+#    1001 /bin/sh /home/zhangsan/process_monitor.sh /home/zhangsan/bin/test -a=1 -b=1
+
 # 以死循环方式，定时检测指定的进程是否存在
 # 一个重要原因是crontab最高频率为1分钟，不满足秒级的监控要求
 while true; do
