@@ -77,6 +77,7 @@ CSafeLogger::CSafeLogger(const char* log_dir, const char* log_filename, uint16_t
     ,_bin_log_enabled(false)
     ,_trace_log_enabled(false)
     ,_raw_log_enabled(false)
+    ,_raw_record_time(false)
     ,_screen_enabled(false)
     ,_log_dir(log_dir)
     ,_log_filename(log_filename)
@@ -136,9 +137,10 @@ void CSafeLogger::enable_trace_log(bool enabled)
     _trace_log_enabled = enabled;
 }
 
-void CSafeLogger::enable_raw_log(bool enabled)
+void CSafeLogger::enable_raw_log(bool enabled, bool record_time)
 {
     _raw_log_enabled = enabled;
+    _raw_record_time = record_time;
 }
 
 void CSafeLogger::enable_auto_adddot(bool enabled)
@@ -408,8 +410,15 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
 
     if (LOG_LEVEL_RAW == log_level)
     {
+        if (_raw_record_time)
+        {
+            char datetime[sizeof("2012-12-12 12:12:12")];
+            get_formatted_current_datetime(log_line.get(), sizeof(datetime), false);
+            log_real_size = sizeof("YYYY-MM-DD hh:mm:ss") - 1;
+        }
+
         // fix_vsnprintf()的返回值包含了结尾符在内的长度
-        log_real_size = utils::CStringUtils::fix_vsnprintf(log_line.get(), _log_line_size, format, args);
+        log_real_size += utils::CStringUtils::fix_vsnprintf(log_line.get()+log_real_size, _log_line_size-log_real_size, format, args);
         --log_real_size; // 结尾符不需要写入日志文件中
     }
     else
