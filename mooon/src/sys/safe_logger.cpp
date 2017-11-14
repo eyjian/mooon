@@ -90,11 +90,15 @@ CSafeLogger::CSafeLogger(const char* log_dir, const char* log_filename, uint16_t
     // 保证日志行最大长度不小于指定值
     _log_line_size = (log_line_size < LOG_LINE_SIZE_MIN)? LOG_LINE_SIZE_MIN: log_line_size;
     if (_log_line_size > LOG_LINE_SIZE_MAX)
+    {
         _log_line_size = LOG_LINE_SIZE_MAX;
+    }
 
     // 出错时记录系统日志
     if (_sys_log_enabled)
+    {
         openlog("mooon-safe-logger", LOG_CONS|LOG_PID, 0);
+    }
 
     _log_fd = open(_log_filepath.c_str(), O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
     if (-1 == _log_fd)
