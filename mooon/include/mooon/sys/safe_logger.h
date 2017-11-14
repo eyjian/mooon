@@ -75,7 +75,7 @@ public:
     /** 是否允许跟踪日志，跟踪日志必须通过它来打开 */
     virtual void enable_trace_log(bool enabled);
     /** 是否允许裸日志，裸日志必须通过它来打开 */
-    virtual void enable_raw_log(bool enabled);
+    virtual void enable_raw_log(bool enabled, bool record_time=false);
     /** 是否自动在一行后添加结尾的点号，如果最后已经有点号或换符符，则不会再添加 */
     virtual void enable_auto_adddot(bool enabled);
     /** 是否自动添加换行符，如果已经有换行符，则不会再自动添加换行符 */
@@ -161,6 +161,7 @@ private:
     bool _bin_log_enabled;
     bool _trace_log_enabled;
     bool _raw_log_enabled;
+    bool _raw_record_time;
 
 private:
     bool _screen_enabled;
