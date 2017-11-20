@@ -409,16 +409,16 @@ bool CSafeLogger::need_rotate(int fd) const
 
 void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno, const char* module_name, const char* format, va_list& args)
 {
-    int log_real_size;
+    int log_real_size = 0;
     utils::ScopedArray<char> log_line(new char[_log_line_size]);
 
     if (LOG_LEVEL_RAW == log_level)
     {
         if (_raw_record_time)
         {
-            char datetime[sizeof("2012-12-12 12:12:12")];
-            get_formatted_current_datetime(log_line.get(), sizeof(datetime), false);
-            log_real_size = sizeof("YYYY-MM-DD hh:mm:ss") - 1;
+            char datetime[sizeof("[2012-12-12 12:12:12]")];
+            CDatetimeUtils::get_current_datetime(log_line.get(), sizeof(datetime), "[%04d-%02d-%02d %02d:%02d:%02d]");
+            log_real_size = sizeof("[YYYY-MM-DD hh:mm:ss]") - 1;
         }
 
         // fix_vsnprintf()的返回值包含了结尾符在内的长度
@@ -449,32 +449,28 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
         else
             n = utils::CStringUtils::fix_vsnprintf(log_line.get()+m-1, _log_line_size-m, format, args);
         log_real_size = m + n - 2;
-
-        // 是否自动添加结尾用的点号
-        if (_auto_adddot)
-        {
-            // 如果已有结尾的点，则不再添加，以免重复
-            if (log_line.get()[log_real_size-1] != '.')
-            {
-                log_line.get()[log_real_size] = '.';
-                ++log_real_size;
-            }
-        }
-
-        // 是否自动换行
-        if (_auto_newline)
-        {
-            // 如果已有一个换行符，则不再添加
-            if (log_line.get()[log_real_size-1] != '\n')
-            {
-                log_line.get()[log_real_size] = '\n';
-                ++log_real_size;
-            }
-        }
     }
 
-    // 允许打屏
-    if (_screen_enabled)
+    // 是否自动添加结尾用的点号
+    if (_auto_adddot)
+    {
+        // 如果已有结尾的点，则不再添加，以免重复
+        if (log_line.get()[log_real_size-1] != '.')
+        {
+            log_line.get()[log_real_size] = '.';
+            ++log_real_size;
+        }
+    }
+    if (_auto_newline) // 是否自动换行
+    {
+        // 如果已有一个换行符，则不再添加
+        if (log_line.get()[log_real_size-1] != '\n')
+        {
+            log_line.get()[log_real_size] = '\n';
+            ++log_real_size;
+        }
+    }
+    if (_screen_enabled) // 允许打屏
     {
         (void)write(STDOUT_FILENO, log_line.get(), log_real_size);
     }
