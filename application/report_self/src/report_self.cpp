@@ -16,7 +16,7 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#include "mooon/sys/report_self.h"
+#include "report_self.h"
 #include "ReportSelfService.h"
 #include <inttypes.h>
 #include <mooon/net/utils.h>

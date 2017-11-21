@@ -1,7 +1,7 @@
 # Writed by yijian (eyjian@qq.com, eyjian@gmail.com)
 
 # include路径
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../include/mooon/report_self)
 
 # 执行cmake时，就编译好thrift文件
 exec_program(${THRIFT_HOME}/bin/thrift ARGS --gen cpp -r -out ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/report_self.thrift)
