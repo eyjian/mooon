@@ -305,6 +305,21 @@ void CDatetimeUtils::decompose(time_t t, std::string* year, std::string* month, 
     decompose(&tm, year, month, day, hour, minute, second);
 }
 
+bool CDatetimeUtils::decompose(const char* str, std::string* year, std::string* month, std::string* day, std::string* hour, std::string* minute, std::string* second)
+{
+    struct tm tm;
+    if (!CDatetimeUtils::datetime_struct_from_string(str, &tm))
+        return false;
+
+    decompose(tm, year, month, day, hour, minute, second);
+    return true;
+}
+
+bool CDatetimeUtils::decompose(const std::string& str, std::string* year, std::string* month, std::string* day, std::string* hour, std::string* minute, std::string* second)
+{
+    return decompose(str.c_str(), year, month, day, hour, minute, second);
+}
+
 // 要求t为YYYY-MM-DD hh:mm:ss格式
 void CDatetimeUtils::decompose_datetime(const std::string& t, std::string* year, std::string* month, std::string* day, std::string* hour, std::string* minute, std::string* second)
 {
@@ -951,6 +966,36 @@ std::string get_formatted_current_datetime(bool with_milliseconds)
 #else
     return std::move(std::string(datetime_buffer));
 #endif
+}
+
+uint32_t date2day(const std::string& date)
+{
+    const std::string& datetime = date + std::string(" 00:00:00");
+    struct tm tm;
+    if (!CDatetimeUtils::datetime_struct_from_string(datetime.c_str(), &tm))
+        return 0;
+
+    return (tm.tm_year+1900)*10000 + (tm.tm_mon+1)*100 + tm.tm_mday;
+}
+
+uint32_t date2month(const std::string& date)
+{
+    const std::string& datetime = date + std::string(" 00:00:00");
+    struct tm tm;
+    if (!CDatetimeUtils::datetime_struct_from_string(datetime.c_str(), &tm))
+        return 0;
+
+    return (tm.tm_year+1900)*100 + (tm.tm_mon+1);
+}
+
+uint32_t date2year(const std::string& date)
+{
+    const std::string& datetime = date + std::string(" 00:00:00");
+    struct tm tm;
+    if (!CDatetimeUtils::datetime_struct_from_string(datetime.c_str(), &tm))
+        return 0;
+
+    return (tm.tm_year+1900);
 }
 
 SYS_NAMESPACE_END

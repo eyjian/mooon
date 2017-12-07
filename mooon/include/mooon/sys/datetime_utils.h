@@ -124,6 +124,8 @@ public:
     static void decompose(const struct tm& tm, std::string* year=NULL, std::string* month=NULL, std::string* day=NULL, std::string* hour=NULL, std::string* minute=NULL, std::string* second=NULL);
     static void decompose(time_t t, int* year=NULL, int* month=NULL, int* day=NULL, int64_t* hour=NULL, int64_t* minute=NULL, int64_t* second=NULL);
     static void decompose(time_t t, std::string* year=NULL, std::string* month=NULL, std::string* day=NULL, std::string* hour=NULL, std::string* minute=NULL, std::string* second=NULL);
+    static bool decompose(const char* str, std::string* year=NULL, std::string* month=NULL, std::string* day=NULL, std::string* hour=NULL, std::string* minute=NULL, std::string* second=NULL);
+    static bool decompose(const std::string& str, std::string* year=NULL, std::string* month=NULL, std::string* day=NULL, std::string* hour=NULL, std::string* minute=NULL, std::string* second=NULL);
 
     // 要求t为YYYY-MM-DD hh:mm:ss格式，不做错误检查，如果长度不够或超出，则什么也不做。
     static void decompose_datetime(const std::string& t, std::string* year=NULL, std::string* month=NULL, std::string* day=NULL, std::string* hour=NULL, std::string* minute=NULL, std::string* second=NULL);
@@ -283,6 +285,18 @@ extern void get_formatted_current_datetime(char* datetime_buffer, size_t datetim
 // 如果with_milliseconds为false，则返回同CDatetimeUtils::get_current_datetime()
 // 如果with_milliseconds为true，则返回为：YYYY-MM-DD hh:mm:ss/milliseconds
 extern std::string get_formatted_current_datetime(bool with_milliseconds=true);
+
+// 格式为YYYY-MM-DD转成格式为YYYYMMDD的无符号4字节整数值，
+// 如果date是一个无效的值，则返回值为0
+extern uint32_t date2day(const std::string& date);
+
+// 格式为YYYY-MM-DD转成格式为YYYYMM的无符号4字节整数值，
+// 如果date是一个无效的值，则返回值为0
+extern uint32_t date2month(const std::string& date);
+
+// 格式为YYYY-MM-DD转成格式为YYYY的无符号4字节整数值，
+// 如果date是一个无效的值，则返回值为0
+extern uint32_t date2year(const std::string& date);
 
 SYS_NAMESPACE_END
 #endif // MOOON_SYS_DATETIME_UTILS_H
