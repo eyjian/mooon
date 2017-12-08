@@ -295,7 +295,8 @@ void CReportSelf::report()
         uint64_t vsz = 0;
         int64_t rss = 0;
         sys::CInfo::process_info_t process_info;
-        if (!sys::CInfo::get_process_info(process_info))
+        memset(&process_info, 0, sizeof(process_info));
+        if (!sys::CInfo::get_process_info(&process_info))
         {
             vsz = 0;
             rss = 0;
