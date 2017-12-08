@@ -363,7 +363,9 @@ public:
 
     /** 获取进程信息，具体请参考process_info_t的描述 */
     static bool get_process_info(process_info_t& process_info, pid_t pid);
+    static bool get_process_info(process_info_t* process_info, pid_t pid);
     static bool get_process_info(process_info_t& process_info);
+    static bool get_process_info(process_info_t* process_info);
 
     /** 获取进程页信息，具体请参考process_page_info_t的描述 */
     static bool get_process_page_info(process_page_info_t& process_page_info, pid_t pid);

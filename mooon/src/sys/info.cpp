@@ -207,13 +207,24 @@ bool CInfo::get_kernel_version(kernel_version_t& kernel_version)
 
 bool CInfo::get_process_info(process_info_t& process_info)
 {
-    pid_t pid = getpid();
+    const pid_t pid = getpid();
+    return get_process_info(process_info);
+}
+
+bool CInfo::get_process_info(process_info_t* process_info)
+{
+    const pid_t pid = getpid();
     return get_process_info(process_info, pid);
+}
+
+bool CInfo::get_process_info(process_info_t& process_info, pid_t pid)
+{
+    return get_process_info(&process_info, pid);
 }
 
 // 在Centos Linux上执行：info proc，
 // 可以搜索到关于文件“/proc/[pid]/stat”的结构介绍。
-bool CInfo::get_process_info(process_info_t& process_info, pid_t pid)
+bool CInfo::get_process_info(process_info_t* process_info, pid_t pid)
 {
     char filename[FILENAME_MAX];
     snprintf(filename, sizeof(filename), "/proc/%u/stat", pid);
@@ -227,6 +238,8 @@ bool CInfo::get_process_info(process_info_t& process_info, pid_t pid)
     char* linep = fgets(line, sizeof(line)-1, fp);
 
     if (NULL == linep) return false;
+
+    process_info_t process_info_;
     const int num = sscanf(line, "%d%s%s%d%d"
                          "%d%d%d%u%" PRIu64
                          "%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64
@@ -235,45 +248,50 @@ bool CInfo::get_process_info(process_info_t& process_info, pid_t pid)
                          "%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64
                          "%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64
                          "%" PRIu64"%d%d"
-              /** 01 */ ,&process_info.pid
-              /** 02 */ , process_info.comm
-              /** 03 */ ,&process_info.state
-              /** 04 */ ,&process_info.ppid
-              /** 05 */ ,&process_info.pgrp
-              /** 06 */ ,&process_info.session
-              /** 07 */ ,&process_info.tty_nr
-              /** 08 */ ,&process_info.tpgid
-              /** 09 */ ,&process_info.flags
-              /** 10 */ ,&process_info.minflt
-              /** 11 */ ,&process_info.cminflt
-              /** 12 */ ,&process_info.majflt
-              /** 13 */ ,&process_info.cmajflt
-              /** 14 */ ,&process_info.utime
-              /** 15 */ ,&process_info.stime
-              /** 16 */ ,&process_info.cutime
-              /** 17 */ ,&process_info.cstime
-              /** 18 */ ,&process_info.priority
-              /** 19 */ ,&process_info.nice
-              /** 20 */ ,&process_info.num_threads
-              /** 21 */ ,&process_info.itrealvalue
-              /** 22 */ ,&process_info.starttime
-              /** 23 */ ,&process_info.vsize
-              /** 24 */ ,&process_info.rss
-              /** 25 */ ,&process_info.rlim
-              /** 26 */ ,&process_info.startcode
-              /** 27 */ ,&process_info.endcode
-              /** 28 */ ,&process_info.startstack
-              /** 29 */ ,&process_info.kstkesp
-              /** 30 */ ,&process_info.kstkeip
-              /** 31 */ ,&process_info.signal
-              /** 32 */ ,&process_info.blocked
-              /** 33 */ ,&process_info.sigignore
-              /** 34 */ ,&process_info.sigcatch
-              /** 35 */ ,&process_info.nswap
-              /** 36 */ ,&process_info.cnswap
-              /** 37 */ ,&process_info.exit_signal
-              /** 38 */ ,&process_info.processor);
-    return num == filed_number;
+              /** 01 */ ,&process_info_.pid
+              /** 02 */ , process_info_.comm
+              /** 03 */ ,&process_info_.state
+              /** 04 */ ,&process_info_.ppid
+              /** 05 */ ,&process_info_.pgrp
+              /** 06 */ ,&process_info_.session
+              /** 07 */ ,&process_info_.tty_nr
+              /** 08 */ ,&process_info_.tpgid
+              /** 09 */ ,&process_info_.flags
+              /** 10 */ ,&process_info_.minflt
+              /** 11 */ ,&process_info_.cminflt
+              /** 12 */ ,&process_info_.majflt
+              /** 13 */ ,&process_info_.cmajflt
+              /** 14 */ ,&process_info_.utime
+              /** 15 */ ,&process_info_.stime
+              /** 16 */ ,&process_info_.cutime
+              /** 17 */ ,&process_info_.cstime
+              /** 18 */ ,&process_info_.priority
+              /** 19 */ ,&process_info_.nice
+              /** 20 */ ,&process_info_.num_threads
+              /** 21 */ ,&process_info_.itrealvalue
+              /** 22 */ ,&process_info_.starttime
+              /** 23 */ ,&process_info_.vsize
+              /** 24 */ ,&process_info_.rss
+              /** 25 */ ,&process_info_.rlim
+              /** 26 */ ,&process_info_.startcode
+              /** 27 */ ,&process_info_.endcode
+              /** 28 */ ,&process_info_.startstack
+              /** 29 */ ,&process_info_.kstkesp
+              /** 30 */ ,&process_info_.kstkeip
+              /** 31 */ ,&process_info_.signal
+              /** 32 */ ,&process_info_.blocked
+              /** 33 */ ,&process_info_.sigignore
+              /** 34 */ ,&process_info_.sigcatch
+              /** 35 */ ,&process_info_.nswap
+              /** 36 */ ,&process_info_.cnswap
+              /** 37 */ ,&process_info_.exit_signal
+              /** 38 */ ,&process_info_.processor);
+
+    if (num == filed_number)
+    {
+        memcpy(process_info, &process_info_, sizeof(process_info_));
+    }
+    return (num == filed_number);
 }
 
 bool CInfo::get_process_page_info(process_page_info_t& process_page_info)
