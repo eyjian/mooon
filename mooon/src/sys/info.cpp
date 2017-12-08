@@ -207,8 +207,7 @@ bool CInfo::get_kernel_version(kernel_version_t& kernel_version)
 
 bool CInfo::get_process_info(process_info_t& process_info)
 {
-    const pid_t pid = getpid();
-    return get_process_info(process_info);
+    return get_process_info(&process_info);
 }
 
 bool CInfo::get_process_info(process_info_t* process_info)
@@ -228,70 +227,77 @@ bool CInfo::get_process_info(process_info_t* process_info, pid_t pid)
 {
     char filename[FILENAME_MAX];
     snprintf(filename, sizeof(filename), "/proc/%u/stat", pid);
-
     FILE* fp = fopen(filename, "r");
-    if (NULL == fp) return false;
-    sys::CloseHelper<FILE*> ch(fp);
 
-    char line[LINE_MAX];
-    int filed_number = 38;
-    char* linep = fgets(line, sizeof(line)-1, fp);
-
-    if (NULL == linep) return false;
-
-    process_info_t process_info_;
-    const int num = sscanf(line, "%d%s%s%d%d"
-                         "%d%d%d%u%" PRIu64
-                         "%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64
-                         "%" PRId64"%" PRId64"%" PRId64"%" PRId64"%" PRId64
-                         "%" PRId64"%" PRId64"%" PRIu64"%" PRId64"%" PRIu64
-                         "%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64
-                         "%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64
-                         "%" PRIu64"%d%d"
-              /** 01 */ ,&process_info_.pid
-              /** 02 */ , process_info_.comm
-              /** 03 */ ,&process_info_.state
-              /** 04 */ ,&process_info_.ppid
-              /** 05 */ ,&process_info_.pgrp
-              /** 06 */ ,&process_info_.session
-              /** 07 */ ,&process_info_.tty_nr
-              /** 08 */ ,&process_info_.tpgid
-              /** 09 */ ,&process_info_.flags
-              /** 10 */ ,&process_info_.minflt
-              /** 11 */ ,&process_info_.cminflt
-              /** 12 */ ,&process_info_.majflt
-              /** 13 */ ,&process_info_.cmajflt
-              /** 14 */ ,&process_info_.utime
-              /** 15 */ ,&process_info_.stime
-              /** 16 */ ,&process_info_.cutime
-              /** 17 */ ,&process_info_.cstime
-              /** 18 */ ,&process_info_.priority
-              /** 19 */ ,&process_info_.nice
-              /** 20 */ ,&process_info_.num_threads
-              /** 21 */ ,&process_info_.itrealvalue
-              /** 22 */ ,&process_info_.starttime
-              /** 23 */ ,&process_info_.vsize
-              /** 24 */ ,&process_info_.rss
-              /** 25 */ ,&process_info_.rlim
-              /** 26 */ ,&process_info_.startcode
-              /** 27 */ ,&process_info_.endcode
-              /** 28 */ ,&process_info_.startstack
-              /** 29 */ ,&process_info_.kstkesp
-              /** 30 */ ,&process_info_.kstkeip
-              /** 31 */ ,&process_info_.signal
-              /** 32 */ ,&process_info_.blocked
-              /** 33 */ ,&process_info_.sigignore
-              /** 34 */ ,&process_info_.sigcatch
-              /** 35 */ ,&process_info_.nswap
-              /** 36 */ ,&process_info_.cnswap
-              /** 37 */ ,&process_info_.exit_signal
-              /** 38 */ ,&process_info_.processor);
-
-    if (num == filed_number)
+    do
     {
-        memcpy(process_info, &process_info_, sizeof(process_info_));
-    }
-    return (num == filed_number);
+        if (NULL == fp) break;
+
+        char line[LINE_MAX];
+        const int filed_number = 38;
+        const char* linep = fgets(line, sizeof(line)-1, fp);
+        if (NULL == linep) break;
+
+        process_info_t pi;
+        const int num = sscanf(line, "%d%s%s%d%d"
+                             "%d%d%d%u%" PRIu64
+                             "%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64
+                             "%" PRId64"%" PRId64"%" PRId64"%" PRId64"%" PRId64
+                             "%" PRId64"%" PRId64"%" PRIu64"%" PRId64"%" PRIu64
+                             "%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64
+                             "%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64
+                             "%" PRIu64"%d%d"
+                  /** 01 */ ,&pi.pid
+                  /** 02 */ , pi.comm
+                  /** 03 */ ,&pi.state
+                  /** 04 */ ,&pi.ppid
+                  /** 05 */ ,&pi.pgrp
+                  /** 06 */ ,&pi.session
+                  /** 07 */ ,&pi.tty_nr
+                  /** 08 */ ,&pi.tpgid
+                  /** 09 */ ,&pi.flags
+                  /** 10 */ ,&pi.minflt
+                  /** 11 */ ,&pi.cminflt
+                  /** 12 */ ,&pi.majflt
+                  /** 13 */ ,&pi.cmajflt
+                  /** 14 */ ,&pi.utime
+                  /** 15 */ ,&pi.stime
+                  /** 16 */ ,&pi.cutime
+                  /** 17 */ ,&pi.cstime
+                  /** 18 */ ,&pi.priority
+                  /** 19 */ ,&pi.nice
+                  /** 20 */ ,&pi.num_threads
+                  /** 21 */ ,&pi.itrealvalue
+                  /** 22 */ ,&pi.starttime
+                  /** 23 */ ,&pi.vsize
+                  /** 24 */ ,&pi.rss
+                  /** 25 */ ,&pi.rlim
+                  /** 26 */ ,&pi.startcode
+                  /** 27 */ ,&pi.endcode
+                  /** 28 */ ,&pi.startstack
+                  /** 29 */ ,&pi.kstkesp
+                  /** 30 */ ,&pi.kstkeip
+                  /** 31 */ ,&pi.signal
+                  /** 32 */ ,&pi.blocked
+                  /** 33 */ ,&pi.sigignore
+                  /** 34 */ ,&pi.sigcatch
+                  /** 35 */ ,&pi.nswap
+                  /** 36 */ ,&pi.cnswap
+                  /** 37 */ ,&pi.exit_signal
+                  /** 38 */ ,&pi.processor);
+
+        if (num == filed_number)
+        {
+            memcpy(process_info, &pi, sizeof(pi));
+        }
+
+        fclose(fp);
+        return (num == filed_number);
+    } while(false);
+
+    if (fp != NULL)
+        fclose(fp);
+    return false;
 }
 
 bool CInfo::get_process_page_info(process_page_info_t& process_page_info)
