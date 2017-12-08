@@ -293,9 +293,14 @@ void CReportSelf::report()
     {
         const std::string& current = sys::CDatetimeUtils::get_current_datetime();
         uint64_t vsz = 0;
-        uint64_t rss = 0;
+        int64_t rss = 0;
         sys::CInfo::process_info_t process_info;
-        if (sys::CInfo::get_process_info(process_info))
+        if (!sys::CInfo::get_process_info(process_info))
+        {
+            vsz = 0;
+            rss = 0;
+        }
+        else
         {
             vsz = process_info.vsize;
             rss = process_info.rss * sys::CUtils::get_page_size();
