@@ -228,13 +228,13 @@ bool CInfo::get_process_info(process_info_t& process_info, pid_t pid)
 
     if (NULL == linep) return false;
     const int num = sscanf(line, "%d%s%s%d%d"
-                         "%d%d%d%u%lu"
-                         "%lu%lu%lu%lu%lu"
-                         "%ld%ld%ld%ld%ld"
-                         "%ld%lld%lu%ld%lu"
-                         "%lu%lu%lu%lu%lu"
-                         "%lu%lu%lu%lu%lu"
-                         "%lu%d%d"
+                         "%d%d%d%u%" PRIu64
+                         "%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64
+                         "%" PRId64"%" PRId64"%" PRId64"%" PRId64"%" PRId64
+                         "%" PRId64"%" PRId64"%" PRIu64"%" PRId64"%" PRIu64
+                         "%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64
+                         "%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64
+                         "%" PRIu64"%d%d"
               /** 01 */ ,&process_info.pid
               /** 02 */ , process_info.comm
               /** 03 */ ,&process_info.state
@@ -300,7 +300,7 @@ bool CInfo::get_process_page_info(process_page_info_t& process_page_info, pid_t 
     if (NULL == linep) return false;
 
     return (sscanf(line
-                  ,"%ld%ld%ld%ld%ld%ld"
+                  ,"%" PRId64"%" PRId64"%" PRId64"%" PRId64"%" PRId64"%" PRId64
                   ,&process_page_info.size
                   ,&process_page_info.resident
                   ,&process_page_info.share
@@ -359,10 +359,10 @@ bool CInfo::do_get_net_info_array(const char* interface_name, std::vector<net_in
         net_info_t net_info;
         if (sscanf(line_p
                       ,"%s"
-                       "%lu%lu%lu%lu%lu"
-                       "%lu%lu%lu%lu%lu"
-                       "%lu%lu%lu%lu%lu"
-                       "%lu"
+                       "%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64
+                       "%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64
+                       "%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64"%" PRIu64
+                       "%" PRIu64
             /** 01 */ , net_info.interface_name
             /** 02 */ ,&net_info.receive_bytes
             /** 03 */ ,&net_info.receive_packets
