@@ -46,6 +46,9 @@ bool CInfo::get_sys_info(sys_info_t& sys_info)
 // sysconf(_SC_PAGESIZE)
 // sysconf(_SC_PHYS_PAGES);
 // sysconf(_SC_AVPHYS_PAGES);
+//
+// 在Centos Linux上执行：info proc，
+// 可以搜索到关于文件“/proc/meminfo”的结构介绍。
 bool CInfo::get_mem_info(mem_info_t& mem_info)
 {
     FILE* fp = fopen("/proc/meminfo", "r");
@@ -107,6 +110,8 @@ bool CInfo::get_mem_info(mem_info_t& mem_info)
     return (i == member_number);
 }
 
+// 在Centos Linux上执行：info proc，
+// 可以搜索到关于文件“/proc/stat”的结构介绍。
 bool CInfo::get_cpu_info(cpu_info_t& cpu_info)
 {
     FILE* fp = fopen("/proc/stat", "r");
@@ -134,6 +139,8 @@ bool CInfo::get_cpu_info(cpu_info_t& cpu_info)
     return (name[0] != '\0');
 }
 
+// 在Centos Linux上执行：info proc，
+// 可以搜索到关于文件“/proc/stat”的结构介绍。
 int CInfo::get_cpu_info_array(std::vector<cpu_info_t>& cpu_info_array)
 {
     cpu_info_array.clear();
@@ -162,6 +169,8 @@ int CInfo::get_cpu_info_array(std::vector<cpu_info_t>& cpu_info_array)
     return cpu_info_array.size();
 }
 
+// 在Centos Linux上执行：info proc，
+// 可以搜索到关于文件“/proc/version”的结构介绍。
 bool CInfo::get_kernel_version(kernel_version_t& kernel_version)
 {
     FILE* fp = fopen("/proc/version", "r");
@@ -202,6 +211,8 @@ bool CInfo::get_process_info(process_info_t& process_info)
     return get_process_info(process_info, pid);
 }
 
+// 在Centos Linux上执行：info proc，
+// 可以搜索到关于文件“/proc/[pid]/stat”的结构介绍。
 bool CInfo::get_process_info(process_info_t& process_info, pid_t pid)
 {
     char filename[FILENAME_MAX];
@@ -213,11 +224,10 @@ bool CInfo::get_process_info(process_info_t& process_info, pid_t pid)
 
     char line[LINE_MAX];
     int filed_number = 38;
-	char* linep = fgets(line, sizeof(line)-1, fp);
+    char* linep = fgets(line, sizeof(line)-1, fp);
 
     if (NULL == linep) return false;
-
-    return (sscanf(line, "%d%s%s%d%d"
+    const int num = sscanf(line, "%d%s%s%d%d"
                          "%d%d%d%u%lu"
                          "%lu%lu%lu%lu%lu"
                          "%ld%ld%ld%ld%ld"
@@ -262,7 +272,8 @@ bool CInfo::get_process_info(process_info_t& process_info, pid_t pid)
               /** 35 */ ,&process_info.nswap
               /** 36 */ ,&process_info.cnswap
               /** 37 */ ,&process_info.exit_signal
-              /** 38 */ ,&process_info.processor) == filed_number);
+              /** 38 */ ,&process_info.processor);
+    return num == filed_number;
 }
 
 bool CInfo::get_process_page_info(process_page_info_t& process_page_info)
@@ -271,6 +282,8 @@ bool CInfo::get_process_page_info(process_page_info_t& process_page_info)
     return get_process_page_info(process_page_info, pid);
 }
 
+// 在Centos Linux上执行：info proc，
+// 可以搜索到关于文件“/proc/[pid]/statm”的结构介绍。
 bool CInfo::get_process_page_info(process_page_info_t& process_page_info, pid_t pid)
 {
     char filename[FILENAME_MAX];
@@ -311,6 +324,8 @@ bool CInfo::get_process_times(process_time_t& process_time)
     return true;
 }
 
+// 在Centos Linux上执行：info proc，
+// 可以搜索到关于文件“/proc/net/dev”的结构介绍。
 bool CInfo::do_get_net_info_array(const char* interface_name, std::vector<net_info_t>& net_info_array)
 {
     net_info_array.clear();

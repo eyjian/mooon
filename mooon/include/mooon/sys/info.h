@@ -55,7 +55,7 @@ public:
     /***
       * 系统当前实时信息
       */
-    typedef struct
+    typedef struct TSysInfo
     {
         long uptime_second;             /* Seconds since boot */
         unsigned long average_load[3];  /* 1, 5, and 15 minute load averages */
@@ -66,23 +66,44 @@ public:
         unsigned long swap_total;       /* Total swap space size */
         unsigned long swap_free;        /* swap space still available */
         unsigned short process_number;  /* Number of current processes */
+
+        TSysInfo()
+        {
+            uptime_second = 0;
+            average_load = 0;
+            ram_total = 0;
+            ram_free = 0;
+            ram_shared = 0;
+            ram_buffer = 0;
+            swap_total = 0;
+            swap_free = 0;
+            process_number = 0;
+        }
     }sys_info_t;
 
     /***
       * 当前进程时间信息
       */
-    typedef struct
+    typedef struct TProcessTime
     {
         long user_time;             /* user time */
         long system_time;          /* system time */
         long user_time_children;    /* user time of children */
         long system_time_children; /* system time of children */
+
+        TProcessTime()
+        {
+            user_time = 0;
+            system_time = 0;
+            user_time_children = 0;
+            system_time_children = 0;
+        }
     }process_time_t;
 
     /***
       * 当前系统CPU信息
       */
-    typedef struct
+    typedef struct TCpuInfo
     {
         // 单位: jiffies, 1jiffies=0.01秒
         uint64_t total;
@@ -95,12 +116,24 @@ public:
         uint32_t softirq; /** 从系统启动开始累计到当前时刻，软中断时间(2.6.0) */
         //uint32_t stealstolen; /** which is the time spent in other operating systems when running in a virtualized environment(2.6.11) */
         //uint32_t guest;       /** which is the time spent running a virtual  CPU  for  guest operating systems under the control of the Linux kernel(2.6.24) */
+
+        TCpuInfo()
+        {
+            total = 0;
+            user = 0;
+            nice = 0;
+            system = 0;
+            idle = 0;
+            iowait = 0;
+            irq = 0;
+            softirq = 0;
+        }
     }cpu_info_t;
 
     /***
       * 当前系统内存信息
       */
-    typedef struct
+    typedef struct TMemInfo
     {
         uint32_t mem_total;
         uint32_t mem_free;
@@ -109,16 +142,34 @@ public:
         uint32_t swap_cached;
         uint32_t swap_total;
         uint32_t swap_free;
+
+        TMemInfo()
+        {
+            mem_total = 0;
+            mem_free = 0;
+            buffers = 0;
+            cached = 0;
+            swap_cached = 0;
+            swap_total = 0;
+            swap_free = 0;
+        }
     }mem_info_t;
 
     /***
       * 内核版本号
       */
-    typedef struct
+    typedef struct TKenelVersion
     {
         int16_t major;    /** 主版本号 */
         int16_t minor;    /** 次版本号(如果次版本号是偶数，那么内核是稳定版；若是奇数则是开发版) */
         int16_t revision; /** 修订版本号 */
+
+        TKenelVersion()
+        {
+            major = 0;
+            minor = 0;
+            revision = 0;
+        }
     }kernel_version_t;
 
     /***
@@ -133,7 +184,7 @@ public:
         X    dead (should never be seen)
         Z    Defunct ("zombie") process, terminated but not reaped by its parent.
       */
-    typedef struct
+    typedef struct TProcessInfo
     {
         /** 01 */ pid_t pid;                     /** 进程号，其允许的最大值，请查看/proc/sys/kernel/pid_max */
         /** 02 */ char comm[FILENAME_MAX];       /** 进程的名字，不包括路径 */
@@ -173,12 +224,54 @@ public:
         /** 36 */ unsigned long cnswap;          /** 所有子进程被swapped的页数的和，当前未用（Cumulative nswap for child processes (not maintained)） */
         /** 37 */ int exit_signal;               /** 结束时向父进程所发送的信号（Signal to be sent to parent when we die (since Linux 2.1.22)） */
         /** 38 */ int processor;                 /** 运行在哪个CPU上（CPU number last executed on (since Linux 2.2.8)） */
+
+        TProcessInfo()
+        {
+            pid = 0;
+            comm[0] = '\0';
+            state = '0';
+            ppid = 0;
+            pgrp = 0;
+            session = 0;
+            tty_nr = 0;
+            tpgid = 0;
+            flags = 0;
+            minflt = 0;
+            cminflt = 0;
+            majflt = 0;
+            cmajflt = 0;
+            utime = 0;
+            stime = 0;
+            cutime = 0;
+            cstime = 0;
+            priority = 0;
+            nice = 0;
+            num_threads = 0;
+            itrealvalue = 0;
+            starttime = 0;
+            vsize = 0;
+            rss = 0;
+            rlim = 0;
+            startcode = 0;
+            endcode = 0;
+            startstack = 0;
+            kstkesp = 0;
+            kstkeip = 0;
+            signal = 0;
+            blocked = 0;
+            sigignore = 0;
+            sigcatch = 0;
+            nswap = 0;
+            cnswap = 0;
+            exit_signal = 0;
+            processor = -1;
+        }
     }process_info_t;
 
     /***
       * 网卡流量数据结构
       */
-    typedef struct
+    typedef struct NetInfo
     {
         /** 01 */ char interface_name[INTERFACE_NAME_MAX]; /** 网卡名，如eth0 */
 
@@ -200,7 +293,29 @@ public:
         /** 14 */ unsigned long transmit_fifo_errors;
         /** 15 */ unsigned long transmit_collisions;
         /** 16 */ unsigned long transmit_carrier;
-        /** 17 */ unsigned long transmit_compressed;        
+        /** 17 */ unsigned long transmit_compressed;
+
+        NetInfo()
+        {
+            interface_name[0] = '\0';
+            receive_bytes = 0;
+            receive_packets = 0;
+            receive_errors = 0;
+            receive_dropped = 0;
+            receive_fifo_errors = 0;
+            receive_frame = 0;
+            receive_compressed = 0;
+            receive_multicast = 0;
+
+            transmit_bytes = 0;
+            transmit_packets = 0;
+            transmit_errors = 0;
+            transmit_dropped = 0;
+            transmit_fifo_errors = 0;
+            transmit_collisions = 0;
+            transmit_carrier = 0;
+            transmit_compressed = 0;
+        }
     }net_info_t;
 
     /***
@@ -208,7 +323,7 @@ public:
       * 一页大小通常为4k，
       * 具体可以调用mooon::sys::CUtils::get_page_size()取得
       */
-    typedef struct
+    typedef struct TProcessPageInfo
     {
         long size;     /** 程序大小 */
         long resident; /** 常驻内存空间大小 */
@@ -216,6 +331,16 @@ public:
         long text;     /** 代码段占用内存页数 */
         long lib;      /** 数据/堆栈段占用内存页数 */
         long data;     /** 引用库占用内存页数 */
+
+        TProcessPageInfo()
+        {
+            size = 0;
+            resident = 0;
+            share = 0;
+            text = 0;
+            lib = 0;
+            data = 0;
+        }
     }process_page_info_t;
 
 public:

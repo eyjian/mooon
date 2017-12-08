@@ -565,8 +565,10 @@ std::string CStringUtils::int16_tostring(int16_t source)
 
 std::string CStringUtils::int_tostring(int16_t source)
 {
+    // # define UINT16_MAX             (65535)
+    // # define INT16_MAX              (32767)
     char str[sizeof("065535")]; // 0xFFFF
-    snprintf(str, sizeof(str), "%d", source);
+    snprintf(str, sizeof(str), "%d", (int)source);
     return str;
 }
 
@@ -577,6 +579,8 @@ std::string CStringUtils::int32_tostring(int32_t source)
 
 std::string CStringUtils::int_tostring(int32_t source)
 {
+    // # define UINT32_MAX             (4294967295U)
+    // # define INT32_MAX              (2147483647)
     char str[sizeof("04294967295")]; // 0xFFFFFFFF
     snprintf(str, sizeof(str), "%d", source);
     return str;
@@ -606,8 +610,10 @@ std::string CStringUtils::uint16_tostring(uint16_t source)
 
 std::string CStringUtils::int_tostring(uint16_t source)
 {
+    // # define INT16_MAX              (32767)
+    // # define UINT16_MAX             (65535)
     char str[sizeof("065535")]; // 0xFFFF
-    snprintf(str, sizeof(str), "%u", source);
+    snprintf(str, sizeof(str), "%d", (int)source);
     return str;
 }
 
@@ -618,6 +624,7 @@ std::string CStringUtils::uint32_tostring(uint32_t source)
 
 std::string CStringUtils::int_tostring(uint32_t source)
 {
+    // # define UINT32_MAX             (4294967295U)
     char str[sizeof("04294967295")]; // 0xFFFFFFFF
     snprintf(str, sizeof(str), "%u", source);
     return str;
@@ -630,12 +637,15 @@ std::string CStringUtils::uint64_tostring(uint64_t source)
 
 std::string CStringUtils::int_tostring(uint64_t source)
 {
+    // # define UINT64_MAX             (__UINT64_C(18446744073709551615))
     char str[sizeof("018446744073709551615")]; // 0xFFFFFFFFFFFFFFFF
-#if __WORDSIZE==64
-    snprintf(str, sizeof(str), "%lu", source);
-#else
-    snprintf(str, sizeof(str), "%llu", source);
-#endif
+    snprintf(str, sizeof(str), "%" PRId64, source);
+
+//#if __WORDSIZE==64
+//    snprintf(str, sizeof(str), "%lu", source);
+//#else
+//    snprintf(str, sizeof(str), "%llu", source);
+//#endif
     return str;
 }
 
