@@ -47,6 +47,7 @@ public:
     bool init();
     void stop();
     void run();
+    std::pair<uint64_t, uint64_t> get_memory() const { return _mem; }
 
 private:
     bool init_info(); // 初始化本机和当前进程的信息
@@ -65,6 +66,7 @@ private:
 private:
     std::string _ethX;
     std::vector<std::pair<std::string, uint16_t> > _report_servers;
+    std::pair<uint64_t, uint64_t> _mem;
 
 private:
     uint32_t _pid; // 进程ID
@@ -78,6 +80,14 @@ private:
 
 static CReportSelf* g_report_self = NULL;
 static sys::CThreadEngine* g_report_self_thread_engine = NULL;
+
+std::pair<uint64_t, uint64_t> get_memory()
+{
+    std::pair<uint64_t, uint64_t> mem(0, 0);
+    if (g_report_self != NULL)
+        mem = g_report_self->get_memory();
+    return mem;
+}
 
 void stop_report_self()
 {
@@ -292,19 +302,17 @@ void CReportSelf::report()
     if (init_conf())
     {
         const std::string& current = sys::CDatetimeUtils::get_current_datetime();
-        uint64_t vsz = 0;
-        int64_t rss = 0;
         sys::CInfo::process_info_t process_info;
         memset(&process_info, 0, sizeof(process_info));
         if (!sys::CInfo::get_process_info(&process_info))
         {
-            vsz = 0;
-            rss = 0;
+            _mem.first = 0;
+            _mem.second = 0;
         }
         else
         {
-            vsz = process_info.vsize;
-            rss = process_info.rss * sys::CUtils::get_page_size();
+            _mem.first = process_info.vsize;
+            _mem.second = process_info.rss * sys::CUtils::get_page_size();
         }
 
         std::vector<std::string> tokens(11);
@@ -317,8 +325,8 @@ void CReportSelf::report()
         tokens[6] = current;
         tokens[7] = utils::CStringUtils::int_tostring(_report_interval_seconds);
         tokens[8] = utils::CStringUtils::int_tostring(_pid);
-        tokens[9] = utils::CStringUtils::int_tostring(vsz);
-        tokens[10] = utils::CStringUtils::int_tostring(rss);
+        tokens[9] = utils::CStringUtils::int_tostring(_mem.first);
+        tokens[10] = utils::CStringUtils::int_tostring(_mem.second);
 
         for (std::vector<std::pair<std::string, uint16_t> >::size_type i=0; i<_report_servers.size(); ++i)
         {
