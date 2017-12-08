@@ -189,7 +189,6 @@ public:
     typedef struct TProcessInfo
     {
         /** 01 */ int32_t pid;              /** 进程号，其允许的最大值，请查看/proc/sys/kernel/pid_max */
-        /** 02 */ char comm[FILENAME_MAX];  /** 进程的名字，不包括路径 */
         /** 03 */ char state;               /** 进程的状态 */
         /** 04 */ int32_t ppid;             /** 父进程号 */
         /** 05 */ int32_t pgrp;             /** 进程组号 */
@@ -226,6 +225,7 @@ public:
         /** 36 */ uint64_t cnswap;          /** 所有子进程被swapped的页数的和，当前未用（Cumulative nswap for child processes (not maintained)） */
         /** 37 */ int32_t exit_signal;      /** 结束时向父进程所发送的信号（Signal to be sent to parent when we die (since Linux 2.1.22)） */
         /** 38 */ int32_t processor;        /** 运行在哪个CPU上（CPU number last executed on (since Linux 2.2.8)） */
+        /** 02 */ char comm[64];            /** 进程的名字，不包括路径和参数 */
 
         TProcessInfo()
         {
