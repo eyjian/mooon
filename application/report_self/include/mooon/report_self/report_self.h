@@ -26,7 +26,7 @@ namespace mooon {
 // 以方便可查看到运行信息
 
 // 取得当前进程的虚拟内存和物理内存
-extern std::pair<uint64_t, uint64_t> get_memory();
+extern std::pair<uint64_t, uint64_t> get_self_memory();
 
 // 停止上报，并结束上报线程
 extern void stop_report_self();

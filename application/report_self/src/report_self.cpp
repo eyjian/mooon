@@ -81,7 +81,7 @@ private:
 static CReportSelf* g_report_self = NULL;
 static sys::CThreadEngine* g_report_self_thread_engine = NULL;
 
-std::pair<uint64_t, uint64_t> get_memory()
+std::pair<uint64_t, uint64_t> get_self_memory()
 {
     std::pair<uint64_t, uint64_t> mem(0, 0);
     if (g_report_self != NULL)
