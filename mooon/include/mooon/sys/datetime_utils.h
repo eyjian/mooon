@@ -58,8 +58,7 @@ public:
 
     /*
      * 求邻居月份
-     * 如果date是一个不符号“YYYY-MM-DD”的值，则返回空字符串
-     * 返回格式为“YYYY-MM-01”的月份字符串
+     * 如果date是一个不符号“YYYY-MM-DD”的值则返回空字符串，否则返回格式为“YYYY-MM-01”的月份字符串
      */
     static std::string neighbor_month_bydate(const std::string& date, int months);
 
