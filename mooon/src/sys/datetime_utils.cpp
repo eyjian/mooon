@@ -55,6 +55,12 @@ uint32_t CDatetimeUtils::time2date(time_t t)
     return (result.tm_year+1900)*10000 + (result.tm_mon+1)*100 + result.tm_mday;
 }
 
+time_t CDatetimeUtils::tm2time_t(const struct tm& tm)
+{
+    struct tm tm_ = tm;
+    return mktime(&tm_);
+}
+
 bool CDatetimeUtils::neighbor_date_bytime(const std::string& datetime, int days, std::string* neighbor_date)
 {
     time_t t;
@@ -84,6 +90,53 @@ std::string CDatetimeUtils::neighbor_date_bydate(const std::string& date, int da
     std::string neighbor_date;
     (void)neighbor_date_bydate(date, days, &neighbor_date);
     return neighbor_date;
+}
+
+std::string CDatetimeUtils::neighbor_month_bydate(const std::string& date, int months)
+{
+    const std::string& datetime = date + std::string(" 00:00:00");
+    std::string month;
+    struct tm tm;
+
+    int months_ = months;
+    if (datetime_struct_from_string(datetime.c_str(), &tm))
+    {
+        // 向后跨2年以上
+        while (months_ > 12)
+        {
+            months_ -= 12;
+            ++tm.tm_year;
+        }
+
+        // 向前跨2年以上
+        while (months_ < -12)
+        {
+            months_ += 12;
+            --tm.tm_year;
+        }
+
+        tm.tm_mon += months_;
+        if (tm.tm_mon < 0)
+        {
+            --tm.tm_year;
+            tm.tm_mon += 12;
+        }
+        else if (tm.tm_mon > 11)
+        {
+            ++tm.tm_year;
+            tm.tm_mon -= 12;
+        }
+
+        tm.tm_mday = 1;
+        tm.tm_hour = 0;
+        tm.tm_min = 0;
+        tm.tm_sec = 0;
+
+        const time_t t = tm2time_t(tm);
+        month = to_date(t);
+    }
+
+    return month;
 }
 
 std::string CDatetimeUtils::extract_date(const char* datetime)
