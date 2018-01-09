@@ -28,10 +28,13 @@
 #include <mooon/utils/args_parser.h>
 #include <mooon/utils/string_utils.h>
 
+// 运行模式，如果是清理，需要保持参数和测试时相同
+INTEGER_ARG_DEFINE(uint8_t, test, 1, 0, 1, "1: test, 0: clean test data");
+
 STRING_ARG_DEFINE(redis, "127.0.0.1:6379", "redis nodes");
 INTEGER_ARG_DEFINE(uint8_t, threads, 1, 1, 100, "number of threads");
 INTEGER_ARG_DEFINE(uint32_t, requests, 1, 1, std::numeric_limits<int32_t>::max(), "number of requests of every threads");
-STRING_ARG_DEFINE(prefix, "r3c", "key prefix");
+STRING_ARG_DEFINE(prefix, "r3ct", "key prefix");
 INTEGER_ARG_DEFINE(uint32_t, expire, 60, 1, 3600, "key expired seconds");
 INTEGER_ARG_DEFINE(uint8_t, verbose, 0, 0, 1, "print error");
 INTEGER_ARG_DEFINE(uint8_t, increments, 10, 1, 100, "number of increments for hmincrby");
@@ -40,6 +43,9 @@ INTEGER_ARG_DEFINE(uint16_t, value_length, 10, 1, std::numeric_limits<uint16_t>:
 static atomic_t sg_success = 0;
 static atomic_t sg_failure = 0;
 static atomic_t sg_not_exists = 0;
+
+static bool is_clean_mode() { return 0 == mooon::argument::test->value(); }
+static bool is_test_mode() { return 1 == mooon::argument::test->value(); }
 
 static void set_test();
 static void get_test();
@@ -78,19 +84,22 @@ int main(int argc, char* argv[])
 
     // KV
     set_test();
-    get_test();
+    if (is_test_mode())
+        get_test();
     setnx_test();
     setex_test();
     setnxex_test();
 
     // HASH
     hset_test();
-    hget_test();
+    if (is_test_mode())
+        hget_test();
     hmincrby_test();
 
     // QUEUE
     lpush_test();
-    rpop_test();
+    if (is_test_mode())
+        rpop_test();
 
     return 0;
 }
@@ -112,16 +121,20 @@ void set_test()
         delete threads[i];
     }
     delete []threads;
-    unsigned int elapsed_microseconds = stop_watch.get_elapsed_microseconds();
-    unsigned int elapsed_milliseconds = elapsed_microseconds / 1000;
-    unsigned int elapsed_seconds = elapsed_milliseconds / 1000;
-    unsigned int success = atomic_read(&sg_success);
-    unsigned int failure = atomic_read(&sg_failure);
-    unsigned int qps = (0 == elapsed_seconds)? (success+failure): (success+failure)/elapsed_seconds;
-    fprintf(stdout, "set:\n");
-    fprintf(stdout, "microseconds=%u, milliseconds=%u, seconds=%u\n", elapsed_microseconds, elapsed_milliseconds, elapsed_seconds);
-    fprintf(stdout, "total: %u, success: %u, failure: %u\n", success+failure, success, failure);
-    fprintf(stdout, "qps: %u\n", qps);
+
+    if (is_test_mode())
+    {
+        unsigned int elapsed_microseconds = stop_watch.get_elapsed_microseconds();
+        unsigned int elapsed_milliseconds = elapsed_microseconds / 1000;
+        unsigned int elapsed_seconds = elapsed_milliseconds / 1000;
+        unsigned int success = atomic_read(&sg_success);
+        unsigned int failure = atomic_read(&sg_failure);
+        unsigned int qps = (0 == elapsed_seconds)? (success+failure): (success+failure)/elapsed_seconds;
+        fprintf(stdout, "set:\n");
+        fprintf(stdout, "microseconds=%u, milliseconds=%u, seconds=%u\n", elapsed_microseconds, elapsed_milliseconds, elapsed_seconds);
+        fprintf(stdout, "total: %u, success: %u, failure: %u\n", success+failure, success, failure);
+        fprintf(stdout, "qps: %u\n", qps);
+    }
 }
 
 void get_test()
@@ -169,16 +182,20 @@ void setnx_test()
         delete threads[i];
     }
     delete []threads;
-    unsigned int elapsed_microseconds = stop_watch.get_elapsed_microseconds();
-    unsigned int elapsed_milliseconds = elapsed_microseconds / 1000;
-    unsigned int elapsed_seconds = elapsed_milliseconds / 1000;
-    unsigned int success = atomic_read(&sg_success);
-    unsigned int failure = atomic_read(&sg_failure);
-    unsigned int qps = (0 == elapsed_seconds)? (success+failure): (success+failure)/elapsed_seconds;
-    fprintf(stdout, "\nsetnx:\n");
-    fprintf(stdout, "microseconds=%u, milliseconds=%u, seconds=%u\n", elapsed_microseconds, elapsed_milliseconds, elapsed_seconds);
-    fprintf(stdout, "total: %u, success: %u, failure: %u\n", success+failure, success, failure);
-    fprintf(stdout, "qps: %u\n", qps);
+
+    if (is_test_mode())
+    {
+        unsigned int elapsed_microseconds = stop_watch.get_elapsed_microseconds();
+        unsigned int elapsed_milliseconds = elapsed_microseconds / 1000;
+        unsigned int elapsed_seconds = elapsed_milliseconds / 1000;
+        unsigned int success = atomic_read(&sg_success);
+        unsigned int failure = atomic_read(&sg_failure);
+        unsigned int qps = (0 == elapsed_seconds)? (success+failure): (success+failure)/elapsed_seconds;
+        fprintf(stdout, "\nsetnx:\n");
+        fprintf(stdout, "microseconds=%u, milliseconds=%u, seconds=%u\n", elapsed_microseconds, elapsed_milliseconds, elapsed_seconds);
+        fprintf(stdout, "total: %u, success: %u, failure: %u\n", success+failure, success, failure);
+        fprintf(stdout, "qps: %u\n", qps);
+    }
 }
 
 void setex_test()
@@ -254,16 +271,20 @@ void hset_test()
         delete threads[i];
     }
     delete []threads;
-    unsigned int elapsed_microseconds = stop_watch.get_elapsed_microseconds();
-    unsigned int elapsed_milliseconds = elapsed_microseconds / 1000;
-    unsigned int elapsed_seconds = elapsed_milliseconds / 1000;
-    unsigned int success = atomic_read(&sg_success);
-    unsigned int failure = atomic_read(&sg_failure);
-    unsigned int qps = (0 == elapsed_seconds)? (success+failure): (success+failure)/elapsed_seconds;
-    fprintf(stdout, "\nhset:\n");
-    fprintf(stdout, "microseconds=%u, milliseconds=%u, seconds=%u\n", elapsed_microseconds, elapsed_milliseconds, elapsed_seconds);
-    fprintf(stdout, "total: %u, success: %u, failure: %u\n", success+failure, success, failure);
-    fprintf(stdout, "qps: %u\n", qps);
+
+    if (is_test_mode())
+    {
+        unsigned int elapsed_microseconds = stop_watch.get_elapsed_microseconds();
+        unsigned int elapsed_milliseconds = elapsed_microseconds / 1000;
+        unsigned int elapsed_seconds = elapsed_milliseconds / 1000;
+        unsigned int success = atomic_read(&sg_success);
+        unsigned int failure = atomic_read(&sg_failure);
+        unsigned int qps = (0 == elapsed_seconds)? (success+failure): (success+failure)/elapsed_seconds;
+        fprintf(stdout, "\nhset:\n");
+        fprintf(stdout, "microseconds=%u, milliseconds=%u, seconds=%u\n", elapsed_microseconds, elapsed_milliseconds, elapsed_seconds);
+        fprintf(stdout, "total: %u, success: %u, failure: %u\n", success+failure, success, failure);
+        fprintf(stdout, "qps: %u\n", qps);
+    }
 }
 
 void hget_test()
@@ -311,16 +332,20 @@ void hmincrby_test()
         delete threads[i];
     }
     delete []threads;
-    unsigned int elapsed_microseconds = stop_watch.get_elapsed_microseconds();
-    unsigned int elapsed_milliseconds = elapsed_microseconds / 1000;
-    unsigned int elapsed_seconds = elapsed_milliseconds / 1000;
-    unsigned int success = atomic_read(&sg_success);
-    unsigned int failure = atomic_read(&sg_failure);
-    unsigned int qps = (0 == elapsed_seconds)? (success+failure): (success+failure)/elapsed_seconds;
-    fprintf(stdout, "\nhmincrby:\n");
-    fprintf(stdout, "microseconds=%u, milliseconds=%u, seconds=%u\n", elapsed_microseconds, elapsed_milliseconds, elapsed_seconds);
-    fprintf(stdout, "total: %u, success: %u, failure: %u\n", success+failure, success, failure);
-    fprintf(stdout, "qps: %u\n", qps);
+
+    if (is_test_mode())
+    {
+        unsigned int elapsed_microseconds = stop_watch.get_elapsed_microseconds();
+        unsigned int elapsed_milliseconds = elapsed_microseconds / 1000;
+        unsigned int elapsed_seconds = elapsed_milliseconds / 1000;
+        unsigned int success = atomic_read(&sg_success);
+        unsigned int failure = atomic_read(&sg_failure);
+        unsigned int qps = (0 == elapsed_seconds)? (success+failure): (success+failure)/elapsed_seconds;
+        fprintf(stdout, "\nhmincrby:\n");
+        fprintf(stdout, "microseconds=%u, milliseconds=%u, seconds=%u\n", elapsed_microseconds, elapsed_milliseconds, elapsed_seconds);
+        fprintf(stdout, "total: %u, success: %u, failure: %u\n", success+failure, success, failure);
+        fprintf(stdout, "qps: %u\n", qps);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -340,16 +365,20 @@ void lpush_test()
         delete threads[i];
     }
     delete []threads;
-    unsigned int elapsed_microseconds = stop_watch.get_elapsed_microseconds();
-    unsigned int elapsed_milliseconds = elapsed_microseconds / 1000;
-    unsigned int elapsed_seconds = elapsed_milliseconds / 1000;
-    unsigned int success = atomic_read(&sg_success);
-    unsigned int failure = atomic_read(&sg_failure);
-    unsigned int qps = (0 == elapsed_seconds)? (success+failure): (success+failure)/elapsed_seconds;
-    fprintf(stdout, "\nlpush:\n");
-    fprintf(stdout, "microseconds=%u, milliseconds=%u, seconds=%u\n", elapsed_microseconds, elapsed_milliseconds, elapsed_seconds);
-    fprintf(stdout, "total: %u, success: %u, failure: %u\n", success+failure, success, failure);
-    fprintf(stdout, "qps: %u\n", qps);
+
+    if (is_test_mode())
+    {
+        unsigned int elapsed_microseconds = stop_watch.get_elapsed_microseconds();
+        unsigned int elapsed_milliseconds = elapsed_microseconds / 1000;
+        unsigned int elapsed_seconds = elapsed_milliseconds / 1000;
+        unsigned int success = atomic_read(&sg_success);
+        unsigned int failure = atomic_read(&sg_failure);
+        unsigned int qps = (0 == elapsed_seconds)? (success+failure): (success+failure)/elapsed_seconds;
+        fprintf(stdout, "\nlpush:\n");
+        fprintf(stdout, "microseconds=%u, milliseconds=%u, seconds=%u\n", elapsed_microseconds, elapsed_milliseconds, elapsed_seconds);
+        fprintf(stdout, "total: %u, success: %u, failure: %u\n", success+failure, success, failure);
+        fprintf(stdout, "qps: %u\n", qps);
+    }
 }
 
 void rpop_test()
@@ -389,12 +418,19 @@ void set_stress_thread(uint8_t index)
 
     for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
     {
-        const std::string key = mooon::utils::CStringUtils::format_string("%s_%d_%u", mooon::argument::prefix->c_value(), index, i);
+        const std::string& key = mooon::utils::CStringUtils::format_string("%s_%d_%u", mooon::argument::prefix->c_value(), index, i);
 
         try
         {
-            redis.set(key, value);
-            atomic_inc(&sg_success);
+            if (is_clean_mode())
+            {
+                redis.del(key);
+            }
+            else
+            {
+                redis.set(key, value);
+                atomic_inc(&sg_success);
+            }
         }
         catch (r3c::CRedisException& ex)
         {
@@ -411,7 +447,7 @@ void get_stress_thread(uint8_t index)
 
     for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
     {
-        const std::string key = mooon::utils::CStringUtils::format_string("%s_%d_%u", mooon::argument::prefix->c_value(), index, i);
+        const std::string& key = mooon::utils::CStringUtils::format_string("%s_%d_%u", mooon::argument::prefix->c_value(), index, i);
 
         try
         {
@@ -443,12 +479,19 @@ void setnx_stress_thread(uint8_t index)
 
     for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
     {
-        const std::string key = mooon::utils::CStringUtils::format_string("nx_%s_%d_%u", mooon::argument::prefix->c_value(), index, i);
+        const std::string& key = mooon::utils::CStringUtils::format_string("%s_nx_%d_%u", mooon::argument::prefix->c_value(), index, i);
 
         try
         {
-            redis.setnx(key, value);
-            atomic_inc(&sg_success);
+            if (is_clean_mode())
+            {
+                redis.del(key);
+            }
+            else
+            {
+                redis.setnx(key, value);
+                atomic_inc(&sg_success);
+            }
         }
         catch (r3c::CRedisException& ex)
         {
@@ -466,13 +509,20 @@ void setex_stress_thread(uint8_t index)
 
     for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
     {
-        const std::string key = mooon::utils::CStringUtils::format_string("ex_%s_%d_%u", mooon::argument::prefix->c_value(), index, i);
+        const std::string& key = mooon::utils::CStringUtils::format_string("%s_ex_%d_%u", mooon::argument::prefix->c_value(), index, i);
 
         try
         {
-            const uint32_t expired_seconds = mooon::argument::expire->value();
-            redis.setex(key, value, expired_seconds);
-            atomic_inc(&sg_success);
+            if (is_clean_mode())
+            {
+                redis.del(key);
+            }
+            else
+            {
+                const uint32_t expired_seconds = mooon::argument::expire->value();
+                redis.setex(key, value, expired_seconds);
+                atomic_inc(&sg_success);
+            }
         }
         catch (r3c::CRedisException& ex)
         {
@@ -490,13 +540,20 @@ void setnxex_stress_thread(uint8_t index)
 
     for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
     {
-        const std::string key = mooon::utils::CStringUtils::format_string("nxex_%s_%d_%u", mooon::argument::prefix->c_value(), index, i);
+        const std::string& key = mooon::utils::CStringUtils::format_string("%s_nxex_%d_%u", mooon::argument::prefix->c_value(), index, i);
 
         try
         {
-            const uint32_t expired_seconds = mooon::argument::expire->value();
-            redis.setnxex(key, value, expired_seconds);
-            atomic_inc(&sg_success);
+            if (is_clean_mode())
+            {
+                redis.del(key);
+            }
+            else
+            {
+                const uint32_t expired_seconds = mooon::argument::expire->value();
+                redis.setnxex(key, value, expired_seconds);
+                atomic_inc(&sg_success);
+            }
         }
         catch (r3c::CRedisException& ex)
         {
@@ -511,40 +568,47 @@ void setnxex_stress_thread(uint8_t index)
 void hset_stress_thread(uint8_t index)
 {
     const std::string value(mooon::argument::value_length->value(), '*');
-    const std::string key = mooon::utils::CStringUtils::format_string("%s_hash_%d", mooon::argument::prefix->c_value(), index);
+    const std::string& key = mooon::utils::CStringUtils::format_string("%s_hash_%d", mooon::argument::prefix->c_value(), index);
     r3c::CRedisClient redis(mooon::argument::redis->value());
 
-    redis.expire(key, mooon::argument::expire->value());
-    for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
+    if (is_clean_mode())
     {
-        const std::string field = mooon::utils::CStringUtils::format_string("field_%u", i);
+        redis.del(key);
+    }
+    else
+    {
+        for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
+        {
+            const std::string field = mooon::utils::CStringUtils::format_string("field_%u", i);
 
-        try
-        {
-            redis.hset(key, field, value);
-            atomic_inc(&sg_success);
-        }
-        catch (r3c::CRedisException& ex)
-        {
-            atomic_inc(&sg_failure);
-            if (1 == mooon::argument::verbose->value())
-                fprintf(stderr, "HSET [%s:%s] ERROR: %s\n", key.c_str(), field.c_str(), ex.str().c_str());
+            try
+            {
+                redis.hset(key, field, value);
+                atomic_inc(&sg_success);
+            }
+            catch (r3c::CRedisException& ex)
+            {
+                atomic_inc(&sg_failure);
+                if (1 == mooon::argument::verbose->value())
+                    fprintf(stderr, "HSET [%s:%s] ERROR: %s\n", key.c_str(), field.c_str(), ex.str().c_str());
+            }
         }
     }
 }
 
 void hget_stress_thread(uint8_t index)
 {
-    const std::string key = mooon::utils::CStringUtils::format_string("%s_hash_%d", mooon::argument::prefix->c_value(), index);
+    const std::string& key = mooon::utils::CStringUtils::format_string("%s_hash_%d", mooon::argument::prefix->c_value(), index);
     r3c::CRedisClient redis(mooon::argument::redis->value());
 
     for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
     {
-        const std::string field = mooon::utils::CStringUtils::format_string("field_%u", i);
+        const std::string& field = mooon::utils::CStringUtils::format_string("field_%u", i);
 
         try
         {
             std::string value;
+
             if (redis.hget(key, field, &value))
             {
                 atomic_inc(&sg_success);
@@ -567,29 +631,35 @@ void hget_stress_thread(uint8_t index)
 
 void hmincrby_stress_thread(uint8_t index)
 {
-    const std::string key = mooon::utils::CStringUtils::format_string("%s_eval_%d", mooon::argument::prefix->c_value(), index);
+    const std::string& key = mooon::utils::CStringUtils::format_string("%s_eval_%d", mooon::argument::prefix->c_value(), index);
     r3c::CRedisClient redis(mooon::argument::redis->value());
 
-    redis.expire(key, mooon::argument::expire->value());
-    for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
+    if (is_clean_mode())
     {
-        std::vector<std::pair<std::string, int64_t> > increments(mooon::argument::increments->value());
-        for (std::vector<std::pair<std::string, int64_t> >::size_type i=0; i<increments.size(); ++i)
+        redis.del(key);
+    }
+    else
+    {
+        for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
         {
-            increments[i].first = mooon::utils::CStringUtils::int_tostring(i%100);
-            increments[i].second = i;
-        }
+            std::vector<std::pair<std::string, int64_t> > increments(mooon::argument::increments->value());
+            for (std::vector<std::pair<std::string, int64_t> >::size_type i=0; i<increments.size(); ++i)
+            {
+                increments[i].first = mooon::utils::CStringUtils::int_tostring(i%100);
+                increments[i].second = i;
+            }
 
-        try
-        {
-            redis.hmincrby(key, increments);
-            atomic_inc(&sg_success);
-        }
-        catch (r3c::CRedisException& ex)
-        {
-            atomic_inc(&sg_failure);
-            if (1 == mooon::argument::verbose->value())
-                fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
+            try
+            {
+                redis.hmincrby(key, increments);
+                atomic_inc(&sg_success);
+            }
+            catch (r3c::CRedisException& ex)
+            {
+                atomic_inc(&sg_failure);
+                if (1 == mooon::argument::verbose->value())
+                    fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
+            }
         }
     }
 }
@@ -598,29 +668,35 @@ void hmincrby_stress_thread(uint8_t index)
 void lpush_stress_thread(uint8_t index)
 {
     const std::string value(mooon::argument::value_length->value(), '*');
-    const std::string key = mooon::utils::CStringUtils::format_string("%s_queue_%d", mooon::argument::prefix->c_value(), index);
+    const std::string& key = mooon::utils::CStringUtils::format_string("%s_queue_%d", mooon::argument::prefix->c_value(), index);
     r3c::CRedisClient redis(mooon::argument::redis->value());
 
-    redis.expire(key, mooon::argument::expire->value());
-    for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
+    if (is_clean_mode())
     {
-        try
+        redis.del(key);
+    }
+    else
+    {
+        for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
         {
-            redis.lpush(key, value);
-            atomic_inc(&sg_success);
-        }
-        catch (r3c::CRedisException& ex)
-        {
-            atomic_inc(&sg_failure);
-            if (1 == mooon::argument::verbose->value())
-                fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
+            try
+            {
+                redis.lpush(key, value);
+                atomic_inc(&sg_success);
+            }
+            catch (r3c::CRedisException& ex)
+            {
+                atomic_inc(&sg_failure);
+                if (1 == mooon::argument::verbose->value())
+                    fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
+            }
         }
     }
 }
 
 void rpop_stress_thread(uint8_t index)
 {
-    const std::string key = mooon::utils::CStringUtils::format_string("%s_queue_%d", mooon::argument::prefix->c_value(), index);
+    const std::string& key = mooon::utils::CStringUtils::format_string("%s_queue_%d", mooon::argument::prefix->c_value(), index);
     r3c::CRedisClient redis(mooon::argument::redis->value());
 
     for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
