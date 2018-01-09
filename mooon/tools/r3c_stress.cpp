@@ -34,7 +34,7 @@ INTEGER_ARG_DEFINE(uint8_t, test, 1, 0, 1, "1: test, 0: clean test data");
 STRING_ARG_DEFINE(redis, "127.0.0.1:6379", "redis nodes");
 INTEGER_ARG_DEFINE(uint8_t, threads, 1, 1, 100, "number of threads");
 INTEGER_ARG_DEFINE(uint32_t, requests, 1, 1, std::numeric_limits<int32_t>::max(), "number of requests of every threads");
-STRING_ARG_DEFINE(prefix, "r3ct", "key prefix");
+STRING_ARG_DEFINE(prefix, "r3ct", "key prefix"); // 前缀的一个作用是方便清掉测试时产生的数据
 INTEGER_ARG_DEFINE(uint32_t, expire, 60, 1, 3600, "key expired seconds");
 INTEGER_ARG_DEFINE(uint8_t, verbose, 0, 0, 1, "print error");
 INTEGER_ARG_DEFINE(uint8_t, increments, 10, 1, 100, "number of increments for hmincrby");
