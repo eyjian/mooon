@@ -214,16 +214,20 @@ void setex_test()
         delete threads[i];
     }
     delete []threads;
-    unsigned int elapsed_microseconds = stop_watch.get_elapsed_microseconds();
-    unsigned int elapsed_milliseconds = elapsed_microseconds / 1000;
-    unsigned int elapsed_seconds = elapsed_milliseconds / 1000;
-    unsigned int success = atomic_read(&sg_success);
-    unsigned int failure = atomic_read(&sg_failure);
-    unsigned int qps = (0 == elapsed_seconds)? (success+failure): (success+failure)/elapsed_seconds;
-    fprintf(stdout, "\nsetex:\n");
-    fprintf(stdout, "microseconds=%u, milliseconds=%u, seconds=%u\n", elapsed_microseconds, elapsed_milliseconds, elapsed_seconds);
-    fprintf(stdout, "total: %u, success: %u, failure: %u\n", success+failure, success, failure);
-    fprintf(stdout, "qps: %u\n", qps);
+
+    if (is_test_mode())
+    {
+        unsigned int elapsed_microseconds = stop_watch.get_elapsed_microseconds();
+        unsigned int elapsed_milliseconds = elapsed_microseconds / 1000;
+        unsigned int elapsed_seconds = elapsed_milliseconds / 1000;
+        unsigned int success = atomic_read(&sg_success);
+        unsigned int failure = atomic_read(&sg_failure);
+        unsigned int qps = (0 == elapsed_seconds)? (success+failure): (success+failure)/elapsed_seconds;
+        fprintf(stdout, "\nsetex:\n");
+        fprintf(stdout, "microseconds=%u, milliseconds=%u, seconds=%u\n", elapsed_microseconds, elapsed_milliseconds, elapsed_seconds);
+        fprintf(stdout, "total: %u, success: %u, failure: %u\n", success+failure, success, failure);
+        fprintf(stdout, "qps: %u\n", qps);
+    }
 }
 
 void setnxex_test()
@@ -242,16 +246,20 @@ void setnxex_test()
         delete threads[i];
     }
     delete []threads;
-    unsigned int elapsed_microseconds = stop_watch.get_elapsed_microseconds();
-    unsigned int elapsed_milliseconds = elapsed_microseconds / 1000;
-    unsigned int elapsed_seconds = elapsed_milliseconds / 1000;
-    unsigned int success = atomic_read(&sg_success);
-    unsigned int failure = atomic_read(&sg_failure);
-    unsigned int qps = (0 == elapsed_seconds)? (success+failure): (success+failure)/elapsed_seconds;
-    fprintf(stdout, "\nsetnxex:\n");
-    fprintf(stdout, "microseconds=%u, milliseconds=%u, seconds=%u\n", elapsed_microseconds, elapsed_milliseconds, elapsed_seconds);
-    fprintf(stdout, "total: %u, success: %u, failure: %u\n", success+failure, success, failure);
-    fprintf(stdout, "qps: %u\n", qps);
+
+    if (is_test_mode())
+    {
+        unsigned int elapsed_microseconds = stop_watch.get_elapsed_microseconds();
+        unsigned int elapsed_milliseconds = elapsed_microseconds / 1000;
+        unsigned int elapsed_seconds = elapsed_milliseconds / 1000;
+        unsigned int success = atomic_read(&sg_success);
+        unsigned int failure = atomic_read(&sg_failure);
+        unsigned int qps = (0 == elapsed_seconds)? (success+failure): (success+failure)/elapsed_seconds;
+        fprintf(stdout, "\nsetnxex:\n");
+        fprintf(stdout, "microseconds=%u, milliseconds=%u, seconds=%u\n", elapsed_microseconds, elapsed_milliseconds, elapsed_seconds);
+        fprintf(stdout, "total: %u, success: %u, failure: %u\n", success+failure, success, failure);
+        fprintf(stdout, "qps: %u\n", qps);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
