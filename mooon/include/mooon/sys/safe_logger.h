@@ -108,32 +108,32 @@ public:
     /** 是否允许Raw级别日志 */
     virtual bool enabled_raw();
 
-    virtual void log_detail(const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
+    virtual void vlog_detail(const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
     virtual void log_detail(const char* filename, int lineno, const char* module_name, const char* format, ...)  __attribute__((format(printf, 5, 6)));
 
-    virtual void log_debug(const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
+    virtual void vlog_debug(const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
     virtual void log_debug(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
 
-    virtual void log_info(const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
+    virtual void vlog_info(const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
     virtual void log_info(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
 
-    virtual void log_warn(const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
+    virtual void vlog_warn(const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
     virtual void log_warn(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
 
-    virtual void log_error(const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
+    virtual void vlog_error(const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
     virtual void log_error(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
 
-    virtual void log_fatal(const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
+    virtual void vlog_fatal(const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
     virtual void log_fatal(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
 
-    virtual void log_state(const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
+    virtual void vlog_state(const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
     virtual void log_state(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
 
-    virtual void log_trace(const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
+    virtual void vlog_trace(const char* filename, int lineno, const char* module_name, const char* format, va_list& args);
     virtual void log_trace(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)));
 
     /** 写裸日志 */
-    virtual void log_raw(const char* format, va_list& args);
+    virtual void vlog_raw(const char* format, va_list& args);
     virtual void log_raw(const char* format, ...) __attribute__((format(printf, 2, 3)));
 
     /** 写二进制日志 */
