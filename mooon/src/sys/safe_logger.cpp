@@ -410,19 +410,20 @@ bool CSafeLogger::need_rotate(int fd) const
 void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno, const char* module_name, const char* format, va_list& args)
 {
     int log_real_size = 0;
-    utils::ScopedArray<char> log_line(new char[_log_line_size]);
+    std::string log_line(_log_line_size+1, '\0');
+    char* log_line_p = const_cast<char*>(log_line.data());
 
     if (LOG_LEVEL_RAW == log_level)
     {
         if (_raw_record_time)
         {
             char datetime[sizeof("[2012-12-12 12:12:12]")];
-            CDatetimeUtils::get_current_datetime(log_line.get(), sizeof(datetime), "[%04d-%02d-%02d %02d:%02d:%02d]");
+            CDatetimeUtils::get_current_datetime(log_line_p, sizeof(datetime), "[%04d-%02d-%02d %02d:%02d:%02d]");
             log_real_size = sizeof("[YYYY-MM-DD hh:mm:ss]") - 1;
         }
 
         // fix_vsnprintf()的返回值包含了结尾符在内的长度
-        log_real_size += utils::CStringUtils::fix_vsnprintf(log_line.get()+log_real_size, _log_line_size-log_real_size, format, args);
+        log_real_size += utils::CStringUtils::fix_vsnprintf(log_line_p+log_real_size, _log_line_size-log_real_size, format, args);
         --log_real_size; // 结尾符不需要写入日志文件中
     }
     else
@@ -442,37 +443,37 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
 
         int m, n;
         // 注意fix_snprintf()的返回值大小包含了结尾符
-        m = utils::CStringUtils::fix_snprintf(log_line.get(), _log_line_size, "%s", log_header.str().c_str());
+        m = utils::CStringUtils::fix_snprintf(log_line_p, _log_line_size, "%s", log_header.str().c_str());
 
         if (LOG_LEVEL_BIN == log_level)
-            n = utils::CStringUtils::fix_snprintf(log_line.get()+m-1, _log_line_size-m, "%s", format);
+            n = utils::CStringUtils::fix_snprintf(log_line_p+m-1, _log_line_size-m, "%s", format);
         else
-            n = utils::CStringUtils::fix_vsnprintf(log_line.get()+m-1, _log_line_size-m, format, args);
-        log_real_size = m + n - 2;
+            n = utils::CStringUtils::fix_vsnprintf(log_line_p+m-1, _log_line_size-m, format, args);
+        log_real_size = m + n - 2; // 减去2个结尾符
     }
 
     // 是否自动添加结尾用的点号
     if (_auto_adddot)
     {
         // 如果已有结尾的点，则不再添加，以免重复
-        if (log_line.get()[log_real_size-1] != '.')
+        if (log_line_p[log_real_size-1] != '.')
         {
-            log_line.get()[log_real_size] = '.';
+            log_line_p[log_real_size] = '.';
             ++log_real_size;
         }
     }
     if (_auto_newline) // 是否自动换行
     {
         // 如果已有一个换行符，则不再添加
-        if (log_line.get()[log_real_size-1] != '\n')
+        if (log_line_p[log_real_size-1] != '\n')
         {
-            log_line.get()[log_real_size] = '\n';
+            log_line_p[log_real_size] = '\n';
             ++log_real_size;
         }
     }
     if (_screen_enabled) // 允许打屏
     {
-        (void)write(STDOUT_FILENO, log_line.get(), log_real_size);
+        (void)write(STDOUT_FILENO, log_line_p, log_real_size);
     }
 
     if (false)
@@ -483,7 +484,7 @@ void CSafeLogger::do_log(log_level_t log_level, const char* filename, int lineno
     else
     {
         // 同步写入日志文件
-        write_log(log_line.get(), log_real_size);
+        write_log(log_line_p, log_real_size);
     }
 }
 
