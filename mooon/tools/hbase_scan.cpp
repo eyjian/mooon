@@ -34,8 +34,10 @@ STRING_ARG_DEFINE(family, "cf1", "hbase column family name");
 STRING_ARG_DEFINE(startrow, "", "hbase row key");
 STRING_ARG_DEFINE(stoprow, "", "hbase row key");
 INTEGER_ARG_DEFINE(int, batch, 1, 1, 10000, "number of rows to scan");
-INTEGER_ARG_DEFINE(int, num, 1, 1, 1000000000, "number of rows to scan");
+INTEGER_ARG_DEFINE(int, num, 1, 1, 1000000000, "repeat scan number");
 INTEGER_ARG_DEFINE(int, timeout, 10, 1, 3600, "timeout seconds of thrift");
+INTEGER_ARG_DEFINE(int, batch_size, 0, 0, 100000, "batch size");
+INTEGER_ARG_DEFINE(int, caching, 0, 0, 100000, "hbase.client.scanner.caching");
 
 using namespace apache::hadoop;
 
@@ -100,10 +102,21 @@ int main(int argc, char* argv[])
             std::vector<hbase::thrift2::TResult> results;
             hbase::thrift2::TScan scan;
 
-            scan.startRow = startrow;
+            if (!startrow.empty())
+            {
+                scan.__set_startRow(startrow);
+            }
             if (!stoprow.empty())
             {
-                scan.stopRow = stoprow;
+                scan.__set_stopRow(stoprow);
+            }
+            if (mooon::argument::caching->value() > 0)
+            {
+                scan.__set_caching(mooon::argument::caching->value());
+            }
+            if (mooon::argument::batch_size->value() > 0)
+            {
+                scan.__set_batchSize(mooon::argument::batch_size->value());
             }
 
             hbase->getScannerResults(results, mooon::argument::table->value(), scan, batch);
