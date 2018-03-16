@@ -33,6 +33,9 @@ private:
 // 生成libcurl的Makefile：
 // configure --prefix=/usr/local/curl-7.42.1 --enable-ares=/usr/local/c-ares --with-ssl=/usr/local/openssl # --with-libssh2=/usr/local/libssh2
 //
+// 一些环境还需要带上libidn（注意libidn和libidn2区别）：
+// configure --prefix=/usr/local/curl-7.42.1 --enable-ares=/usr/local/c-ares --with-ssl=/usr/local/openssl --with-libidn=/usr/local/libidn # --with-libssh2=/usr/local/libssh2
+//
 // 编译openssl-1.0.2h：
 // 1) ./config --prefix=/usr/local/openssl-1.0.2h shared threads
 // 2) make depend # openssl-1.0.2h之前的版本并不需要这一步
