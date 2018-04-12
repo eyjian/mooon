@@ -57,6 +57,18 @@ public:
     virtual bool is_deadlock_exception(CDBException& db_error) const;
     virtual bool is_shutdowning_exception(CDBException& db_error) const;
 
+    // 如果一条查询语句过慢，可能导致大量的lost错误消耗光MySQL连接
+    // 因此遇到此错误时，需要考虑降慢重连接速度，即使开启了自动得连接！
+    virtual bool is_lost_connection_exception(CDBException& db_error) const;
+    virtual bool is_too_many_connections_exception(CDBException& db_error) const;
+
+    virtual bool is_query_interrupted_exception(CDBException& db_error) const;
+    virtual bool is_connect_host_exception(CDBException& db_error) const;
+    virtual bool is_server_gone_exception(CDBException& db_error) const;
+    virtual bool is_connection_error_exception(CDBException& db_error) const;
+    virtual bool is_server_handshake_exception(CDBException& db_error) const;
+    virtual bool is_ipsock_exception(CDBException& db_error) const;
+
     virtual std::string escape_string(const std::string& str) const throw (CDBException);
     virtual void change_charset(const std::string& charset) throw (CDBException);
     virtual void open() throw (CDBException);

@@ -128,6 +128,54 @@ bool CMySQLConnection::is_shutdowning_exception(CDBException& db_error) const
     return ER_SERVER_SHUTDOWN == errcode;
 }
 
+bool CMySQLConnection::is_lost_connection_exception(CDBException& db_error) const
+{
+    const int errcode = db_error.errcode();
+    return CR_SERVER_LOST == errcode;
+}
+
+bool CMySQLConnection::is_too_many_connections_exception(CDBException& db_error) const
+{
+    const int errcode = db_error.errcode();
+    return ER_CON_COUNT_ERROR == errcode;
+}
+
+bool CMySQLConnection::is_query_interrupted_exception(CDBException& db_error) const
+{
+    const int errcode = db_error.errcode();
+    return ER_QUERY_INTERRUPTED == errcode;
+}
+
+bool CMySQLConnection::is_connect_host_exception(CDBException& db_error) const
+{
+    const int errcode = db_error.errcode();
+    return CR_CONN_HOST_ERROR == errcode;
+}
+
+bool CMySQLConnection::is_server_gone_exception(CDBException& db_error) const
+{
+    const int errcode = db_error.errcode();
+    return CR_SERVER_GONE_ERROR == errcode;
+}
+
+bool CMySQLConnection::is_connection_error_exception(CDBException& db_error) const
+{
+    const int errcode = db_error.errcode();
+    return CR_CONNECTION_ERROR == errcode;
+}
+
+bool CMySQLConnection::is_server_handshake_exception(CDBException& db_error) const
+{
+    const int errcode = db_error.errcode();
+    return CR_SERVER_HANDSHAKE_ERR == errcode;
+}
+
+bool CMySQLConnection::is_ipsock_exception(CDBException& db_error) const
+{
+    const int errcode = db_error.errcode();
+    return CR_IPSOCK_ERROR == errcode;
+}
+
 std::string CMySQLConnection::escape_string(const std::string& str) const throw (CDBException)
 {
     MOOON_ASSERT(_mysql_handle != NULL);

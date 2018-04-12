@@ -86,6 +86,19 @@ public:
     // 对于MySQL为：ER_SERVER_SHUTDOWN(1053) Server shutdown in progress 当执行关闭MySQL时
     virtual bool is_shutdowning_exception(CDBException& db_error) const { return false; }
 
+    // Lost connection to MySQL server during query
+    virtual bool is_lost_connection_exception(CDBException& db_error) const { return false; }
+
+    // Too many connections
+    virtual bool is_too_many_connections(CDBException& db_error) const { return false; }
+
+    virtual bool is_query_interrupted_exception(CDBException& db_error) const { return false; }
+    virtual bool is_connect_host_exception(CDBException& db_error) const { return false; }
+    virtual bool is_server_gone_exception(CDBException& db_error) const { return false; }
+    virtual bool is_connection_error_exception(CDBException& db_error) const { return false; }
+    virtual bool is_server_handshake_exception(CDBException& db_error) const { return false; }
+    virtual bool is_ipsock_exception(CDBException& db_error) const { return false; }
+
     // 对字符串进行编码，以防止SQL注入
     // str 需要编码的字符串，返回被编码后的字符串
     virtual std::string escape_string(const std::string& str) const throw (CDBException) = 0;
