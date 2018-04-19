@@ -35,8 +35,8 @@ class CUdpSocket: public CEpollable
 {
 public:
     CUdpSocket() throw (sys::CSyscallException);
-    void listen(uint16_t port, bool nonblock=false) throw (sys::CSyscallException);
-    void listen(const std::string& ip, uint16_t port, bool nonblock=false) throw (sys::CSyscallException);
+    void listen(uint16_t port, bool nonblock=false, bool reuse_port=false) throw (sys::CSyscallException);
+    void listen(const std::string& ip, uint16_t port, bool nonblock=false, bool reuse_port=false) throw (sys::CSyscallException);
 
     // to_ip 目标IP，要求为网络字节序
     // to_port 目标端口，同样要求为主机字节序

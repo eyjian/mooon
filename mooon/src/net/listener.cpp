@@ -27,7 +27,7 @@ CListener::CListener()
 {
 }
 
-void CListener::listen(const ip_address_t& ip, uint16_t port, bool nonblock, bool enabled_address_zero) throw (sys::CSyscallException)
+void CListener::listen(const ip_address_t& ip, uint16_t port, bool nonblock, bool enabled_address_zero, bool reuse_port) throw (sys::CSyscallException)
 {    
     // 是否允许是任意地址上监听
     if (!enabled_address_zero && ip.is_zero_address())
@@ -76,6 +76,18 @@ void CListener::listen(const ip_address_t& ip, uint16_t port, bool nonblock, boo
         if (-1 == retval)
             THROW_SYSCALL_EXCEPTION(NULL, errno, "setsockopt");
 
+#if defined(SO_REUSEPORT)
+        // 重用端口
+        if (reuse_port)
+        {
+            // #define SO_REUSEPORT 15
+            reuse = 1;
+            retval = ::setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse));
+            if (-1 == retval)
+                THROW_SYSCALL_EXCEPTION(NULL, errno, "setsockopt");
+        }
+#endif // SO_REUSEPORT
+
         // 防止子进程继承
         retval = ::fcntl(fd, F_SETFD, FD_CLOEXEC);
         if (-1 == retval)
@@ -114,13 +126,13 @@ void CListener::listen(const ip_address_t& ip, uint16_t port, bool nonblock, boo
     }
 }
 
-void CListener::listen(const ipv4_node_t& ip_node, bool nonblock, bool enabled_address_zero) throw (sys::CSyscallException)
+void CListener::listen(const ipv4_node_t& ip_node, bool nonblock, bool enabled_address_zero, bool reuse_port) throw (sys::CSyscallException)
 {
     ip_address_t ip = ip_node.ip;
     listen(ip, ip_node.port, nonblock, enabled_address_zero);
 }
 
-void CListener::listen(const ipv6_node_t& ip_node, bool nonblock, bool enabled_address_zero) throw (sys::CSyscallException)
+void CListener::listen(const ipv6_node_t& ip_node, bool nonblock, bool enabled_address_zero, bool reuse_port) throw (sys::CSyscallException)
 {
     ip_address_t ip = (uint32_t*)ip_node.ip;
     listen(ip, ip_node.port, nonblock, enabled_address_zero);

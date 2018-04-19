@@ -30,12 +30,12 @@ CUdpSocket::CUdpSocket() throw (sys::CSyscallException)
     set_fd(fd);
 }
 
-void CUdpSocket::listen(uint16_t port, bool nonblock) throw (sys::CSyscallException)
+void CUdpSocket::listen(uint16_t port, bool nonblock, bool reuse_port) throw (sys::CSyscallException)
 {
-	listen("0.0.0.0", port, nonblock);
+	listen("0.0.0.0", port, nonblock, reuse_port);
 }
 
-void CUdpSocket::listen(const std::string& ip, uint16_t port, bool nonblock) throw (sys::CSyscallException)
+void CUdpSocket::listen(const std::string& ip, uint16_t port, bool nonblock, bool reuse_port) throw (sys::CSyscallException)
 {
 	struct sockaddr_in listen_addr;
 
@@ -43,6 +43,24 @@ void CUdpSocket::listen(const std::string& ip, uint16_t port, bool nonblock) thr
 	listen_addr.sin_port = htons(port);
 	listen_addr.sin_addr.s_addr = inet_addr(ip.c_str()); // htonl(INADDR_ANY)
 	memset(listen_addr.sin_zero, 0, sizeof(listen_addr.sin_zero));
+
+    // IP地址重用
+    int reuse = 1;
+    int retval = ::setsockopt(get_fd(), SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+    if (-1 == retval)
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "setsockopt");
+
+#if defined(SO_REUSEPORT)
+    // 重用端口
+    if (reuse_port)
+    {
+        // #define SO_REUSEPORT 15
+        reuse = 1;
+        retval = ::setsockopt(get_fd(), SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse));
+        if (-1 == retval)
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "setsockopt");
+    }
+#endif // SO_REUSEPORT
 
 	if (-1 == bind(get_fd(), (struct sockaddr*)&listen_addr, sizeof(listen_addr)))
 		THROW_SYSCALL_EXCEPTION(NULL, errno, "bind");
