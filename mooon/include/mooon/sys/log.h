@@ -320,7 +320,7 @@ do { \
 #define __MYLOG_RAW_ENABLE(logger) (((NULL == logger) && ::mooon::sys::g_null_print_screen) || ((logger != NULL) && (logger->enabled_raw())))
 #define __MYLOG_BIN_ENABLE(logger) (((NULL == logger) && ::mooon::sys::g_null_print_screen) || ((logger != NULL) && (logger->enabled_bin())))
 
-inline bool MYLOG_ENABLE() { return ::mooon::sys::g_logger != NULL; }
+#define MYLOG_ENABLE()               (::mooon::sys::g_logger != NULL)
 #define MYLOG_BIN(log, size)         __MYLOG_BIN(::mooon::sys::g_logger, NULL, log, size)
 #define MYLOG_RAW(format, ...)       __MYLOG_RAW(::mooon::sys::g_logger, format, ##__VA_ARGS__)
 #define MYLOG_TRACE(format, ...)     __MYLOG_TRACE(::mooon::sys::g_logger, NULL, format, ##__VA_ARGS__)
