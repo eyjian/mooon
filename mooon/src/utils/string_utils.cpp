@@ -1209,4 +1209,20 @@ const std::string& CStringUtils::replace_string(const std::string& src, std::str
     return replace_string(src.c_str(), dest, rules);
 }
 
+void CStringUtils::parse_filename(const std::string& filename, std::string* shortname, std::string* suffix)
+{
+    const std::string::size_type dot_pos = filename.rfind('.');
+
+    if (dot_pos == std::string::npos)
+    {
+        shortname->clear();
+        suffix->clear();
+    }
+    else
+    {
+        shortname->assign(filename.c_str(), dot_pos);
+        suffix->assign(filename.c_str() + dot_pos + 1);
+    }
+}
+
 UTILS_NAMESPACE_END

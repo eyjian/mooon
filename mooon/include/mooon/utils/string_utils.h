@@ -404,6 +404,15 @@ public:
     // &lt;12&gt;
     static const std::string& replace_string(const char* src, std::string* dest, const std::vector<std::pair<char, std::string> >& rules);
     static const std::string& replace_string(const std::string& src, std::string* dest, const std::vector<std::pair<char, std::string> >& rules);
+
+    // filename 包含后缀的文件名，如：test.json
+    // shortname 不包含后缀的文件名，如：test
+    // suffix 文件名的后缀，如：json
+    //
+    // 如果filename是标准的shortname.suffix格式，
+    // 则返回后shortname存储shortname值，suffix存储suffix值
+    // 但如果filename不带后缀，或者以点号结尾，则返回后shortname和suffix值均为空
+    static void parse_filename(const std::string& filename, std::string* shortname, std::string* suffix);
 };
 
 UTILS_NAMESPACE_END
