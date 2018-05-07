@@ -141,17 +141,20 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
         }
         catch (sys::CSyscallException& ex)
         {
-            if (ex.errcode() != ETIMEDOUT)
-                throw;
+            if ((retry > _retry_times) || (0 == _retry_times))
+            {
+                if (ex.errcode() != ETIMEDOUT)
+                    throw;
 
-            THROW_SYSCALL_EXCEPTION(
-                    utils::CStringUtils::format_string("[UniqID][%s] receive timeout", net::to_string(agent_addr).c_str()),
-                    ETIMEDOUT, "timed_receive_from");
+                THROW_SYSCALL_EXCEPTION(
+                        utils::CStringUtils::format_string("[UniqID][%s] receive timeout", net::to_string(agent_addr).c_str()),
+                        ETIMEDOUT, "timed_receive_from");
+            }
         }
         catch (utils::CException&)
         {
             // 在重试之前不抛出异常
-            if ((retry == _retry_times) || (0 == _retry_times))
+            if ((retry > _retry_times-1) || (0 == _retry_times))
                 throw;
         }
     }
@@ -216,16 +219,19 @@ uint32_t CUniqId::get_unqi_seq(uint16_t num) throw (utils::CException, sys::CSys
         }
         catch (sys::CSyscallException& ex)
         {
-            if (ex.errcode() != ETIMEDOUT)
-                throw;
+            if ((retry > _retry_times) || (0 == _retry_times))
+            {
+                if (ex.errcode() != ETIMEDOUT)
+                    throw;
 
-            THROW_SYSCALL_EXCEPTION(
-                    utils::CStringUtils::format_string("[UniqID][%s] receive timeout", net::to_string(agent_addr).c_str()),
-                    ETIMEDOUT, "timed_receive_from");
+                THROW_SYSCALL_EXCEPTION(
+                        utils::CStringUtils::format_string("[UniqID][%s] receive timeout", net::to_string(agent_addr).c_str()),
+                        ETIMEDOUT, "timed_receive_from");
+            }
         }
         catch (utils::CException&)
         {
-            if ((retry == _retry_times) || (0 == _retry_times))
+            if ((retry > _retry_times) || (0 == _retry_times))
                 throw;
         }
     }
@@ -292,16 +298,19 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (uti
         }
         catch (sys::CSyscallException& ex)
         {
-            if (ex.errcode() != ETIMEDOUT)
-                throw;
+            if ((retry > _retry_times) || (0 == _retry_times))
+            {
+                if (ex.errcode() != ETIMEDOUT)
+                    throw;
 
-            THROW_SYSCALL_EXCEPTION(
-                    utils::CStringUtils::format_string("[UniqID][%s] receive timeout", net::to_string(agent_addr).c_str()),
-                    ETIMEDOUT, "timed_receive_from");
+                THROW_SYSCALL_EXCEPTION(
+                        utils::CStringUtils::format_string("[UniqID][%s] receive timeout", net::to_string(agent_addr).c_str()),
+                        ETIMEDOUT, "timed_receive_from");
+            }
         }
         catch (utils::CException&)
         {
-            if ((retry == _retry_times) || (0 == _retry_times))
+            if ((retry > _retry_times) || (0 == _retry_times))
                 throw;
         }
     }
@@ -417,16 +426,19 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num) thr
         }
         catch (sys::CSyscallException& ex)
         {
-            if (ex.errcode() != ETIMEDOUT)
-                throw;
+            if ((retry > _retry_times) || (0 == _retry_times))
+            {
+                if (ex.errcode() != ETIMEDOUT)
+                    throw;
 
-            THROW_SYSCALL_EXCEPTION(
-                    utils::CStringUtils::format_string("[UniqID][%s] receive timeout", net::to_string(agent_addr).c_str()),
-                    ETIMEDOUT, "timed_receive_from");
+                THROW_SYSCALL_EXCEPTION(
+                        utils::CStringUtils::format_string("[UniqID][%s] receive timeout", net::to_string(agent_addr).c_str()),
+                        ETIMEDOUT, "timed_receive_from");
+            }
         }
         catch (utils::CException&)
         {
-            if ((retry == _retry_times) || (0 == _retry_times))
+            if ((retry > _retry_times) || (0 == _retry_times))
                 throw;
         }
     }
