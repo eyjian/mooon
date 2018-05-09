@@ -106,6 +106,9 @@ class ILogger
 public:
     /** 空虚拟析构函数，以屏蔽编译器告警 */
     virtual ~ILogger() {}
+    virtual std::string get_log_dir() const { return std::string(""); }
+    virtual std::string get_log_filename() const { return std::string(""); }
+    virtual std::string get_log_filepath() const { return std::string(""); }
 
     /** 是否允许同时在标准输出上打印日志 */
     virtual void enable_screen(bool enabled) {}

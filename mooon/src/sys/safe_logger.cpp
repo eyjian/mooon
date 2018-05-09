@@ -126,6 +126,21 @@ CSafeLogger::~CSafeLogger()
         closelog();
 }
 
+std::string CSafeLogger::get_log_dir() const
+{
+    return _log_dir;
+}
+
+std::string CSafeLogger::get_log_filename() const
+{
+    return _log_filename;
+}
+
+std::string CSafeLogger::get_log_filepath() const
+{
+    return _log_filepath;
+}
+
 void CSafeLogger::enable_screen(bool enabled)
 {
     _screen_enabled = enabled;
