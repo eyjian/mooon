@@ -94,7 +94,7 @@ public:
 // 目的是为规避单例的多线程问题。
 class CObjectFacotry
 {
-    SINGLETON_DECLARE(CObjectFacotry)
+    SINGLETON_DECLARE(CObjectFacotry);
 
 public:
     typedef std::map<std::string, CObjectCreator*> ObjectCreatorTable; // key为类型名

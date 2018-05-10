@@ -242,7 +242,7 @@ private:
 
 class CArgumentContainer
 {
-    SINGLETON_DECLARE(CArgumentContainer)
+    SINGLETON_DECLARE(CArgumentContainer);
 
 public:
     void add_argument(CArgumentBase* argument);

@@ -65,14 +65,21 @@ MOOON_NAMESPACE_END
 // 可以通过delete来删除单例对象
 #define SINGLETON_DECLARE(ClassName) \
     public: \
-        static ClassName* get_singleton();
+        static ClassName* get_singleton(); \
+        static void destroy()
 
 #define SINGLETON_IMPLEMENT(ClassName) \
-    ClassName* ClassName::get_singleton() { \
-        static ClassName* s_pClassName = NULL; \
-        if (NULL == s_pClassName) \
-            s_pClassName = new ClassName; \
-        return s_pClassName; \
+    static ClassName* __sg_singleton_##ClassName = NULL; \
+    ClassName* ClassName::get_singleton() \
+    { \
+        if (NULL == __sg_singleton_##ClassName) \
+        __sg_singleton_##ClassName = new ClassName; \
+        return __sg_singleton_##ClassName; \
+    } \
+    void ClassName::destroy() \
+    { \
+        delete __sg_singleton_##ClassName; \
+        __sg_singleton_##ClassName = NULL; \
     }
 
 /** 回调接口 */
