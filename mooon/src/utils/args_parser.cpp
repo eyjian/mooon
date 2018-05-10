@@ -97,6 +97,15 @@ CArgumentBase::CArgumentBase(const std::string& name, const std::string& help_st
 ////////////////////////////////////////////////////////////////////////////////
 SINGLETON_IMPLEMENT(CArgumentContainer);
 
+CArgumentContainer::~CArgumentContainer()
+{
+    for (std::map<std::string, CArgumentBase*>::iterator iter=_argument_table.begin(); iter!=_argument_table.end(); ++iter)
+    {
+        CArgumentBase* arg = iter->second;
+        delete arg;
+    }
+}
+
 void  CArgumentContainer::add_argument(CArgumentBase* argument)
 {
     _argument_table.insert(std::make_pair(argument->name(), argument));
