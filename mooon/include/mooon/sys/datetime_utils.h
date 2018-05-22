@@ -162,40 +162,40 @@ public:
     static std::string to_str_long_second(const struct tm& t, const char* prefix=NULL);
 
     /** 日期和时间 */
-    static void to_current_datetime(struct tm* current_datetime_struct, char* datetime_buffer, size_t datetime_buffer_size, const char* format="%04d-%02d-%02d %02d:%02d:%02d");
-    static std::string to_current_datetime(struct tm* current_datetime_struct, const char* format="%04d-%02d-%02d %02d:%02d:%02d");
+    static void to_current_datetime(const struct tm* current_datetime_struct, char* datetime_buffer, size_t datetime_buffer_size, const char* format="%04d-%02d-%02d %02d:%02d:%02d");
+    static std::string to_current_datetime(const struct tm* current_datetime_struct, const char* format="%04d-%02d-%02d %02d:%02d:%02d");
 
     /** 仅日期 */
-    static void to_current_date(struct tm* current_datetime_struct, char* date_buffer, size_t date_buffer_size, const char* format="%04d-%02d-%02d");
-    static std::string to_current_date(struct tm* current_datetime_struct, const char* format="%04d-%02d-%02d");
+    static void to_current_date(const struct tm* current_datetime_struct, char* date_buffer, size_t date_buffer_size, const char* format="%04d-%02d-%02d");
+    static std::string to_current_date(const struct tm* current_datetime_struct, const char* format="%04d-%02d-%02d");
 
     /** 仅时间 */
-    static void to_current_time(struct tm* current_datetime_struct, char* time_buffer, size_t time_buffer_size, const char* format="%02d:%02d:%02d");
-    static std::string to_current_time(struct tm* current_datetime_struct, const char* format="%02d:%02d:%02d");
+    static void to_current_time(const struct tm* current_datetime_struct, char* time_buffer, size_t time_buffer_size, const char* format="%02d:%02d:%02d");
+    static std::string to_current_time(const struct tm* current_datetime_struct, const char* format="%02d:%02d:%02d");
 
     /** 仅年份 */
-    static void to_current_year(struct tm* current_datetime_struct, char* year_buffer, size_t year_buffer_size);
-    static std::string to_current_year(struct tm* current_datetime_struct);
+    static void to_current_year(const struct tm* current_datetime_struct, char* year_buffer, size_t year_buffer_size);
+    static std::string to_current_year(const struct tm* current_datetime_struct);
 
     /** 仅月份 */
-    static void to_current_month(struct tm* current_datetime_struct, char* month_buffer, size_t month_buffer_size);
-    static std::string to_current_month(struct tm* current_datetime_struct);
+    static void to_current_month(const struct tm* current_datetime_struct, char* month_buffer, size_t month_buffer_size);
+    static std::string to_current_month(const struct tm* current_datetime_struct);
 
     /** 仅天 */
-    static void to_current_day(struct tm* current_datetime_struct, char* day_buffer, size_t day_buffer_size);
-    static std::string to_current_day(struct tm* current_datetime_struct);
+    static void to_current_day(const struct tm* current_datetime_struct, char* day_buffer, size_t day_buffer_size);
+    static std::string to_current_day(const struct tm* current_datetime_struct);
 
     /** 仅小时 */
-    static void to_current_hour(struct tm* current_datetime_struct, char* hour_buffer, size_t hour_buffer_size);
-    static std::string to_current_hour(struct tm* current_datetime_struct);
+    static void to_current_hour(const struct tm* current_datetime_struct, char* hour_buffer, size_t hour_buffer_size);
+    static std::string to_current_hour(const struct tm* current_datetime_struct);
 
     /** 仅分钟 */
-    static void to_current_minite(struct tm* current_datetime_struct, char* minite_buffer, size_t minite_buffer_size);
-    static std::string to_current_minite(struct tm* current_datetime_struct);
+    static void to_current_minite(const struct tm* current_datetime_struct, char* minite_buffer, size_t minite_buffer_size);
+    static std::string to_current_minite(const struct tm* current_datetime_struct);
 
     /** 仅秒钟 */
-    static void to_current_second(struct tm* current_datetime_struct, char* second_buffer, size_t second_buffer_size);
-    static std::string to_current_second(struct tm* current_datetime_struct);
+    static void to_current_second(const struct tm* current_datetime_struct, char* second_buffer, size_t second_buffer_size);
+    static std::string to_current_second(const struct tm* current_datetime_struct);
 
     /***
       * 将一个字符串转换成日期时间格式
