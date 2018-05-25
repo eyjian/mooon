@@ -1225,4 +1225,20 @@ void CStringUtils::parse_filename(const std::string& filename, std::string* shor
     }
 }
 
+bool CStringUtils::nodeV4_from_str(const std::string& node, std::string* ip, uint16_t* port)
+{
+    const std::string::size_type pos = node.find(":");
+
+    if (pos == std::string::npos)
+    {
+        return false;
+    }
+    else
+    {
+        *ip = node.substr(0, pos);
+        return (ip->size() >= 7) && (ip->size() <= 15) && // 1.1.1.1, 111.111.111.111
+                mooon::utils::CStringUtils::string2int(node.substr(pos+1).c_str(), *port);
+    }
+}
+
 UTILS_NAMESPACE_END

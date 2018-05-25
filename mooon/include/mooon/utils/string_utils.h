@@ -413,6 +413,11 @@ public:
     // 则返回后shortname存储shortname值，suffix存储suffix值
     // 但如果filename不带后缀，或者以点号结尾，则返回后shortname和suffix值均为空
     static void parse_filename(const std::string& filename, std::string* shortname, std::string* suffix);
+
+    // 将一个格式为“ip:port”的字符串转换成IP和端口
+    // 如果不符合此格式返回false，或者端口不在有效范围内的数字也返回false
+    // 对ip只做了弱检查，即长度要求满足IPV4的地址长度，没做更严格的检查。
+    static bool nodeV4_from_str(const std::string& node, std::string* ip, uint16_t* port);
 };
 
 UTILS_NAMESPACE_END
