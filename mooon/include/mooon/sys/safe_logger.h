@@ -70,6 +70,7 @@ public:
     virtual std::string get_log_dir() const;
     virtual std::string get_log_filename() const;
     virtual std::string get_log_filepath() const;
+    virtual std::string get_log_shortname() const;
 
     /** 是否允许同时在标准输出上打印日志 */
     virtual void enable_screen(bool enabled);
@@ -173,6 +174,7 @@ private:
     const std::string _log_dir;
     const std::string _log_filename;
     const std::string _log_filepath;
+    const std::string _log_shortname;
 };
 
 SYS_NAMESPACE_END

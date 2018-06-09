@@ -109,6 +109,7 @@ public:
     virtual std::string get_log_dir() const { return std::string(""); }
     virtual std::string get_log_filename() const { return std::string(""); }
     virtual std::string get_log_filepath() const { return std::string(""); }
+    virtual std::string get_log_shortname() const { return std::string(""); } /* 不包含后缀的文件名 */
 
     /** 是否允许同时在标准输出上打印日志 */
     virtual void enable_screen(bool enabled) {}

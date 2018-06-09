@@ -82,6 +82,7 @@ CSafeLogger::CSafeLogger(const char* log_dir, const char* log_filename, uint16_t
     ,_log_dir(log_dir)
     ,_log_filename(log_filename)
     ,_log_filepath(_log_dir + std::string("/") + _log_filename)
+    ,_log_shortname(mooon::utils::CStringUtils::remove_suffix(log_filename))
 {
     atomic_set(&_max_bytes, DEFAULT_LOG_FILE_SIZE);
     atomic_set(&_log_level, LOG_LEVEL_INFO);
@@ -139,6 +140,11 @@ std::string CSafeLogger::get_log_filename() const
 std::string CSafeLogger::get_log_filepath() const
 {
     return _log_filepath;
+}
+
+std::string CSafeLogger::get_log_shortname() const
+{
+    return _log_shortname;
 }
 
 void CSafeLogger::enable_screen(bool enabled)
