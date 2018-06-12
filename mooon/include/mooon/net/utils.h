@@ -247,7 +247,17 @@ extern std::string to_string(const struct in6_addr& sin_addr);
 extern std::string to_string(const sockaddr_in& addr);
 extern std::string to_string(const sockaddr_in6& addr);
 extern std::string ip2string(uint32_t ip);
+extern uint32_t string2ipv4(const char* ip);
 extern uint32_t string2ipv4(const std::string& ip);
+
+extern bool is_loop_ipv4(uint32_t ip);
+extern bool is_loop_ipv4(const char* ip);
+extern bool is_loop_ipv4(const std::string& ip);
+
+// ip 为网络字节序值
+extern bool is_local_ipv4(uint32_t ip);
+extern bool is_local_ipv4(const char* ip);
+extern bool is_local_ipv4(const std::string& ip);
 
 NET_NAMESPACE_END
 #endif // MOOON_NET_UTILS_H

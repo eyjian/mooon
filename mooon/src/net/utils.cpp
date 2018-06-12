@@ -396,9 +396,56 @@ std::string ip2string(uint32_t ip)
     return to_string(sin_addr);
 }
 
+uint32_t string2ipv4(const char* ip)
+{
+    return inet_addr(ip);
+}
+
 uint32_t string2ipv4(const std::string& ip)
 {
-    return inet_addr(ip.c_str());
+    return string2ipv4(ip.c_str());
+}
+
+// 127.0.0.1 => 7F 00 00 01
+bool is_loop_ipv4(uint32_t ip)
+{
+    const uint32_t n = ntohl(ip);
+    return 0x007F0000 == (n>>8);
+}
+
+bool is_loop_ipv4(const char* ip)
+{
+    return is_loop_ipv4(std::string(ip));
+}
+
+bool is_loop_ipv4(const std::string& ip)
+{
+    return (9 == ip.size()) && (ip == "127.0.0.1");
+}
+
+//TCP/IP协议中专门保留了三个IP地址区域作为私有地址：
+//10.0.0.0/8：10.0.0.0～10.255.255.255
+//172.16.0.0/12：172.16.0.0～172.31.255.255
+//192.168.0.0/16：192.168.0.0～192.168.255.255
+bool is_local_ipv4(uint32_t ip)
+{
+    const uint32_t n = ntohl(ip);
+    return (0x0A == n>>24) ||
+           (0xC0A8 == n>>16) ||
+           (0x02B0 == n>>22) ||
+           is_loop_ipv4(ip);
+}
+
+bool is_local_ipv4(const char* ip)
+{
+    const int n = string2ipv4(ip);
+    return is_local_ipv4(n);
+}
+
+bool is_local_ipv4(const std::string& ip)
+{
+    const int n = string2ipv4(ip);
+    return (ip.size() >= 7) && is_local_ipv4(n);
 }
 
 NET_NAMESPACE_END
