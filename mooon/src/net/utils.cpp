@@ -415,12 +415,13 @@ bool is_loop_ipv4(uint32_t ip)
 
 bool is_loop_ipv4(const char* ip)
 {
-    return is_loop_ipv4(std::string(ip));
+    const int n = string2ipv4(ip);
+    return is_loop_ipv4(n);
 }
 
 bool is_loop_ipv4(const std::string& ip)
 {
-    return (9 == ip.size()) && (ip == "127.0.0.1");
+    return is_loop_ipv4(ip.c_str());
 }
 
 //TCP/IP协议中专门保留了三个IP地址区域作为私有地址：
