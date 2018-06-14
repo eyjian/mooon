@@ -119,9 +119,10 @@ private:
     //
     // 并捕获了CSyscallException和Exception两个异常
     virtual bool init(int argc, char* argv[]);
+    virtual bool run() { return on_run(); }
     virtual void fini();
 
-public:
+private:
     // CMainHelper内置阻塞了信号SIGTERM，
     // 如果需要，子类可以在on_block_signal中阻塞其它信号，信号发生时，on_signal_handler被调用
     virtual void on_block_signal() { /* mooon::sys::CSignalHandler::block_signal(SIGUSR1); */ }
@@ -129,11 +130,18 @@ public:
     // on_init需子类重写
     virtual bool on_init(int argc, char* argv[]) = 0;
 
+    // 让run和init等统一
+    virtual bool on_run();
+
     // 子类可选择是否重写on_fini
     // 这个时候信号线程已经退出
     virtual void on_fini();
 
-public: // 信号相关的，子类一般不用重写
+public: // 信号相关的
+    // 特别注意：
+    // 子类可重写on_terminated，
+    // 但在重写前一定要先调用CMainHelper::on_terminated()，
+    // 在CMainHelper::on_terminated()中会置_stop为true，这是优雅退出的前提
     virtual void on_terminated();
     virtual void on_child_end(pid_t child_pid, int child_exited_status);
     virtual void on_signal_handler(int signo);
