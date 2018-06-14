@@ -109,11 +109,12 @@ extern int main_template(IMainHelper* main_helper, int argc, char* argv[]);
 //     virtual bool on_init(int argc, char* argv[])
 //     {
 //         library_init(argc, argv);
+//         return true;
 //     }
 //
 //     virtual bool on_run()
 //     {
-//         _myserver.start();
+//         return _myserver.start();
 //     }
 //
 //     virtual void on_fini()
