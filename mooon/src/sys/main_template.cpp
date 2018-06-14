@@ -317,6 +317,13 @@ bool CMainHelper::init(int argc, char* argv[])
         return false;
     }
 
+    // 参数检查
+    if (on_check_parameter())
+    {
+        fprintf(stderr, "%s\n", mooon::utils::g_help_string.c_str());
+        return false;
+    }
+
     // 创建日志器
     try
     {
@@ -330,16 +337,21 @@ bool CMainHelper::init(int argc, char* argv[])
 
     try
     {
+        // 通过SIGTERM幽雅退出
+        mooon::sys::CSignalHandler::block_signal(SIGTERM);
         // 让子类有机会阻塞其它信号
         on_block_signal();
 
-        // 通过SIGTERM幽雅退出
-        mooon::sys::CSignalHandler::block_signal(SIGTERM);
-
-        // 创建信号线程
-        _signal_thread = new mooon::sys::CThreadEngine(mooon::sys::bind(&CMainHelper::signal_thread, this));
-
-        return on_init(argc, argv);
+        if (!on_init(argc, argv))
+        {
+            return false;
+        }
+        else
+        {
+            // 创建信号线程
+            _signal_thread = new mooon::sys::CThreadEngine(mooon::sys::bind(&CMainHelper::signal_thread, this));
+            return true;
+        }
     }
     catch (mooon::sys::CSyscallException& ex)
     {
@@ -367,7 +379,10 @@ void CMainHelper::fini()
     }
 
     on_fini();
-    MYLOG_INFO("exit now\n");
+    if (_stop)
+    {
+        MYLOG_INFO("exit now\n");
+    }
 }
 
 void CMainHelper::on_terminated()

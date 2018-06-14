@@ -143,10 +143,12 @@ private:
     // 子类一般不要重写init，
     // init()过程依次为：
     // 1) 命令行参数解析
-    // 2) 创建SafeLogger
-    // 3) 阻塞信号SIGTERM
-    // 4) 创建信号线程signal_thread
-    // 5) 调用子类的on_init()
+    // 2) 调用子类的on_check_parameter()做参数检查
+    // 3) 创建SafeLogger，之后可用MYLOG_xxx记录日志
+    // 4) 阻塞信号SIGTERM
+    // 5) 调用子类的on_block_signal()
+    // 6) 调用子类的on_init()
+    // 7) 创建信号线程signal_thread
     //
     // 并捕获了CSyscallException和Exception两个异常
     virtual bool init(int argc, char* argv[]);
@@ -154,6 +156,9 @@ private:
     virtual void fini();
 
 private:
+    // 参数检查
+    virtual bool on_check_parameter() { return true; }
+
     // CMainHelper内置阻塞了信号SIGTERM，
     // 如果需要，子类可以在on_block_signal中阻塞其它信号，信号发生时，on_signal_handler被调用
     virtual void on_block_signal() { /* mooon::sys::CSignalHandler::block_signal(SIGUSR1); */ }
