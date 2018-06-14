@@ -24,9 +24,11 @@
 #include <stdexcept>
 #include <sys/wait.h>
 #include <utils/string_utils.h>
-#include "sys/log.h"
+#include "sys/safe_logger.h"
+#include "sys/signal_handler.h"
 #include "sys/utils.h"
 #include "sys/main_template.h"
+#include "utils/args_parser.h"
 SYS_NAMESPACE_BEGIN
 
 /***
@@ -280,6 +282,112 @@ bool parent_process(IMainHelper* main_helper, pid_t child_pid, int& child_exit_c
     }
 
     return restart;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// CMainHelper
+
+CMainHelper::CMainHelper()
+    : _stop(false), _signal_thread(NULL)
+{
+}
+
+CMainHelper::~CMainHelper()
+{
+    delete _signal_thread;
+}
+
+void CMainHelper::signal_thread()
+{
+    while (!_stop)
+    {
+        mooon::sys::CSignalHandler::handle(this);
+    }
+
+    MYLOG_INFO("signal thread exit\n");
+}
+
+bool CMainHelper::init(int argc, char* argv[])
+{
+    // 命令行参数解析
+    std::string errmsg;
+    if (!mooon::utils::parse_arguments(argc, argv, &errmsg))
+    {
+        fprintf(stderr, "%s\n", errmsg.c_str());
+        return false;
+    }
+
+    // 创建日志器
+    try
+    {
+        mooon::sys::g_logger = mooon::sys::create_safe_logger();
+    }
+    catch (mooon::sys::CSyscallException& ex)
+    {
+        fprintf(stderr, "create logger failed: %s\n", ex.str().c_str());
+        return false;
+    }
+
+    try
+    {
+        // 让子类有机会阻塞其它信号
+        on_block_signal();
+
+        // 通过SIGTERM幽雅退出
+        mooon::sys::CSignalHandler::block_signal(SIGTERM);
+
+        // 创建信号线程
+        _signal_thread = new mooon::sys::CThreadEngine(mooon::sys::bind(&CMainHelper::signal_thread, this));
+
+        return on_init(argc, argv);
+    }
+    catch (mooon::sys::CSyscallException& ex)
+    {
+        MYLOG_ERROR("%s\n", ex.str().c_str());
+        return false;
+    }
+    catch (mooon::utils::CException& ex)
+    {
+        MYLOG_ERROR("%s\n", ex.str().c_str());
+        return false;
+    }
+}
+
+void CMainHelper::fini()
+{
+    if (!_stop && _signal_thread!=NULL)
+    {
+        kill(getpid(), SIGTERM); // 不能使用raise(SIGTERM)，因为它是针对线程的
+    }
+    if (_signal_thread != NULL)
+    {
+        _signal_thread->join();
+        delete _signal_thread;
+        _signal_thread = NULL;
+    }
+
+    on_fini();
+    MYLOG_INFO("exit now\n");
+}
+
+void CMainHelper::on_terminated()
+{
+    // 优雅退出
+    _stop = true;
+    MYLOG_INFO("will exit by SIGTERM\n");
+}
+
+void CMainHelper::on_child_end(pid_t child_pid, int child_exited_status)
+{
+}
+
+void CMainHelper::on_signal_handler(int signo)
+{
+}
+
+void CMainHelper::on_exception(int errcode)
+{
+    MYLOG_ERROR("(%d)%s\n", errcode, mooon::sys::Error::to_string(errcode).c_str());
 }
 
 SYS_NAMESPACE_END

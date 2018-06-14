@@ -25,6 +25,7 @@
 #ifndef MOOON_SYS_MAIN_TEMPLATE_H
 #define MOOON_SYS_MAIN_TEMPLATE_H
 #include "mooon/sys/log.h"
+#include <mooon/sys/thread_engine.h>
 #include <signal.h>
 SYS_NAMESPACE_BEGIN
 
@@ -98,6 +99,53 @@ public:
   * }
   */
 extern int main_template(IMainHelper* main_helper, int argc, char* argv[]);
+
+// CMainHelper内置了优雅退出
+class CMainHelper: public IMainHelper
+{
+public:
+    CMainHelper();
+    ~CMainHelper();
+    void signal_thread();
+
+private:
+    // 子类一般不要重写init，
+    // init()过程依次为：
+    // 1) 命令行参数解析
+    // 2) 创建SafeLogger
+    // 3) 阻塞信号SIGTERM
+    // 4) 创建信号线程signal_thread
+    // 5) 调用子类的on_init()
+    //
+    // 并捕获了CSyscallException和Exception两个异常
+    virtual bool init(int argc, char* argv[]);
+    virtual void fini();
+
+public:
+    // CMainHelper内置阻塞了信号SIGTERM，
+    // 如果需要，子类可以在on_block_signal中阻塞其它信号，信号发生时，on_signal_handler被调用
+    virtual void on_block_signal() { /* mooon::sys::CSignalHandler::block_signal(SIGUSR1); */ }
+
+    // on_init需子类重写
+    virtual bool on_init(int argc, char* argv[]) = 0;
+
+    // 子类可选择是否重写on_fini
+    // 这个时候信号线程已经退出
+    virtual void on_fini();
+
+public: // 信号相关的，子类一般不用重写
+    virtual void on_terminated();
+    virtual void on_child_end(pid_t child_pid, int child_exited_status);
+    virtual void on_signal_handler(int signo);
+    virtual void on_exception(int errcode);
+
+protected:
+    bool to_stop() const { return _stop; }
+
+private:
+    volatile bool _stop;
+    mooon::sys::CThreadEngine* _signal_thread;
+};
 
 SYS_NAMESPACE_END
 #endif // MOOON_SYS_MAIN_TEMPLATE_H
