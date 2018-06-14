@@ -101,6 +101,37 @@ public:
 extern int main_template(IMainHelper* main_helper, int argc, char* argv[]);
 
 // CMainHelper内置了优雅退出
+//
+// 使用示例：
+// class CMyMainHelper: public mooon::sys::CMainHelper
+// {
+// private:
+//     virtual bool on_init(int argc, char* argv[])
+//     {
+//         library_init(argc, argv);
+//     }
+//
+//     virtual bool on_run()
+//     {
+//         _myserver.start();
+//     }
+//
+//     virtual void on_fini()
+//     {
+//         mooon::sys::CMySQLConnection::library_end();
+//     }
+//
+//     virtual void on_terminated()
+//     {
+//         // 一定要最先调用父类的on_terminated
+//         mooon::sys::CMainHelper::on_terminated();
+//         // 停止CMyServer
+//         _myserver.stop();
+//     }
+//
+// private:
+//     CMyServer _myserver;
+// };
 class CMainHelper: public IMainHelper
 {
 public:
@@ -131,11 +162,11 @@ private:
     virtual bool on_init(int argc, char* argv[]) = 0;
 
     // 让run和init等统一
-    virtual bool on_run();
+    virtual bool on_run() { return true; }
 
     // 子类可选择是否重写on_fini
     // 这个时候信号线程已经退出
-    virtual void on_fini();
+    virtual void on_fini() {}
 
 public: // 信号相关的
     // 特别注意：
