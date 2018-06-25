@@ -20,43 +20,43 @@ set(RPC DbProxyService.cpp db_proxy_constants.cpp db_proxy_types.cpp)
 add_executable(check_sqllog check_sqllog.cpp)
 target_link_libraries(check_sqllog libmooon.a)
 
-# db_proxy_tool
-add_executable(db_proxy_tool db_proxy_tool.cpp)
-target_link_libraries(db_proxy_tool libmooon.a)
+# dbproxy_tool
+add_executable(dbproxy_tool db_proxy_tool.cpp)
+target_link_libraries(dbproxy_tool libmooon.a)
 
 # dbproxy客户端工具
-add_executable(db_proxy_client db_proxy_client.cpp ${RPC})
-target_link_libraries(db_proxy_client libjsoncpp.a libthriftnb.a libthrift.a libevent.a)
+add_executable(dbproxy_client db_proxy_client.cpp ${RPC})
+target_link_libraries(dbproxy_client libjsoncpp.a libthriftnb.a libthrift.a libevent.a)
 
 # dbproxy压力测试工具
-add_executable(db_proxy_stress db_proxy_stress.cpp ${RPC})
-target_link_libraries(db_proxy_stress libjsoncpp.a libthriftnb.a libthrift.a libevent.a)
+add_executable(dbproxy_stress db_proxy_stress.cpp ${RPC})
+target_link_libraries(dbproxy_stress libjsoncpp.a libthriftnb.a libthrift.a libevent.a)
 
 # db压力测试工具
 add_executable(db_stress db_stress.cpp)
 
 # db_proxy
-add_executable(db_proxy ${RPC} main.cpp db_proxy_handler.cpp config_loader.cpp sql_logger.cpp db_process.cpp)
+add_executable(dbproxy ${RPC} main.cpp db_proxy_handler.cpp config_loader.cpp sql_logger.cpp db_process.cpp)
 
 if (EXISTS ${MYSQL_HOME}/lib/libmysqlclient_r.a)
-    target_link_libraries(db_proxy libjsoncpp.a libmysqlclient_r.a libthriftnb.a libthrift.a libevent.a)
+    target_link_libraries(dbproxy libjsoncpp.a libmysqlclient_r.a libthriftnb.a libthrift.a libevent.a)
     target_link_libraries(db_stress libmysqlclient_r.a)
 elseif (EXISTS ${MYSQL_HOME}/lib/mysql/libmysqlclient_r.a)
     link_directories(${MYSQL_HOME}/lib/mysql)
-    target_link_libraries(db_proxy libjsoncpp.a libmysqlclient_r.a libthriftnb.a libthrift.a libevent.a)
+    target_link_libraries(dbproxy libjsoncpp.a libmysqlclient_r.a libthriftnb.a libthrift.a libevent.a)
     target_link_libraries(db_stress libmysqlclient_r.a)
 elseif (EXISTS ${MYSQL_HOME}/lib/mysql/libmysqlclient.a)
     link_directories(${MYSQL_HOME}/lib/mysql)
-    target_link_libraries(db_proxy libjsoncpp.a libmysqlclient.a libthriftnb.a libthrift.a libevent.a)
+    target_link_libraries(dbproxy libjsoncpp.a libmysqlclient.a libthriftnb.a libthrift.a libevent.a)
     target_link_libraries(db_stress libmysqlclient.a)
 else ()
-    target_link_libraries(db_proxy libjsoncpp.a libmysqlclient.a libthriftnb.a libthrift.a libevent.a)
+    target_link_libraries(dbproxy libjsoncpp.a libmysqlclient.a libthriftnb.a libthrift.a libevent.a)
     target_link_libraries(db_stress libmysqlclient.a)
 endif ()
 
 # DBConnection依赖于SQLite3，虽然db_proxy并未使用SQLite3
 if (MOOON_HAVE_SQLITE3)
-    target_link_libraries(db_proxy libsqlite3.a)
+    target_link_libraries(dbproxy libsqlite3.a)
 endif ()
 
 # 供C++客户端使用的静态库
@@ -75,7 +75,7 @@ add_custom_command(
 
 # CMAKE_INSTALL_PREFIX
 install(
-        TARGETS db_proxy db_proxy_client db_proxy_stress db_stress
+        TARGETS dbproxy dbproxy_client dbproxy_stress db_stress
         DESTINATION bin
        )
 
