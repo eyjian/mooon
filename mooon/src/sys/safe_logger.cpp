@@ -37,8 +37,8 @@ static uint64_t get_current_thread_id()
 
 CSafeLogger* create_safe_logger(bool enable_program_path, uint16_t log_line_size, const std::string& suffix, bool enable_syslog) throw (CSyscallException)
 {
-    const std::string log_dirpath = get_log_dirpath(enable_program_path);
-    const std::string log_filename = get_log_filename(suffix);
+    const std::string& log_dirpath = get_log_dirpath(enable_program_path);
+    const std::string& log_filename = get_log_filename(suffix);
     CSafeLogger* logger = new CSafeLogger(log_dirpath.c_str(), log_filename.c_str(), log_line_size, enable_syslog);
 
     set_log_level_by_env(logger);
@@ -52,11 +52,8 @@ CSafeLogger* create_safe_logger(bool enable_program_path, uint16_t log_line_size
 
 CSafeLogger* create_safe_logger(const std::string& log_dirpath, const std::string& cpp_filename, uint16_t log_line_size, bool enable_syslog) throw (CSyscallException)
 {
-    char* cpp_filepath = strdup(cpp_filename.c_str());
-    std::string only_filename = basename(cpp_filepath);
-    free(cpp_filepath);
-
-    std::string log_filename = utils::CStringUtils::replace_suffix(only_filename, ".log");
+    const std::string& only_filename = utils::CStringUtils::extract_filename(cpp_filename);
+    const std::string& log_filename = utils::CStringUtils::replace_suffix(only_filename, ".log");
     CSafeLogger* logger = new CSafeLogger(log_dirpath.c_str(), log_filename.c_str(), log_line_size, enable_syslog);
 
     set_log_level_by_env(logger);
