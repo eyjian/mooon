@@ -8,10 +8,6 @@ add_library(mooon_net STATIC ${SRCS})
 
 # CMAKE_INSTALL_PREFIX
 install(
-        TARGETS mooon_net
-        DESTINATION lib
-       )
-install(
         DIRECTORY ../../include/mooon/net        
         DESTINATION include/mooon
         PATTERN "*.h"
