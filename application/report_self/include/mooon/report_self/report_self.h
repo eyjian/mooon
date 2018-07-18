@@ -32,8 +32,10 @@ extern std::pair<uint64_t, uint64_t> get_self_memory();
 extern void stop_report_self();
 
 // 启动上报，会创建一专门的上报线程
-// conffile 配置文件
+// conffile 配置文件，如果值为空，则什么也不做，直接返回true
 // report_interval_seconds 上报间隔，默认每2小时上报一次
+//
+// 返回值：启动成功，或conffile参数值为空字符串
 extern bool start_report_self(const std::string& conffile="/etc/mooon_report_self.conf", uint32_t report_interval_seconds=7200);
 
 /*
