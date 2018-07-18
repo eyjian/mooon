@@ -280,21 +280,17 @@ std::string CReportSelfHandler::make_insert_sql(const std::vector<std::string>& 
         const std::string& user = utils::CStringUtils::trim(tokens[2]);
         const std::string& shortname = utils::CStringUtils::trim(tokens[3]);
         const std::string& dirpath = utils::CStringUtils::trim(tokens[4]);
-        const std::string& full_cmdline = utils::CStringUtils::trim(tokens[5]);
+        //const std::string& full_cmdline = utils::CStringUtils::trim(tokens[5]); // 包含安全信息，不再上报
         const std::string& lasttime = utils::CStringUtils::trim(tokens[6]);
         const std::string& report_interval_seconds = utils::CStringUtils::trim(tokens[7]);
         const std::string& pid = utils::CStringUtils::trim(tokens[8]);
         const std::string& vsz = utils::CStringUtils::trim(tokens[9]);
         const std::string& rss = utils::CStringUtils::trim(tokens[10]);
         const std::string& firsttime = lasttime;
-        const std::string& full_cmdline_md5_ = utils::CMd5Helper::md5("%s%s%s", ip.c_str(), user.c_str(), full_cmdline.c_str());
+        //const std::string& full_cmdline_md5_ = utils::CMd5Helper::md5("%s%s%s", ip.c_str(), user.c_str(), full_cmdline.c_str());
 
         // 检查关键字段
-        if (full_cmdline_md5_ != full_cmdline_md5)
-        {
-            MYLOG_ERROR("invalid tokens: md5 check error\n");
-        }
-        else if (full_cmdline_md5.empty())
+        if (full_cmdline_md5.empty())
         {
             MYLOG_ERROR("invalid tokens: empty `md5`\n");
         }
@@ -318,10 +314,10 @@ std::string CReportSelfHandler::make_insert_sql(const std::vector<std::string>& 
         {
             sql = utils::CStringUtils::format_string(
                     "INSERT INTO t_program_deployment ("
-                    "f_md5,f_ip,f_user,f_shortname,f_dirpath,f_full_cmdline,f_lasttime,f_interval,f_pid,f_vsz,f_rss,f_firsttime) "
-                    "VALUES ('%s','%s','%s','%s','%s','%s','%s',%s,%s,%s,%s,'%s')",
+                    "f_md5,f_ip,f_user,f_shortname,f_dirpath,f_lasttime,f_interval,f_pid,f_vsz,f_rss,f_firsttime) "
+                    "VALUES ('%s','%s','%s','%s','%s','%s',%s,%s,%s,%s,'%s')",
                     full_cmdline_md5.c_str(), ip.c_str(), user.c_str(), shortname.c_str(), dirpath.c_str(),
-                    full_cmdline.c_str(), lasttime.c_str(), report_interval_seconds.c_str(),
+                    lasttime.c_str(), report_interval_seconds.c_str(),
                     pid.c_str(), vsz.c_str(), rss.c_str(), firsttime.c_str());
         }
     }
@@ -345,22 +341,17 @@ std::string CReportSelfHandler::make_update_sql(const std::vector<std::string>& 
         const std::string& user = utils::CStringUtils::trim(tokens[2]);
         const std::string& shortname = utils::CStringUtils::trim(tokens[3]);
         const std::string& dirpath = utils::CStringUtils::trim(tokens[4]);
-        const std::string& full_cmdline = utils::CStringUtils::trim(tokens[5]);
+        //const std::string& full_cmdline = utils::CStringUtils::trim(tokens[5]); // 包含安全信息，不再上报
         const std::string& lasttime = utils::CStringUtils::trim(tokens[6]);
         const std::string& report_interval_seconds = utils::CStringUtils::trim(tokens[7]);
         const std::string& pid = utils::CStringUtils::trim(tokens[8]);
         const std::string& vsz = utils::CStringUtils::trim(tokens[9]);
         const std::string& rss = utils::CStringUtils::trim(tokens[10]);
-        const std::string& full_cmdline_md5_ = utils::CMd5Helper::md5("%s%s%s", ip.c_str(), user.c_str(), full_cmdline.c_str());
 
         // 检查关键字段
         if (full_cmdline_md5.empty())
         {
             MYLOG_ERROR("invalid tokens: empty `md5`\n");
-        }
-        else if (full_cmdline_md5_ != full_cmdline_md5)
-        {
-            MYLOG_ERROR("md5 check error: %s => %s\n", full_cmdline_md5_.c_str(), full_cmdline_md5.c_str());
         }
         else if (ip.empty())
         {
@@ -382,10 +373,10 @@ std::string CReportSelfHandler::make_update_sql(const std::vector<std::string>& 
         {
             sql = utils::CStringUtils::format_string(
                     "UPDATE t_program_deployment SET "
-                    "f_ip='%s',f_user='%s',f_shortname='%s',f_dirpath='%s',f_full_cmdline='%s',f_lasttime='%s',f_interval=%s,f_pid=%s,f_vsz=%s,f_rss=%s "
+                    "f_ip='%s',f_user='%s',f_shortname='%s',f_dirpath='%s',f_lasttime='%s',f_interval=%s,f_pid=%s,f_vsz=%s,f_rss=%s "
                     "WHERE f_md5='%s'",
                     ip.c_str(), user.c_str(), shortname.c_str(), dirpath.c_str(),
-                    full_cmdline.c_str(), lasttime.c_str(), report_interval_seconds.c_str(),
+                    lasttime.c_str(), report_interval_seconds.c_str(),
                     pid.c_str(), vsz.c_str(), rss.c_str(),
                     full_cmdline_md5.c_str());
         }

@@ -321,7 +321,7 @@ void CReportSelf::report()
         tokens[2] = _user;
         tokens[3] = _shortname;
         tokens[4] = _dirpath;
-        tokens[5] = _full_cmdline;
+        //tokens[5] = _full_cmdline; // 包含安全信息，不能上报
         tokens[6] = current;
         tokens[7] = utils::CStringUtils::int_tostring(_report_interval_seconds);
         tokens[8] = utils::CStringUtils::int_tostring(_pid);
