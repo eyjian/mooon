@@ -46,9 +46,9 @@ std::string label2string(uint8_t label, bool uppercase)
 }
 
 CUniqId::CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds, uint8_t retry_times, bool polling) throw (utils::CException)
-    : _echo(0), _agent_nodes(agent_nodes), _timeout_milliseconds(timeout_milliseconds), _retry_times(retry_times), _polling(polling), _udp_socket(NULL)
+    : _echo(ECHO_START), _agent_nodes(agent_nodes), _timeout_milliseconds(timeout_milliseconds), _retry_times(retry_times), _polling(polling), _udp_socket(NULL)
 {
-    _echo = sys::CUtils::get_random_number(0, 100000U); // 初始化一个随机值，这样不同实例不同
+    _echo = ECHO_START + sys::CUtils::get_random_number(0, 1235U); // 初始化一个随机值，这样不同实例不同
     _udp_socket = new net::CUdpSocket;
 
     utils::CEnhancedTokenerEx tokener;
@@ -94,6 +94,11 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
     request.value2 = 0;
     request.value3 = 0;
 
+    if (echo < ECHO_START)
+    {
+        echo = ECHO_START + sys::CUtils::get_random_number(0, 1235U);
+        _echo = echo + 1;
+    }
     for (uint8_t retry=0; retry<_retry_times+1; ++retry)
     {
         const struct sockaddr_in& agent_addr = pick_agent();
@@ -116,6 +121,12 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
                         utils::CStringUtils::format_string("[UniqID][%s] invalid size", net::to_string(from_addr).c_str()),
                         bytes, "receive_from");
             }
+            else if (memcmp(&agent_addr, &from_addr, sizeof(struct sockaddr_in)) != 0)
+            {
+                THROW_EXCEPTION(
+                        utils::CStringUtils::format_string("[UniqID][%s][AGENT:%s] unexcepted response", net::to_string(from_addr).c_str(), net::to_string(agent_addr).c_str()),
+                        ERROR_UNEXCEPTED);
+            }
             else if (RESPONSE_ERROR == response.type)
             {
                 THROW_EXCEPTION(
@@ -136,15 +147,15 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
             }
             else
             {
-                const uint8_t label = static_cast<uint8_t>(response.value1.to_int());
-                if (0xFF == label)
+                const uint8_t label_ = static_cast<uint8_t>(response.value1.to_int());
+                if (0xFF == label_)
                 {
                     THROW_EXCEPTION(
                         utils::CStringUtils::format_string("[UniqID][%s] invalid label from master", net::to_string(from_addr).c_str()),
                         ERROR_INVALID_LABEL);
                 }
 
-                return static_cast<uint8_t>(response.value1.to_int());
+                return label_;
             }
         }
         catch (sys::CSyscallException& ex)
@@ -182,6 +193,11 @@ uint32_t CUniqId::get_unqi_seq(uint16_t num) throw (utils::CException, sys::CSys
     request.value2 = 0;
     request.value3 = 0;
 
+    if (echo < ECHO_START)
+    {
+        echo = ECHO_START + sys::CUtils::get_random_number(0, 1235U);
+        _echo = echo + 1;
+    }
     for (uint8_t retry=0; retry<_retry_times+1; ++retry)
     {
         const struct sockaddr_in& agent_addr = pick_agent();
@@ -201,6 +217,12 @@ uint32_t CUniqId::get_unqi_seq(uint16_t num) throw (utils::CException, sys::CSys
                 THROW_SYSCALL_EXCEPTION(
                         utils::CStringUtils::format_string("[UniqID][%s] invalid size", net::to_string(from_addr).c_str()),
                         bytes, "receive_from");
+            }
+            else if (memcmp(&agent_addr, &from_addr, sizeof(struct sockaddr_in)) != 0)
+            {
+                THROW_EXCEPTION(
+                        utils::CStringUtils::format_string("[UniqID][%s][AGENT:%s] unexcepted response", net::to_string(from_addr).c_str(), net::to_string(agent_addr).c_str()),
+                        ERROR_UNEXCEPTED);
             }
             else if (RESPONSE_ERROR == response.type)
             {
@@ -259,6 +281,11 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (uti
     request.value1 = 0;
     request.value3 = current_seconds;
 
+    if (echo < ECHO_START)
+    {
+        echo = ECHO_START + sys::CUtils::get_random_number(0, 1235U);
+        _echo = echo + 1;
+    }
     for (uint8_t retry=0; retry<_retry_times+1; ++retry)
     {
         const struct sockaddr_in& agent_addr = pick_agent();
@@ -280,6 +307,12 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (uti
                 THROW_SYSCALL_EXCEPTION(
                         utils::CStringUtils::format_string("[UniqID][%s] invalid size", net::to_string(from_addr).c_str()),
                         bytes, "receive_from");
+            }
+            else if (memcmp(&agent_addr, &from_addr, sizeof(struct sockaddr_in)) != 0)
+            {
+                THROW_EXCEPTION(
+                        utils::CStringUtils::format_string("[UniqID][%s][AGENT:%s] unexcepted response", net::to_string(from_addr).c_str(), net::to_string(agent_addr).c_str()),
+                        ERROR_UNEXCEPTED);
             }
             else if (RESPONSE_ERROR == response.type)
             {
@@ -385,6 +418,11 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num) thr
     request.value2 = 0;
     request.value3 = 0;
 
+    if (echo < ECHO_START)
+    {
+        echo = ECHO_START + sys::CUtils::get_random_number(0, 1235U);
+        _echo = echo + 1;
+    }
     for (uint8_t retry=0; retry<_retry_times+1; ++retry)
     {
         const struct sockaddr_in& agent_addr = pick_agent();
@@ -407,6 +445,12 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num) thr
                         utils::CStringUtils::format_string("[UniqID][%s] invalid size", net::to_string(from_addr).c_str()),
                         bytes, "receive_from");
             }
+            else if (memcmp(&agent_addr, &from_addr, sizeof(struct sockaddr_in)) != 0)
+            {
+                THROW_EXCEPTION(
+                        utils::CStringUtils::format_string("[UniqID][%s][AGENT:%s] unexcepted response", net::to_string(from_addr).c_str(), net::to_string(agent_addr).c_str()),
+                        ERROR_UNEXCEPTED);
+            }
             else if (RESPONSE_ERROR == response.type)
             {
                 THROW_EXCEPTION(
@@ -427,14 +471,15 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num) thr
             }
             else
             {
-                *label = static_cast<uint8_t>(response.value1.to_int());
-                if (0xFF == *label)
+                const uint8_t label_ = static_cast<uint8_t>(response.value1.to_int());
+                if (0xFF == label_)
                 {
                     THROW_EXCEPTION(
                         utils::CStringUtils::format_string("[UniqID][%s] invalid label from master", net::to_string(from_addr).c_str()),
                         ERROR_INVALID_LABEL);
                 }
 
+                *label = label_;
                 *seq = static_cast<uint32_t>(response.value2.to_int());
                 break;
             }

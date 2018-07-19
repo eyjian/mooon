@@ -45,7 +45,8 @@ enum
     ERROR_LABEL_NOT_HOLD = 201600007, // Label被其它租用着
     ERROR_DATABASE = 201600008,       // DB错误
     ERROR_PARAMETER = 201600009,      // 参数错误
-    ERROR_MISMATCH = 201600010        // 不匹配的响应
+    ERROR_MISMATCH = 201600010,       // 不匹配的响应
+    ERROR_UNEXCEPTED = 201600010      // 非期望的响应，响应来自非请求的Agent
 };
 
 // 64位唯一ID结构
