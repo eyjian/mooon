@@ -24,6 +24,36 @@
 #include "utils/string_utils.h"
 SYS_NAMESPACE_BEGIN
 
+CInfo::TSysInfo::TSysInfo()
+{
+    uptime_second = 0;
+    average_load[0] = 0;
+    average_load[1] = 0;
+    average_load[2] = 0;
+    ram_total = 0;
+    ram_free = 0;
+    ram_shared = 0;
+    ram_buffer = 0;
+    swap_total = 0;
+    swap_free = 0;
+    process_number = 0;
+}
+
+float CInfo::TSysInfo::load_1min() const
+{
+    return average_load[0]/(float)(1 << SI_LOAD_SHIFT);
+}
+
+float CInfo::TSysInfo::load_5min() const
+{
+    return average_load[1]/(float)(1 << SI_LOAD_SHIFT);
+}
+
+float CInfo::TSysInfo::load_15min() const
+{
+    return average_load[2]/(float)(1 << SI_LOAD_SHIFT);
+}
+
 bool CInfo::get_sys_info(sys_info_t& sys_info)
 {
     struct sysinfo info;

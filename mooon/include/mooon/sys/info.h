@@ -52,9 +52,10 @@ SYS_NAMESPACE_BEGIN
 class CInfo
 {
 public:
-    /***
-      * 系统当前实时信息
-      */
+    // 要得到和top或uptime命令相同的负载值，需要再次计算：
+    // 1分钟平均负载：info.average_load[0]/(float)(1<<SI_LOAD_SHIFT)
+    // 5分钟平均负载：info.average_load[1]/(float)(1<<SI_LOAD_SHIFT)
+    // 15分钟平均负载：info.average_load[2]/(float)(1<<SI_LOAD_SHIFT)
     typedef struct TSysInfo
     {
         int64_t uptime_second;     /* Seconds since boot */
@@ -67,20 +68,10 @@ public:
         uint64_t swap_free;        /* swap space still available */
         uint16_t process_number;   /* Number of current processes */
 
-        TSysInfo()
-        {
-            uptime_second = 0;
-            average_load[0] = 0;
-            average_load[1] = 0;
-            average_load[2] = 0;
-            ram_total = 0;
-            ram_free = 0;
-            ram_shared = 0;
-            ram_buffer = 0;
-            swap_total = 0;
-            swap_free = 0;
-            process_number = 0;
-        }
+        TSysInfo();
+        float load_1min() const;  // 1分钟平均负载，返回和top或uptime等相同值
+        float load_5min() const;  // 5分钟平均负载，返回和top或uptime等相同值
+        float load_15min() const; // 15分钟平均负载，返回和top或uptime等相同值
     }sys_info_t;
 
     /***
