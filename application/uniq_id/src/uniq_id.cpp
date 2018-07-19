@@ -136,6 +136,14 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
             }
             else
             {
+                const uint8_t label = static_cast<uint8_t>(response.value1.to_int());
+                if (0xFF == label)
+                {
+                    THROW_EXCEPTION(
+                        utils::CStringUtils::format_string("[UniqID][%s] invalid label from master", net::to_string(from_addr).c_str()),
+                        ERROR_INVALID_LABEL);
+                }
+
                 return static_cast<uint8_t>(response.value1.to_int());
             }
         }
@@ -420,6 +428,13 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num) thr
             else
             {
                 *label = static_cast<uint8_t>(response.value1.to_int());
+                if (0xFF == *label)
+                {
+                    THROW_EXCEPTION(
+                        utils::CStringUtils::format_string("[UniqID][%s] invalid label from master", net::to_string(from_addr).c_str()),
+                        ERROR_INVALID_LABEL);
+                }
+
                 *seq = static_cast<uint32_t>(response.value2.to_int());
                 break;
             }

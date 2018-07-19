@@ -34,7 +34,7 @@ enum
     //
     // 标准的MTU大小为576（Windows默认为1500），减去IP首部和UDP首部后为548，因此UDP发送的数据大小不超过548是最安全的。
     SOCKET_BUFFER_SIZE = 128,
-    LABEL_MAX = 255,                     // Label最大的取值（不包含0，从1开始），注意只能为255，不能为更大的值
+    LABEL_MAX = 254,                     // Label最大的取值（不包含0，从1开始），注意只能为254，不能为更大的值
     LABEL_EXPIRED_SECONDS = (3600*24*15) // Label多少小秒过期，默认15天
 };
 
