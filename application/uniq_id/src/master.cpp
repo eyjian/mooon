@@ -292,7 +292,7 @@ bool CUniqMaster::run()
                     if (magic_ != _message_head->magic)
                     {
                         errocode = ERROR_ILLEGAL; // 非法来源，直接丢弃
-                        MYLOG_ERROR("[%s] illegal request: %s\n", net::to_string(_from_addr).c_str(), _message_head->str().c_str());
+                        MYLOG_ERROR("[%s] illegal request: %s|%u\n", net::to_string(_from_addr).c_str(), _message_head->str().c_str(), magic_);
                     }
 #endif // _CHECK_MAGIC_
 
