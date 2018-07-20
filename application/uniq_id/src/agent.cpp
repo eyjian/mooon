@@ -35,7 +35,7 @@
 #include <vector>
 
 // 是否检查magic
-#define _CHECK_MAGIC_ 0
+#define _CHECK_MAGIC_ 1
 
 // 日志控制：
 // 可通过设置环境变量MOOON_LOG_LEVEL和MOOON_LOG_SCREEN来控制日志级别和是否在屏幕上输出日志
@@ -312,8 +312,7 @@ bool CUniqAgent::run()
                         _message_head = reinterpret_cast<struct MessageHead*>(_request_buffer);
                         MYLOG_DEBUG("%s from %s", _message_head->str().c_str(), net::to_string(_from_addr).c_str());
 
-                        if ((bytes_received != _message_head->len) ||
-                            (bytes_received < static_cast<int>(sizeof(struct MessageHead))))
+                        if (bytes_received != _message_head->len)
                         {
                             MYLOG_ERROR("invalid size (%d/%d/%zd) from %s: %s\n", bytes_received, _message_head->len.to_int(), sizeof(struct MessageHead), net::to_string(_from_addr).c_str(), strerror(errno));
                         }
@@ -326,11 +325,13 @@ bool CUniqAgent::run()
                             const uint32_t magic_ = _message_head->calc_magic();
                             if (magic_ != _message_head->magic)
                             {
-                                errocode = ERROR_ILLEGAL; // 非法来源，直接丢弃
-                                MYLOG_ERROR("[%s] illegal request: %s\n", net::to_string(_from_addr).c_str(), _message_head->str().c_str());
+                                errcode = ERROR_ILLEGAL; // 非法来源，直接丢弃
+                                MYLOG_ERROR("[%s] illegal request: %s|%u\n", net::to_string(_from_addr).c_str(), _message_head->str().c_str(), magic_);
                             }
 #endif // _CHECK_MAGIC_
 
+                            // 如果errcode在这里为非0，
+                            // 则表示一个非法的包，这种情形不需做出响应
                             if (0 == errcode)
                             {
                                 // Request from client
@@ -369,6 +370,8 @@ bool CUniqAgent::run()
                                     prepare_response_error(errcode);
                                 }
 
+                                // -1为Master回给Agent的响应，
+                                // 其它为Client向Agent的请求，这种情形Agent需要回响应给Client
                                 if (errcode != -1)
                                 {
                                     try

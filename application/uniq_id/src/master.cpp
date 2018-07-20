@@ -279,8 +279,7 @@ bool CUniqMaster::run()
                 _message_head = reinterpret_cast<struct MessageHead*>(_request_buffer);
                 MYLOG_DEBUG("%s from %s", _message_head->str().c_str(), net::to_string(_from_addr).c_str());
 
-                if ((bytes_received != _message_head->len) ||
-                    (bytes_received < static_cast<int>(sizeof(struct MessageHead))))
+                if (bytes_received != _message_head->len)
                 {
                     MYLOG_ERROR("invalid size (%d/%d/%zd) from %s: %s\n", bytes_received, _message_head->len.to_int(), sizeof(struct MessageHead), net::to_string(_from_addr).c_str(), strerror(errno));
                 }
