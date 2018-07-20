@@ -325,7 +325,7 @@ bool CUniqAgent::run()
                             const uint32_t magic_ = _message_head->calc_magic();
                             if (magic_ != _message_head->magic)
                             {
-                                errcode = ERROR_ILLEGAL; // 非法来源，直接丢弃
+                                //errcode = ERROR_ILLEGAL; // 非法来源，直接丢弃
                                 MYLOG_ERROR("[%s] illegal request: %s|%u\n", net::to_string(_from_addr).c_str(), _message_head->str().c_str(), magic_);
                             }
 #endif // _CHECK_MAGIC_
@@ -354,11 +354,17 @@ bool CUniqAgent::run()
                                 // Response from master
                                 else if (RESPONSE_ERROR == _message_head->type)
                                 {
-                                    errcode = on_response_error();
+                                    if (magic_ != _message_head->magic)
+                                        errcode = -1;
+                                    else
+                                        errcode = on_response_error();
                                 }
                                 else if (RESPONSE_LABEL == _message_head->type)
                                 {
-                                    errcode = on_response_label();
+                                    if (magic_ != _message_head->magic)
+                                        errcode = -1;
+                                    else
+                                        errcode = on_response_label();
                                 }
                                 else
                                 {
@@ -426,6 +432,8 @@ int CUniqAgent::get_label(bool asynchronous)
         {
             try
             {
+                request->major_ver = MAJOR_VERSION;
+                request->minor_ver = MINOR_VERSION;
                 request->len = sizeof(struct MessageHead);
                 request->type = REQUEST_LABEL;
                 request->echo = _echo++;
@@ -783,6 +791,8 @@ void CUniqAgent::prepare_response_error(int errcode)
     struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
 
     _response_size = sizeof(struct MessageHead);
+    response->major_ver = MAJOR_VERSION;
+    response->minor_ver = MINOR_VERSION;
     response->len = sizeof(struct MessageHead);
     response->type = RESPONSE_ERROR;
     response->echo = request->echo;
@@ -810,6 +820,8 @@ int CUniqAgent::prepare_response_get_label()
         struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
 
         _response_size = sizeof(struct MessageHead);
+        response->major_ver = MAJOR_VERSION;
+        response->minor_ver = MINOR_VERSION;
         response->len = sizeof(struct MessageHead);
         response->type = RESPONSE_LABEL;
         response->echo = request->echo;
@@ -850,6 +862,8 @@ int CUniqAgent::prepare_response_get_uniq_id()
         else
         {
             _response_size = sizeof(struct MessageHead);
+            response->major_ver = MAJOR_VERSION;
+            response->minor_ver = MINOR_VERSION;
             response->len = sizeof(struct MessageHead);
             response->type = RESPONSE_UNIQ_ID;
             response->echo = request->echo;
@@ -888,6 +902,8 @@ int CUniqAgent::prepare_response_get_uniq_seq()
         else
         {
             _response_size = sizeof(struct MessageHead);
+            response->major_ver = MAJOR_VERSION;
+            response->minor_ver = MINOR_VERSION;
             response->len = sizeof(struct MessageHead);
             response->type = RESPONSE_UNIQ_SEQ;
             response->echo = request->echo;
@@ -926,6 +942,8 @@ int CUniqAgent::prepare_response_get_label_and_seq()
         else
         {
             _response_size = sizeof(struct MessageHead);
+            response->major_ver = MAJOR_VERSION;
+            response->minor_ver = MINOR_VERSION;
             response->len = sizeof(struct MessageHead);
             response->type = RESPONSE_LABEL_AND_SEQ;
             response->echo = request->echo;

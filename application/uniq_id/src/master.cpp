@@ -690,6 +690,8 @@ void CUniqMaster::prepare_response_error(int errcode)
     struct MessageHead* response = reinterpret_cast<struct MessageHead*>(_response_buffer);
 
     _response_size = sizeof(struct MessageHead);
+    response->major_ver = MAJOR_VERSION;
+    response->minor_ver = MINOR_VERSION;
     response->len = sizeof(struct MessageHead);
     response->type = RESPONSE_ERROR;
     response->echo = request->echo;
@@ -744,6 +746,8 @@ int CUniqMaster::prepare_response_get_label()
         }
 
         _response_size = sizeof(struct MessageHead);
+        response->major_ver = MAJOR_VERSION;
+        response->minor_ver = MINOR_VERSION;
         response->len = sizeof(struct MessageHead);
         response->type = RESPONSE_LABEL;
         response->echo = request->echo;

@@ -30,7 +30,7 @@ enum
 {
     BASE_YEAR = 2016,  // 基数年份，计时开始的年份
     MAJOR_VERSION = 0, // 主版本号
-    MINOR_VERSION = 3  // 次版本号
+    MINOR_VERSION = 4  // 次版本号
 };
 
 // 出错代码（不要超过int32_t取值范围）

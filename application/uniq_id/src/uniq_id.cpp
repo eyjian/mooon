@@ -156,19 +156,19 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
             else if (RESPONSE_ERROR == response->type)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] store sequence block error", net::to_string(from_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] store sequence block error: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
                         static_cast<int>(response->value1.to_int()));
             }
             else if (response->type != RESPONSE_LABEL)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] error response label", net::to_string(from_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] error response label: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
                         response->type.to_int());
             }
             else if (response->echo.to_int() != echo)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] mismatch response label", net::to_string(from_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] mismatch response label: %s|%u", net::to_string(from_addr).c_str(), response->str().c_str(), echo),
                         ERROR_MISMATCH);
             }
             else
@@ -188,7 +188,7 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
                 if ((label_ >= 0xFF) || (label_ < 1))
                 {
                     THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] invalid label from master", net::to_string(from_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] invalid label from master: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
                         ERROR_INVALID_LABEL);
                 }
 
@@ -262,19 +262,19 @@ uint32_t CUniqId::get_unqi_seq(uint16_t num) throw (utils::CException, sys::CSys
             else if (RESPONSE_ERROR == response->type)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] store sequence block error", net::to_string(from_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] store sequence block error: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
                         static_cast<int>(response->value1.to_int()));
             }
             else if (response->type != RESPONSE_UNIQ_SEQ)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] error response sequence", net::to_string(from_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] error response sequence: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
                         response->type.to_int());
             }
             else if (response->echo.to_int() != echo)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] mismatch response sequence", net::to_string(from_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] mismatch response sequence: %s|%u", net::to_string(from_addr).c_str(), response->str().c_str(), echo),
                         ERROR_MISMATCH);
             }
             else
@@ -361,19 +361,19 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (uti
             else if (RESPONSE_ERROR == response->type)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] store sequence block error", net::to_string(from_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] store sequence block error: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
                         static_cast<int>(response->value1.to_int()));
             }
             else if (response->type != RESPONSE_UNIQ_ID)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] error response id", net::to_string(from_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] error response id: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
                         response->type.to_int());
             }
             else if (response->echo.to_int() != echo)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] mismatch response id", net::to_string(from_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] mismatch response id: %s|%u", net::to_string(from_addr).c_str(), response->str().c_str(), echo),
                         ERROR_MISMATCH);
             }
             else
@@ -507,19 +507,19 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num) thr
             else if (RESPONSE_ERROR == response->type)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] store sequence block error", net::to_string(from_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] store sequence block error: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
                         static_cast<int>(response->value1.to_int()));
             }
             else if (response->type != RESPONSE_LABEL_AND_SEQ)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] error response label and sequence", net::to_string(from_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] error response label and sequence: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
                         response->type.to_int());
             }
             else if (response->echo.to_int() != echo)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] mismatch response label and sequence", net::to_string(from_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] mismatch response label and sequence: %s|%u", net::to_string(from_addr).c_str(), response->str().c_str(), echo),
                         ERROR_MISMATCH);
             }
             else
@@ -539,7 +539,7 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num) thr
                 if ((label_ >= 0xFF) || (label_ < 1))
                 {
                     THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] invalid label from master", net::to_string(from_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] invalid label from master: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
                         ERROR_INVALID_LABEL);
                 }
 
