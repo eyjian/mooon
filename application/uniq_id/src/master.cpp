@@ -34,6 +34,9 @@
 #include <sys/types.h>
 #include <vector>
 
+// 是否检查magic
+#define _CHECK_MAGIC_ 1
+
 // 允许两个master同时运行，
 // 通过MySQL的事务、表锁和唯一键保证数据的安全和一致性。
 
@@ -219,6 +222,7 @@ bool CUniqMaster::init(int argc, char* argv[])
     }
     if (!check_parameter())
     {
+        fprintf(stderr, "%s\n", mooon::utils::g_help_string.c_str());
         return false;
     }
 
@@ -275,36 +279,49 @@ bool CUniqMaster::run()
                 _message_head = reinterpret_cast<struct MessageHead*>(_request_buffer);
                 MYLOG_DEBUG("%s from %s", _message_head->str().c_str(), net::to_string(_from_addr).c_str());
 
-                if (bytes_received != _message_head->len)
+                if ((bytes_received != _message_head->len) ||
+                    (bytes_received < static_cast<int>(sizeof(struct MessageHead))))
                 {
-                    MYLOG_ERROR("invalid size (%d/%d) from %s: %s\n", bytes_received, _message_head->len.to_int(), net::to_string(_from_addr).c_str(), strerror(errno));
+                    MYLOG_ERROR("invalid size (%d/%d/%zd) from %s: %s\n", bytes_received, _message_head->len.to_int(), sizeof(struct MessageHead), net::to_string(_from_addr).c_str(), strerror(errno));
                 }
                 else
                 {
                     int errocode = 0;
 
-                    if (REQUEST_LABEL == _message_head->type)
+#if _CHECK_MAGIC_ == 1
+                    const uint32_t magic_ = _message_head->calc_magic();
+                    if (magic_ != _message_head->magic)
                     {
-                        errocode = prepare_response_get_label();
+                        errocode = ERROR_ILLEGAL; // 非法来源，直接丢弃
+                        MYLOG_ERROR("[%s] illegal request: %s\n", net::to_string(_from_addr).c_str(), _message_head->str().c_str());
                     }
-                    else
-                    {
-                        errocode = ERROR_INVALID_TYPE;
-                        MYLOG_ERROR("invalid message type: %s\n", _message_head->str().c_str());
-                    }
-                    if (errocode != 0)
-                    {
-                        prepare_response_error(errocode);
-                    }
+#endif // _CHECK_MAGIC_
 
-                    try
+                    if (0 == errocode)
                     {
-                        _udp_socket->send_to(_response_buffer, _response_size, _from_addr);
-                        MYLOG_INFO("send to %s ok\n", net::to_string(_from_addr).c_str());
-                    }
-                    catch (sys::CSyscallException& ex)
-                    {
-                        MYLOG_ERROR("send to %s failed: %s\n", net::to_string(_from_addr).c_str(), ex.str().c_str());
+                        if (REQUEST_LABEL == _message_head->type)
+                        {
+                            errocode = prepare_response_get_label();
+                        }
+                        else
+                        {
+                            errocode = ERROR_INVALID_TYPE;
+                            MYLOG_ERROR("invalid message type: %s\n", _message_head->str().c_str());
+                        }
+                        if (errocode != 0)
+                        {
+                            prepare_response_error(errocode);
+                        }
+
+                        try
+                        {
+                            _udp_socket->send_to(_response_buffer, _response_size, _from_addr);
+                            MYLOG_INFO("send to %s ok\n", net::to_string(_from_addr).c_str());
+                        }
+                        catch (sys::CSyscallException& ex)
+                        {
+                            MYLOG_ERROR("send to %s failed: %s\n", net::to_string(_from_addr).c_str(), ex.str().c_str());
+                        }
                     }
                 }
             }
@@ -320,6 +337,27 @@ void CUniqMaster::fini()
 
 bool CUniqMaster::check_parameter()
 {
+    // db_host
+    if (argument::db_host->value().empty())
+    {
+        fprintf(stderr, "parameter[--db_host] not set\n");
+        return false;
+    }
+
+    // db_name
+    if (argument::db_name->value().empty())
+    {
+        fprintf(stderr, "parameter[--db_name] not set\n");
+        return false;
+    }
+
+    // db_user
+    if (argument::db_user->value().empty())
+    {
+        fprintf(stderr, "parameter[--db_user] not set\n");
+        return false;
+    }
+
     return true;
 }
 
@@ -355,7 +393,7 @@ bool CUniqMaster::generate_labels()
         std::string str = _mysql->query("SELECT count(1) FROM t_label_pool");
         if (str == "0")
         {
-            for (int label=0; label<=LABEL_MAX; ++label)
+            for (int label=1; label<=LABEL_MAX; ++label)
             {
                 _mysql->update("INSERT INTO t_label_pool (f_label) VALUES (%d)", label);
                 need_rollback = true;
@@ -658,6 +696,7 @@ void CUniqMaster::prepare_response_error(int errcode)
     response->echo = request->echo;
     response->value1 = errcode;
     response->value2 = 0;
+    response->update_magic();
 
     MYLOG_DEBUG("prepare %s ok for %s\n", response->str().c_str(), net::to_string(_from_addr).c_str());
 }
@@ -711,6 +750,7 @@ int CUniqMaster::prepare_response_get_label()
         response->echo = request->echo;
         response->value1 = label;
         response->value2 = 0;
+        response->update_magic();
         MYLOG_INFO("%s => %s\n", response->str().c_str(), net::to_string(_from_addr).c_str());
 
         struct LabelInfo label_info(label, _from_addr.sin_addr.s_addr, _current_time);

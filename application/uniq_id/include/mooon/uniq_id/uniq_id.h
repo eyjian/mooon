@@ -46,7 +46,8 @@ enum
     ERROR_DATABASE = 201600008,       // DB错误
     ERROR_PARAMETER = 201600009,      // 参数错误
     ERROR_MISMATCH = 201600010,       // 不匹配的响应
-    ERROR_UNEXCEPTED = 201600010      // 非期望的响应，响应来自非请求的Agent
+    ERROR_UNEXCEPTED = 201600011,     // 非期望的响应，响应来自非请求的Agent
+    ERROR_ILLEGAL = 201600012         // 非法的数据包
 };
 
 // 64位唯一ID结构

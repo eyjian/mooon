@@ -34,6 +34,9 @@
 #include <sys/types.h>
 #include <vector>
 
+// 是否检查magic
+#define _CHECK_MAGIC_ 0
+
 // 日志控制：
 // 可通过设置环境变量MOOON_LOG_LEVEL和MOOON_LOG_SCREEN来控制日志级别和是否在屏幕上输出日志
 // 1) MOOON_LOG_LEVEL可以取值debug,info,error,warn,fatal
@@ -207,6 +210,7 @@ bool CUniqAgent::init(int argc, char* argv[])
     if (!utils::parse_arguments(argc, argv, &errmsg))
     {
         fprintf(stderr, "%s\n", errmsg.c_str());
+        fprintf(stderr, "%s\n", mooon::utils::g_help_string.c_str());
         return false;
     }
 
@@ -214,12 +218,14 @@ bool CUniqAgent::init(int argc, char* argv[])
     if (argument::master_nodes->value().empty() && (0 == argument::label->value()))
     {
     	fprintf(stderr, "parameter[master] is empty and parameter[label] is 0 at the same time.\n");
+    	fprintf(stderr, "%s\n", mooon::utils::g_help_string.c_str());
     	return false;
     }
     if ((argument::expire->value() < argument::interval->value() * 2) ||
         (argument::expire->value() < argument::interval->value() + 10))
     {
         fprintf(stderr, "parameter[expire] should greater than interval with 10 and double\n");
+        fprintf(stderr, "%s\n", mooon::utils::g_help_string.c_str());
         return false;
     }
 
@@ -306,61 +312,74 @@ bool CUniqAgent::run()
                         _message_head = reinterpret_cast<struct MessageHead*>(_request_buffer);
                         MYLOG_DEBUG("%s from %s", _message_head->str().c_str(), net::to_string(_from_addr).c_str());
 
-                        if (bytes_received != _message_head->len)
+                        if ((bytes_received != _message_head->len) ||
+                            (bytes_received < static_cast<int>(sizeof(struct MessageHead))))
                         {
-                            MYLOG_ERROR("invalid size (%d/%d) from %s: %s\n", bytes_received, _message_head->len.to_int(), net::to_string(_from_addr).c_str(), strerror(errno));
+                            MYLOG_ERROR("invalid size (%d/%d/%zd) from %s: %s\n", bytes_received, _message_head->len.to_int(), sizeof(struct MessageHead), net::to_string(_from_addr).c_str(), strerror(errno));
                         }
                         else
                         {
                             int errcode = 0;
                             std::string errmsg;
 
-                            // Request from client
-                            if (REQUEST_LABEL == _message_head->type)
+#if _CHECK_MAGIC_ == 1
+                            const uint32_t magic_ = _message_head->calc_magic();
+                            if (magic_ != _message_head->magic)
                             {
-                                errcode = prepare_response_get_label();
+                                errocode = ERROR_ILLEGAL; // 非法来源，直接丢弃
+                                MYLOG_ERROR("[%s] illegal request: %s\n", net::to_string(_from_addr).c_str(), _message_head->str().c_str());
                             }
-                            else if (REQUEST_UNIQ_ID == _message_head->type)
-                            {
-                                errcode = prepare_response_get_uniq_id();
-                            }
-                            else if (REQUEST_UNIQ_SEQ == _message_head->type)
-                            {
-                                errcode = prepare_response_get_uniq_seq();
-                            }
-                            else if (REQUEST_LABEL_AND_SEQ == _message_head->type)
-                            {
-                                errcode = prepare_response_get_label_and_seq();
-                            }
-                            // Response from master
-                            else if (RESPONSE_ERROR == _message_head->type)
-                            {
-                                errcode = on_response_error();
-                            }
-                            else if (RESPONSE_LABEL == _message_head->type)
-                            {
-                                errcode = on_response_label();
-                            }
-                            else
-                            {
-                                errcode = ERROR_INVALID_TYPE;
-                                MYLOG_ERROR("invalid message type: %s\n", _message_head->str().c_str());
-                            }
-                            if ((errcode != 0) && (errcode != -1))
-                            {
-                                prepare_response_error(errcode);
-                            }
+#endif // _CHECK_MAGIC_
 
-                            if (errcode != -1)
+                            if (0 == errcode)
                             {
-                                try
+                                // Request from client
+                                if (REQUEST_LABEL == _message_head->type)
                                 {
-                                    _udp_socket->send_to(_response_buffer, _response_size, _from_addr);
-                                    MYLOG_DEBUG("send to %s ok\n", net::to_string(_from_addr).c_str());
+                                    errcode = prepare_response_get_label();
                                 }
-                                catch (sys::CSyscallException& ex)
+                                else if (REQUEST_UNIQ_ID == _message_head->type)
                                 {
-                                    MYLOG_ERROR("send to %s failed: %s\n", net::to_string(_from_addr).c_str(), ex.str().c_str());
+                                    errcode = prepare_response_get_uniq_id();
+                                }
+                                else if (REQUEST_UNIQ_SEQ == _message_head->type)
+                                {
+                                    errcode = prepare_response_get_uniq_seq();
+                                }
+                                else if (REQUEST_LABEL_AND_SEQ == _message_head->type)
+                                {
+                                    errcode = prepare_response_get_label_and_seq();
+                                }
+                                // Response from master
+                                else if (RESPONSE_ERROR == _message_head->type)
+                                {
+                                    errcode = on_response_error();
+                                }
+                                else if (RESPONSE_LABEL == _message_head->type)
+                                {
+                                    errcode = on_response_label();
+                                }
+                                else
+                                {
+                                    errcode = ERROR_INVALID_TYPE;
+                                    MYLOG_ERROR("invalid message type: %s\n", _message_head->str().c_str());
+                                }
+                                if ((errcode != 0) && (errcode != -1))
+                                {
+                                    prepare_response_error(errcode);
+                                }
+
+                                if (errcode != -1)
+                                {
+                                    try
+                                    {
+                                        _udp_socket->send_to(_response_buffer, _response_size, _from_addr);
+                                        MYLOG_DEBUG("send to %s ok\n", net::to_string(_from_addr).c_str());
+                                    }
+                                    catch (sys::CSyscallException& ex)
+                                    {
+                                        MYLOG_ERROR("send to %s failed: %s\n", net::to_string(_from_addr).c_str(), ex.str().c_str());
+                                    }
                                 }
                             }
                         }
@@ -409,6 +428,7 @@ int CUniqAgent::get_label(bool asynchronous)
                 request->echo = _echo++;
                 request->value1 = _seq_block.label;
                 request->value2 = 0;
+                request->update_magic();
                 _udp_socket->send_to(_request_buffer, sizeof(struct MessageHead), master_addr);
 
                 if (asynchronous)
@@ -766,6 +786,7 @@ void CUniqAgent::prepare_response_error(int errcode)
     response->value1 = errcode;
     response->value2 = 0;
     response->value3 = 0;
+    response->update_magic();
 
     MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
 }
@@ -792,6 +813,7 @@ int CUniqAgent::prepare_response_get_label()
         response->value1 = _seq_block.label;
         response->value2 = 0;
         response->value3 = 0;
+        response->update_magic();
 
         MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
         return 0;
@@ -831,6 +853,7 @@ int CUniqAgent::prepare_response_get_uniq_id()
             response->value1 = 0;
             response->value2 = 0;
             response->value3 = uniq_id; // value1和value2均为uint32_t类型，存不下uniq_id
+            response->update_magic();
 
             MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
             return 0;
@@ -868,6 +891,7 @@ int CUniqAgent::prepare_response_get_uniq_seq()
             response->value1 = seq;
             response->value2 = 0;
             response->value3 = 0;
+            response->update_magic();
 
             MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
             return 0;
@@ -905,6 +929,7 @@ int CUniqAgent::prepare_response_get_label_and_seq()
             response->value1 = _seq_block.label;
             response->value2 = seq;
             response->value3 = 0;
+            response->update_magic();
 
             MYLOG_DEBUG("prepare %s ok\n", response->str().c_str());
             return 0;

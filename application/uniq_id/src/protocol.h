@@ -18,6 +18,7 @@
  */
 #ifndef MOOON_UNIQ_ID_PROTOCOL_H
 #define MOOON_UNIQ_ID_PROTOCOL_H
+#include "crc32.h"
 #include "mooon/uniq_id/uniq_id.h"
 #include <mooon/net/inttypes.h>
 #include <mooon/utils/string_utils.h>
@@ -36,7 +37,8 @@ enum
     SOCKET_BUFFER_SIZE = 128,
     LABEL_MAX = 254,                      // Label最大的取值（不包含0，从1开始），注意只能为254，不能为更大的值
     LABEL_EXPIRED_SECONDS = (3600*24*15), // Label多少小秒过期，默认15天
-    ECHO_START = 1357 // echo起始值，为0容易恰好碰上
+    ECHO_START = 1357, // echo起始值，为0容易恰好碰上
+    RETRY_MAX = 128 // 最多重试次数，如果超过则会置为128
 };
 
 // 命令字
@@ -77,7 +79,35 @@ struct MessageHead
 
     std::string str() const
     {
-        return utils::CStringUtils::format_string("message://V%d.%d/L%d/T%d/E%u/M%u/%u/%u/%" PRIu64, (int)major_ver.to_int(), (int)minor_ver.to_int(), (int)len.to_int(), (int)type.to_int(), echo.to_int(), magic.to_int(), value1.to_int(), value2.to_int(), value3.to_int());
+        return utils::CStringUtils::format_string("message://V:%d.%d/L:%d/T:%d/E:%u/M:%u/V1:%u/V2:%u/V3:%" PRIu64, (int)major_ver.to_int(), (int)minor_ver.to_int(), (int)len.to_int(), (int)type.to_int(), echo.to_int(), magic.to_int(), value1.to_int(), value2.to_int(), value3.to_int());
+    }
+
+    uint32_t calc_magic() const
+    {
+        uint32_t magic = 0;
+        uint16_t len_ = len.to_int();
+        uint16_t type_ = type.to_int();
+        uint16_t major_ver_ = major_ver.to_int();
+        uint16_t minor_ver_ = minor_ver.to_int();
+        uint32_t echo_ = echo.to_int();
+        uint32_t value1_ = value1.to_int();
+        uint32_t value2_ = value2.to_int();
+        uint32_t value3_ = value3.to_int();
+
+        magic = crc32(magic, &len_, sizeof(len_));
+        magic = crc32(magic, &type_, sizeof(type_));
+        magic = crc32(magic, &major_ver_, sizeof(major_ver_));
+        magic = crc32(magic, &minor_ver_, sizeof(minor_ver_));
+        magic = crc32(magic, &echo_, sizeof(echo_));
+        magic = crc32(magic, &value1_, sizeof(value1_));
+        magic = crc32(magic, &value2_, sizeof(value2_));
+        magic = crc32(magic, &value3_, sizeof(value3_));
+        return magic;
+    }
+
+    void update_magic()
+    {
+        magic = calc_magic();
     }
 };
 

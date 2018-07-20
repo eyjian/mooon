@@ -3,17 +3,18 @@
 include_directories(../../include)
 include_directories(../../include/mooon)
 link_directories(${CMAKE_CURRENT_SOURCE_DIR})
+link_directories(${MOOON_HOME}/lib)
 
 # libmooon_uniq.a
-add_library(mooon_uniq STATIC uniq_id.cpp)
+add_library(mooon_uniq STATIC uniq_id.cpp crc32.cpp)
 
 # uniq_agent
-add_executable(uniq_agent agent.cpp)
+add_executable(uniq_agent agent.cpp crc32.cpp)
 target_link_libraries(uniq_agent libmooon.a)
 
 if (MOOON_HAVE_MYSQL)
 	# uniq_master
-	add_executable(uniq_master master.cpp)
+	add_executable(uniq_master master.cpp crc32.cpp)
 	target_link_libraries(uniq_master libmooon.a libmysqlclient.a)
 endif ()
 

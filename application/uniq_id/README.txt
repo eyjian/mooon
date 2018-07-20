@@ -1,5 +1,7 @@
 简单原理的极高性能分布式无单点高可用性唯一ID生成服务UniqId
 
+涉及的MySQL库表，请参见master.cpp文件中的注释，在运行Master之前，需要先创建一个库和三张表。
+
 cmake安装方法：
 cmake -DCMAKE_INSTALL_PREFIX=<installation directory> .
 

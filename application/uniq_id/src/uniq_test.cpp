@@ -70,7 +70,7 @@ void print_transaction_id(const char* agent_nodes, bool polling)
         time_t now = time(NULL);
         struct tm* tm = localtime(&now);
         uint32_t timeout_milliseconds = 200;
-        uint8_t retry_times = 5;
+        uint8_t retry_times = 3;
         mooon::CUniqId uniq_id(agent_nodes, timeout_milliseconds, retry_times, polling);
 
         str = uniq_id.get_transaction_id("02%L%Y%M%D%m%5S");
