@@ -84,15 +84,15 @@ struct MessageHead
 
     uint32_t calc_magic() const
     {
+        const uint16_t len_ = len.to_int();
+        const uint16_t type_ = type.to_int();
+        const uint16_t major_ver_ = major_ver.to_int();
+        const uint16_t minor_ver_ = minor_ver.to_int();
+        const uint32_t echo_ = echo.to_int();
+        const uint32_t value1_ = value1.to_int();
+        const uint32_t value2_ = value2.to_int();
+        const uint64_t value3_ = value3.to_int();
         uint32_t magic = 0;
-        uint16_t len_ = len.to_int();
-        uint16_t type_ = type.to_int();
-        uint16_t major_ver_ = major_ver.to_int();
-        uint16_t minor_ver_ = minor_ver.to_int();
-        uint32_t echo_ = echo.to_int();
-        uint32_t value1_ = value1.to_int();
-        uint32_t value2_ = value2.to_int();
-        uint32_t value3_ = value3.to_int();
 
         magic = crc32(magic, &len_, sizeof(len_));
         magic = crc32(magic, &type_, sizeof(type_));

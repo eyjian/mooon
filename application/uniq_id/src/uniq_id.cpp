@@ -179,7 +179,7 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
                 if (magic_ != response->magic)
                 {
                     THROW_EXCEPTION(
-                            utils::CStringUtils::format_string("[UniqID][%s] illegal response: %u", net::to_string(from_addr).c_str(), magic_),
+                            utils::CStringUtils::format_string("[UniqID][%s] illegal response: %s|%u", net::to_string(from_addr).c_str(), response->str().c_str(), magic_),
                             ERROR_ILLEGAL);
                 }
 #endif // _CHECK_MAGIC_
@@ -285,7 +285,7 @@ uint32_t CUniqId::get_unqi_seq(uint16_t num) throw (utils::CException, sys::CSys
                 if (magic_ != response->magic)
                 {
                     THROW_EXCEPTION(
-                            utils::CStringUtils::format_string("[UniqID][%s] illegal response: %u", net::to_string(from_addr).c_str(), magic_),
+                            utils::CStringUtils::format_string("[UniqID][%s] illegal response: %s|%u", net::to_string(from_addr).c_str(), response->str().c_str(), magic_),
                             ERROR_ILLEGAL);
                 }
 #endif // _CHECK_MAGIC_
@@ -384,7 +384,7 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (uti
                 if (magic_ != response->magic)
                 {
                     THROW_EXCEPTION(
-                            utils::CStringUtils::format_string("[UniqID][%s] illegal response: %u", net::to_string(from_addr).c_str(), magic_),
+                            utils::CStringUtils::format_string("[UniqID][%s] illegal response: %s|%u", net::to_string(from_addr).c_str(), response->str().c_str(), magic_),
                             ERROR_ILLEGAL);
                 }
 #endif // _CHECK_MAGIC_
@@ -530,7 +530,7 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num) thr
                 if (magic_ != response->magic)
                 {
                     THROW_EXCEPTION(
-                            utils::CStringUtils::format_string("[UniqID][%s] illegal response: %u", net::to_string(from_addr).c_str(), magic_),
+                            utils::CStringUtils::format_string("[UniqID][%s] illegal response: %s|%u", net::to_string(from_addr).c_str(), response->str().c_str(), magic_),
                             ERROR_ILLEGAL);
                 }
 #endif // _CHECK_MAGIC_
