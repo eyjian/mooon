@@ -282,6 +282,7 @@ std::string CReportSelfHandler::make_insert_sql(const std::vector<std::string>& 
         const std::string& dirpath = utils::CStringUtils::trim(tokens[4]);
         //const std::string& full_cmdline = utils::CStringUtils::trim(tokens[5]); // 包含安全信息，不再上报
         const std::string& lasttime = utils::CStringUtils::trim(tokens[6]);
+        const std::string& lastdate = mooon::sys::CDatetimeUtils::extract_date(lasttime);
         const std::string& report_interval_seconds = utils::CStringUtils::trim(tokens[7]);
         const std::string& pid = utils::CStringUtils::trim(tokens[8]);
         const std::string& vsz = utils::CStringUtils::trim(tokens[9]);
@@ -314,10 +315,10 @@ std::string CReportSelfHandler::make_insert_sql(const std::vector<std::string>& 
         {
             sql = utils::CStringUtils::format_string(
                     "INSERT INTO t_program_deployment ("
-                    "f_md5,f_ip,f_user,f_shortname,f_dirpath,f_lasttime,f_interval,f_pid,f_vsz,f_rss,f_firsttime) "
-                    "VALUES ('%s','%s','%s','%s','%s','%s',%s,%s,%s,%s,'%s')",
+                    "f_md5,f_ip,f_user,f_shortname,f_dirpath,f_lasttime,f_lastdate,f_interval,f_pid,f_vsz,f_rss,f_firsttime) "
+                    "VALUES ('%s','%s','%s','%s','%s','%s','%s',%s,%s,%s,%s,'%s')",
                     full_cmdline_md5.c_str(), ip.c_str(), user.c_str(), shortname.c_str(), dirpath.c_str(),
-                    lasttime.c_str(), report_interval_seconds.c_str(),
+                    lasttime.c_str(), lastdate.c_str(), report_interval_seconds.c_str(),
                     pid.c_str(), vsz.c_str(), rss.c_str(), firsttime.c_str());
         }
     }
@@ -343,6 +344,7 @@ std::string CReportSelfHandler::make_update_sql(const std::vector<std::string>& 
         const std::string& dirpath = utils::CStringUtils::trim(tokens[4]);
         //const std::string& full_cmdline = utils::CStringUtils::trim(tokens[5]); // 包含安全信息，不再上报
         const std::string& lasttime = utils::CStringUtils::trim(tokens[6]);
+        const std::string& lastdate = mooon::sys::CDatetimeUtils::extract_date(lasttime);
         const std::string& report_interval_seconds = utils::CStringUtils::trim(tokens[7]);
         const std::string& pid = utils::CStringUtils::trim(tokens[8]);
         const std::string& vsz = utils::CStringUtils::trim(tokens[9]);
@@ -373,10 +375,10 @@ std::string CReportSelfHandler::make_update_sql(const std::vector<std::string>& 
         {
             sql = utils::CStringUtils::format_string(
                     "UPDATE t_program_deployment SET "
-                    "f_ip='%s',f_user='%s',f_shortname='%s',f_dirpath='%s',f_lasttime='%s',f_interval=%s,f_pid=%s,f_vsz=%s,f_rss=%s "
+                    "f_ip='%s',f_user='%s',f_shortname='%s',f_dirpath='%s',f_lasttime='%s',f_lastdate='%s',f_interval=%s,f_pid=%s,f_vsz=%s,f_rss=%s "
                     "WHERE f_md5='%s'",
                     ip.c_str(), user.c_str(), shortname.c_str(), dirpath.c_str(),
-                    lasttime.c_str(), report_interval_seconds.c_str(),
+                    lasttime.c_str(), lastdate.c_str(), report_interval_seconds.c_str(),
                     pid.c_str(), vsz.c_str(), rss.c_str(),
                     full_cmdline_md5.c_str());
         }
