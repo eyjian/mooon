@@ -376,11 +376,11 @@ std::string CReportSelfHandler::make_update_sql(const std::vector<std::string>& 
             sql = utils::CStringUtils::format_string(
                     "UPDATE t_program_deployment SET "
                     "f_ip='%s',f_user='%s',f_shortname='%s',f_dirpath='%s',f_lasttime='%s',f_lastdate='%s',f_interval=%s,f_pid=%s,f_vsz=%s,f_rss=%s "
-                    "WHERE f_md5='%s'",
+                    "WHERE f_md5='%s' AND f_lastdate='%s'",
                     ip.c_str(), user.c_str(), shortname.c_str(), dirpath.c_str(),
                     lasttime.c_str(), lastdate.c_str(), report_interval_seconds.c_str(),
                     pid.c_str(), vsz.c_str(), rss.c_str(),
-                    full_cmdline_md5.c_str());
+                    full_cmdline_md5.c_str(), lastdate.c_str());
         }
     }
 
