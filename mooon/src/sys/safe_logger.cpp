@@ -124,6 +124,11 @@ CSafeLogger::~CSafeLogger()
         closelog();
 }
 
+int CSafeLogger::get_log_level() const
+{
+    return atomic_read(&_log_level);
+}
+
 std::string CSafeLogger::get_log_dir() const
 {
     return _log_dir;

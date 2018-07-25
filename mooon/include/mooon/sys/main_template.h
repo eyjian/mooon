@@ -151,7 +151,10 @@ extern int main_template(IMainHelper* main_helper, int argc, char* argv[]);
 class CMainHelper: public IMainHelper
 {
 public:
-    CMainHelper();
+    // log_level_signo
+    // 动态调整日志级别的信号，通过该信号可让日志级别在DEBUG和INFO两个级别间互相切换
+    // 如果值为0或负值，表示不启用该功能
+    CMainHelper(int log_level_signo=SIGUSR2);
     ~CMainHelper();
     void signal_thread();
 
@@ -196,14 +199,21 @@ public: // 信号相关的
     // 在CMainHelper::on_terminated()中会置_stop为true，这是优雅退出的前提
     virtual void on_terminated();
     virtual void on_child_end(pid_t child_pid, int child_exited_status);
-    virtual void on_signal_handler(int signo);
     virtual void on_exception(int errcode);
+
+    // 非SIGTERM信号发生时被调用
+    //
+    // 注意：
+    // 如果子类重写on_signal_handler，则应首先调用CMainHelper::on_signal_handler，
+    // 否则动态日志级别调整功能将失效。
+    virtual void on_signal_handler(int signo);
 
 protected:
     bool to_stop() const { return _stop; }
 
 private:
     volatile bool _stop;
+    int _log_level_signo;
     mooon::sys::CThreadEngine* _signal_thread;
 };
 

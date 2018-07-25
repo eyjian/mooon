@@ -306,8 +306,8 @@ bool parent_process(IMainHelper* main_helper, pid_t child_pid, int& child_exit_c
 ////////////////////////////////////////////////////////////////////////////////
 // CMainHelper
 
-CMainHelper::CMainHelper()
-    : _stop(false), _signal_thread(NULL)
+CMainHelper::CMainHelper(int log_level_signo)
+    : _stop(false), _log_level_signo(log_level_signo), _signal_thread(NULL)
 {
 }
 
@@ -360,6 +360,12 @@ bool CMainHelper::init(int argc, char* argv[])
     {
         // 通过SIGTERM幽雅退出
         mooon::sys::CSignalHandler::block_signal(SIGTERM);
+        // 控制日志级别信号
+        if (_log_level_signo > 0)
+        {
+            mooon::sys::CSignalHandler::block_signal(_log_level_signo);
+        }
+
         // 让子类有机会阻塞其它信号
         on_block_signal();
 
@@ -419,6 +425,22 @@ void CMainHelper::on_child_end(pid_t child_pid, int child_exited_status)
 
 void CMainHelper::on_signal_handler(int signo)
 {
+    if (_log_level_signo == signo)
+    {
+        if (g_logger != NULL)
+        {
+            const int log_level = g_logger->get_log_level();
+
+            if (LOG_LEVEL_DEBUG == log_level)
+            {
+                g_logger->set_log_level(LOG_LEVEL_INFO);
+            }
+            else if (LOG_LEVEL_INFO == log_level)
+            {
+                g_logger->set_log_level(LOG_LEVEL_DEBUG);
+            }
+        }
+    }
 }
 
 void CMainHelper::on_exception(int errcode)

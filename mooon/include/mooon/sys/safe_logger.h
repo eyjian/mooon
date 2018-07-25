@@ -67,6 +67,8 @@ class CSafeLogger: public ILogger
 public:
     CSafeLogger(const char* log_dir, const char* log_filename, uint16_t log_line_size=8192, bool enable_syslog=false) throw (CSyscallException);
     virtual ~CSafeLogger();
+
+    virtual int get_log_level() const;
     virtual std::string get_log_dir() const;
     virtual std::string get_log_filename() const;
     virtual std::string get_log_filepath() const;

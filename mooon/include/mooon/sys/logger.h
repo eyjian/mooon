@@ -85,10 +85,11 @@ public:
       * @log_line_size: 默认情况下每行日志的最大长度，最长不会超过LOG_LINE_SIZE_MAX，否则截断
       */
     CLogger(uint16_t log_line_size=8192);
+
 private:
     virtual ~CLogger();
-public:
 
+public:
     /***
       * 销毁日志器，非线程安全，只有被一个线程调用一次
       * ，调用后，Logger不能再被使用。
