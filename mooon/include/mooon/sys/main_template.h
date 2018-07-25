@@ -31,6 +31,7 @@
 
 // 指定ReportSelf的配置文件（值为空时表示不上报），
 // 如果report_self_conf指定的文件不存在或配置错误等，将均不能上报
+// 默认值为：/etc/mooon_report_self.conf
 //
 // report_self_conf文件格式示例（JSON格式）：
 // {
@@ -40,6 +41,7 @@
 STRING_ARG_DECLARE(report_self_conf);
 
 // ReportSelf上报间隔（单位：秒，值为0时表示不上报）
+// 默认值为3600，即一小时上报一次
 INTEGER_ARG_DECLARE(int, report_self_interval);
 
 SYS_NAMESPACE_BEGIN
