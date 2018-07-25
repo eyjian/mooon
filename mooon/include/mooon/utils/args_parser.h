@@ -346,11 +346,11 @@ protected:
         {
             if (name().size() < 2)
             {
-                *errmsg = CStringUtils::format_string("parameter[-%s] not set\n", name().c_str());
+                *errmsg = CStringUtils::format_string("parameter[-%s] not set", name().c_str());
             }
             else
             {
-                *errmsg = CStringUtils::format_string("parameter[--%s] not set\n", name().c_str());
+                *errmsg = CStringUtils::format_string("parameter[--%s] not set", name().c_str());
             }
 
             return false;
