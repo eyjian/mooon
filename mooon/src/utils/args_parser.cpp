@@ -43,6 +43,8 @@ static std::string remove_prefix_of_argument_name(const std::string& argument_na
 bool parse_arguments(int argc, char* argv[], std::string* errmsg)
 {
     MOOON_ASSERT(errmsg != NULL);
+
+    g_help_string = mooon::utils::CArgumentContainer::get_singleton()->usage_string();
     for (int i=1; i<argc; ++i)
     {
         std::string argument = argv[i];
@@ -70,27 +72,22 @@ bool parse_arguments(int argc, char* argv[], std::string* errmsg)
         }
         if ("help" == argument_name)
         {
-            if (g_help_string.empty())
-                g_help_string = mooon::utils::CArgumentContainer::get_singleton()->usage_string();
-
-            *errmsg = g_help_string;
+            errmsg->clear();
             return false;
         }
         if (!mooon::utils::CArgumentContainer::get_singleton()->set_argument(
-            argument_name, argument_value, errmsg))
+                argument_name, argument_value, errmsg))
         {
             return false;
         }
     }
 
-    if (g_help_string.empty())
-        g_help_string = mooon::utils::CArgumentContainer::get_singleton()->usage_string();
-    return true;
+    return mooon::utils::CArgumentContainer::get_singleton()->check_parameters(errmsg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 CArgumentBase::CArgumentBase(const std::string& name, const std::string& help_string)
-    : _name(name), _help_string(help_string)
+    : _checked(false), _name(name), _help_string(help_string)
 {
 }
 
@@ -108,13 +105,17 @@ CArgumentContainer::~CArgumentContainer()
 
 void  CArgumentContainer::add_argument(CArgumentBase* argument)
 {
-    _argument_table.insert(std::make_pair(argument->name(), argument));
+    std::pair<ArgumentTable::iterator, bool> ret = _argument_table.insert(std::make_pair(argument->name(), argument));
+    if (ret.second)
+    {
+        _argument_list.push_back(argument);
+    }
 }
 
 bool CArgumentContainer::set_argument(const std::string& name, const std::string& value, std::string* errmsg)
 {
     CArgumentBase* argument = NULL;
-    std::map<std::string, CArgumentBase*>::iterator iter = _argument_table.find(name);
+    ArgumentTable::iterator iter = _argument_table.find(name);
 
     if (iter == _argument_table.end())
     {
@@ -124,6 +125,7 @@ bool CArgumentContainer::set_argument(const std::string& name, const std::string
     else
     {
         argument = iter->second;
+        argument->set_checked();
         return argument->set_value(value, errmsg);
     }
 }
@@ -131,16 +133,33 @@ bool CArgumentContainer::set_argument(const std::string& name, const std::string
 std::string CArgumentContainer::usage_string() const
 {
     std::stringstream usage_stream;
-    std::map<std::string, CArgumentBase*>::const_iterator iter = _argument_table.begin();
 
     usage_stream << "usage:" << std::endl;
-    for (; iter!=_argument_table.end(); ++iter)
+    for (ArgumentList::size_type i=0; i<_argument_list.size(); ++i)
     {
-        CArgumentBase* argument = iter->second;
+        CArgumentBase* argument = _argument_list[i];
         usage_stream << argument->usage_string() << std::endl;
     }
 
     return usage_stream.str();
+}
+
+bool CArgumentContainer::check_parameters(std::string* errmsg) const
+{
+    for (ArgumentList::size_type i=0; i<_argument_list.size(); ++i)
+    {
+        CArgumentBase* argument = _argument_list[i];
+
+        if (!argument->checked())
+        {
+            if (!argument->check_value(errmsg))
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 UTILS_NAMESPACE_END

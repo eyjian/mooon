@@ -313,7 +313,9 @@ bool CMainHelper::init(int argc, char* argv[])
     std::string errmsg;
     if (!mooon::utils::parse_arguments(argc, argv, &errmsg))
     {
-        fprintf(stderr, "%s\n", errmsg.c_str());
+        if (!errmsg.empty())
+            fprintf(stderr, "%s\n\n", errmsg.c_str());
+        fprintf(stderr, "%s\n", mooon::utils::g_help_string.c_str());
         return false;
     }
 
