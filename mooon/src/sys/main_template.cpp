@@ -341,6 +341,7 @@ bool CMainHelper::init(int argc, char* argv[])
     // 参数检查
     if (!on_check_parameter())
     {
+        fprintf(stderr, "\n");
         fprintf(stderr, "%s\n", mooon::utils::g_help_string.c_str());
         return false;
     }
