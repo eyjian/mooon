@@ -27,6 +27,9 @@ SYS_NAMESPACE_BEGIN
 class CFileUtils
 {
 public:
+    // 是否存在指定的文件
+    static bool exists(const char* filepath) throw (CSyscallException);
+
     /** 文件复制函数
       * @src_fd: 打开的源文件句柄
       * @dst_fd: 打开的目的文件句柄

@@ -21,6 +21,10 @@
 #include <mooon/sys/log.h>
 SYS_NAMESPACE_BEGIN
 
+// 注意：
+// 需要配合应用ReportSelf使用，
+// report_self.h为ReportSelf的客户端
+
 // 请使用mooon::sys::g_logger记录日志，
 // 即使用MYLOG_INFO系列宏写日志，
 // 以方便可查看到运行信息
@@ -36,7 +40,7 @@ extern void stop_report_self();
 // report_interval_seconds 上报间隔，默认每2小时上报一次
 //
 // 返回值：启动成功，或conffile参数值为空字符串
-extern bool start_report_self(const std::string& conffile="/etc/mooon_report_self.conf", uint32_t report_interval_seconds=7200);
+extern bool start_report_self(const std::string& conffile="/etc/mooon_report_self.conf", uint32_t report_interval_seconds=3600);
 
 /*
  * 配置文件要求结构：

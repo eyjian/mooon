@@ -24,6 +24,20 @@
 #include "sys/close_helper.h"
 SYS_NAMESPACE_BEGIN
 
+bool CFileUtils::exists(const char* filepath) throw (CSyscallException)
+{
+    if (0 == access(filepath, F_OK))
+    {
+        return true;
+    }
+    else
+    {
+        if (ENOENT == errno)
+            return false;
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "access");
+    }
+}
+
 size_t CFileUtils::file_copy(int src_fd, int dst_fd) throw (CSyscallException)
 {
     char buf[IO_BUFFER_MAX];

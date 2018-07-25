@@ -24,9 +24,24 @@
  */
 #ifndef MOOON_SYS_MAIN_TEMPLATE_H
 #define MOOON_SYS_MAIN_TEMPLATE_H
-#include "mooon/sys/log.h"
+#include <mooon/sys/log.h>
 #include <mooon/sys/thread_engine.h>
+#include <mooon/utils/args_parser.h>
 #include <signal.h>
+
+// 指定ReportSelf的配置文件（值为空时表示不上报），
+// 如果report_self_conf指定的文件不存在或配置错误等，将均不能上报
+//
+// report_self_conf文件格式示例（JSON格式）：
+// {
+//     "ethX":"eth0",
+//     "report_self_servers":"127.0.0.1:7110,127.0.0.2:7110"
+// }
+STRING_ARG_DECLARE(report_self_conf);
+
+// ReportSelf上报间隔（单位：秒，值为0时表示不上报）
+INTEGER_ARG_DECLARE(int, report_self_interval);
+
 SYS_NAMESPACE_BEGIN
 
 // 是否收到了退出信号，值为大于0，表示收到了退出信号

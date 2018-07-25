@@ -23,6 +23,7 @@
 #include <mooon/net/thrift_helper.h>
 #include <mooon/sys/datetime_utils.h>
 #include <mooon/sys/event.h>
+#include <mooon/sys/file_utils.h>
 #include <mooon/sys/info.h>
 #include <mooon/sys/lock.h>
 #include <mooon/sys/log.h>
@@ -112,34 +113,40 @@ void stop_report_self()
 
 bool start_report_self(const std::string& conffile, uint32_t report_interval_seconds)
 {
-    if (!conffile.empty())
+    try
     {
-        if (NULL == g_report_self)
+        if (g_report_self != NULL)
         {
-            g_report_self = new CReportSelf(conffile, report_interval_seconds);
-            if (!g_report_self->init())
-            {
-                delete g_report_self;
-                g_report_self = NULL;
-                return false;
-            }
-
-            try
-            {
-                g_report_self_thread_engine = new mooon::sys::CThreadEngine(mooon::sys::bind(&CReportSelf::run, g_report_self));
-                MYLOG_INFO("[%s] start ok: %" PRId64"\n", REPORT_SELF_MODULE_NAME, g_report_self_thread_engine->thread_id());
-            }
-            catch (sys::CSyscallException& ex)
-            {
-                MYLOG_ERROR("[%s] start failed: %s\n", REPORT_SELF_MODULE_NAME, ex.str().c_str());
-                delete g_report_self;
-                g_report_self = NULL;
-                return false;
-            }
+            return true;
         }
-    }
+        if (conffile.empty())
+        {
+            return true;
+        }
+        if (!CFileUtils::exists(conffile.c_str()))
+        {
+            return true;
+        }
 
-    return true;
+        g_report_self = new CReportSelf(conffile, report_interval_seconds);
+        if (!g_report_self->init())
+        {
+            delete g_report_self;
+            g_report_self = NULL;
+            return false;
+        }
+
+        g_report_self_thread_engine = new mooon::sys::CThreadEngine(mooon::sys::bind(&CReportSelf::run, g_report_self));
+        MYLOG_INFO("[%s] start ok: %" PRId64"\n", REPORT_SELF_MODULE_NAME, g_report_self_thread_engine->thread_id());
+        return true;
+    }
+    catch (sys::CSyscallException& ex)
+    {
+        MYLOG_ERROR("[%s] start failed: %s\n", REPORT_SELF_MODULE_NAME, ex.str().c_str());
+        delete g_report_self;
+        g_report_self = NULL;
+        return false;
+    }
 }
 
 CReportSelf::CReportSelf(const std::string& conffile, uint32_t report_interval_seconds)

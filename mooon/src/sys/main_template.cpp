@@ -23,16 +23,19 @@
 #include <strings.h>
 #include <stdexcept>
 #include <sys/wait.h>
-#include <utils/args_parser.h>
 #include <utils/string_utils.h>
+#include "sys/report_self.h"
 #include "sys/safe_logger.h"
 #include "sys/signal_handler.h"
 #include "sys/utils.h"
 #include "sys/main_template.h"
 #include "utils/args_parser.h"
 
-// 指定ReportSelf的配置文件，如果为空表示禁用ReportSelf
-STRING_ARG_DEFINE(report_conf, "/etc/mooon_report_self.conf", "report self conf file");
+// 指定ReportSelf的配置文件（值为空时表示不上报）
+STRING_ARG_DEFINE(report_self_conf, "/etc/mooon_report_self.conf", "report self conf file, will not report if empty");
+
+// ReportSelf上报间隔（单位：秒，值为0时表示不上报）
+INTEGER_ARG_DEFINE(int, report_self_interval, 3600, 0, std::numeric_limits<int>::max(), "interval to report in seconds, will not report if 0");
 
 SYS_NAMESPACE_BEGIN
 
@@ -201,9 +204,19 @@ void child_process(IMainHelper* main_helper, int argc, char* argv[])
 		main_helper->fini();
         exit(1);
     }
+
+    // 启动上报，
+    // 不关心返回值，因为report_conf指定的配置文件不一定存在
+    if ((!argument::report_self_conf->value().empty()) &&
+        (argument::report_self_interval->value() > 0))
+    {
+        (void)start_report_self(argument::report_self_conf->value(), argument::report_self_interval->value());
+    }
+
     if (!main_helper->run())
 	{
 		//fprintf(stderr, "Main helper run failed.\n");
+        stop_report_self();
 		main_helper->fini();
 		exit(1);
 	}
@@ -224,6 +237,7 @@ void child_process(IMainHelper* main_helper, int argc, char* argv[])
         }
     }
 
+    stop_report_self();
     main_helper->fini();
     exit(errcode);
 }

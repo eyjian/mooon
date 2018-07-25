@@ -29,11 +29,6 @@ ADD_DEPENDENCIES(report_self_example mooon_report_self)
 
 # 安装
 install(
-        FILES ${CMAKE_CURRENT_SOURCE_DIR}/../include/mooon/report_self/report_self.h
-        DESTINATION include/mooon/report_self
-       )
-
-install(
         TARGETS mooon_report_self
         DESTINATION lib
        )

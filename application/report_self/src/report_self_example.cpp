@@ -16,13 +16,13 @@
  *
  * Author: jian yi, eyjian@qq.com
  */
-#include "mooon/report_self/report_self.h"
+#include "mooon/sys/report_self.h"
 int main(int argc, char* argv[])
 {
-    if (mooon::start_report_self())
+    if (mooon::sys::start_report_self())
     {
         MYLOG_INFO("press any key to stop\n");
-        mooon::stop_report_self();
+        mooon::sys::stop_report_self();
     }
 
     return 0;
