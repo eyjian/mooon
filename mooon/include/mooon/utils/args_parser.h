@@ -382,59 +382,60 @@ private:
         {
             return handle_empty_value(errmsg);
         }
-        if (value.size() != sizeof("YYYY-MM-DD")-1)
-        {
-            *errmsg = CStringUtils::format_string("invalid date (length) format (YYYY-MM-DD): %s", value.c_str());
-            return false;
-        }
-        if ((value[4] != '-') ||
-            (value[7] != '-'))
-        {
-            *errmsg = CStringUtils::format_string("invalid date (separator) format (YYYY-MM-DD): %s", value.c_str());
-            return false;
-        }
 
-        uint16_t year, month, day;
-        const std::string& year_str = value.substr(0, 4);
-        const std::string& month_str = value.substr(5, 2);
-        const std::string& day_str = value.substr(8, 2);
-        if (!CStringUtils::string2int(year_str.c_str(), year, 0, false))
+        do
         {
-            *errmsg = CStringUtils::format_string("invalid date (year) format (YYYY-MM-DD): %s", value.c_str());
-            return false;
-        }
-        if (!CStringUtils::string2int(month_str.c_str(), month, 0, true))
-        {
-            *errmsg = CStringUtils::format_string("invalid date (month) format (YYYY-MM-DD): %s", value.c_str());
-            return false;
-        }
-        if (!CStringUtils::string2int(day_str.c_str(), day, 0, true))
-        {
-            *errmsg = CStringUtils::format_string("invalid date (day) format (YYYY-MM-DD): %s", value.c_str());
-            return false;
-        }
-        if (year < 1970)
-        {
-            *errmsg = CStringUtils::format_string("invalid date (year) format (YYYY-MM-DD): %s", value.c_str());
-            return false;
-        }
-        if (month > 12)
-        {
-            *errmsg = CStringUtils::format_string("invalid date (month) format (YYYY-MM-DD): %s", value.c_str());
-            return false;
-        }
-        if (day > 31)
-        {
-            *errmsg = CStringUtils::format_string("invalid date (day) format (YYYY-MM-DD): %s", value.c_str());
-            return false;
-        }
-        if (2==month && day>29)
-        {
-            *errmsg = CStringUtils::format_string("invalid date (month&day) format (YYYY-MM-DD): %s", value.c_str());
-            return false;
-        }
+            if (value.size() != sizeof("YYYY-MM-DD")-1)
+            {
+                break;
+            }
+            if ((value[4] != '-') ||
+                (value[7] != '-'))
+            {
+                break;
+            }
 
-        return true;
+            uint16_t year, month, day;
+            const std::string& year_str = value.substr(0, 4);
+            const std::string& month_str = value.substr(5, 2);
+            const std::string& day_str = value.substr(8, 2);
+            if (!CStringUtils::string2int(year_str.c_str(), year, 0, false))
+            {
+                break;
+            }
+            if (!CStringUtils::string2int(month_str.c_str(), month, 0, true))
+            {
+                break;
+            }
+            if (!CStringUtils::string2int(day_str.c_str(), day, 0, true))
+            {
+                break;
+            }
+            if (year < 1970)
+            {
+                break;
+            }
+            if (month > 12)
+            {
+                break;
+            }
+            if (day > 31)
+            {
+                break;
+            }
+            if (2==month && day>29)
+            {
+                break;
+            }
+
+            return true;
+        } while(false);
+
+        if (name().size() < 2)
+            *errmsg = CStringUtils::format_string("parameter[-%s] with invalid date format (YYYY-MM-DD): %s", name().c_str(), value.c_str());
+        else
+            *errmsg = CStringUtils::format_string("parameter[--%s] with invalid date format (YYYY-MM-DD): %s", name().c_str(), value.c_str());
+        return false;
     }
 
     virtual bool check_value(std::string* errmsg)
@@ -475,54 +476,56 @@ private:
         {
             return handle_empty_value(errmsg);
         }
-        if (value.size() != sizeof("hh:mm:ss")-1)
-        {
-            *errmsg = CStringUtils::format_string("invalid time (length) format (hh:mm:ss): %s", value.c_str());
-            return false;
-        }
-        if ((value[2] != ':') ||
-            (value[5] != ':'))
-        {
-            *errmsg = CStringUtils::format_string("invalid time (separator) format (hh:mm:ss): %s", value.c_str());
-            return false;
-        }
 
-        uint16_t hour, minute, second;
-        const std::string& hour_str = value.substr(0, 2);
-        const std::string& minute_str = value.substr(3, 2);
-        const std::string& second_str = value.substr(6, 2);
-        if (!CStringUtils::string2int(hour_str.c_str(), hour, 0, true))
+        do
         {
-            *errmsg = CStringUtils::format_string("invalid time (hour) format (hh:mm:ss): %s", value.c_str());
-            return false;
-        }
-        if (!CStringUtils::string2int(minute_str.c_str(), minute, 0, true))
-        {
-            *errmsg = CStringUtils::format_string("invalid time (minute) format (hh:mm:ss): %s", value.c_str());
-            return false;
-        }
-        if (!CStringUtils::string2int(second_str.c_str(), second, 0, true))
-        {
-            *errmsg = CStringUtils::format_string("invalid time (second) format (hh:mm:ss): %s", value.c_str());
-            return false;
-        }
-        if (hour > 23)
-        {
-            *errmsg = CStringUtils::format_string("invalid time (hour) format (hh:mm:ss): %s", value.c_str());
-            return false;
-        }
-        if (minute > 59)
-        {
-            *errmsg = CStringUtils::format_string("invalid time (minute) format (hh:mm:ss): %s", value.c_str());
-            return false;
-        }
-        if (second > 59)
-        {
-            *errmsg = CStringUtils::format_string("invalid time (second) format (hh:mm:ss): %s", value.c_str());
-            return false;
-        }
+            if (value.size() != sizeof("hh:mm:ss")-1)
+            {
+                break;
+            }
+            if ((value[2] != ':') ||
+                (value[5] != ':'))
+            {
+                break;
+            }
 
-        return true;
+            uint16_t hour, minute, second;
+            const std::string& hour_str = value.substr(0, 2);
+            const std::string& minute_str = value.substr(3, 2);
+            const std::string& second_str = value.substr(6, 2);
+            if (!CStringUtils::string2int(hour_str.c_str(), hour, 0, true))
+            {
+                break;
+            }
+            if (!CStringUtils::string2int(minute_str.c_str(), minute, 0, true))
+            {
+                break;
+            }
+            if (!CStringUtils::string2int(second_str.c_str(), second, 0, true))
+            {
+                break;
+            }
+            if (hour > 23)
+            {
+                break;
+            }
+            if (minute > 59)
+            {
+                break;
+            }
+            if (second > 59)
+            {
+                break;
+            }
+
+            return true;
+        } while(false);
+
+        if (name().size() < 2)
+            *errmsg = CStringUtils::format_string("parameter[-%s] with invalid time format (hh:mm:ss): %s", name().c_str(), value.c_str());
+        else
+            *errmsg = CStringUtils::format_string("parameter[--%s] with invalid time format (hh:mm:ss): %s", name().c_str(), value.c_str());
+        return false;
     }
 
     virtual bool check_value(std::string* errmsg)
@@ -563,75 +566,76 @@ private:
         {
             return handle_empty_value(errmsg);
         }
-        if (value.size() != sizeof("YYYY-MM-DD hh:mm:ss")-1)
-        {
-            *errmsg = CStringUtils::format_string("invalid datetime (length) format (YYYY-MM-DD hh:mm:ss): %s", value.c_str());
-            return false;
-        }
-        if ((value[4] != '-') ||
-            (value[7] != '-') ||
-            (value[10] != ' ') ||
-            (value[13] != ':') ||
-            (value[16] != ':'))
-        {
-            *errmsg = CStringUtils::format_string("invalid datetime (separator) format (YYYY-MM-DD hh:mm:ss): %s", value.c_str());
-            return false;
-        }
 
-        uint16_t year, month, day, hour, minute, second;
-        const std::string& year_str = value.substr(0, 4);
-        const std::string& month_str = value.substr(5, 2);
-        const std::string& day_str = value.substr(8, 2);
-        const std::string& hour_str = value.substr(11, 2);
-        const std::string& minute_str = value.substr(14, 2);
-        const std::string& second_str = value.substr(17, 2);
-        if (!CStringUtils::string2int(year_str.c_str(), year, 0, false) ||
-            !CStringUtils::string2int(month_str.c_str(), month, 0, true) ||
-            !CStringUtils::string2int(day_str.c_str(), day, 0, true) ||
-            !CStringUtils::string2int(hour_str.c_str(), hour, 0, true) ||
-            !CStringUtils::string2int(minute_str.c_str(), minute, 0, true) ||
-            !CStringUtils::string2int(second_str.c_str(), second, 0, true))
+        do
         {
-            *errmsg = CStringUtils::format_string("invalid datetime format (YYYY-MM-DD hh:mm:ss): %s", value.c_str());
-            return false;
-        }
-        if (year < 1970)
-        {
-            *errmsg = CStringUtils::format_string("invalid datetime (year) format (YYYY-MM-DD hh:mm:ss): %s", value.c_str());
-            return false;
-        }
-        if (month > 12)
-        {
-            *errmsg = CStringUtils::format_string("invalid datetime (month) format (YYYY-MM-DD hh:mm:ss): %s", value.c_str());
-            return false;
-        }
-        if (day > 31)
-        {
-            *errmsg = CStringUtils::format_string("invalid datetime (day) format (YYYY-MM-DD hh:mm:ss): %s", value.c_str());
-            return false;
-        }
-        if (2==month && day>29)
-        {
-            *errmsg = CStringUtils::format_string("invalid datetime (month&day) format (YYYY-MM-DD hh:mm:ss): %s", value.c_str());
-            return false;
-        }
-        if (hour > 23)
-        {
-            *errmsg = CStringUtils::format_string("invalid datetime (hour) format (YYYY-MM-DD hh:mm:ss): %s", value.c_str());
-            return false;
-        }
-        if (minute > 59)
-        {
-            *errmsg = CStringUtils::format_string("invalid datetime (minute) format (YYYY-MM-DD hh:mm:ss): %s", value.c_str());
-            return false;
-        }
-        if (second > 59)
-        {
-            *errmsg = CStringUtils::format_string("invalid datetime (second) format (YYYY-MM-DD hh:mm:ss): %s", value.c_str());
-            return false;
-        }
+            if (value.size() != sizeof("YYYY-MM-DD hh:mm:ss")-1)
+            {
+                break;
+            }
+            if ((value[4] != '-') ||
+                (value[7] != '-') ||
+                (value[10] != ' ') ||
+                (value[13] != ':') ||
+                (value[16] != ':'))
+            {
+                break;
+            }
 
-        return true;
+            uint16_t year, month, day, hour, minute, second;
+            const std::string& year_str = value.substr(0, 4);
+            const std::string& month_str = value.substr(5, 2);
+            const std::string& day_str = value.substr(8, 2);
+            const std::string& hour_str = value.substr(11, 2);
+            const std::string& minute_str = value.substr(14, 2);
+            const std::string& second_str = value.substr(17, 2);
+            if (!CStringUtils::string2int(year_str.c_str(), year, 0, false) ||
+                !CStringUtils::string2int(month_str.c_str(), month, 0, true) ||
+                !CStringUtils::string2int(day_str.c_str(), day, 0, true) ||
+                !CStringUtils::string2int(hour_str.c_str(), hour, 0, true) ||
+                !CStringUtils::string2int(minute_str.c_str(), minute, 0, true) ||
+                !CStringUtils::string2int(second_str.c_str(), second, 0, true))
+            {
+                break;
+            }
+            if (year < 1970)
+            {
+                break;
+            }
+            if (month > 12)
+            {
+                break;
+            }
+            if (day > 31)
+            {
+                break;
+            }
+            if (2==month && day>29)
+            {
+                break;
+            }
+            if (hour > 23)
+            {
+                break;
+            }
+            if (minute > 59)
+            {
+                break;
+            }
+            if (second > 59)
+            {
+                break;
+            }
+
+            return true;
+        }
+        while (false);
+
+        if (name().size() < 2)
+            *errmsg = CStringUtils::format_string("parameter[-%s] with invalid datetime format (YYYY-MM-DD hh:mm:ss): %s", name().c_str(), value.c_str());
+        else
+            *errmsg = CStringUtils::format_string("parameter[--%s] with invalid datetime format (YYYY-MM-DD hh:mm:ss): %s", name().c_str(), value.c_str());
+        return false;
     }
 
     virtual bool check_value(std::string* errmsg)
@@ -681,7 +685,10 @@ public:
         }
         if ((new_value != "false") && (new_value != "true"))
         {
-            *errmsg = CStringUtils::format_string("invalid value (valid: true or false): %s", new_value.c_str());
+            if (name().size() < 2)
+                *errmsg = CStringUtils::format_string("parameter[-%s] with invalid value (valid: true or false): %s", name().c_str(), new_value.c_str());
+            else
+                *errmsg = CStringUtils::format_string("parameter[--%s] with invalid value (valid: true or false): %s", name().c_str(), new_value.c_str());
             return false;
         }
 
