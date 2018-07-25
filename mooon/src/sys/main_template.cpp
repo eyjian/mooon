@@ -23,12 +23,17 @@
 #include <strings.h>
 #include <stdexcept>
 #include <sys/wait.h>
+#include <utils/args_parser.h>
 #include <utils/string_utils.h>
 #include "sys/safe_logger.h"
 #include "sys/signal_handler.h"
 #include "sys/utils.h"
 #include "sys/main_template.h"
 #include "utils/args_parser.h"
+
+// 指定ReportSelf的配置文件，如果为空表示禁用ReportSelf
+STRING_ARG_DEFINE(report_conf, "/etc/mooon_report_self.conf", "report self conf file");
+
 SYS_NAMESPACE_BEGIN
 
 /***
@@ -152,7 +157,7 @@ void child_process(IMainHelper* main_helper, int argc, char* argv[])
     int errcode = 0;
     //sigset_t sigset;
     sigset_t old_sigset;
-    
+
     int exit_signo = main_helper->get_exit_signal();
     if (exit_signo > 0)
     {            

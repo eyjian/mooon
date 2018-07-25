@@ -3,9 +3,33 @@
 include_directories(../../include)
 include_directories(../../include/mooon)
 
+if (MOOON_HAVE_THRIFT)
+        # 编译thrift文件
+    exec_program(
+        ${THRIFT_HOME}/bin/thrift
+        ARGS
+        --gen cpp -r -out ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/report_self.thrift
+    )
+    exec_program(
+        rm
+        ARGS
+        -f ${CMAKE_CURRENT_SOURCE_DIR}/ReportSelfService_server.skeleton.cpp
+    )
+    
+    set(
+        REPORT_SELF_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/report_self.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/ReportSelfService.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/report_self_types.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/report_self_constants.cpp
+    )
+endif ()
+
 # 源代码
 set(
     MOOON_SYS_SRC
+    ${REPORT_SELF_SRC}
     ${CMAKE_CURRENT_SOURCE_DIR}/curl_wrapper.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/event.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/info.cpp
