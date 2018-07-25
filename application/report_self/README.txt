@@ -1,3 +1,7 @@
+特别注意：
+ReportSelf的客户端集成在libmooon.a中，引用方式：
+#include <mooon/sys/report_self.h>
+
 cmake安装方法：
 cmake -DCMAKE_INSTALL_PREFIX=<installation directory> .
 
