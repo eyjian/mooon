@@ -264,12 +264,12 @@ public:
         CArgumentContainer::get_singleton()->add_argument(this);
     }
 
-    const std::string default_value() const
+    const std::string& default_value() const
     {
         return _default_value;
     }
 
-    const std::string value() const
+    const std::string& value() const
     {
         return _value;
     }
