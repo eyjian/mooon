@@ -14,7 +14,7 @@ CREATE TABLE t_program_deployment (
     f_ip VARCHAR(32) NOT NULL, # 进程所在机器的IP
     f_user VARCHAR(24) NOT NULL, # 进程的当前系统用户名
     f_shortname VARCHAR(64) NOT NULL, # 进程的短名称
-    f_dirpath VARCHAR(256) NOT NULL, # 程序所在目录
+    f_dirpath VARCHAR(512) NOT NULL, # 程序所在目录
     f_firsttime DATETIME NOT NULL, # 最近一次上报时间
     f_lasttime DATETIME NOT NULL, # 最近一次上报时间
     f_lastdate DATE NOT NULL, # 最近一次上报日期
