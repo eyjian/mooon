@@ -200,7 +200,7 @@ void stat_thread_proc()
             if (last_num_moved > old_num_moved)
             {
                 const int num_moved = static_cast<int>((last_num_moved - old_num_moved) / seconds);
-                stat_logger->log_raw(" %d/s MOVED\n", num_moved);
+                stat_logger->log_raw(" %" PRId64" %" PRId64" %" PRId64" %d/s MOVED\n", last_num_moved, old_num_moved, last_num_moved - old_num_moved, num_moved);
             }
 
             old_num_moved = last_num_moved;
@@ -221,11 +221,12 @@ void move_thread_proc(uint8_t i)
     const std::string& dst_key = get_dst_key(i);
     r3c::CRedisClient src_redis(mooon::argument::src_redis->value());
     r3c::CRedisClient dst_redis(mooon::argument::dst_redis->value());
+    std::vector<std::string> values;
 
     MYLOG_INFO("[%s] => [%s]\n", src_key.c_str(), dst_key.c_str());
     while (!g_stop)
     {
-        std::vector<std::string> values;
+        values.clear();
 
         for (int k=0; !g_stop&&k<mooon::argument::batch->value(); ++k)
         {
@@ -233,13 +234,14 @@ void move_thread_proc(uint8_t i)
             {
                 std::string value;
 
-                if (src_redis.rpop(src_key, &value))
+                if (!src_redis.rpop(src_key, &value))
                 {
-                    values.push_back(value);
+                    break;
                 }
                 else
                 {
-                    break;
+                    values.push_back(value);
+                    MYLOG_DEBUG("[%d] %s\n", k, value.c_str());
                 }
             }
             catch (r3c::CRedisException& ex)
@@ -259,13 +261,14 @@ void move_thread_proc(uint8_t i)
             {
                 dst_redis.lpush(dst_key, values);
 
-                num_moved += static_cast<uint32_t>(values.size());
+                const uint32_t num_moved_ = static_cast<uint32_t>(values.size());
 #if __WORDSIZE==64
-                atomic8_add(num_moved, &g_num_moved);
+                atomic8_add(num_moved_, &g_num_moved);
 #else
-                atomic_add(num_moved, &g_num_moved);
+                atomic_add(num_moved_, &g_num_moved);
 #endif
 
+                num_moved += num_moved_;
                 if (num_moved - old_num_moved >= mooon::argument::tick->value())
                 {
                     old_num_moved = num_moved;
