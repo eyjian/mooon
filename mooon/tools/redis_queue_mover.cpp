@@ -26,33 +26,51 @@
 #include <mooon/utils/args_parser.h>
 #include <mooon/utils/string_utils.h>
 
+// 如何确定一个redis的key？
+// 通过前缀prefix加序号的方式，其它前缀prefix由参数指定，但可以为空，
+// 序号从0开始按1递增，最大值为参数queues的值减1
+//
+// 假设前缀prefix值为“mooon:”，queues值为3，则有如下三个key：
+// mooon:0
+// mooon:1
+// mooon:2
+
 // 队列数
+// 源队列和目标队列数均由此参数决定，也即源队列和目标队列的个数是相等的
 INTEGER_ARG_DEFINE(uint8_t, queues, 1, 1, 10, "the number of queues, e.g. --queues=1");
-// 线程数系数，实际的线程为：threads * queues
-INTEGER_ARG_DEFINE(uint8_t, threads, 1, 1, 20, "the thread number to move, e.g. --threads=1");
+
+// 线程数系数，
+// 注意并不是线程数，线程数为：threads * queues，
+// 假设queues参数值为2，threads参数值为3，则线程数为6
+INTEGER_ARG_DEFINE(uint8_t, threads, 1, 1, 18, "`threads` times `queues` to get number of move threads, e.g., --threads=1");
 
 // 源redis
 STRING_ARG_DEFINE(src_redis, "", "the nodes of source redis, e.g., --src_redis=127.0.0.1:6379,127.0.0.1:6380");
 
 // 目标redis
+// 当源和目标相同时，应当指定不同的prefix，虽然也可以都相同，但那样无实际意义了
 STRING_ARG_DEFINE(dst_redis, "", "the nodes of destination redis, e.g., --dst_redis=127.0.0.1:6381,127.0.0.1:6382");
 
 // 源队列Key前缀
-STRING_ARG_DEFINE(src_prefix, "", "the key prefix of source queue");
-// 目标队列Key前缀
-STRING_ARG_DEFINE(dst_prefix, "", "the key prefix of destination queue");
+STRING_ARG_DEFINE(src_prefix, "", "the key prefix of source queue, e.g., --src_prefix='mooon:'");
 
-// 源队列Key是否仅由前缀组成
+// 目标队列Key前缀
+STRING_ARG_DEFINE(dst_prefix, "", "the key prefix of destination queue, e.g., --src_prefix='mooon:'");
+
+// 源队列Key是否仅由前缀组成，即src_prefix是key，或只是key的前缀
 INTEGER_ARG_DEFINE(uint8_t, src_only_prefix, 0, 0, 1, "the prefix is the key of source");
 
-// 目标队列Key是否仅由前缀组成
+// 目标队列Key是否仅由前缀组成，即dst_prefix是key，或只是key的前缀
 INTEGER_ARG_DEFINE(uint8_t, dst_only_prefix, 0, 0, 1, "the prefix is the key of destination");
 
 // 多少个时输出一次计数
-INTEGER_ARG_DEFINE(uint32_t, tick, 10000, 1, 1000000000, "the times to tick");
+INTEGER_ARG_DEFINE(uint32_t, tick, 10000, 1, 10000000, "the times to tick");
 
-// 轮询和重试间隔，单位为毫秒
+// 轮询队列和重试操作的间隔（单位为毫秒）
 INTEGER_ARG_DEFINE(uint32_t, interval, 100, 1, 1000000, "the interval (milliseconds) to poll or retry");
+
+// 批量数，即一次批量移动多少
+INTEGER_ARG_DEFINE(int, batch, 1, 1, 100000, "batch to move");
 
 static volatile bool g_stop = false;
 static void on_terminated();
@@ -67,68 +85,63 @@ int main(int argc, char* argv[])
 
     if (!mooon::utils::parse_arguments(argc, argv, &errmsg))
     {
-        fprintf(stderr, "%s\n", errmsg.c_str());
+        fprintf(stderr, "%s\n\n", errmsg.c_str());
         fprintf(stderr, "%s\n", mooon::utils::g_help_string.c_str());
-        return 1;
+        exit(1);
     }
     else if (mooon::argument::src_redis->value().empty())
     {
-        fprintf(stderr, "parameter[--src_redis] not set\n");
+        fprintf(stderr, "parameter[--src_redis] not set\n\n");
         fprintf(stderr, "%s\n", mooon::utils::g_help_string.c_str());
-        return 1;
+        exit(1);
     }
     else if (mooon::argument::dst_redis->value().empty())
     {
-        fprintf(stderr, "parameter[--dst_redis] not set\n");
+        fprintf(stderr, "parameter[--dst_redis] not set\n\n");
         fprintf(stderr, "%s\n", mooon::utils::g_help_string.c_str());
-        return 1;
+        exit(1);
     }
     else if (mooon::argument::src_prefix->value().empty())
     {
-        fprintf(stderr, "parameter[--src_prefix] not set\n");
+        fprintf(stderr, "parameter[--src_prefix] not set\n\n");
         fprintf(stderr, "%s\n", mooon::utils::g_help_string.c_str());
-        return 1;
+        exit(1);
     }
     else if (mooon::argument::dst_prefix->value().empty())
     {
-        fprintf(stderr, "parameter[--dst_prefix] not set\n");
+        fprintf(stderr, "parameter[--dst_prefix] not set\n\n");
         fprintf(stderr, "%s\n", mooon::utils::g_help_string.c_str());
-        return 1;
+        exit(1);
     }
-    else
+
+    try
     {
-        try
+        mooon::sys::g_logger = mooon::sys::create_safe_logger();
+        mooon::sys::CThreadEngine* signal_thread = new mooon::sys::CThreadEngine(mooon::sys::bind(&signal_thread_proc));
+
+        const uint8_t num_queues = mooon::argument::queues->value();
+        const uint8_t num_threads = num_queues * mooon::argument::threads->value();
+        mooon::sys::CThreadEngine** thread_engines = new mooon::sys::CThreadEngine*[num_threads];
+        for (uint8_t i=0; i<num_threads; ++i)
         {
-            r3c::set_debug_log_write(NULL);
-            r3c::set_info_log_write(NULL);
-            r3c::set_error_log_write(NULL);
-
-            mooon::sys::g_logger = mooon::sys::create_safe_logger();
-            mooon::sys::CThreadEngine* signal_thread = new mooon::sys::CThreadEngine(mooon::sys::bind(&signal_thread_proc));
-
-            const uint8_t num_queues = mooon::argument::queues->value();
-            const uint8_t num_threads = num_queues * mooon::argument::threads->value();
-            mooon::sys::CThreadEngine** thread_engines = new mooon::sys::CThreadEngine*[num_threads];
-            for (uint8_t i=0; i<num_threads; ++i)
-            {
-                thread_engines[i] = new mooon::sys::CThreadEngine(mooon::sys::bind(&move_thread_proc, i));
-            }
-            for (uint8_t i=0; i<num_threads; ++i)
-            {
-                thread_engines[i]->join();
-                delete thread_engines[i];
-            }
-            delete []thread_engines;
-
-            signal_thread->join();
-            delete signal_thread;
-            return 0;
+            thread_engines[i] = new mooon::sys::CThreadEngine(mooon::sys::bind(&move_thread_proc, i));
         }
-        catch (mooon::sys::CSyscallException& ex)
+        for (uint8_t i=0; i<num_threads; ++i)
         {
-            MYLOG_ERROR("%s\n", ex.str().c_str());
-            return 1;
+            thread_engines[i]->join();
+            delete thread_engines[i];
         }
+        delete []thread_engines;
+
+        signal_thread->join();
+        delete signal_thread;
+        MYLOG_INFO("mover exit\n");
+        return 0;
+    }
+    catch (mooon::sys::CSyscallException& ex)
+    {
+        MYLOG_ERROR("%s\n", ex.str().c_str());
+        exit(1);
     }
 }
 
@@ -147,7 +160,8 @@ void signal_thread_proc()
 
 void move_thread_proc(uint8_t i)
 {
-    uint32_t num_moved = 0;
+    uint32_t num_moved = 0; // 已移动的数目
+    uint32_t old_num_moved = 0; // 上一次移动的数目
     const uint32_t interval = mooon::argument::interval->value();
     const std::string& src_key = get_src_key(i);
     const std::string& dst_key = get_dst_key(i);
@@ -157,30 +171,44 @@ void move_thread_proc(uint8_t i)
     MYLOG_INFO("[%s] => [%s]\n", src_key.c_str(), dst_key.c_str());
     while (!g_stop)
     {
-        std::string value;
+        std::vector<std::string> values;
 
-        try
+        for (int k=0; !g_stop&&k<mooon::argument::batch->value(); ++k)
         {
-            if (!src_redis.rpop(src_key, &value))
+            try
             {
-                mooon::sys::CUtils::millisleep(interval);
-                continue;
+                std::string value;
+
+                if (src_redis.rpop(src_key, &value))
+                {
+                    values.push_back(value);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            catch (r3c::CRedisException& ex)
+            {
+                MYLOG_ERROR("[%s]: %s\n", src_key.c_str(), ex.str().c_str());
             }
         }
-        catch (r3c::CRedisException& ex)
+        if (values.empty())
         {
-            MYLOG_ERROR("[%s]: %s\n", src_key.c_str(), ex.str().c_str());
             mooon::sys::CUtils::millisleep(interval);
             continue;
         }
 
-        do
+        while (!values.empty())
         {
             try
             {
-                dst_redis.lpush(dst_key, value);
-                if (0 == ++num_moved%mooon::argument::tick->value())
+                dst_redis.lpush(dst_key, values);
+
+                num_moved += static_cast<uint32_t>(values.size());
+                if (num_moved - old_num_moved >= mooon::argument::tick->value())
                 {
+                    old_num_moved = num_moved;
                     MYLOG_INFO("[%s]=>[%s]: %u\n", src_key.c_str(), dst_key.c_str(), num_moved);
                 }
                 break;
@@ -190,8 +218,10 @@ void move_thread_proc(uint8_t i)
                 MYLOG_ERROR("[%s]=>[%s]: %s\n", src_key.c_str(), dst_key.c_str(), ex.str().c_str());
                 mooon::sys::CUtils::millisleep(interval);
             }
-        } while (!g_stop);
+        }
     }
+
+    MYLOG_INFO("move thread %d exit\n", i);
 }
 
 std::string get_src_key(uint8_t i)
