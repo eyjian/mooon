@@ -156,7 +156,7 @@ bool CConfigLoader::load(const std::string& filepath)
     }
     if (!reader.parse(fs, root))
     {
-        MYLOG_ERROR("parse %s failed: %s\n", filepath.c_str(), reader.getFormattedErrorMessages().c_str());
+        MYLOG_ERROR("parse %s failed\n", filepath.c_str());
         return false;
     }
 
