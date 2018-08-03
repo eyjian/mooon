@@ -85,7 +85,15 @@ int main(int argc, char* argv[])
     std::string errmsg;
     if (!mooon::utils::parse_arguments(argc, argv, &errmsg))
     {
-        fprintf(stderr, "parameter error: %s\n", errmsg.c_str());
+        if (errmsg.empty())
+        {
+            fprintf(stderr, "%s\n", mooon::utils::g_help_string.c_str());
+        }
+        else
+        {
+            fprintf(stderr, "parameter error: %s\n\n", errmsg.c_str());
+            fprintf(stderr, "%s\n", mooon::utils::g_help_string.c_str());
+        }
         exit(1);
     }
 
@@ -110,7 +118,7 @@ int main(int argc, char* argv[])
     // 检查参数（-c）
     if (commands.empty())
     {
-        fprintf(stderr, "parameter[-c]'s value not set\n");
+        fprintf(stderr, "parameter[-c]'s value not set\n\n");
         fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
         exit(1);
     }
@@ -122,7 +130,7 @@ int main(int argc, char* argv[])
         const char* hosts_ = getenv("H");
         if (NULL == hosts_)
         {
-            fprintf(stderr, "parameter[-h] or environment `H` not set\n");
+            fprintf(stderr, "parameter[-h] or environment `H` not set\n\n");
             fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
             exit(1);
         }
@@ -144,7 +152,7 @@ int main(int argc, char* argv[])
         const char* user_ = getenv("U");
         if (NULL == user_)
         {
-            fprintf(stderr, "parameter[-u] or environment `U` not set\n");
+            fprintf(stderr, "parameter[-u] or environment `U` not set\n\n");
             fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
             exit(1);
         }
@@ -153,7 +161,7 @@ int main(int argc, char* argv[])
         mooon::utils::CStringUtils::trim(user);
         if (user.empty())
         {
-            fprintf(stderr, "parameter[-u] or environment `U` not set\n");
+            fprintf(stderr, "parameter[-u] or environment `U` not set\n\n");
             fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
             exit(1);
         }
@@ -166,7 +174,7 @@ int main(int argc, char* argv[])
         const char* password_ = getenv("P");
         if (NULL == password_)
         {
-            fprintf(stderr, "parameter[-p] or environment `P` not set\n");
+            fprintf(stderr, "parameter[-p] or environment `P` not set\n\n");
             fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
             exit(1);
         }
@@ -174,7 +182,7 @@ int main(int argc, char* argv[])
         password= password_;
         if (password.empty())
         {
-            fprintf(stderr, "parameter[-p] or environment `P` not set\n");
+            fprintf(stderr, "parameter[-p] or environment `P` not set\n\n");
             fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
             exit(1);
         }
@@ -185,7 +193,7 @@ int main(int argc, char* argv[])
     const int num_remote_hosts_ip = mooon::utils::CTokener::split(&hosts_ip, remote_hosts_ip, ",", true);
     if (0 == num_remote_hosts_ip)
     {
-        fprintf(stderr, "parameter[-h] or environment `H` error\n");
+        fprintf(stderr, "parameter[-h] or environment `H` error\n\n");
         fprintf(stderr, "%s\n", mooon::utils::CArgumentContainer::get_singleton()->usage_string().c_str());
         exit(1);
     }
