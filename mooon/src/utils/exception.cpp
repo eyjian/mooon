@@ -17,6 +17,7 @@
  * Author: jian yi, eyjian@qq.com
  */
 #include "utils/exception.h"
+#include "utils/string_utils.h"
 #include <sstream>
 UTILS_NAMESPACE_BEGIN
 
@@ -69,9 +70,11 @@ void CException::init(const char* errmsg, int errcode, const char* file, int lin
         _errmsg = errmsg;
     _errcode = errcode;
 
-    if (file != NULL)
-        _file = file;
     _line = line;
+    if (file != NULL)
+    {
+        _file = utils::CStringUtils::extract_filename(file);
+    }
 }
 
 UTILS_NAMESPACE_END
