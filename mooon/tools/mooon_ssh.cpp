@@ -198,6 +198,7 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
+    mooon::net::CLibssh2::init();
     std::vector<struct ResultInfo> results(num_remote_hosts_ip);
     for (int i=0; i<num_remote_hosts_ip; ++i)
     {
@@ -267,6 +268,7 @@ int main(int argc, char* argv[])
         results[i].seconds = stop_watch.get_elapsed_microseconds() / 1000000;
         std::cout << std::endl;
     } // for
+    mooon::net::CLibssh2::fini();
 
     // 输出总结
     std::cout << std::endl;

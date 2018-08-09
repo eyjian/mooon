@@ -213,6 +213,7 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
+    mooon::net::CLibssh2::init();
     std::vector<struct ResultInfo> results(num_remote_hosts_ip * num_source_files);
     for (int i=0, k=0; i<num_remote_hosts_ip; ++i)
     {
@@ -259,6 +260,7 @@ int main(int argc, char* argv[])
 			++k;
     	}
     }
+    mooon::net::CLibssh2::fini();
 
     // 输出总结
     std::cout << std::endl;

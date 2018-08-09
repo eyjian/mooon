@@ -77,6 +77,26 @@
 NET_NAMESPACE_BEGIN
 #if MOOON_HAVE_LIBSSH2 == 1
 
+static __thread char sg_password[16];
+static void kbd_callback(const char *name, int name_len,
+                         const char *instruction, int instruction_len,
+                         int num_prompts,
+                         const LIBSSH2_USERAUTH_KBDINT_PROMPT *prompts,
+                         LIBSSH2_USERAUTH_KBDINT_RESPONSE *responses,
+                         void **abstract)
+{
+    (void)name;
+    (void)name_len;
+    (void)instruction;
+    (void)instruction_len;
+    if (num_prompts == 1) {
+        responses[0].text = strdup(sg_password);
+        responses[0].length = strlen(sg_password);
+    }
+    (void)prompts;
+    (void)abstract;
+} /* kbd_callback */
+
 void CLibssh2::init() throw (utils::CException)
 {
     int errcode = libssh2_init(0);
@@ -367,14 +387,53 @@ void CLibssh2::validate_authorization(const std::string& password)
 
     while (true)
     {
-        if (!password.empty())
+        // 查询服务端支持的授权方式列表
+        const char* userauth_list = libssh2_userauth_list(session, _username.c_str(), _username.size());
+        int userauth = 0;
+
+        if (NULL == userauth_list)
+        {
+            errcode = get_session_errcode();
+            if (LIBSSH2_ERROR_EAGAIN == errcode)
+            {
+                continue;
+            }
+            else
+            {
+                THROW_EXCEPTION(get_session_errmsg(), errcode);
+            }
+        }
+
+        if (strstr(userauth_list, "password") != NULL)
+        {
+            // 密码方式，
+            // 要求服务端的配置文件/etc/ssh/sshd_config的PasswordAuthentication值为yes
+            userauth |= 0x01;
+        }
+        if (strstr(userauth_list, "keyboard-interactive") != NULL)
+        {
+            // 交互方式
+            userauth |= 0x02;
+            strncpy(sg_password, password.c_str(), sizeof(sg_password)-2);
+            sg_password[sizeof(sg_password)-1] = '\0';
+        }
+        if (strstr(userauth_list, "publickey") != NULL)
+        {
+            userauth |= 0x04;
+        }
+
+        if (userauth & 0x01)
         {
             errcode = libssh2_userauth_password(session, _username.c_str(), password.c_str());
+        }
+        else if (userauth & 0x02)
+        {
+            errcode = libssh2_userauth_keyboard_interactive(session, _username.c_str(), &kbd_callback);
         }
         else
         {
             errcode = libssh2_userauth_publickey_fromfile(session, _username.c_str(),
-                "/home/user/.ssh/id_rsa.pub", "/home/user/.ssh/id_rsa", password.c_str());
+                "~/.ssh/id_rsa.pub", "~/.ssh/id_rsa", password.c_str());
         }
 
         if (0 == errcode)

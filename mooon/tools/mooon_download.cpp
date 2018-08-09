@@ -203,6 +203,7 @@ int main(int argc, char* argv[])
     std::vector<std::string> source_files;
     const int num_source_files = mooon::utils::CTokener::split(&source_files, sources, ",", true);
 
+    mooon::net::CLibssh2::init();
     std::vector<struct ResultInfo> results(num_source_files);
     for (int j=0; j<num_source_files; ++j)
     {
@@ -241,6 +242,7 @@ int main(int argc, char* argv[])
 
         results[j].seconds = stop_watch.get_elapsed_microseconds() / 1000000;
     }
+    mooon::net::CLibssh2::fini();
 
     // 输出总结
     std::cout << std::endl;
