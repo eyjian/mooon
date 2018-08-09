@@ -102,6 +102,8 @@ static size_t on_write_response_header(void* buffer, size_t size, size_t nmemb, 
 CCurlWrapper::CCurlWrapper(int data_timeout_seconds, int connect_timeout_seconds, bool nosignal) throw (utils::CException)
     : _data_timeout_seconds(data_timeout_seconds), _connect_timeout_seconds(connect_timeout_seconds), _nosignal(nosignal)
 {
+    _curl_version_info = curl_version_info(CURLVERSION_NOW);
+
     CURL* curl = curl_easy_init();
     if (NULL == curl)
         THROW_EXCEPTION("curl_easy_init failed", -1);
@@ -211,6 +213,7 @@ bool CCurlWrapper::add_request_header(const std::string& name_value_pair)
 
 void CCurlWrapper::http_get(std::string& response_header, std::string& response_body, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
 {
+    const curl_version_info_data* curl_version_info = (curl_version_info_data*)_curl_version_info;
     CURLcode errcode;
     CURL* curl = (CURL*)_curl;
 
@@ -240,16 +243,41 @@ void CCurlWrapper::http_get(std::string& response_header, std::string& response_
 
     // CURLOPT_SSL_VERIFYPEER
     // 相当于curl命令的“-k”或“--insecure”参数
-    int ssl_verifypeer = enable_insecure? 0: 1;
-    //int ssl_verifyhost = enable_insecure? 0: 1;
+    const int ssl_verifypeer = enable_insecure? 0: 1;
     errcode = curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYPEER, ssl_verifypeer);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
     // CURLOPT_SSL_VERIFYHOST
-    //errcode = curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYHOST, ssl_verifyhost);
-    //if (errcode != CURLE_OK)
-    //    THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+    // When the verify value is 1,
+    // curl_easy_setopt will return an error and the option value will not be changed.
+    // It was previously (in 7.28.0 and earlier) a debug option of some sorts,
+    // but it is no longer supported due to frequently leading to programmer mistakes.
+    // Future versions will stop returning an error for 1 and just treat 1 and 2 the same.
+    //
+    // When the verify value is 0, the connection succeeds regardless of the names in the certificate.
+    // Use that ability with caution!
+    //
+    // 7.28.1开始默认值为2
+    int ssl_verifyhost = 0;
+    if (enable_insecure)
+    {
+        ssl_verifyhost = 0;
+    }
+    else
+    {
+        if (curl_version_info->version_num > 0x071C00) // 7.28.0
+        {
+            ssl_verifyhost = 2;
+        }
+        else
+        {
+            ssl_verifyhost = 1;
+        }
+    }
+    errcode = curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYHOST, ssl_verifyhost);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
     // CURLOPT_COOKIE
     // 设置cookie
@@ -291,6 +319,7 @@ void CCurlWrapper::proxy_http_get(std::string& response_header, std::string& res
 
 void CCurlWrapper::http_post(const std::string& data, std::string& response_header, std::string& response_body, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
 {
+    const curl_version_info_data* curl_version_info = (curl_version_info_data*)_curl_version_info;
     CURLcode errcode;
     CURL* curl = (CURL*)_curl;
 
@@ -330,9 +359,39 @@ void CCurlWrapper::http_post(const std::string& data, std::string& response_head
 
     // CURLOPT_SSL_VERIFYPEER
     // 相当于curl命令的“-k”或“--insecure”参数
-    int ssl_verifypeer = enable_insecure? 0: 1;
-    //int ssl_verifyhost = enable_insecure? 0: 1;
+    const int ssl_verifypeer = enable_insecure? 0: 1;
     errcode = curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYPEER, ssl_verifypeer);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+
+    // CURLOPT_SSL_VERIFYHOST
+    // When the verify value is 1,
+    // curl_easy_setopt will return an error and the option value will not be changed.
+    // It was previously (in 7.28.0 and earlier) a debug option of some sorts,
+    // but it is no longer supported due to frequently leading to programmer mistakes.
+    // Future versions will stop returning an error for 1 and just treat 1 and 2 the same.
+    //
+    // When the verify value is 0, the connection succeeds regardless of the names in the certificate.
+    // Use that ability with caution!
+    //
+    // 7.28.1开始默认值为2
+    int ssl_verifyhost = 0;
+    if (enable_insecure)
+    {
+        ssl_verifyhost = 0;
+    }
+    else
+    {
+        if (curl_version_info->version_num > 0x071C00) // 7.28.0
+        {
+            ssl_verifyhost = 2;
+        }
+        else
+        {
+            ssl_verifyhost = 1;
+        }
+    }
+    errcode = curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYHOST, ssl_verifyhost);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
@@ -352,6 +411,7 @@ void CCurlWrapper::http_post(const std::string& data, std::string& response_head
 
 void CCurlWrapper::http_post(const CHttpPostData* http_post_data, std::string& response_header, std::string& response_body, const std::string& url, bool enable_insecure, const char* cookie) throw (utils::CException)
 {
+    const curl_version_info_data* curl_version_info = (curl_version_info_data*)_curl_version_info;
     CURLcode errcode;
     CURL* curl = (CURL*)_curl;
 
@@ -381,16 +441,41 @@ void CCurlWrapper::http_post(const CHttpPostData* http_post_data, std::string& r
 
     // CURLOPT_SSL_VERIFYPEER
     // 相当于curl命令的“-k”或“--insecure”参数
-    int ssl_verifypeer = enable_insecure? 0: 1;
-    //int ssl_verifyhost = enable_insecure? 0: 1;
+    const int ssl_verifypeer = enable_insecure? 0: 1;
     errcode = curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYPEER, ssl_verifypeer);
     if (errcode != CURLE_OK)
         THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
     // CURLOPT_SSL_VERIFYHOST
-    //errcode = curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYHOST, ssl_verifyhost);
-    //if (errcode != CURLE_OK)
-    //    THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
+    // When the verify value is 1,
+    // curl_easy_setopt will return an error and the option value will not be changed.
+    // It was previously (in 7.28.0 and earlier) a debug option of some sorts,
+    // but it is no longer supported due to frequently leading to programmer mistakes.
+    // Future versions will stop returning an error for 1 and just treat 1 and 2 the same.
+    //
+    // When the verify value is 0, the connection succeeds regardless of the names in the certificate.
+    // Use that ability with caution!
+    //
+    // 7.28.1开始默认值为2
+    int ssl_verifyhost = 0;
+    if (enable_insecure)
+    {
+        ssl_verifyhost = 0;
+    }
+    else
+    {
+        if (curl_version_info->version_num > 0x071C00) // 7.28.0
+        {
+            ssl_verifyhost = 2;
+        }
+        else
+        {
+            ssl_verifyhost = 1;
+        }
+    }
+    errcode = curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYHOST, ssl_verifyhost);
+    if (errcode != CURLE_OK)
+        THROW_EXCEPTION(curl_easy_strerror(errcode), errcode);
 
     // CURLOPT_COOKIE
     // 设置cookie

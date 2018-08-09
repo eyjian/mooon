@@ -127,6 +127,10 @@ if (MOOON_HAVE_SQLITE3)
     endif ()
 endif ()
 
+# idn（一些环境Curl强依赖idn）
+discover_library(LIBIDN libidn)
+#link_libraries(libidn.a)
+
 # C-ares（Curl可选依赖C-ares）
 discover_library(CARES c-ares)
 #link_libraries(libcares.a)

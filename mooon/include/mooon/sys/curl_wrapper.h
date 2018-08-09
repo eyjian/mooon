@@ -85,6 +85,7 @@ public:
     int get_response_code() const throw (utils::CException);
 
 private:
+    void* _curl_version_info; // curl_version_info_data
     void* _curl;
     void* _head_list;
     int _data_timeout_seconds;

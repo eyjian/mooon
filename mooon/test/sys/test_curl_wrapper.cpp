@@ -22,26 +22,47 @@ MOOON_NAMESPACE_USE
 
 extern "C" int main(int argc, char* argv[])
 {
-    if ((argc < 2) || (argc > 5))
-    {
-        fprintf(stderr, "Usage1: curl_get url, e.g., curl_get 'http://www.qq.com'\n");
-        fprintf(stderr, "Usage2: curl_get url data_timeout_seconds, e.g., curl_get 'http://www.abc123.com' 10\n");
-        fprintf(stderr, "Usage3: curl_get url data_timeout_seconds connect_timeout_seconds, e.g., curl_get 'http://www.abc123.com' 10 20\n");
-        fprintf(stderr, "Usage4: curl_get url data_timeout_seconds connect_timeout_seconds nosignal, e.g., curl_get 'http://www.abc123.com' 10 20 yes\n");
-        exit(1);
-    }
-    
+    bool enable_insecure = false;
     bool nosignal = false;
+    int min = 2, max = 5;
     int data_timeout_seconds = 5;
     int connect_timeout_seconds = 2;
-    const std::string url = argv[1];
-    if (argc > 2)
-        data_timeout_seconds = mooon::utils::CStringUtils::string2int<int>(argv[2]);
-    if (argc > 3)
-        connect_timeout_seconds = mooon::utils::CStringUtils::string2int<int>(argv[3]);
-    if (argc > 4)
+    std::string url;
+
+    if ((argc > 1) && (0 == strcmp(argv[1], "-k")))
     {
-        nosignal = (0 == strcmp(argv[4], "yes"));
+        enable_insecure = true;
+        min = 3;
+        max = 6;
+    }
+    if ((argc < min) || (argc > max))
+    {
+        fprintf(stderr, "Usage1: curl_get <-k> url, e.g., curl_get 'http://www.qq.com'\n");
+        fprintf(stderr, "Usage2: curl_get <-k> url data_timeout_seconds, e.g., curl_get 'http://www.abc123.com' 10\n");
+        fprintf(stderr, "Usage3: curl_get <-k> url data_timeout_seconds connect_timeout_seconds, e.g., curl_get 'http://www.abc123.com' 10 20\n");
+        fprintf(stderr, "Usage4: curl_get <-k> url data_timeout_seconds connect_timeout_seconds nosignal, e.g., curl_get 'http://www.abc123.com' 10 20 yes\n");
+        exit(1);
+    }
+
+    if (!enable_insecure)
+    {
+        url = argv[1];
+        if (argc > 2)
+            data_timeout_seconds = mooon::utils::CStringUtils::string2int<int>(argv[2]);
+        if (argc > 3)
+            connect_timeout_seconds = mooon::utils::CStringUtils::string2int<int>(argv[3]);
+        if (argc > 4)
+            nosignal = (0 == strcmp(argv[4], "yes"));
+    }
+    else
+    {
+        url = argv[2];
+        if (argc > 2)
+            data_timeout_seconds = mooon::utils::CStringUtils::string2int<int>(argv[3]);
+        if (argc > 3)
+            connect_timeout_seconds = mooon::utils::CStringUtils::string2int<int>(argv[4]);
+        if (argc > 4)
+            nosignal = (0 == strcmp(argv[5], "yes"));
     }
 
     try
