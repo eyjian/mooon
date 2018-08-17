@@ -284,16 +284,16 @@ extern std::string yesterday(const char* format="%04d-%02d-%02d");
 extern std::string tomorrow(const char* format="%04d-%02d-%02d");
 
 // 取得格式化的当前日期时间，
-// 如果with_milliseconds为true，则返回格式为：YYYY-MM-DD hh:mm:ss/ms，其中ms最长为10位数字；
-// 如果with_milliseconds为false，则返回格式为：YYYY-MM-DD hh:mm:ss。
+// 如果with_microseconds为true，则返回格式为：YYYY-MM-DD hh:mm:ss/ms，其中ms最长为10位数字；
+// 如果with_microseconds为false，则返回格式为：YYYY-MM-DD hh:mm:ss。
 //
-// 如果with_milliseconds为true则datetime_buffer_size的大小不能小于sizeof("YYYY-MM-DD hh:mm:ss/0123456789")，
-// 如果with_milliseconds为false则datetime_buffer_size的大小不能小于sizeof("YYYY-MM-DD hh:mm:ss")，
-extern void get_formatted_current_datetime(char* datetime_buffer, size_t datetime_buffer_size, bool with_milliseconds=true);
+// 如果with_microseconds为true则datetime_buffer_size的大小不能小于sizeof("YYYY-MM-DD hh:mm:ss/0123456789")，
+// 如果with_microseconds为false则datetime_buffer_size的大小不能小于sizeof("YYYY-MM-DD hh:mm:ss")，
+extern void get_formatted_current_datetime(char* datetime_buffer, size_t datetime_buffer_size, bool with_microseconds=true);
 
-// 如果with_milliseconds为false，则返回同CDatetimeUtils::get_current_datetime()
-// 如果with_milliseconds为true，则返回为：YYYY-MM-DD hh:mm:ss/milliseconds
-extern std::string get_formatted_current_datetime(bool with_milliseconds=true);
+// 如果with_microseconds为false，则返回同CDatetimeUtils::get_current_datetime()
+// 如果with_microseconds为true，则返回为：YYYY-MM-DD hh:mm:ss/microseconds
+extern std::string get_formatted_current_datetime(bool with_microseconds=true);
 
 // 格式为YYYY-MM-DD转成格式为YYYYMMDD的无符号4字节整数值，
 // 如果date是一个无效的值，则返回值为0
