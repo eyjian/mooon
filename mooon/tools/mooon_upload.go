@@ -3,6 +3,9 @@
 // Linux批量上传到远程机器工具
 // 相比C++版本，借助go的特性，不依赖libc和libc++等库，编译出的二进制应用相对广泛
 //
+// 注意：
+// 如果目标文件已存在，则会上传失败！
+//
 // 依赖的crypto包：
 // 从https://github.com/golang/crypto下载，
 // 放到目录$GOPATH/src/golang.org/x或$GOROOT/src/golang.org/x下
