@@ -290,5 +290,5 @@ int main(int argc, char* argv[])
     fprintf(stderr, "NOT IMPLEMENT! please install libssh2 (https://www.libssh2.org/) into /usr/local/libssh2 and recompile.\n");
 #endif // MOOON_HAVE_LIBSSH2 == 1
 
-    return 0;
+    return (0 == num_failure)? 0: 1;
 }
