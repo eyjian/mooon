@@ -1,7 +1,7 @@
 // Writed by yijian on 2018/1/29
 //
 // Linux批量远程执行命令工具
-// 相比C++版本，借助go的特性，不依赖libc和libc++等库
+// 相比C++版本，借助go的特性，不依赖libc和libc++等库，编译出的二进制应用相对广泛
 //
 // 依赖的crypto包：
 // 从https://github.com/golang/crypto下载，
@@ -12,6 +12,9 @@
 // 参数-u：连接远程机器的用户名，可用环境变量U替代
 // 参数-p：连接远程机器的密码，可用环境变量P替代
 // 参数-c：需要远程执行的命令，建议使用单引号括起来，如：-c='ls -l'
+//
+// 编译方法：
+// go build -o mooon_ssh mooon_ssh.go
 
 // main函数的package名只能为main，否则运行报：
 // cannot run non-main package
@@ -119,20 +122,36 @@ func main() {
     }
 }
 
-func RemoteExecute(ip_port string, user string, password string) {        
+func RemoteExecute(ip_port string, user string, password string) {
+    authMethods := []ssh.AuthMethod{}
+
     fmt.Printf("\033[1;33m")
     fmt.Printf("[%s]\n", ip_port)
     fmt.Printf("\033[m")
+    
+    keyboardInteractiveChallenge := func(
+        user,
+        instruction string,
+        questions []string,
+        echos []bool,
+    ) (answers []string, err error) {
+        if len(questions) == 0 {
+            return []string{}, nil
+        }
+        return []string{*g_password}, nil
+    }
 
-    client, err := ssh.Dial("tcp", ip_port,  &ssh.ClientConfig{
-        User: user,
-        Auth: []ssh.AuthMethod{
-            ssh.Password(password),
-        },
+    authMethods = append(authMethods, ssh.KeyboardInteractive(keyboardInteractiveChallenge))
+    authMethods = append(authMethods, ssh.Password(*g_password))
+    sshConfig := &ssh.ClientConfig{
+        User: *g_user,
+        Auth: authMethods,
         HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
             return nil
         },
-    })
+    }
+
+    client, err := ssh.Dial("tcp", ip_port,  sshConfig)
     if err != nil {
         fmt.Printf("\033[0;32;31m");
         fmt.Printf("%s\n", err)
@@ -168,4 +187,3 @@ func usage() {
     fmt.Printf("Format:\nmssh -h=host1,host2,... -P=port -u=user -p=password -c=command\n")
     fmt.Printf("Example:\nmssh -h=192.168.31.32 -P=22 -u=root -p='root@2018' -c='whoami'\n")
 }
-

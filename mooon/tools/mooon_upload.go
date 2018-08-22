@@ -1,7 +1,7 @@
 // Writed by yijian on 2018/1/29
 //
 // Linux批量上传到远程机器工具
-// 相比C++版本，借助go的特性，不依赖libc和libc++等库
+// 相比C++版本，借助go的特性，不依赖libc和libc++等库，编译出的二进制应用相对广泛
 //
 // 依赖的crypto包：
 // 从https://github.com/golang/crypto下载，
@@ -21,6 +21,9 @@
 // 参数-p：连接远程机器的密码，可用环境变量P替代
 // 参数-s：需要上传的单个或多个文件，多个文件间以逗号分隔
 // 参数-d：上传到哪个目录
+//
+// 编译方法：
+// go build -o mooon_upload mooon_upload.go
 
 // main函数的package名只能为main，否则运行报：
 // cannot run non-main package
@@ -122,7 +125,7 @@ func main() {
         usage()
         os.Exit(1)
     }
-    
+
     // destination
     if *g_destination == "" {
         fmt.Printf("Parameter[-d] not set\n")
@@ -138,22 +141,38 @@ func main() {
     }
 }
 
-func Upload2Remote(ip_port string, user string, password string) {        
+func Upload2Remote(ip_port string, user string, password string) {
+    authMethods := []ssh.AuthMethod{}
+
     fmt.Printf("\033[1;33m")
     fmt.Printf("[%s]\n", ip_port)
     fmt.Printf("\033[m")
 
+    keyboardInteractiveChallenge := func(
+        user,
+        instruction string,
+        questions []string,
+        echos []bool,
+    ) (answers []string, err error) {
+        if len(questions) == 0 {
+            return []string{}, nil
+        }
+        return []string{*g_password}, nil
+    }
+
+    authMethods = append(authMethods, ssh.KeyboardInteractive(keyboardInteractiveChallenge))
+    authMethods = append(authMethods, ssh.Password(*g_password))
+    sshConfig := &ssh.ClientConfig{
+        User: *g_user,
+        Auth: authMethods,
+        HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+            return nil
+        },
+    }
+
     filepath_array := strings.Split(*g_sources, ",")
     for _, filepath:=range filepath_array {
-        client, err := ssh.Dial("tcp", ip_port,  &ssh.ClientConfig{
-            User: user,
-            Auth: []ssh.AuthMethod{
-                ssh.Password(password),
-            },
-            HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-                return nil
-            },
-        })
+        client, err := ssh.Dial("tcp", ip_port,  sshConfig)
         if err != nil {
             fmt.Printf("\033[0;32;31m");
             fmt.Printf("%s\n", err)
