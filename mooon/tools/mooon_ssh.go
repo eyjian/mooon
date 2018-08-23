@@ -46,7 +46,7 @@ import (
 
 var (
     g_help = flag.Bool("H", false, "Display a help message and exit")
-    g_hosts = flag.String("h", "", " Connect to the remote machines on the given hosts separated by comma, can be replaced by environment variable 'H'")
+    g_hosts = flag.String("h", "", "Connect to the remote machines on the given hosts separated by comma, can be replaced by environment variable 'H'")
     g_port = flag.Int("P", 22, "Specifies the port to connect to on the remote machines, can be replaced by environment variable 'PORT'")
     g_user = flag.String("u", "", "Specifies the user to log in as on the remote machines, can be replaced by environment variable 'U'")
     g_password = flag.String("p", "", "The password to use when connecting to the remote machines, can be replaced by environment variable 'P'")

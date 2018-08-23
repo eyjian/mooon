@@ -32,19 +32,19 @@
 #include "mooon/utils/tokener.h"
 #include <iostream>
 
-// 被执行的命令，可为一条或多条命令，如：ls /&&whoami
-STRING_ARG_DEFINE(c, "", "command to execute remotely, e.g., -c='grep ERROR /tmp/*.log'");
 // 逗号分隔的远程主机IP列表
-STRING_ARG_DEFINE(h, "", "remote hosts separated by comma, e.g., -h='192.168.1.10,192.168.1.11'. You can also set environment `H` instead of `-h`, e.g., export H=192.168.1.10,192.168.1.11");
+STRING_ARG_DEFINE(h, "", "Connect to the remote machines on the given hosts separated by comma, can be replaced by environment variable 'H', example: -h='192.168.1.10,192.168.1.11'");
 // 远程主机的sshd端口号
-INTEGER_ARG_DEFINE(uint16_t, P, 22, 10, 65535, "remote hosts port, e.g., -P=22. You can also set environment `PORT` instead of `-P`, e.g., export PORT=1998");
+INTEGER_ARG_DEFINE(uint16_t, P, 22, 10, 65535, "Specifies the port to connect to on the remote machines, can be replaced by environment variable 'PORT'");
 // 用户名
-STRING_ARG_DEFINE(u, "", "remote host user name, e.g., -u=root. You can also set environment `U` instead of `-u`, e.g., export U=zhangsan");
+STRING_ARG_DEFINE(u, "", "Specifies the user to log in as on the remote machines, can be replaced by environment variable 'U'");
 // 密码
-STRING_ARG_DEFINE(p, "", "remote host password, e.g., -p='password'. You can also set environment `P` instead of `-p`, e.g., export P=123456");
-
+STRING_ARG_DEFINE(p, "", "The password to use when connecting to the remote machines, can be replaced by environment variable 'P'");
 // 连接超时，单位为秒
-INTEGER_ARG_DEFINE(uint16_t, t, 60, 1, 65535, "timeout seconds to remote host, e.g., -t=100");
+INTEGER_ARG_DEFINE(uint16_t, t, 60, 1, 65535, "The number of seconds before connection timeout");
+
+// 被执行的命令，可为一条或多条命令，如：ls /&&whoami
+STRING_ARG_DEFINE(c, "", "The command is executed on the remote machines, example: -c='grep ERROR /tmp/*.log'");
 
 // 结果信息
 struct ResultInfo
