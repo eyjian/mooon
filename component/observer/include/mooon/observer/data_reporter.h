@@ -42,6 +42,9 @@ public:
 
     /** 上报或记录日志 */
     virtual void report(const std::string& data) {}
+
+    /** 上报或记录日志 */
+    virtual void report(const std::string& key, const std::string& data) {}
 };
 
 /**
