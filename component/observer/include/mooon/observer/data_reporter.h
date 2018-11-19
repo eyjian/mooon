@@ -39,6 +39,9 @@ public:
 
 	/** 上报或记录日志 */
     virtual void report(const void* data, uint32_t data_size) {}
+
+    /** 上报或记录日志 */
+    virtual void report(const std::string& data) {}
 };
 
 /**
