@@ -34,6 +34,10 @@ public:
     /** 虚拟析构函数，仅为应付编译器告警 */
     virtual ~IDataReporter() {}
 
+    // 等待操作，用于替代Observer内置的sleep，
+    // 如果返回true，则DataReporter需要实现timed，否则Observer内置为sleep操作
+    virtual bool timed_poll(int milliseconds) { return false; }
+
     /** 上报或记录日志 */
     virtual void reportf(const char* format, ...) __attribute__((format(printf, 2, 3))) {}
 
