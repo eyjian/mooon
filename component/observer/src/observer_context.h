@@ -32,8 +32,9 @@ public:
 	bool create();
 	void destroy();
 	void collect();
+	bool timed_poll(int milliseconds) { return _data_reporter->timed_poll(milliseconds); }
 	uint16_t get_report_frequency_seconds() const { return _report_frequency_seconds; }
-	
+
 private:
 	virtual void register_observee(IObservable* observee);
     virtual void deregister_objservee(IObservable* observee);

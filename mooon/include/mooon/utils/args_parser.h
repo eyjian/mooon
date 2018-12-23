@@ -95,8 +95,8 @@
                 #param_name, default_value, help_string, enable_empty); \
     }}
 
-// 布尔类型参数定义，值只能为false或true
-// 注意default_value值必须为false或true
+// 布尔类型参数定义，值只能为false或true，只能为小写
+// 注意default_value值必须为false或true，只能为小写
 #define BOOL_STRING_ARG_DEFINE(param_name, default_value, help_string) \
     namespace mooon { namespace argument \
     { \
@@ -662,8 +662,9 @@ class CBoolStringArgument: public CStringArgument
 {
 public:
     CBoolStringArgument(const std::string& name, const std::string& default_value, const std::string& help_string)
-        : CStringArgument(name, default_value, help_string, false), _bool_value(false)
+        : CStringArgument(name, default_value, help_string, false)
     {
+        _bool_value = (default_value == "true");
         CArgumentContainer::get_singleton()->add_argument(this);
     }
 

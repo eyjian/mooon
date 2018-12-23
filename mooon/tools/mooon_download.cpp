@@ -33,22 +33,21 @@
 #include <fstream>
 #include <iostream>
 
-// 远程主机IP
-STRING_ARG_DEFINE(h, "", "one remote host, e.g., -h='192.168.1.10'. You can also set environment `H` instead of `-h`, e.g., export H=192.168.1.10");
+// 逗号分隔的远程主机IP列表
+STRING_ARG_DEFINE(h, "", "Connect to the remote machines on the given hosts separated by comma, can be replaced by environment variable 'H', example: -h='192.168.1.10,192.168.1.11'");
 // 远程主机的sshd端口号
-INTEGER_ARG_DEFINE(uint16_t, P, 22, 10, 65535, "remote host port, e.g., -P=22. You can also set environment `PORT` instead of `-P`, e.g., export PORT=1998");
+INTEGER_ARG_DEFINE(uint16_t, P, 22, 10, 65535, "Specifies the port to connect to on the remote machines, can be replaced by environment variable 'PORT'");
 // 用户名
-STRING_ARG_DEFINE(u, "", "remote host user name, e.g., -u=root. You can also set environment `U` instead of `-u`, e.g., export U=zhangsan");
+STRING_ARG_DEFINE(u, "", "Specifies the user to log in as on the remote machines, can be replaced by environment variable 'U'");
 // 密码
-STRING_ARG_DEFINE(p, "", "remote host password, e.g., -p='password'. You can also set environment `P` instead of `-p`, e.g., export P=123456");
+STRING_ARG_DEFINE(p, "", "The password to use when connecting to the remote machines, can be replaced by environment variable 'P'");
+// 连接超时，单位为秒
+INTEGER_ARG_DEFINE(uint16_t, t, 60, 1, 65535, "The number of seconds before connection timeout");
 
 // 被上传的文件路径
-STRING_ARG_DEFINE(s, "", "the remote source files to download, separated by comma, e.g., -s='/tmp/x1.txt,/tmp/x2.txt'");
+STRING_ARG_DEFINE(s, "", "The remote source files downloaded, separated by comma, example: -s='/tmp/x1.txt,/tmp/x2.txt'");
 // 文件上传后存放的目录路径
-STRING_ARG_DEFINE(d, "", "the local directory to store, e.g., -d='/tmp/'");
-
-// 连接超时，单位为秒
-INTEGER_ARG_DEFINE(uint16_t, t, 60, 1, 65535, "timeout seconds to remote host, e.g., -t=100");
+STRING_ARG_DEFINE(d, "", "The local destination directory, example: -d='/tmp/'");
 
 // 结果信息
 struct ResultInfo
@@ -264,5 +263,5 @@ int main(int argc, char* argv[])
     fprintf(stderr, "NOT IMPLEMENT! please install libssh2 (https://www.libssh2.org/) into /usr/local/libssh2 and recompile.\n");
 #endif // MOOON_HAVE_LIBSSH2 == 1
 
-    return 0;
+    return (0 == num_failure)? 0: 1;
 }

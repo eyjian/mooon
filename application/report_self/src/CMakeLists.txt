@@ -10,7 +10,7 @@ exec_program(${THRIFT_HOME}/bin/thrift ARGS --gen cpp -r -out ${CMAKE_CURRENT_SO
 set(RPC_SRC ReportSelfService.cpp report_self_types.cpp report_self_constants.cpp)
 
 # THRIFT_LIB
-set(THRIFT_LIB libthriftnb.a libthrift.a libevent.a libssl.a libcrypto.a)
+set(THRIFT_LIB libthriftnb.a libthrift.a libevent.a libssl.a libcrypto.a pthread dl rt z)
 
 # report_self_server
 add_executable(report_self_server ${RPC_SRC} report_self_server.cpp)

@@ -997,7 +997,7 @@ void get_formatted_current_datetime(char* datetime_buffer, size_t datetime_buffe
         snprintf(datetime_buffer, datetime_buffer_size
             ,"%04d-%02d-%02d %02d:%02d:%02d/%u"
             ,result.tm_year+1900, result.tm_mon+1, result.tm_mday
-            ,result.tm_hour, result.tm_min, result.tm_sec, (unsigned int)(current.tv_usec/1000));
+            ,result.tm_hour, result.tm_min, result.tm_sec, (unsigned int)(current.tv_usec));
     }
     else
     {

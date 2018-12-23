@@ -44,7 +44,8 @@ void CObserverThread::run()
     const int milliseconds = report_frequency_seconds * 1000;
 	while (!is_stop())
 	{
-        do_millisleep(milliseconds);
+	    if (!_observer_context->timed_poll(milliseconds))
+	        do_millisleep(milliseconds);
 		_observer_context->collect();
 	}
 

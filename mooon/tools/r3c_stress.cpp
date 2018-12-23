@@ -74,34 +74,41 @@ int main(int argc, char* argv[])
     std::string errmsg;
     if (!mooon::utils::parse_arguments(argc, argv, &errmsg))
     {
-        fprintf(stderr, "%s\n", errmsg.c_str());
+        if (!errmsg.empty())
+            fprintf(stderr, "%s\n", errmsg.c_str());
+        else
+            fprintf(stderr, "%s\n", mooon::utils::g_help_string.c_str());
         exit(1);
     }
 
-    r3c::set_debug_log_write(NULL);
-    r3c::set_info_log_write(NULL);
-    r3c::set_error_log_write(NULL);
+    try
+    {
+        // KV
+        set_test();
+        if (is_test_mode())
+            get_test();
+        setnx_test();
+        setex_test();
+        setnxex_test();
 
-    // KV
-    set_test();
-    if (is_test_mode())
-        get_test();
-    setnx_test();
-    setex_test();
-    setnxex_test();
+        // HASH
+        hset_test();
+        if (is_test_mode())
+            hget_test();
+        hmincrby_test();
 
-    // HASH
-    hset_test();
-    if (is_test_mode())
-        hget_test();
-    hmincrby_test();
+        // QUEUE
+        lpush_test();
+        if (is_test_mode())
+            rpop_test();
 
-    // QUEUE
-    lpush_test();
-    if (is_test_mode())
-        rpop_test();
-
-    return 0;
+        return 0;
+    }
+    catch (r3c::CRedisException& ex)
+    {
+        fprintf(stderr, "%s\n", ex.str().c_str());
+        exit(1);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -421,312 +428,382 @@ void rpop_test()
 ////////////////////////////////////////////////////////////////////////////////
 void set_stress_thread(uint8_t index)
 {
-    const std::string value(mooon::argument::value_length->value(), '*');
-    r3c::CRedisClient redis(mooon::argument::redis->value());
-
-    for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
+    try
     {
-        const std::string& key = mooon::utils::CStringUtils::format_string("%s_%d_%u", mooon::argument::prefix->c_value(), index, i);
+        const std::string value(mooon::argument::value_length->value(), '*');
+        r3c::CRedisClient redis(mooon::argument::redis->value());
 
-        try
+        for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
         {
-            if (is_clean_mode())
+            const std::string& key = mooon::utils::CStringUtils::format_string("%s_%d_%u", mooon::argument::prefix->c_value(), index, i);
+
+            try
             {
-                redis.del(key);
+                if (is_clean_mode())
+                {
+                    redis.del(key);
+                }
+                else
+                {
+                    redis.set(key, value);
+                    atomic_inc(&sg_success);
+                }
             }
-            else
+            catch (r3c::CRedisException& ex)
             {
-                redis.set(key, value);
-                atomic_inc(&sg_success);
+                atomic_inc(&sg_failure);
+                if (1 == mooon::argument::verbose->value())
+                    fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
             }
         }
-        catch (r3c::CRedisException& ex)
-        {
-            atomic_inc(&sg_failure);
-            if (1 == mooon::argument::verbose->value())
-                fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
-        }
+    }
+    catch (r3c::CRedisException& ex)
+    {
+        fprintf(stderr, "[%s] %s\n", __FUNCTION__, ex.str().c_str());
     }
 }
 
 void get_stress_thread(uint8_t index)
 {
-    r3c::CRedisClient redis(mooon::argument::redis->value());
-
-    for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
+    try
     {
-        const std::string& key = mooon::utils::CStringUtils::format_string("%s_%d_%u", mooon::argument::prefix->c_value(), index, i);
+        r3c::CRedisClient redis(mooon::argument::redis->value());
 
-        try
+        for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
         {
-            std::string value;
-            if (redis.get(key, &value))
+            const std::string& key = mooon::utils::CStringUtils::format_string("%s_%d_%u", mooon::argument::prefix->c_value(), index, i);
+
+            try
             {
-                atomic_inc(&sg_success);
+                std::string value;
+                if (redis.get(key, &value))
+                {
+                    atomic_inc(&sg_success);
+                }
+                else
+                {
+                    atomic_inc(&sg_not_exists);
+                    if (1 == mooon::argument::verbose->value())
+                        fprintf(stderr, "[%s] not exists\n", key.c_str());
+                }
             }
-            else
+            catch (r3c::CRedisException& ex)
             {
-                atomic_inc(&sg_not_exists);
+                atomic_inc(&sg_failure);
                 if (1 == mooon::argument::verbose->value())
-                    fprintf(stderr, "[%s] not exists\n", key.c_str());
+                    fprintf(stderr, "GET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
             }
         }
-        catch (r3c::CRedisException& ex)
-        {
-            atomic_inc(&sg_failure);
-            if (1 == mooon::argument::verbose->value())
-                fprintf(stderr, "GET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
-        }
+    }
+    catch (r3c::CRedisException& ex)
+    {
+        fprintf(stderr, "[%s] %s\n", __FUNCTION__, ex.str().c_str());
     }
 }
 
 void setnx_stress_thread(uint8_t index)
 {
-    const std::string value(mooon::argument::value_length->value(), '*');
-    r3c::CRedisClient redis(mooon::argument::redis->value());
-
-    for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
+    try
     {
-        const std::string& key = mooon::utils::CStringUtils::format_string("%s_nx_%d_%u", mooon::argument::prefix->c_value(), index, i);
+        const std::string value(mooon::argument::value_length->value(), '*');
+        r3c::CRedisClient redis(mooon::argument::redis->value());
 
-        try
+        for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
         {
-            if (is_clean_mode())
+            const std::string& key = mooon::utils::CStringUtils::format_string("%s_nx_%d_%u", mooon::argument::prefix->c_value(), index, i);
+
+            try
             {
-                redis.del(key);
+                if (is_clean_mode())
+                {
+                    redis.del(key);
+                }
+                else
+                {
+                    redis.setnx(key, value);
+                    atomic_inc(&sg_success);
+                }
             }
-            else
+            catch (r3c::CRedisException& ex)
             {
-                redis.setnx(key, value);
-                atomic_inc(&sg_success);
+                atomic_inc(&sg_failure);
+                if (1 == mooon::argument::verbose->value())
+                    fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
             }
         }
-        catch (r3c::CRedisException& ex)
-        {
-            atomic_inc(&sg_failure);
-            if (1 == mooon::argument::verbose->value())
-                fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
-        }
+    }
+    catch (r3c::CRedisException& ex)
+    {
+        fprintf(stderr, "[%s] %s\n", __FUNCTION__, ex.str().c_str());
     }
 }
 
 void setex_stress_thread(uint8_t index)
 {
-    const std::string value(mooon::argument::value_length->value(), '*');
-    r3c::CRedisClient redis(mooon::argument::redis->value());
-
-    for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
+    try
     {
-        const std::string& key = mooon::utils::CStringUtils::format_string("%s_ex_%d_%u", mooon::argument::prefix->c_value(), index, i);
+        const std::string value(mooon::argument::value_length->value(), '*');
+        r3c::CRedisClient redis(mooon::argument::redis->value());
 
-        try
+        for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
         {
-            if (is_clean_mode())
+            const std::string& key = mooon::utils::CStringUtils::format_string("%s_ex_%d_%u", mooon::argument::prefix->c_value(), index, i);
+
+            try
             {
-                redis.del(key);
+                if (is_clean_mode())
+                {
+                    redis.del(key);
+                }
+                else
+                {
+                    const uint32_t expired_seconds = mooon::argument::expire->value();
+                    redis.setex(key, value, expired_seconds);
+                    atomic_inc(&sg_success);
+                }
             }
-            else
+            catch (r3c::CRedisException& ex)
             {
-                const uint32_t expired_seconds = mooon::argument::expire->value();
-                redis.setex(key, value, expired_seconds);
-                atomic_inc(&sg_success);
+                atomic_inc(&sg_failure);
+                if (1 == mooon::argument::verbose->value())
+                    fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
             }
         }
-        catch (r3c::CRedisException& ex)
-        {
-            atomic_inc(&sg_failure);
-            if (1 == mooon::argument::verbose->value())
-                fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
-        }
+    }
+    catch (r3c::CRedisException& ex)
+    {
+        fprintf(stderr, "[%s] %s\n", __FUNCTION__, ex.str().c_str());
     }
 }
 
 void setnxex_stress_thread(uint8_t index)
 {
-    const std::string value(mooon::argument::value_length->value(), '*');
-    r3c::CRedisClient redis(mooon::argument::redis->value());
-
-    for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
+    try
     {
-        const std::string& key = mooon::utils::CStringUtils::format_string("%s_nxex_%d_%u", mooon::argument::prefix->c_value(), index, i);
+        const std::string value(mooon::argument::value_length->value(), '*');
+        r3c::CRedisClient redis(mooon::argument::redis->value());
 
-        try
+        for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
         {
-            if (is_clean_mode())
+            const std::string& key = mooon::utils::CStringUtils::format_string("%s_nxex_%d_%u", mooon::argument::prefix->c_value(), index, i);
+
+            try
             {
-                redis.del(key);
+                if (is_clean_mode())
+                {
+                    redis.del(key);
+                }
+                else
+                {
+                    const uint32_t expired_seconds = mooon::argument::expire->value();
+                    redis.setnxex(key, value, expired_seconds);
+                    atomic_inc(&sg_success);
+                }
             }
-            else
+            catch (r3c::CRedisException& ex)
             {
-                const uint32_t expired_seconds = mooon::argument::expire->value();
-                redis.setnxex(key, value, expired_seconds);
-                atomic_inc(&sg_success);
+                atomic_inc(&sg_failure);
+                if (1 == mooon::argument::verbose->value())
+                    fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
             }
         }
-        catch (r3c::CRedisException& ex)
-        {
-            atomic_inc(&sg_failure);
-            if (1 == mooon::argument::verbose->value())
-                fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
-        }
+    }
+    catch (r3c::CRedisException& ex)
+    {
+        fprintf(stderr, "[%s] %s\n", __FUNCTION__, ex.str().c_str());
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void hset_stress_thread(uint8_t index)
 {
-    const std::string value(mooon::argument::value_length->value(), '*');
-    const std::string& key = mooon::utils::CStringUtils::format_string("%s_hash_%d", mooon::argument::prefix->c_value(), index);
-    r3c::CRedisClient redis(mooon::argument::redis->value());
+    try
+    {
+        const std::string value(mooon::argument::value_length->value(), '*');
+        const std::string& key = mooon::utils::CStringUtils::format_string("%s_hash_%d", mooon::argument::prefix->c_value(), index);
+        r3c::CRedisClient redis(mooon::argument::redis->value());
 
-    if (is_clean_mode())
-    {
-        redis.del(key);
-    }
-    else
-    {
-        for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
+        if (is_clean_mode())
         {
-            const std::string field = mooon::utils::CStringUtils::format_string("field_%u", i);
+            redis.del(key);
+        }
+        else
+        {
+            for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
+            {
+                const std::string field = mooon::utils::CStringUtils::format_string("field_%u", i);
 
-            try
-            {
-                redis.hset(key, field, value);
-                atomic_inc(&sg_success);
-            }
-            catch (r3c::CRedisException& ex)
-            {
-                atomic_inc(&sg_failure);
-                if (1 == mooon::argument::verbose->value())
-                    fprintf(stderr, "HSET [%s:%s] ERROR: %s\n", key.c_str(), field.c_str(), ex.str().c_str());
+                try
+                {
+                    redis.hset(key, field, value);
+                    atomic_inc(&sg_success);
+                }
+                catch (r3c::CRedisException& ex)
+                {
+                    atomic_inc(&sg_failure);
+                    if (1 == mooon::argument::verbose->value())
+                        fprintf(stderr, "HSET [%s:%s] ERROR: %s\n", key.c_str(), field.c_str(), ex.str().c_str());
+                }
             }
         }
+    }
+    catch (r3c::CRedisException& ex)
+    {
+        fprintf(stderr, "[%s] %s\n", __FUNCTION__, ex.str().c_str());
     }
 }
 
 void hget_stress_thread(uint8_t index)
 {
-    const std::string& key = mooon::utils::CStringUtils::format_string("%s_hash_%d", mooon::argument::prefix->c_value(), index);
-    r3c::CRedisClient redis(mooon::argument::redis->value());
-
-    for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
+    try
     {
-        const std::string& field = mooon::utils::CStringUtils::format_string("field_%u", i);
+        const std::string& key = mooon::utils::CStringUtils::format_string("%s_hash_%d", mooon::argument::prefix->c_value(), index);
+        r3c::CRedisClient redis(mooon::argument::redis->value());
 
-        try
-        {
-            std::string value;
-
-            if (redis.hget(key, field, &value))
-            {
-                atomic_inc(&sg_success);
-            }
-            else
-            {
-                atomic_inc(&sg_not_exists);
-                if (1 == mooon::argument::verbose->value())
-                    fprintf(stderr, "HASH[%s:%s] not exists\n", key.c_str(), field.c_str());
-            }
-        }
-        catch (r3c::CRedisException& ex)
-        {
-            atomic_inc(&sg_failure);
-            if (1 == mooon::argument::verbose->value())
-                fprintf(stderr, "HGET [%s:%s] ERROR: %s\n", key.c_str(), field.c_str(), ex.str().c_str());
-        }
-    }
-}
-
-void hmincrby_stress_thread(uint8_t index)
-{
-    const std::string& key = mooon::utils::CStringUtils::format_string("%s_eval_%d", mooon::argument::prefix->c_value(), index);
-    r3c::CRedisClient redis(mooon::argument::redis->value());
-
-    if (is_clean_mode())
-    {
-        redis.del(key);
-    }
-    else
-    {
         for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
         {
-            std::vector<std::pair<std::string, int64_t> > increments(mooon::argument::increments->value());
-            for (std::vector<std::pair<std::string, int64_t> >::size_type i=0; i<increments.size(); ++i)
-            {
-                increments[i].first = mooon::utils::CStringUtils::int_tostring(i%100);
-                increments[i].second = i;
-            }
+            const std::string& field = mooon::utils::CStringUtils::format_string("field_%u", i);
 
             try
             {
-                redis.hmincrby(key, increments);
-                atomic_inc(&sg_success);
+                std::string value;
+
+                if (redis.hget(key, field, &value))
+                {
+                    atomic_inc(&sg_success);
+                }
+                else
+                {
+                    atomic_inc(&sg_not_exists);
+                    if (1 == mooon::argument::verbose->value())
+                        fprintf(stderr, "HASH[%s:%s] not exists\n", key.c_str(), field.c_str());
+                }
             }
             catch (r3c::CRedisException& ex)
             {
                 atomic_inc(&sg_failure);
                 if (1 == mooon::argument::verbose->value())
-                    fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
+                    fprintf(stderr, "HGET [%s:%s] ERROR: %s\n", key.c_str(), field.c_str(), ex.str().c_str());
             }
         }
+    }
+    catch (r3c::CRedisException& ex)
+    {
+        fprintf(stderr, "[%s] %s\n", __FUNCTION__, ex.str().c_str());
+    }
+}
+
+void hmincrby_stress_thread(uint8_t index)
+{
+    try
+    {
+        const std::string& key = mooon::utils::CStringUtils::format_string("%s_eval_%d", mooon::argument::prefix->c_value(), index);
+        r3c::CRedisClient redis(mooon::argument::redis->value());
+
+        if (is_clean_mode())
+        {
+            redis.del(key);
+        }
+        else
+        {
+            for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
+            {
+                std::vector<std::pair<std::string, int64_t> > increments(mooon::argument::increments->value());
+                for (std::vector<std::pair<std::string, int64_t> >::size_type i=0; i<increments.size(); ++i)
+                {
+                    increments[i].first = mooon::utils::CStringUtils::int_tostring(i%100);
+                    increments[i].second = i;
+                }
+
+                try
+                {
+                    redis.hmincrby(key, increments);
+                    atomic_inc(&sg_success);
+                }
+                catch (r3c::CRedisException& ex)
+                {
+                    atomic_inc(&sg_failure);
+                    if (1 == mooon::argument::verbose->value())
+                        fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
+                }
+            }
+        }
+    }
+    catch (r3c::CRedisException& ex)
+    {
+        fprintf(stderr, "[%s] %s\n", __FUNCTION__, ex.str().c_str());
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void lpush_stress_thread(uint8_t index)
 {
-    const std::string value(mooon::argument::value_length->value(), '*');
-    const std::string& key = mooon::utils::CStringUtils::format_string("%s_queue_%d", mooon::argument::prefix->c_value(), index);
-    r3c::CRedisClient redis(mooon::argument::redis->value());
+    try
+    {
+        const std::string value(mooon::argument::value_length->value(), '*');
+        const std::string& key = mooon::utils::CStringUtils::format_string("%s_queue_%d", mooon::argument::prefix->c_value(), index);
+        r3c::CRedisClient redis(mooon::argument::redis->value());
 
-    if (is_clean_mode())
-    {
-        redis.del(key);
-    }
-    else
-    {
-        for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
+        if (is_clean_mode())
         {
-            try
+            redis.del(key);
+        }
+        else
+        {
+            for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
             {
-                redis.lpush(key, value);
-                atomic_inc(&sg_success);
-            }
-            catch (r3c::CRedisException& ex)
-            {
-                atomic_inc(&sg_failure);
-                if (1 == mooon::argument::verbose->value())
-                    fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
+                try
+                {
+                    redis.lpush(key, value);
+                    atomic_inc(&sg_success);
+                }
+                catch (r3c::CRedisException& ex)
+                {
+                    atomic_inc(&sg_failure);
+                    if (1 == mooon::argument::verbose->value())
+                        fprintf(stderr, "SET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
+                }
             }
         }
+    }
+    catch (r3c::CRedisException& ex)
+    {
+        fprintf(stderr, "[%s] %s\n", __FUNCTION__, ex.str().c_str());
     }
 }
 
 void rpop_stress_thread(uint8_t index)
 {
-    const std::string& key = mooon::utils::CStringUtils::format_string("%s_queue_%d", mooon::argument::prefix->c_value(), index);
-    r3c::CRedisClient redis(mooon::argument::redis->value());
-
-    for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
+    try
     {
-        try
-        {
-            std::string value;
+        const std::string& key = mooon::utils::CStringUtils::format_string("%s_queue_%d", mooon::argument::prefix->c_value(), index);
+        r3c::CRedisClient redis(mooon::argument::redis->value());
 
-            if (redis.rpop(key, &value))
-            {
-                atomic_inc(&sg_success);
-            }
-            else
-            {
-                break;
-            }
-        }
-        catch (r3c::CRedisException& ex)
+        for (uint32_t i=0; i<mooon::argument::requests->value(); ++i)
         {
-            atomic_inc(&sg_failure);
-            if (1 == mooon::argument::verbose->value())
-                fprintf(stderr, "GET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
+            try
+            {
+                std::string value;
+
+                if (redis.rpop(key, &value))
+                {
+                    atomic_inc(&sg_success);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            catch (r3c::CRedisException& ex)
+            {
+                atomic_inc(&sg_failure);
+                if (1 == mooon::argument::verbose->value())
+                    fprintf(stderr, "GET [%s] ERROR: %s\n", key.c_str(), ex.str().c_str());
+            }
         }
+    }
+    catch (r3c::CRedisException& ex)
+    {
+        fprintf(stderr, "[%s] %s\n", __FUNCTION__, ex.str().c_str());
     }
 }

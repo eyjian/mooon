@@ -26,17 +26,19 @@ target_link_libraries(dbproxy_tool libmooon.a)
 
 # dbproxy客户端工具
 add_executable(dbproxy_client db_proxy_client.cpp ${RPC})
-target_link_libraries(dbproxy_client libjsoncpp.a libthriftnb.a libthrift.a libevent.a)
+target_link_libraries(dbproxy_client libjsoncpp.a libthriftnb.a libthrift.a libevent.a pthread dl rt)
 
 # dbproxy压力测试工具
 add_executable(dbproxy_stress db_proxy_stress.cpp ${RPC})
-target_link_libraries(dbproxy_stress libjsoncpp.a libthriftnb.a libthrift.a libevent.a)
+target_link_libraries(dbproxy_stress libjsoncpp.a libthriftnb.a libthrift.a libevent.a pthread dl rt)
 
 # db压力测试工具
 add_executable(db_stress db_stress.cpp)
+target_link_libraries(db_stress pthread dl rt)
 
 # db_proxy
 add_executable(dbproxy ${RPC} main.cpp db_proxy_handler.cpp config_loader.cpp sql_logger.cpp db_process.cpp)
+target_link_libraries(dbproxy pthread dl rt)
 
 if (EXISTS ${MYSQL_HOME}/lib/libmysqlclient_r.a)
     target_link_libraries(dbproxy libjsoncpp.a libmysqlclient_r.a libthriftnb.a libthrift.a libevent.a)

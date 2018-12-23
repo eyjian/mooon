@@ -188,21 +188,15 @@ public:
 
     // 当str为非有效的IntType类型整数值时，返回error_value指定的值
     template <typename IntType>
-    static IntType string2int(const char* str, IntType error_value=0)
+    static IntType string2int(const std::string& str, IntType error_value=0)
     {
         IntType m = 0;
         uint8_t converted_length = 0;
         bool ignored_zero = false;
-        if (!string2int(str, m, converted_length, ignored_zero))
+        if (!string2int(str.c_str(), m, converted_length, ignored_zero))
             m = error_value;
 
         return m;
-    }
-
-    template <typename IntType>
-    static IntType string2int(const std::string& str, IntType error_value=0)
-    {
-        return string2int<IntType>(str.c_str(), error_value);
     }
 
     static std::string int_tostring(int16_t source);
