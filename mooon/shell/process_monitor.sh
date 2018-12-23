@@ -28,6 +28,12 @@
 # /usr/local/bin/process_monitor.sh "/usr/local/bin/test wangwu" "/usr/local/bin/test --name=wangwu"
 # /usr/local/bin/process_monitor.sh "/usr/local/bin/test zhangsan" "/usr/local/bin/test --name=zhangsan"
 
+# crontab技巧：
+# 1）公共的定义为变量
+# 2）如果包含了特殊字符，比如分号则使用单引用号，而不能用双引号，比如：
+# RECEIVERS="tom;mike;jay"
+# * * * * * * * * * * /usr/local/bin/process_monitor.sh "/tmp/test" "/tmp/test '$RECEIVERS'"
+
 # 注意事项：
 # 不管是监控脚本还是可执行程序，
 # 均要求使用绝对路径，即必须以“/”打头的路径。
@@ -134,6 +140,22 @@ active=0
 log_filepath=/tmp/process_monitor-$cur_user.log
 # 日志文件大小（10M）
 log_filesize=10485760
+
+# 关闭所有已打开的文件描述符
+# 子进程不能继承，否则会导致本脚本自身的日志文件滚动时，被删除的备份不能被释放
+close_all_fd()
+{
+    # 0, 1, 2, 255
+    # compgen -G "/proc/$BASHPID/fd/*
+    for fd in $(ls /proc/$$/fd); do
+        if test $fd -ge 0; then
+            # 关闭文件描述符fd
+            eval "exec $fd>&-"
+        fi
+    done
+}
+# 导出close_all_fd
+export -f close_all_fd
 
 # 写日志函数，带1个参数：
 # 1) 需要写入的日志
@@ -278,7 +300,7 @@ while true; do
         if test $process_count -lt 1; then
             # 执行重启脚本，要求这个脚本能够将指定的进程拉起来
             log "restart \"$process_cmdline\"\n"
-            sh -c "$restart_script" >> $log_filepath 2>&1 # 注意一定要以“sh -c”方式执行
+            sh -c "close_all_fd;$restart_script" >> $log_filepath 2>&1 # 注意一定要以“sh -c”方式执行
 
             # sleep时间得长一点，原因是启动可能没那么快，以防止启动多个进程
             # 在某些环境遇到sleep无效，正常sleep后“$?”值为0，则异常时变成“141”，
