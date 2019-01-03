@@ -1,5 +1,5 @@
 #!/bin/sh
-# https://github.com/eyjian/mooon/blob/master/common_library/shell/process_monitor.sh
+# https://github.com/eyjian/libmooon/blob/master/shell/process_monitor.sh
 # Created by yijian on 2012/7/23
 #
 # 运行日志：/tmp/process_monitor-USER.log，由于多进程同时写，不一定完整，仅供参考。
@@ -27,6 +27,12 @@
 # 则要求每个实例的参数必须可区分，否则无法独立监控，如：
 # /usr/local/bin/process_monitor.sh "/usr/local/bin/test wangwu" "/usr/local/bin/test --name=wangwu"
 # /usr/local/bin/process_monitor.sh "/usr/local/bin/test zhangsan" "/usr/local/bin/test --name=zhangsan"
+
+# crontab技巧：
+# 1）公共的定义为变量
+# 2）如果包含了特殊字符，比如分号则使用单引用号，而不能用双引号，比如：
+# RECEIVERS="tom;mike;jay"
+# * * * * * * * * * * /usr/local/bin/process_monitor.sh "/tmp/test" "/tmp/test '$RECEIVERS'"
 
 # 注意事项：
 # 不管是监控脚本还是可执行程序，
@@ -134,6 +140,24 @@ active=0
 log_filepath=/tmp/process_monitor-$cur_user.log
 # 日志文件大小（10M）
 log_filesize=10485760
+
+# 关闭所有已打开的文件描述符
+# 子进程不能继承，否则会导致本脚本自身的日志文件滚动时，被删除的备份不能被释放
+close_all_fd()
+{
+    return
+    # 0, 1, 2, 255
+    # compgen -G "/proc/$BASHPID/fd/*
+    for fd in $(ls /proc/$$/fd); do
+        if test $fd -ge 0; then
+            # 关闭文件描述符fd
+            eval "exec $fd>&-"
+            #eval "exec $fd<&-"
+        fi
+    done
+}
+# 导出close_all_fd
+export -f close_all_fd
 
 # 写日志函数，带1个参数：
 # 1) 需要写入的日志
@@ -278,7 +302,16 @@ while true; do
         if test $process_count -lt 1; then
             # 执行重启脚本，要求这个脚本能够将指定的进程拉起来
             log "restart \"$process_cmdline\"\n"
-            sh -c "$restart_script" >> $log_filepath 2>&1 # 注意一定要以“sh -c”方式执行
+            # 如果使用“>>”重定向到log_filepath，
+            # 则会导致该文件的fd由被拉起进程继承，
+            # 当log_filepath滚动后无法从磁盘上释放。
+            # 如果采用close_all_fd，并仍然使用“>>”，
+            # 则会出现关闭被拉起进程fd问题，
+            # 比如导致MySQL在执行SELECT时报错“mysql server has gone away”。
+            #sh -c "$restart_script" >> $log_filepath 2>&1
+            # “2>&1”的作用是“restart_script”有语法错误时，
+            # sh的错误信息输出到log_filepath，并不是restart_script的错误信息
+            sh -c "$restart_script" 2>&1 | tee -a $log_filepath
 
             # sleep时间得长一点，原因是启动可能没那么快，以防止启动多个进程
             # 在某些环境遇到sleep无效，正常sleep后“$?”值为0，则异常时变成“141”，
