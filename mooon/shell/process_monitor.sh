@@ -37,7 +37,7 @@
 # 注意事项：
 # 不管是监控脚本还是可执行程序，
 # 均要求使用绝对路径，即必须以“/”打头的路径。
-#
+# 其次建议以后台方式启动被监控进程，比如可以考虑带“&”方式启动。
 
 # 需要指定个数的命令行参数
 # 参数1：被监控的进程名（可以包含命令行参数，而且必须包含绝对路径方式）
@@ -163,7 +163,7 @@ export -f close_all_fd
 # 1) 需要写入的日志
 log()
 {
-    # 创建日志文件，如果不存在的话    
+    # 创建日志文件，如果不存在的话
     if test ! -f $log_filepath; then
         touch $log_filepath
     fi
@@ -238,11 +238,11 @@ if test $p1 != "/"; then
     process_filetype=2
 else
     file $process_full_filepath |grep ELF >/dev/null
-    if test $? -eq 0; then    
+    if test $? -eq 0; then
         process_filetype=1
     else
         file $process_full_filepath |grep script >/dev/null
-        if test $? -eq 0; then        
+        if test $? -eq 0; then
             process_filetype=0
         else
             echo "unknown file type: process_raw_filepath\n"
@@ -264,8 +264,8 @@ while true; do
     if test $ONLY_TEST -eq 1; then
         log "self_count: $self_count\n"
     fi
-    if test ! -z "$self_count"; then 
-        if test $self_count -gt 2; then 
+    if test ! -z "$self_count"; then
+        if test $self_count -gt 2; then
             log "$0 is running[$self_count/active:$active], current user is $cur_user\n"
             # 经测试，正常情况下一般为2，
             # 但运行一段时间后，会出现值为3，因此放在crontab中非常必要
@@ -284,7 +284,7 @@ while true; do
             process_count=`ps -C $process_name h -o euid,args| awk 'BEGIN { num=0; } { if ($1==uid) && ($2==process_full_filepath)) ++num; } END { printf("%d",num); }' uid=$uid process_full_filepath=$process_full_filepath`
         else # 未知类型文件
             process_count=`ps -C $process_name h -o euid,args| awk 'BEGIN { num=0; } { if ($1==uid) ++num; } END { printf("%d",num); }' uid=$uid`
-        fi        
+        fi
     else
         if test $process_filetype -eq 0; then # 可执行脚本文件
             process_count=`ps -C $process_name h -o euid,args| awk 'BEGIN { num=0; } { if (($1==uid) && match($0, process_match) && ($3==process_full_filepath)) ++num; } END { printf("%d",num); }' uid=$uid process_full_filepath=$process_full_filepath process_match="$process_match"`
@@ -292,9 +292,9 @@ while true; do
             process_count=`ps -C $process_name h -o euid,args| awk 'BEGIN { num=0; } { if (($1==uid) && match($0, process_match) && ($2==process_full_filepath)) ++num; } END { printf("%d",num); }' uid=$uid process_full_filepath=$process_full_filepath process_match="$process_match"`
         else # 未知类型文件
             process_count=`ps -C $process_name h -o euid,args| awk 'BEGIN { num=0; } { if (($1==uid) && match($0, process_match)) ++num; } END { printf("%d",num); }' uid=$uid process_match="$process_match"`
-        fi        
+        fi
     fi
-    
+
     if test $ONLY_TEST -eq 1; then
         log "process_count: $process_count\n"
     fi
@@ -302,16 +302,8 @@ while true; do
         if test $process_count -lt 1; then
             # 执行重启脚本，要求这个脚本能够将指定的进程拉起来
             log "restart \"$process_cmdline\"\n"
-            # 如果使用“>>”重定向到log_filepath，
-            # 则会导致该文件的fd由被拉起进程继承，
-            # 当log_filepath滚动后无法从磁盘上释放。
-            # 如果采用close_all_fd，并仍然使用“>>”，
-            # 则会出现关闭被拉起进程fd问题，
-            # 比如导致MySQL在执行SELECT时报错“mysql server has gone away”。
-            #sh -c "$restart_script" >> $log_filepath 2>&1
-            # “2>&1”的作用是“restart_script”有语法错误时，
-            # sh的错误信息输出到log_filepath，并不是restart_script的错误信息
-            sh -c "$restart_script" 2>&1 | tee -a $log_filepath
+            #sh -c "$restart_script" 2>&1 >> $log_filepath
+            sh -c "$restart_script" > /dev/null 2>&1
 
             # sleep时间得长一点，原因是启动可能没那么快，以防止启动多个进程
             # 在某些环境遇到sleep无效，正常sleep后“$?”值为0，则异常时变成“141”，
