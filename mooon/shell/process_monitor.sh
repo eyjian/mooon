@@ -37,7 +37,6 @@
 # 注意事项：
 # 不管是监控脚本还是可执行程序，
 # 均要求使用绝对路径，即必须以“/”打头的路径。
-# 其次建议以后台方式启动被监控进程，比如可以考虑带“&”方式启动。
 
 # 需要指定个数的命令行参数
 # 参数1：被监控的进程名（可以包含命令行参数，而且必须包含绝对路径方式）
@@ -303,7 +302,10 @@ while true; do
             # 执行重启脚本，要求这个脚本能够将指定的进程拉起来
             log "restart \"$process_cmdline\"\n"
             #sh -c "$restart_script" 2>&1 >> $log_filepath
-            sh -c "$restart_script" > /dev/null 2>&1
+            msg=`sh -c "$restart_script" 2>&1`
+            if test ! -z "${msg}"; then
+                log "${msg}\n"
+            fi
 
             # sleep时间得长一点，原因是启动可能没那么快，以防止启动多个进程
             # 在某些环境遇到sleep无效，正常sleep后“$?”值为0，则异常时变成“141”，
