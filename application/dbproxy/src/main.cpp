@@ -133,11 +133,11 @@ void CMainHelper::cleanup_cache_thread()
     {
         mooon::sys::CUtils::millisleep(1000*mooon::argument::cleanup_frequency->value());
 
-        mooon::db_proxy::CDbProxyHandler* dbproxy_handler = _thrift_server.get();
-        if (NULL == dbproxy_handler)
+        //mooon::db_proxy::CDbProxyHandler* dbproxy_handler = _thrift_server.get();
+        if (NULL == _thrift_server.get())
             break;
 
-        dbproxy_handler->cleanup_cache();
+        _thrift_server.get()->cleanup_cache();
     }
 
     MYLOG_INFO("cleanup cache thread exiting\n");

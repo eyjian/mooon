@@ -18,23 +18,23 @@ set(RPC DbProxyService.cpp db_proxy_constants.cpp db_proxy_types.cpp)
 
 # sqllog文件检测工具
 add_executable(check_sqllog check_sqllog.cpp)
-target_link_libraries(check_sqllog libmooon.a)
+target_link_libraries(check_sqllog libmooon.a pthread dl rt z)
 
 # dbproxy_tool
 add_executable(dbproxy_tool db_proxy_tool.cpp)
-target_link_libraries(dbproxy_tool libmooon.a)
+target_link_libraries(dbproxy_tool libmooon.a pthread dl rt z)
 
 # dbproxy客户端工具
 add_executable(dbproxy_client db_proxy_client.cpp ${RPC})
-target_link_libraries(dbproxy_client libjsoncpp.a libthriftnb.a libthrift.a libevent.a pthread dl rt)
+target_link_libraries(dbproxy_client libjsoncpp.a libthriftnb.a libthrift.a libevent.a pthread dl rt z)
 
 # dbproxy压力测试工具
 add_executable(dbproxy_stress db_proxy_stress.cpp ${RPC})
-target_link_libraries(dbproxy_stress libjsoncpp.a libthriftnb.a libthrift.a libevent.a pthread dl rt)
+target_link_libraries(dbproxy_stress libjsoncpp.a libthriftnb.a libthrift.a libevent.a pthread dl rt z)
 
 # db压力测试工具
 add_executable(db_stress db_stress.cpp)
-target_link_libraries(db_stress pthread dl rt)
+target_link_libraries(db_stress pthread dl rt  z)
 
 # db_proxy
 add_executable(dbproxy ${RPC} main.cpp db_proxy_handler.cpp config_loader.cpp sql_logger.cpp db_process.cpp)

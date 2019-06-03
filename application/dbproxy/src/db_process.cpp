@@ -671,7 +671,7 @@ void CDbProcess::on_report(mooon::observer::IDataReporter* data_reporter, const 
         _last_failure_num_sqls = _failure_num_sqls;
         _last_retry_times = _retry_times;
 
-        data_reporter->report("[%s]%" PRIu64",%" PRIu64",%" PRIu64"\n", current_datetime.c_str(), _success_num_sqls, _failure_num_sqls, _retry_times);
+        data_reporter->reportf("[%s]%" PRIu64",%" PRIu64",%" PRIu64"\n", current_datetime.c_str(), _success_num_sqls, _failure_num_sqls, _retry_times);
     }
 }
 

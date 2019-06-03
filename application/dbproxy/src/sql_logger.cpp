@@ -228,7 +228,7 @@ void CSqlLogger::on_report(mooon::observer::IDataReporter* data_reporter, const 
     if ((_total_lines > 0) && (_total_lines > _last_total_lines))
     {
         _last_total_lines = _total_lines;
-        data_reporter->report("[%s][D]%d,%" PRIu64"\n", current_datetime.c_str(), _database_index, _total_lines);
+        data_reporter->reportf("[%s][D]%d,%" PRIu64"\n", current_datetime.c_str(), _database_index, _total_lines);
     }
 }
 

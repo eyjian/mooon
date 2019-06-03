@@ -619,7 +619,7 @@ void CDbProxyHandler::on_report(mooon::observer::IDataReporter* data_reporter, c
         (_num_write_success != 0) || (_num_write_failure != 0) ||
         (_num_error_update_sql != 0))
     {
-        data_reporter->report("[%s][B]%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", current_datetime.c_str(),
+        data_reporter->reportf("[%s][B]%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", current_datetime.c_str(),
             _num_query_success, _num_query_failure,
             _num_query2_success, _num_query2_failure,
             _num_update_success, _num_update_failure,
