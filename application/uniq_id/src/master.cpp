@@ -114,6 +114,22 @@ CREATE TABLE t_label_log (
 );
 */
 
+/*
+ * Event维表（非必须）
+DROP TABLE IF EXISTS t_label_event;
+CREATE TABLE `t_label_event` (
+  `f_id` INT,
+  `f_event_id` TINYINT NOT NULL,
+  `f_event_name` CHAR(12) NOT NULL,
+  PRIMARY KEY (`f_id`),
+  UNIQUE KEY (`f_event_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+SET NAMES utf8;
+INSERT INTO `t_label_event` (`f_id`,`f_event_id`,`f_event_name`) VALUES (1,1,"被租赁(1)");
+INSERT INTO `t_label_event` (`f_id`,`f_event_id`,`f_event_name`) VALUES (2,2,"被回收(2)");
+*/
+
 // 常量
 enum
 {
