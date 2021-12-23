@@ -67,7 +67,11 @@ union UniqID
 
         std::string str() const
         {
-            return mooon::utils::CStringUtils::format_string("uniq://U%d/L%02X/%d-%d-%d_%d/S%u", (int)user, (int)label, (int)year+BASE_YEAR, (int)month, (int)day, (int)hour, (unsigned int)seq);
+            return mooon::utils::CStringUtils::format_string(
+                    "uniq://U%d/L%02X/%d-%d-%d_%d/S%u",
+                    static_cast<int>(user), static_cast<int>(label),
+                    static_cast<int>(year+BASE_YEAR), static_cast<int>(month), static_cast<int>(day),
+                    static_cast<int>(hour), static_cast<unsigned int>(seq));
         }
     }id;
 };
@@ -82,11 +86,13 @@ public:
     // timeout_milliseconds 接收agent返回超时值
     // retry_times 从一个agent取失败时，改从多少其它agent取，如果值为0表示不重试
     // polling 是否轮询取agent，效率会比随机高一点
-    CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds=300, uint8_t retry_times=3, bool polling=false) throw (utils::CException);
+    // 出错抛 mooon::utils::CException 异常
+    CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds=300, uint8_t retry_times=3, bool polling=false);
     ~CUniqId();
 
     // 取得机器Label（标签），用于唯一区分机器，同一时间两台机器不会出现相同的Label
-    uint8_t get_label() throw (utils::CException, sys::CSyscallException);
+    // 出错抛 mooon::utils::CException,mooon::sys::CSyscallException 异常
+    uint8_t get_label();
 
     // 获取seq，
     // 参数用来指定获取连续的num个，返回值为起始的seq，
@@ -95,22 +101,28 @@ public:
     // UniqAgent的steps参数值不能比num值小，最好是num的10倍或以上
     //
     // 返回的seq值最大为4294967295，即无符号4字节整数的最大值，最小值为1
-    uint32_t get_unqi_seq(uint16_t num=1) throw (utils::CException, sys::CSyscallException);
+    // 出错抛 mooon::utils::CException,mooon::sys::CSyscallException 异常
+    uint32_t get_unqi_seq(uint16_t num=1);
 
     // 取得一个唯一的无符号8字节的整数，可用来唯一标识一个消息等
     // current_seconds 通常为time(NULL)的返回值，user可以为用户定义的值，但最大只能为63
     //                 函数实现会取s的年份、月份、天和小时，具体可以参考UniqID的定义。
     // 由于seq一小时内只有10亿的容量，如果不够用，则可以将分钟设置到user参数，这样就扩容1分钟10亿的容量。
-    uint64_t get_uniq_id(uint8_t user=0, uint64_t current_seconds=0) throw (utils::CException, sys::CSyscallException);
+    // 出错抛 mooon::utils::CException,mooon::sys::CSyscallException 异常
+    uint64_t get_uniq_id(uint8_t user=0, uint64_t current_seconds=0);
 
     // 和get_uniq_id的区别在于，get_local_uniq_id只从agent取得Label和Seq，组装是在本地完成的，相当于分担了agent的部分工作。
-    uint64_t get_local_uniq_id(uint8_t user=0, uint64_t current_seconds=0) throw (utils::CException, sys::CSyscallException);
+    // 出错抛 mooon::utils::CException,mooon::sys::CSyscallException 异常
+    uint64_t get_local_uniq_id(uint8_t user=0, uint64_t current_seconds=0);
+
     // UniqAgent的steps参数值，不能比num值小，最好是num的10倍或以上
-    void get_local_uniq_id(uint16_t num, std::vector<uint64_t>* id_vec, uint8_t user=0, uint64_t current_seconds=0) throw (utils::CException, sys::CSyscallException);
+    // 出错抛 mooon::utils::CException,mooon::sys::CSyscallException 异常
+    void get_local_uniq_id(uint16_t num, std::vector<uint64_t>* id_vec, uint8_t user=0, uint64_t current_seconds=0);
 
     // 同时取得机器Label和seq值，可用这两者来组装交易流水号等
     // UniqAgent的steps参数值不能比num值小，最好是num的10倍或以上
-    void get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num=1) throw (utils::CException, sys::CSyscallException);
+    // 出错抛 mooon::utils::CException,mooon::sys::CSyscallException 异常
+    void get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num=1);
 
     // 取流水号、交易号等便利函数
     // format 取值：
@@ -127,12 +139,14 @@ public:
     //
     // 注意，只有%S、%d和%X有宽度参数，如：%4S%d，并且不足时统一填充0，不能指定填充数字，而且宽长参数不能超过9
     // 使用示例：%9S, %2d, %5X，不能为%09S、%02d和%05X等，%10S等超过9的宽度是无效的。
-    std::string get_transaction_id(const char* format, ...) throw (utils::CException, sys::CSyscallException);
-    std::string get_transaction_id(const char* format, va_list& va) throw (utils::CException, sys::CSyscallException);
+    // 出错抛 mooon::utils::CException,mooon::sys::CSyscallException 异常
+    std::string get_transaction_id(const char* format, ...);
+    std::string get_transaction_id(const char* format, va_list& va);
 
     // UniqAgent的steps参数值不能比num值小，最好是num的10倍或以上
-    void get_transaction_id(uint16_t num, std::vector<std::string>* id_vec, const char* format, ...) throw (utils::CException, sys::CSyscallException);
-    void get_transaction_id(uint16_t num, std::vector<std::string>* id_vec, const char* format, va_list& va) throw (utils::CException, sys::CSyscallException);
+    // 出错抛 mooon::utils::CException,mooon::sys::CSyscallException 异常
+    void get_transaction_id(uint16_t num, std::vector<std::string>* id_vec, const char* format, ...);
+    void get_transaction_id(uint16_t num, std::vector<std::string>* id_vec, const char* format, va_list& va);
 
 private:
     const struct sockaddr_in& pick_agent() const;

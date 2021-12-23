@@ -66,8 +66,9 @@ std::string label2string(uint8_t label, bool uppercase)
     return str;
 }
 
-CUniqId::CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds, uint8_t retry_times, bool polling) throw (utils::CException)
-    : _echo(ECHO_START), _agent_nodes(agent_nodes), _timeout_milliseconds(timeout_milliseconds), _retry_times(retry_times), _polling(polling), _udp_socket(NULL)
+CUniqId::CUniqId(const std::string& agent_nodes, uint32_t timeout_milliseconds, uint8_t retry_times, bool polling)
+    : _echo(ECHO_START), _agent_nodes(agent_nodes), _timeout_milliseconds(timeout_milliseconds),
+      _retry_times(retry_times), _polling(polling), _udp_socket(NULL)
 {
     _udp_socket = new net::CUdpSocket;
     _echo = ECHO_START + sys::CUtils::get_random_number(0, 1235U); // 初始化一个随机值，这样不同实例不同
@@ -110,7 +111,7 @@ CUniqId::~CUniqId()
     delete _udp_socket;
 }
 
-uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
+uint8_t CUniqId::get_label()
 {
     const uint32_t echo = get_echo(_echo);
     char response_buffer[1 + sizeof(struct MessageHead)]; // 故意多出一字节，以过滤掉包大小不同的脏数据
@@ -150,25 +151,29 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
             else if (memcmp(&agent_addr, &from_addr, sizeof(struct sockaddr_in)) != 0)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s][AGENT:%s] unexcepted response", net::to_string(from_addr).c_str(), net::to_string(agent_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s][AGENT:%s] unexcepted response",
+                                net::to_string(from_addr).c_str(), net::to_string(agent_addr).c_str()),
                         ERROR_UNEXCEPTED);
             }
             else if (RESPONSE_ERROR == response->type)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] store sequence block error: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] store sequence block error: %s",
+                                net::to_string(from_addr).c_str(), response->str().c_str()),
                         static_cast<int>(response->value1.to_int()));
             }
             else if (response->type != RESPONSE_LABEL)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] error response label: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] error response label: %s",
+                                net::to_string(from_addr).c_str(), response->str().c_str()),
                         response->type.to_int());
             }
             else if (response->echo.to_int() != echo)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] mismatch response label: %s|%u", net::to_string(from_addr).c_str(), response->str().c_str(), echo),
+                        utils::CStringUtils::format_string("[UniqID][%s] mismatch response label: %s|%u",
+                                net::to_string(from_addr).c_str(), response->str().c_str(), echo),
                         ERROR_MISMATCH);
             }
             else
@@ -179,7 +184,8 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
                 if (magic_ != response->magic)
                 {
                     THROW_EXCEPTION(
-                            utils::CStringUtils::format_string("[UniqID][%s] illegal response: %s|%u", net::to_string(from_addr).c_str(), response->str().c_str(), magic_),
+                            utils::CStringUtils::format_string("[UniqID][%s] illegal response: %s|%u",
+                                    net::to_string(from_addr).c_str(), response->str().c_str(), magic_),
                             ERROR_ILLEGAL);
                 }
 #endif // _CHECK_MAGIC_
@@ -188,7 +194,8 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
                 if ((label_ >= 0xFF) || (label_ < 1))
                 {
                     THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] invalid label from master: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] invalid label from master: %s",
+                                net::to_string(from_addr).c_str(), response->str().c_str()),
                         ERROR_INVALID_LABEL);
                 }
 
@@ -218,7 +225,7 @@ uint8_t CUniqId::get_label() throw (utils::CException, sys::CSyscallException)
     return 0;
 }
 
-uint32_t CUniqId::get_unqi_seq(uint16_t num) throw (utils::CException, sys::CSyscallException)
+uint32_t CUniqId::get_unqi_seq(uint16_t num)
 {
     const uint32_t echo = get_echo(_echo);
     char response_buffer[1 + sizeof(struct MessageHead)]; // 故意多出一字节，以过滤掉包大小不同的脏数据
@@ -256,25 +263,29 @@ uint32_t CUniqId::get_unqi_seq(uint16_t num) throw (utils::CException, sys::CSys
             else if (memcmp(&agent_addr, &from_addr, sizeof(struct sockaddr_in)) != 0)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s][AGENT:%s] unexcepted response", net::to_string(from_addr).c_str(), net::to_string(agent_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s][AGENT:%s] unexcepted response",
+                                net::to_string(from_addr).c_str(), net::to_string(agent_addr).c_str()),
                         ERROR_UNEXCEPTED);
             }
             else if (RESPONSE_ERROR == response->type)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] store sequence block error: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] store sequence block error: %s",
+                                net::to_string(from_addr).c_str(), response->str().c_str()),
                         static_cast<int>(response->value1.to_int()));
             }
             else if (response->type != RESPONSE_UNIQ_SEQ)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] error response sequence: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] error response sequence: %s",
+                                net::to_string(from_addr).c_str(), response->str().c_str()),
                         response->type.to_int());
             }
             else if (response->echo.to_int() != echo)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] mismatch response sequence: %s|%u", net::to_string(from_addr).c_str(), response->str().c_str(), echo),
+                        utils::CStringUtils::format_string("[UniqID][%s] mismatch response sequence: %s|%u",
+                                net::to_string(from_addr).c_str(), response->str().c_str(), echo),
                         ERROR_MISMATCH);
             }
             else
@@ -285,7 +296,8 @@ uint32_t CUniqId::get_unqi_seq(uint16_t num) throw (utils::CException, sys::CSys
                 if (magic_ != response->magic)
                 {
                     THROW_EXCEPTION(
-                            utils::CStringUtils::format_string("[UniqID][%s] illegal response: %s|%u", net::to_string(from_addr).c_str(), response->str().c_str(), magic_),
+                            utils::CStringUtils::format_string("[UniqID][%s] illegal response: %s|%u",
+                                    net::to_string(from_addr).c_str(), response->str().c_str(), magic_),
                             ERROR_ILLEGAL);
                 }
 #endif // _CHECK_MAGIC_
@@ -315,7 +327,7 @@ uint32_t CUniqId::get_unqi_seq(uint16_t num) throw (utils::CException, sys::CSys
     return 0;
 }
 
-uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (utils::CException, sys::CSyscallException)
+uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds)
 {
     const uint32_t echo = get_echo(_echo);
     char response_buffer[1 + sizeof(struct MessageHead)]; // 故意多出一字节，以过滤掉包大小不同的脏数据
@@ -355,25 +367,29 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (uti
             else if (memcmp(&agent_addr, &from_addr, sizeof(struct sockaddr_in)) != 0)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s][AGENT:%s] unexcepted response", net::to_string(from_addr).c_str(), net::to_string(agent_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s][AGENT:%s] unexcepted response",
+                                net::to_string(from_addr).c_str(), net::to_string(agent_addr).c_str()),
                         ERROR_UNEXCEPTED);
             }
             else if (RESPONSE_ERROR == response->type)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] store sequence block error: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] store sequence block error: %s",
+                                net::to_string(from_addr).c_str(), response->str().c_str()),
                         static_cast<int>(response->value1.to_int()));
             }
             else if (response->type != RESPONSE_UNIQ_ID)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] error response id: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] error response id: %s",
+                                net::to_string(from_addr).c_str(), response->str().c_str()),
                         response->type.to_int());
             }
             else if (response->echo.to_int() != echo)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] mismatch response id: %s|%u", net::to_string(from_addr).c_str(), response->str().c_str(), echo),
+                        utils::CStringUtils::format_string("[UniqID][%s] mismatch response id: %s|%u",
+                                net::to_string(from_addr).c_str(), response->str().c_str(), echo),
                         ERROR_MISMATCH);
             }
             else
@@ -384,7 +400,8 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (uti
                 if (magic_ != response->magic)
                 {
                     THROW_EXCEPTION(
-                            utils::CStringUtils::format_string("[UniqID][%s] illegal response: %s|%u", net::to_string(from_addr).c_str(), response->str().c_str(), magic_),
+                            utils::CStringUtils::format_string("[UniqID][%s] illegal response: %s|%u",
+                                    net::to_string(from_addr).c_str(), response->str().c_str(), magic_),
                             ERROR_ILLEGAL);
                 }
 #endif // _CHECK_MAGIC_
@@ -414,7 +431,7 @@ uint64_t CUniqId::get_uniq_id(uint8_t user, uint64_t current_seconds) throw (uti
     return 0;
 }
 
-uint64_t CUniqId::get_local_uniq_id(uint8_t user, uint64_t current_seconds) throw (utils::CException, sys::CSyscallException)
+uint64_t CUniqId::get_local_uniq_id(uint8_t user, uint64_t current_seconds)
 {
     uint8_t label = 0;
     uint32_t seq = 0;
@@ -436,7 +453,7 @@ uint64_t CUniqId::get_local_uniq_id(uint8_t user, uint64_t current_seconds) thro
     return uniq_id.value;
 }
 
-void CUniqId::get_local_uniq_id(uint16_t num, std::vector<uint64_t>* id_vec, uint8_t user, uint64_t current_seconds) throw (utils::CException, sys::CSyscallException)
+void CUniqId::get_local_uniq_id(uint16_t num, std::vector<uint64_t>* id_vec, uint8_t user, uint64_t current_seconds)
 {
     uint8_t label = 0;
     uint32_t seq = 0;
@@ -461,7 +478,7 @@ void CUniqId::get_local_uniq_id(uint16_t num, std::vector<uint64_t>* id_vec, uin
     }
 }
 
-void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num) throw (utils::CException, sys::CSyscallException)
+void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num)
 {
     const uint32_t echo = get_echo(_echo);
     char response_buffer[1 + sizeof(struct MessageHead)]; // 故意多出一字节，以过滤掉包大小不同的脏数据
@@ -501,19 +518,22 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num) thr
             else if (memcmp(&agent_addr, &from_addr, sizeof(struct sockaddr_in)) != 0)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s][AGENT:%s] unexcepted response", net::to_string(from_addr).c_str(), net::to_string(agent_addr).c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s][AGENT:%s] unexcepted response",
+                                net::to_string(from_addr).c_str(), net::to_string(agent_addr).c_str()),
                         ERROR_UNEXCEPTED);
             }
             else if (RESPONSE_ERROR == response->type)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] store sequence block error: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] store sequence block error: %s",
+                                net::to_string(from_addr).c_str(), response->str().c_str()),
                         static_cast<int>(response->value1.to_int()));
             }
             else if (response->type != RESPONSE_LABEL_AND_SEQ)
             {
                 THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] error response label and sequence: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] error response label and sequence: %s",
+                                net::to_string(from_addr).c_str(), response->str().c_str()),
                         response->type.to_int());
             }
             else if (response->echo.to_int() != echo)
@@ -530,7 +550,8 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num) thr
                 if (magic_ != response->magic)
                 {
                     THROW_EXCEPTION(
-                            utils::CStringUtils::format_string("[UniqID][%s] illegal response: %s|%u", net::to_string(from_addr).c_str(), response->str().c_str(), magic_),
+                            utils::CStringUtils::format_string("[UniqID][%s] illegal response: %s|%u",
+                                    net::to_string(from_addr).c_str(), response->str().c_str(), magic_),
                             ERROR_ILLEGAL);
                 }
 #endif // _CHECK_MAGIC_
@@ -539,7 +560,8 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num) thr
                 if ((label_ >= 0xFF) || (label_ < 1))
                 {
                     THROW_EXCEPTION(
-                        utils::CStringUtils::format_string("[UniqID][%s] invalid label from master: %s", net::to_string(from_addr).c_str(), response->str().c_str()),
+                        utils::CStringUtils::format_string("[UniqID][%s] invalid label from master: %s",
+                                net::to_string(from_addr).c_str(), response->str().c_str()),
                         ERROR_INVALID_LABEL);
                 }
 
@@ -570,7 +592,7 @@ void CUniqId::get_label_and_seq(uint8_t* label, uint32_t* seq, uint16_t num) thr
 
 // %Y 年份 %M 月份 %D 日期 %H 小时 %m 分钟 %S Sequence %L Label %d 4字节十进制整数 %s 字符串 %X 十六进制
 // 只有%S和%d有宽度参数，如：%4S%d，并且不足时统一填充0，不能指定填充数字
-std::string CUniqId::get_transaction_id(const char* format, ...) throw (utils::CException, sys::CSyscallException)
+std::string CUniqId::get_transaction_id(const char* format, ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -579,7 +601,7 @@ std::string CUniqId::get_transaction_id(const char* format, ...) throw (utils::C
     return get_transaction_id(format, ap);
 }
 
-std::string CUniqId::get_transaction_id(const char* format, va_list& va) throw (utils::CException, sys::CSyscallException)
+std::string CUniqId::get_transaction_id(const char* format, va_list& va)
 {
     std::vector<std::string> id_vec;
     get_transaction_id(1, &id_vec, format, va);
@@ -590,7 +612,7 @@ std::string CUniqId::get_transaction_id(const char* format, va_list& va) throw (
         return std::string("");
 }
 
-void CUniqId::get_transaction_id(uint16_t num, std::vector<std::string>* id_vec, const char* format, ...) throw (utils::CException, sys::CSyscallException)
+void CUniqId::get_transaction_id(uint16_t num, std::vector<std::string>* id_vec, const char* format, ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -599,7 +621,7 @@ void CUniqId::get_transaction_id(uint16_t num, std::vector<std::string>* id_vec,
     get_transaction_id(num, id_vec, format, ap);
 }
 
-void CUniqId::get_transaction_id(uint16_t num, std::vector<std::string>* id_vec, const char* format, va_list& va) throw (utils::CException, sys::CSyscallException)
+void CUniqId::get_transaction_id(uint16_t num, std::vector<std::string>* id_vec, const char* format, va_list& va)
 {
     char *s;
     int m, width;
