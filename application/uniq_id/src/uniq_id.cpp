@@ -749,13 +749,13 @@ const struct sockaddr_in& CUniqId::pick_agent() const
     else if (_polling)
     {
         static uint32_t factor = 0;
-        register uint32_t index = factor++;
+        uint32_t index = factor++;
         return _agents_addr[index % _agents_addr.size()];
     }
     else
     {
         static unsigned int i = 0;
-        register std::vector<struct sockaddr_in>::size_type index = sys::CUtils::get_random_number(i++, _agents_addr.size());
+        std::vector<struct sockaddr_in>::size_type index = sys::CUtils::get_random_number(i++, _agents_addr.size());
         return _agents_addr[index];
     }
 }
